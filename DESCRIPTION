@@ -1,8 +1,8 @@
 Package: RMODFLOW
 Type: Package
 Title: Pre- and post-processing of native MODFLOW files
-Version: 1.0
-Date: 2014-03-01
+Version: 0.1
+Date: 2014-03-02
 Author: Bart Rogiers <brogiers@sckcen.be>
 Maintainer: Bart Rogiers <brogiers@sckcen.be>
 Description: More about what it does (maybe more than one line)

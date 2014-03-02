@@ -1,6 +1,10 @@
-################################################################################
-### read.ba6 ###################################################################
-################################################################################
+#' Read a MODFLOW basic file
+#' 
+#' \code{read.ba6} reads in a MODFLOW basic file and returns it as an \code{\link{RMODFLOW}} ba6 object.
+#' 
+#' @param file Filename; typically "*.ba6"
+#' @return Object of class ba6
+#' @export
 read.ba6 <- function(file, dis=read.dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {
   ba6.lines <- scan(file, what=character(), sep='\n')

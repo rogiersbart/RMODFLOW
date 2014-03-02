@@ -1,3 +1,10 @@
+#' Read a MODFLOW budget ascii file
+#' 
+#' \code{read.bud} reads in a MODFLOW budget ascii file created from the binary file (typically *.bud) using \code{Read_budget.exe} and returns it as an \code{\link{RMODFLOW}} bud object.
+#' 
+#' @param file Filename; typically "Budget.out"
+#' @return Object of class bud
+#' @export
 read.bud <- function(file)
 {
   

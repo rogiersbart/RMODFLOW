@@ -1,6 +1,10 @@
-################################################################################
-### read.mlt ###################################################################
-################################################################################
+#' Read a MODFLOW multiplier file
+#' 
+#' \code{read.mlt} reads in a MODFLOW multiplier file and returns it as an \code{\link{RMODFLOW}} mlt object.
+#' 
+#' @param file Filename; typically "*.mlt"
+#' @return Object of class ba6
+#' @export
 read.mlt <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {
   mlt <- NULL

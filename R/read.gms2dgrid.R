@@ -1,6 +1,10 @@
-################################################################################
-### read.gms2dgrid #############################################################
-################################################################################
+#' Read a GMS 2D grid file
+#' 
+#' \code{read.gms2dgrid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
+#' 
+#' @param file Filename
+#' @return Object of class gms2dgrid
+#' @export
 read.gms2dgrid <- function(file)
 {
   grid2d <- NULL

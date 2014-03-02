@@ -1,10 +1,18 @@
-################################################################################
-### write.ba6 ##################################################################
-################################################################################
+#' Write a MODFLOW basic file
+#' 
+#' \code{write.ba6} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} ba6 object.
+#' 
+#' @param ba6 An \code{\link{RMODFLOW}} ba6 object
+#' @param file File to write to; typically "*.ba6"
+#' @param info Additional information
+#' @param IPRN Needed for the format code.
+#' @return None
+#' @export
 write.ba6 <- function(ba6, file, info='No further information provided',IPRN=-1)
 {
   # Data set 0
-  cat('# MODFLOW Basic Package created in R\n', file=file)
+  v <- packageDescription("RMODFLOW")$Version
+  cat(paste('# MODFLOW Basic Package created by RMODFLOW, version',v,'\n'), file=file)
   cat(paste('#', info, '\n'), file=file, append=TRUE)
   
   # Data set 1

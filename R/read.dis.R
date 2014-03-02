@@ -1,4 +1,7 @@
 #' Read a MODFLOW discretization file
+#' 
+#' \code{read.dis} reads in a MODFLOW discretization file and returns it as an \code{\link{RMODFLOW}} dis object.
+#' 
 #' @param file Filename; typically *.dis
 #' @return Object of class dis
 #' @export

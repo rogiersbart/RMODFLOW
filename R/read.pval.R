@@ -1,6 +1,10 @@
-################################################################################
-### read.pval ##################################################################
-################################################################################
+#' Read a MODFLOW parameter value file
+#' 
+#' \code{read.pval} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pval object.
+#' 
+#' @param file Filename; typically "*.pval"
+#' @return Object of class pval
+#' @export
 read.pval <- function(file, read.all=F)
 {
   pval.lines <- scan(file, what=character(), sep='\n')

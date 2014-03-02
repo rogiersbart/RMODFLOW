@@ -1,6 +1,10 @@
-################################################################################
-### read.hob ###################################################################
-################################################################################
+#' Read a MODFLOW head observations file
+#' 
+#' \code{read.hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.
+#' 
+#' @param file Filename; typically "*.hob"
+#' @return Object of class hob
+#' @export
 read.hob <- function(file)
 {
   hob.lines <- scan(file, what=character(), sep='\n')

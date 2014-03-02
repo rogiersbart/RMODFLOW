@@ -1,0 +1,18 @@
+\name{read.ba6}
+\alias{read.ba6}
+\title{Read a MODFLOW basic file}
+\usage{
+read.ba6(file, dis = read.dis(paste(substring(file, 1, nchar(file) - 4),
+  ".dis", sep = "")))
+}
+\arguments{
+  \item{file}{Filename; typically "*.ba6"}
+}
+\value{
+Object of class ba6
+}
+\description{
+\code{read.ba6} reads in a MODFLOW basic file and returns
+it as an \code{\link{RMODFLOW}} ba6 object.
+}
+

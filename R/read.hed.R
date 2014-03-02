@@ -1,7 +1,10 @@
-################################################################################
-### read.hed ###################################################################
-################################################################################
-
+#' Read a MODFLOW head file
+#' 
+#' \code{read.hed} reads in a MODFLOW head file and returns it as an \code{\link{RMODFLOW}} hed object.
+#' 
+#' @param file Filename; typically "*.hed"
+#' @return Object of class hed
+#' @export
 read.hed <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), ba6=read.ba6(paste(substring(file,1,nchar(file)-4),'.ba6',sep='')))
 {
   hed <- NULL
@@ -21,28 +24,3 @@ read.hed <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'
   #hed[which(hed==ba6$HNOFLO)] <- NA
   return(hed)
 }
-
-# # Old version
-# read.hed <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), ba6=read.ba6(paste(substring(file,1,nchar(file)-4),'.ba6',sep='')))
-# {
-#   hed <- NULL
-#   hed.lines <- scan(file, what=character(), sep='\n')
-#   hed <- dis$BOTM * NA
-#   
-#   for(k in 1:dis$NLAY)
-#   {
-#     # remove first line
-#     hed.lines <- hed.lines[-1] 
-#     
-#     # read heads
-#     hedVector <- NULL
-#     for(i in 1:ceiling(dis$NROW*dis$NCOL/10))
-#     {
-#       hedVector <- append(hedVector,as.numeric(split.line.num(hed.lines[1])))
-#       hed.lines <- hed.lines[-1]
-#     }
-#     for(i in 1:dis$NROW) for(j in 1:dis$NCOL) hed[i,j,k] <- hedVector[(i-1)*dis$NCOL+j]
-#   }
-#   hed[which(hed==ba6$HNOFLO)] <- NA
-#   return(hed)
-# }

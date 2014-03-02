@@ -1,4 +1,7 @@
 #' Read a MODFLOW hydrogeologic unit flow file
+#' 
+#' \code{read.ba6} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
+#' 
 #' @param file Filename; typically *.huf
 #' @param dis Corresponding discretization file; typically *.dis
 #' @return Object of class huf
