@@ -22,5 +22,6 @@ read.hed <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'
     hed[,,k] <- matrix(hedVector,nrow=180,ncol=250,byrow=T)
   }
   #hed[which(hed==ba6$HNOFLO)] <- NA
+  class(hed) <- c('hed','mf3darray')
   return(hed)
 }
