@@ -1,0 +1,23 @@
+\name{read.kdep}
+\alias{read.kdep}
+\title{Read a MODFLOW hydraulic conductivity depth-dependence capability file}
+\usage{
+read.kdep(file, dis = read.dis(paste(substring(file, 1, nchar(file) - 4),
+  ".dis", sep = "")), huf = read.huf(paste(substring(file, 1, nchar(file) -
+  4), ".huf", sep = ""), dis))
+}
+\arguments{
+  \item{file}{Filename; typically *.kdep}
+
+  \item{dis}{Corresponding discretization file; typically
+  *.dis}
+}
+\value{
+Object of class kdep
+}
+\description{
+\code{read.kdep} reads in a MODFLOW Hydraulic-Conductivity
+Depth-Dependence Capability file and returns it as an
+\code{\link{RMODFLOW}} kdep object.
+}
+

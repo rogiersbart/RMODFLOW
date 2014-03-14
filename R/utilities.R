@@ -10,6 +10,12 @@ remove.comments.from.lines <- function(lines)
     #if(i==1) cat('Comments removed\n')
     return(lines)
 }
+# Remove comments at the end of a line
+remove.comments.end.of.line <- function(line)
+{
+  if(grepl('#',line)) return(substr(line,1,regexpr('#',line)-1))
+  else return(line)
+}
 
 # Remove empty strings from string array
 remove.empty.strings <- function(stringArray)
@@ -26,7 +32,7 @@ remove.empty.strings <- function(stringArray)
 # Split line into characters
 split.line.char <- function(string)
 {
-  split.line <- as.character(strsplit(string,' ')[[1]])
+  split.line <- as.character(strsplit(remove.comments.end.of.line(string),' |\t')[[1]])
   split.line <- remove.empty.strings(split.line)
   return(split.line)
 }
@@ -34,7 +40,7 @@ split.line.char <- function(string)
 # Split line into numbers
 split.line.num <- function(string)
 {
-  split.line <- as.vector(na.omit(as.numeric(strsplit(string,' ')[[1]])))
+  split.line <- as.vector(na.omit(as.numeric(strsplit(remove.comments.end.of.line(string),' |\t')[[1]])))
   return(split.line)
 }
 # Mirror matrix

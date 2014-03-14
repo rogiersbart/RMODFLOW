@@ -18,25 +18,29 @@ get.mfarray <- function(mfarray.lines,NROW,NCOL,NLAY)
         {
           if(NLAY==1)
           {
-            mfarray <- as.numeric(strsplit(mfarray.lines[1],' ')[[1]][2])
+            mfarray <- as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]][2])
             mfarray.lines <- mfarray.lines[-1]
             return(list(mfarray=mfarray,remaining.lines=mfarray.lines))
           } else {
-            mfarray[,,k] <- matrix(as.numeric(strsplit(mfarray.lines[1],' ')[[1]][2]),nrow=NROW,ncol=NCOL)
+            mfarray[,,k] <- matrix(as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]][2]),nrow=NROW,ncol=NCOL)
           }
         }
         else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='INTERNAL')
         {
           mfarray.lines <- mfarray.lines[-1] 
-          nPerLine <- length(as.numeric(strsplit(mfarray.lines[1],' ')[[1]]))
+          nPerLine <- length(as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]]))
           nLines <- (NCOL %/% nPerLine + ifelse((NCOL %% nPerLine)==0, 0, 1))*NROW
-          mfarray[,,k] <- matrix(as.numeric(strsplit(paste(mfarray.lines[1:nLines],collapse=''),' ')[[1]]),nrow=NROW,ncol=NCOL,byrow=TRUE)
+          mfarray[,,k] <- matrix(as.numeric(strsplit(paste(mfarray.lines[1:nLines],collapse='\n'),' |\t|\n| \n')[[1]]),nrow=NROW,ncol=NCOL,byrow=TRUE)
           mfarray.lines <- mfarray.lines[-c(1:nLines)]
         }
         else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='EXTERNAL')
         {
           stop('Reading EXTERNAL arrays is not implemented yet...')
-        }       
+        }   
+        else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='OPEN/CLOSE')
+        {
+          stop('Reading OPEN/CLOSE arrays is not implemented yet...')
+        }   
       }
     }
   
