@@ -3,9 +3,7 @@
 \title{Plot a layer of a MODFLOW 3D array}
 \usage{
 \method{plot}{mf3darray}(mf3darray, layer = 1, dis, ibound = mf3darray * 0 +
-  1, color.palette = terrain.colors, zlim = range(mf3darray[, , layer],
-  finite = TRUE), levels = pretty(zlim, nlevels), nlevels = 20,
-  main = paste("mf3darray plot, layer", layer))
+  1, zlim = range(mf3darray[, , layer], finite = TRUE), ...)
 }
 \arguments{
   \item{mf3darray}{An object of class mf3darray, or a 3D

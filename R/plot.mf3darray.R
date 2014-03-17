@@ -13,10 +13,10 @@
 #' @return None
 #' @method plot mf3darray
 #' @export
-plot.mf3darray <- function(mf3darray, layer=1, dis, ibound=mf3darray*0+1, color.palette=terrain.colors, zlim = range(mf3darray[,,layer], finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 20, main=paste('mf3darray plot, layer',layer))
+plot.mf3darray <- function(mf3darray, layer=1, dis, ibound=mf3darray*0+1, zlim = range(mf3darray[,,layer], finite=TRUE), ...)
 {
   mf2darray <- mf3darray[,,layer]
   class(mf2darray) <- 'mf2darray'
   ibound <- ibound[,,layer]
-  plot(mf2darray, dis, ibound, color.palette, zlim, levels, nlevels, main)
+  plot(mf2darray, dis, ibound=ibound, zlim=zlim, ...)
 }

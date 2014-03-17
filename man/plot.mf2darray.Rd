@@ -4,7 +4,8 @@
 \usage{
 \method{plot}{mf2darray}(mf2darray, dis, ibound = mf2darray * 0 + 1,
   color.palette = terrain.colors, zlim = range(mf2darray, finite = TRUE),
-  levels = pretty(zlim, nlevels), nlevels = 20, main = "MF2DARRAY plot")
+  levels = pretty(zlim, nlevels), nlevels = 20, main = "MF ARRAY plot",
+  type = "fill", add = FALSE, xOrigin = 0, yOrigin = 0)
 }
 \arguments{
   \item{mf2darray}{An object of class mf2darray, or a 2D
