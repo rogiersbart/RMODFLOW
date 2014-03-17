@@ -12,16 +12,27 @@
 #' @return None
 #' @method plot mf2darray
 #' @export
-plot.mf2darray <- function(mf2darray, ibound=mf2darray*0+1, color.palette=terrain.colors, zlim = range(mf2darray, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 20, main='MF2DARRAY plot')
+#' @import ggplot2 directlabels
+plot.mf2darray <- function(mf2darray, dis, ibound=mf2darray*0+1, color.palette=terrain.colors, zlim = range(mf2darray, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 20, main='MF2DARRAY plot')
 {
-  nr <- nrow(mf2darray)
-  nc <- ncol(mf2darray)
+  ids <- factor(1:(dis$NROW*dis$NCOL))
   ibound[which(ibound==0)] <- NA
-  mf2darray[which(mf2darray < zlim[1])] <- zlim[1]
-  mf2darray[which(mf2darray > zlim[2])] <- zlim[2]
-  filled.contour(t(mirror.matrix(mf2darray, 'vertical'))*t(mirror.matrix(ibound, 'vertical')),
-                 plot.title=title(main=main, xlab='X (km)', ylab='Y (km)'),
-                 color.palette=color.palette, asp=nr/nc, levels=levels, zlim=zlim,
-                 plot.axes = { axis(1, seq(0, 1, by = 1/12.5),labels=seq(0,nc*50/1000,nc*50/1000/12.5))
-                               axis(2, seq(0, 1, by = 1/9), labels=seq(0,nr*50/1000,nr*50/1000/9)) }) #, zlim=c(-2,2)
+  xWidth <- rep(dis$DELR,dis$NROW)
+  yWidth <- rep(dis$DELC,each=dis$NCOL)
+  xy <- expand.grid(cumsum(dis$DELR)-dis$DELR/2,sum(dis$DELC)-(cumsum(dis$DELC)-dis$DELC/2))
+  names(xy) <- c('x','y')
+  positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
+  positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+  positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+  positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+  positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+  positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+  positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+  positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+  positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+  values <- data.frame(id = ids,value = c(t(mf2darray*ibound)))
+  datapoly <- merge(values, positions, by=c("id"))
+  ggplot(datapoly, aes(x=x, y=y)) +
+    geom_polygon(aes(fill=value, group=id)) +
+    scale_fill_gradientn(colours=rainbow(7))
 }

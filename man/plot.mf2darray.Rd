@@ -2,7 +2,7 @@
 \alias{plot.mf2darray}
 \title{Plot a MODFLOW 2D array}
 \usage{
-\method{plot}{mf2darray}(mf2darray, ibound = mf2darray * 0 + 1,
+\method{plot}{mf2darray}(mf2darray, dis, ibound = mf2darray * 0 + 1,
   color.palette = terrain.colors, zlim = range(mf2darray, finite = TRUE),
   levels = pretty(zlim, nlevels), nlevels = 20, main = "MF2DARRAY plot")
 }

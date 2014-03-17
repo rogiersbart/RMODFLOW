@@ -2,9 +2,9 @@
 \alias{plot.mf3darray}
 \title{Plot a layer of a MODFLOW 3D array}
 \usage{
-\method{plot}{mf3darray}(mf3darray, ibound = mf3darray * 0 + 1, layer = 1,
-  color.palette = terrain.colors, zlim = range(mf3darray[, , layer], finite
-  = TRUE), levels = pretty(zlim, nlevels), nlevels = 20,
+\method{plot}{mf3darray}(mf3darray, layer = 1, dis, ibound = mf3darray * 0 +
+  1, color.palette = terrain.colors, zlim = range(mf3darray[, , layer],
+  finite = TRUE), levels = pretty(zlim, nlevels), nlevels = 20,
   main = paste("mf3darray plot, layer", layer))
 }
 \arguments{
