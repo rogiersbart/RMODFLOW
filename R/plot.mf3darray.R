@@ -19,4 +19,17 @@ plot.mf3darray <- function(mf3darray, layer=1, dis, ibound=mf3darray*0+1, zlim =
   class(mf2darray) <- 'mf2darray'
   ibound <- ibound[,,layer]
   plot(mf2darray, dis, ibound=ibound, zlim=zlim, ...)
+  
+  
+#   if(layer=='all')
+#   {
+#     plot3d.mf2darray(mf3darray[,,1])
+#     for(k in 2:dim(mf3darray)[3])
+#     {
+#       plot3d.mf2darray(mf3darray[,,1],add=TRUE)
+#     }
+#     
+#   } else {
+#     plot3d.mf2darray(mf3darray[,,layer])
+#   }
 }

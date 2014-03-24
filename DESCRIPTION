@@ -9,5 +9,7 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Imports:
     ggplot2,
-    directlabels,
-    akima
+    akima,
+    rgl
+Depends:
+    directlabels
