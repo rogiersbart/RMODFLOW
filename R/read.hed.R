@@ -17,9 +17,9 @@ read.hed <- function(file,  dis=read.dis(paste(substring(file,1,nchar(file)-4),'
     
     # read heads
     hedVector <- NULL
-    hedVector <- as.numeric(split.line.num(paste(hed.lines[1:ceiling(dis$NROW*dis$NCOL/10)],collapse=' ')))
-    hed.lines <- hed.lines[-c(1:ceiling(dis$NROW*dis$NCOL/10))]
-    hed[,,k] <- matrix(hedVector,nrow=180,ncol=250,byrow=T)
+    hedVector <- as.numeric(split.line.num(paste(hed.lines[1:(ceiling(dis$NCOL/10)*dis$NROW)],collapse=' ')))
+    hed.lines <- hed.lines[-c(1:(ceiling(dis$NCOL/10)*dis$NROW))]
+    hed[,,k] <- matrix(hedVector,nrow=dis$NROW,ncol=dis$NCOL,byrow=T)
   }
   #hed[which(hed==ba6$HNOFLO)] <- NA
   class(hed) <- c('hed','mf3darray')

@@ -14,7 +14,7 @@ read.dis <- function(file)
     dis.lines <- remove.comments.from.lines(dis.lines)
   
   # Data set 1
-    dataSet1 <- strsplit(dis.lines[1],' ')[[1]]
+    dataSet1 <- remove.empty.strings(strsplit(dis.lines[1],' ')[[1]])
     dis.lines <- dis.lines[-1]  
     dis$NLAY <- as.numeric(dataSet1[1])
     dis$NROW <- as.numeric(dataSet1[2])
@@ -25,7 +25,7 @@ read.dis <- function(file)
     rm(dataSet1)
     
   # Data set 2
-    dis$LAYCBD <- as.numeric(strsplit(dis.lines[1],' ')[[1]])
+    dis$LAYCBD <- as.numeric(remove.empty.strings(strsplit(dis.lines[1],' ')[[1]]))
     dis.lines <- dis.lines[-1]
     
   # Data set 3

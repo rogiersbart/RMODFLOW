@@ -14,30 +14,31 @@ get.mfarray <- function(mfarray.lines,NROW,NCOL,NLAY)
         # Read in first row with format code
         # If constant and NLAY==1, return constant
         # If constant and NLAY!=1, fill layer with constant (is part of mf3darray!?)
-        if(strsplit(mfarray.lines[1],' ')[[1]][1]=='CONSTANT') 
+        if(remove.empty.strings(strsplit(mfarray.lines[1],' ')[[1]])[1]=='CONSTANT') 
         {
           if(NLAY==1)
           {
-            mfarray <- as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]][2])
+            mfarray <- as.numeric(remove.empty.strings(strsplit(mfarray.lines[1],' |\t')[[1]])[2])
             mfarray.lines <- mfarray.lines[-1]
             return(list(mfarray=mfarray,remaining.lines=mfarray.lines))
           } else {
-            mfarray[,,k] <- matrix(as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]][2]),nrow=NROW,ncol=NCOL)
+            mfarray[,,k] <- matrix(as.numeric(remove.empty.strings(strsplit(mfarray.lines[1],' |\t')[[1]])[2]),nrow=NROW,ncol=NCOL)
+            mfarray.lines <- mfarray.lines[-1]
           }
         }
-        else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='INTERNAL')
+        else if(remove.empty.strings(strsplit(mfarray.lines[1],' ')[[1]])[1]=='INTERNAL')
         {
           mfarray.lines <- mfarray.lines[-1] 
-          nPerLine <- length(as.numeric(strsplit(mfarray.lines[1],' |\t')[[1]]))
+          nPerLine <- length(as.numeric(remove.empty.strings(strsplit(mfarray.lines[1],' |\t')[[1]])))
           nLines <- (NCOL %/% nPerLine + ifelse((NCOL %% nPerLine)==0, 0, 1))*NROW
-          mfarray[,,k] <- matrix(as.numeric(strsplit(paste(mfarray.lines[1:nLines],collapse='\n'),' |\t|\n| \n')[[1]]),nrow=NROW,ncol=NCOL,byrow=TRUE)
+          mfarray[,,k] <- matrix(as.numeric(strsplit0(paste(mfarray.lines[1:nLines],collapse='\n'),' |\t|\n| \n|\n ')[[1]]),nrow=NROW,ncol=NCOL,byrow=TRUE)
           mfarray.lines <- mfarray.lines[-c(1:nLines)]
         }
-        else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='EXTERNAL')
+        else if(remove.empty.strings(strsplit(mfarray.lines[1],' ')[[1]])[1]=='EXTERNAL')
         {
           stop('Reading EXTERNAL arrays is not implemented yet...')
         }   
-        else if(strsplit(mfarray.lines[1],' ')[[1]][1]=='OPEN/CLOSE')
+        else if(remove.empty.strings(strsplit(mfarray.lines[1],' ')[[1]])[1]=='OPEN/CLOSE')
         {
           stop('Reading OPEN/CLOSE arrays is not implemented yet...')
         }   

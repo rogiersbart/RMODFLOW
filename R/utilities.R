@@ -75,6 +75,17 @@ rmse <- function(observations, predictions)
 {
   return(sqrt(mean((observations-predictions)^2)))
 }
-
+strsplit0 <- function(...)
+{
+  output <- strsplit(...)
+  for(i in 1:length(output))
+  {
+    if(output[[i]][1]=='')
+    {
+      output[[i]] <- output[[i]][-1]
+    }
+  }
+  return(output)
+}
 
 
