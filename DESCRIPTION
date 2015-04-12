@@ -1,8 +1,8 @@
 Package: RMODFLOW
 Type: Package
 Title: Pre- and post-processing of MODFLOW files
-Version: 0.1.0
-Date: 2014-12-18
+Version: 0.2.0
+Date: 2015-04-13
 Author: Bart Rogiers <brogiers@sckcen.be>
 Maintainer: Bart Rogiers <brogiers@sckcen.be>
 Description: The RMODFLOW package provides a set of tools for groundwater flow
