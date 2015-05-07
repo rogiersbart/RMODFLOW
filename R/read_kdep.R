@@ -8,7 +8,7 @@
 #' @export
 read_kdep <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), huf=read_huf(paste(substring(file,1,nchar(file)-4),'.huf',sep=''),dis))
 {
-  kdep.lines <- scan(file, what=character(), sep='\n')
+  kdep.lines <- read_lines(file)
   kdep <- NULL
   
   # Data set 0

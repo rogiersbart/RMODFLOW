@@ -8,7 +8,7 @@
 #' @export
 read_pval <- function(file, read_all=F)
 {
-  pval.lines <- scan(file, what=character(), sep='\n')
+  pval.lines <- read_lines(file)
   pval <- NULL
   
   # Data set 0

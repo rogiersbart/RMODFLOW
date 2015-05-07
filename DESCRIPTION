@@ -12,7 +12,8 @@ Imports:
     ggplot2,
     akima,
     rgl,
-    RTOOLZ
+    RTOOLZ,
+    readr
 Depends:
     directlabels
 URL: https://github.com/rogiersbart/RMODFLOW

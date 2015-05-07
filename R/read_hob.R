@@ -7,7 +7,7 @@
 #' @export
 read_hob <- function(file)
 {
-  hob.lines <- scan(file, what=character(), sep='\n')
+  hob.lines <- read_lines(file)
   hob <- NULL
   
   # Data set 0

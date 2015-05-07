@@ -7,7 +7,7 @@
 #' @export
 read_prj <- function(file)
 {
-  prj.lines <- scan(file, what=character(), sep='\n')
+  prj.lines <- read_lines(file)
   prj <- NULL
   prj$projection <- prj.lines[1]
   prj$origin <- as.numeric(remove_empty_strings(strsplit(prj.lines[2],' ')[[1]]))

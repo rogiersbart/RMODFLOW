@@ -8,7 +8,7 @@
 read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {
   mlt <- NULL
-  mlt.lines <- scan(file, what=character(), sep='\n')
+  mlt.lines <- read_lines(file)
   
   # Data set 0
     comments <- get_comments_from_lines(mlt.lines)

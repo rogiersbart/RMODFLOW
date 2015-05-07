@@ -7,7 +7,7 @@
 #' @export
 read_dis <- function(file)
 {
-  dis.lines <- scan(file, what=character(), sep='\n')
+  dis.lines <- read_lines(file)
   dis <- NULL
   
   # Data set 0

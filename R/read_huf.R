@@ -8,7 +8,7 @@
 #' @export
 read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {
-  huf.lines <- scan(file, what=character(), sep='\n')
+  huf.lines <- read_lines(file)
   huf <- NULL
 
   # Data set 0

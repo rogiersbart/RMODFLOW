@@ -8,7 +8,7 @@
 read_ba6 <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {
   ba6 <- NULL
-  ba6.lines <- scan(file, what=character(), sep='\n')
+  ba6.lines <- read_lines(file)
   
   # Data set 0
     comments <- get_comments_from_lines(ba6.lines)

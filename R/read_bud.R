@@ -96,7 +96,7 @@ read_bud <- function(file,binary=TRUE)
     return(bud)
   } else {
     bud <- list()
-    bud.lines <- scan(file, what=character(), sep='\n')
+    bud.lines <- read_lines(file)
     while(length(bud.lines)!=0)
     {
       name <- substr(bud.lines[1],25,40)
