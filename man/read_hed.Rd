@@ -5,7 +5,7 @@
 \usage{
 read_hed(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
   ".dis", sep = "")), ba6 = read_ba6(paste(substring(file, 1, nchar(file) -
-  4), ".ba6", sep = "")))
+  4), ".ba6", sep = "")), convert_HNOFLO_to_NA = TRUE)
 }
 \arguments{
 \item{file}{Filename; typically "*.hed"}

@@ -6,7 +6,7 @@
 #' @return Object of class hed
 #' @importFrom readr read_lines
 #' @export
-read_hed <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), ba6=read_ba6(paste(substring(file,1,nchar(file)-4),'.ba6',sep='')))
+read_hed <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), ba6=read_ba6(paste(substring(file,1,nchar(file)-4),'.ba6',sep='')), convert_HNOFLO_to_NA=TRUE)
 {
   hed <- NULL
   hed.lines <- read_lines(file)
@@ -22,7 +22,7 @@ read_hed <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'
     hed.lines <- hed.lines[-c(1:(ceiling(dis$NCOL/10)*dis$NROW))]
     hed[,,k] <- matrix(hedVector,nrow=dis$NROW,ncol=dis$NCOL,byrow=T)
   }
-  #hed[which(hed==ba6$HNOFLO)] <- NA
+  if(convert_HNOFLO_to_NA) hed[which(hed==ba6$HNOFLO)] <- NA
   class(hed) <- c('hed','modflow_3d_array')
   return(hed)
 }
