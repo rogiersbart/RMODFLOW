@@ -5,6 +5,7 @@
 #' @param file Filename; typically "*.pval"
 #' @param read_all A logical value indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pval file for storing additional parameters).
 #' @return Object of class pval
+#' @importFrom readr read_lines
 #' @export
 read_pval <- function(file, read_all=F)
 {

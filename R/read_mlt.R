@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically "*.mlt"
 #' @return Object of class ba6
+#' @importFrom readr read_lines
 #' @export
 read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {

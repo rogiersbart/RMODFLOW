@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically "Budget.out"
 #' @return Object of class bud
+#' @importFrom readr read_lines
 #' @export
 read_bud <- function(file,binary=TRUE)
 {

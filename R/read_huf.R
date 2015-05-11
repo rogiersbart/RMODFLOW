@@ -5,6 +5,7 @@
 #' @param file Filename; typically *.huf
 #' @param dis Corresponding discretization file; typically *.dis
 #' @return Object of class huf
+#' @importFrom readr read_lines
 #' @export
 read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
 {

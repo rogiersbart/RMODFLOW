@@ -5,6 +5,7 @@
 #' @param file Filename; typically *.kdep
 #' @param dis Corresponding discretization file; typically *.dis
 #' @return Object of class kdep
+#' @importFrom readr read_lines
 #' @export
 read_kdep <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), huf=read_huf(paste(substring(file,1,nchar(file)-4),'.huf',sep=''),dis))
 {

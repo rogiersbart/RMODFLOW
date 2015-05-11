@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically "*.hob"
 #' @return Object of class hob
+#' @importFrom readr read_lines
 #' @export
 read_hob <- function(file)
 {

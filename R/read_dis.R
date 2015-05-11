@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically *.dis
 #' @return Object of class dis
+#' @importFrom readr read_lines
 #' @export
 read_dis <- function(file)
 {

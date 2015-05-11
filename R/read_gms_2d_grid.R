@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename
 #' @return Object of class gms2dgrid
+#' @importFrom readr read_lines
 #' @export
 read_gms_2d_grid <- function(file)
 {

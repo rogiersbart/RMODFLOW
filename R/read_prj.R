@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically *.prj
 #' @return Object of class prj
+#' @importFrom readr read_lines
 #' @export
 read_prj <- function(file)
 {

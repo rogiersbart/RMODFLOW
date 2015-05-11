@@ -4,6 +4,7 @@
 #' 
 #' @param file Filename; typically "*.hed"
 #' @return Object of class hed
+#' @importFrom readr read_lines
 #' @export
 read_hed <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')), ba6=read_ba6(paste(substring(file,1,nchar(file)-4),'.ba6',sep='')))
 {
