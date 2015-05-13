@@ -8,6 +8,6 @@
 read_hpr <- function(file)
 {
   hpr <- read.table(file,header=T)
-  class(hpr) <- c('hpr')
+  class(hpr) <- c('hpr','data.frame')
   return(hpr)
 }
