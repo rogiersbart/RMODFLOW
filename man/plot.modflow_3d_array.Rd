@@ -4,8 +4,8 @@
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
 \method{plot}{modflow_3d_array}(modflow_3d_array, i = NULL, j = NULL,
-  k = NULL, dis, mask = modflow_3d_array * 0 + 1,
-  zlim = range(modflow_3d_array[ifelse0(is.null(i),
+  k = NULL, dis, ba6 = NULL, mask = ifelse0(is.null(ba6), modflow_3d_array
+  * 0 + 1, ba6$IBOUND), zlim = range(modflow_3d_array[ifelse0(is.null(i),
   c(1:dim(modflow_3d_array)[1]), i), ifelse0(is.null(j),
   c(1:dim(modflow_3d_array)[2]), j), ifelse0(is.null(k),
   c(1:dim(modflow_3d_array)[3]), k)], finite = TRUE),

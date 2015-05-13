@@ -13,7 +13,7 @@
 #' @method plot modflow_2d_array
 #' @export
 #' @import ggplot2 directlabels akima rgl RTOOLZ
-plot.modflow_2d_array <- function(modflow_2d_array, dis, mask=modflow_2d_array*0+1, color.palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, main='MF ARRAY plot', type='fill', add=FALSE,xOrigin=0,yOrigin=0,height.exageration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
+plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_2d_array*0+1,ba6$IBOUND[,,1]), color.palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, main='MF ARRAY plot', type='fill', add=FALSE,xOrigin=0,yOrigin=0,height.exageration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
 {
   if(plot3d)
   {
