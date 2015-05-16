@@ -4,7 +4,7 @@
 \title{Run a MODFLOW model optimization, based on the parameter value file}
 \usage{
 run_modflow_opt(file, dir = getwd(), modflow_executable = "mf2005",
-  par = NULL, include = NULL, ...)
+  par = NULL, include = NULL, trans = NULL, control = NULL, ...)
 }
 \arguments{
 \item{file}{Name file; typically "*.nam"}

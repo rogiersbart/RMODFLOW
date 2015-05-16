@@ -10,7 +10,7 @@
 #' @param ... further arguments provided to \code{optim}
 #' @return \code{optim} results with the full list of parameters
 #' @export
-run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL,include=NULL, ...)
+run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, control=NULL, ...)
 {
   nam <- read_nam(paste0(dir,'/',file))
   pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
@@ -23,20 +23,31 @@ run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
     par <- pvl$Parval
     par[which(include)] <- par2
   } 
+  if(!is.null(trans))
+  {
+    par[which(trans=='log')] <- log(par[which(trans=='log')])
+    if('parscale' %in% names(control))
+    {
+      control$parscale[which(trans[include]=='log')] <- log(control$parscale[which(trans[include]=='log')])
+    }
+  }
   optim_modflow <- function(par_include)
   {
     pvl$Parval <- par
     pvl$Parval[which(include)] <- par_include
+    if(!is.null(trans)) pvl$Parval[which(trans=='log')] <- exp(pvl$Parval[which(trans=='log')])
     write_pvl(pvl, file=paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
     run_modflow(file,dir,modflow_executable)
     rmse <- performance(read_hpr(paste0(dir,'/',nam$Fname[which(nam$Nunit==hob$IUHOBSV)])))$rmse
-    cat(paste('RMSE=',format(rmse,scientific=TRUE,digits=4),'Parval=',paste(format(par_include,scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
+    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'Parval=',paste(format(pvl$Parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
     return(rmse)
   }
-  opt <- optim(par[which(include)],optim_modflow, ...)
+  if(!is.null(control)) opt <- optim(par[which(include)],optim_modflow, control=control, ...)
+  if(is.null(control)) opt <- optim(par[which(include)],optim_modflow, ...)
   par2 <- opt$par
   opt$par <- par
   opt$par[which(include)] <- par2
+  if(!is.null(trans)) opt$par[which(trans=='log')] <- exp(opt$par[which(trans=='log')])
   opt$included <- include
   return(opt)
 }
