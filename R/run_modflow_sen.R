@@ -14,7 +14,6 @@ run_modflow_sen <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
   nam <- read_nam(paste0(dir,'/',file))
   pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
   hob <- read_hob(paste0(dir,'/',nam$Fname[which(nam$Ftype=='HOB')]))
-  hpr
   if(is.null(par)) par <- pvl$Parval
   if(is.null(include)) include <- rep(TRUE,length(par))
   if(length(par)!=length(pvl$Parval)) 
