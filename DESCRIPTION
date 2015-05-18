@@ -13,7 +13,9 @@ Imports:
     akima,
     rgl,
     RTOOLZ,
-    readr
+    readr,
+    hydroPSO,
+    DEoptim
 Depends:
     directlabels
 URL: https://github.com/rogiersbart/RMODFLOW

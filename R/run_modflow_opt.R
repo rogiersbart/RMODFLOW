@@ -9,8 +9,10 @@
 #' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
 #' @param ... further arguments provided to \code{optim}
 #' @return \code{optim} results with the full list of parameters
+#' @importFrom hydroPSO hydroPSO
+#' @importFrom DEoptim DEoptim
 #' @export
-run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, control=NULL, ...)
+run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
 {
   nam <- read_nam(paste0(dir,'/',file))
   pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
@@ -22,10 +24,14 @@ run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
     par2 <- par
     par <- pvl$Parval
     par[which(include)] <- par2
-  } 
+  }
+  if(is.infinite(lower)) lower <- rep(lower,pvl$NP)
+  if(is.infinite(upper)) upper <- rep(upper,pvl$NP)
   if(!is.null(trans))
   {
     par[which(trans=='log')] <- log(par[which(trans=='log')])
+    lower[which(trans=='log')] <- log(lower[which(trans=='log')])
+    upper[which(trans=='log')] <- log(upper[which(trans=='log')])
     if('parscale' %in% names(control))
     {
       control$parscale[which(trans[include]=='log')] <- log(control$parscale[which(trans[include]=='log')])
@@ -42,12 +48,30 @@ run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
     cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'Parval=',paste(format(pvl$Parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
     return(rmse)
   }
-  if(!is.null(control)) opt <- optim(par[which(include)],optim_modflow, control=control, ...)
-  if(is.null(control)) opt <- optim(par[which(include)],optim_modflow, ...)
-  par2 <- opt$par
-  opt$par <- par
-  opt$par[which(include)] <- par2
-  if(!is.null(trans)) opt$par[which(trans=='log')] <- exp(opt$par[which(trans=='log')])
+  if(method %in% c('Nelder-Mead','BFGS','CG','SANN','Brent'))
+  {
+    opt <- optim(par[which(include)],optim_modflow, method=method, control=control, ...)
+#     if(!is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, control=control, ...)
+#     if(is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, ...)
+  } else if(method=='L-BGFS-B')
+  {
+    opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower[which(include)], upper=upper[which(include)], control=control, ...)
+  } else if(method %in% c('spso2011','spso2007','ipso','fips','wfips','canonical'))
+  {
+    opt <- hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower,upper=upper,control=control, ...)
+  } else if(method=='DEoptim')
+  {
+    opt <- DEoptim(optim_modflow,lower=lower,upper=upper, control=control, ...)
+  } else {
+    stop(paste('Method',method,'is not supported. Please provide one of the optim, hydroPSO or DEoptim methods.'))
+  }
+  if(method!='DEoptim') # make this part compatible with DEoptim as well!
+  {
+    par2 <- opt$par
+    opt$par <- par
+    opt$par[which(include)] <- par2
+    if(!is.null(trans)) opt$par[which(trans=='log')] <- exp(opt$par[which(trans=='log')])
+  }
   opt$included <- include
   return(opt)
 }
