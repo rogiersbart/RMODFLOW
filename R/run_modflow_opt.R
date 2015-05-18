@@ -58,10 +58,17 @@ run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
     opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower[which(include)], upper=upper[which(include)], control=control, ...)
   } else if(method %in% c('spso2011','spso2007','ipso','fips','wfips','canonical'))
   {
+<<<<<<< HEAD
     opt <- hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower[which(include)],upper=upper[which(include)],control=control, ...)
   } else if(method=='DEoptim')
   {
     opt <- DEoptim(optim_modflow,lower=lower[which(include)],upper=upper[which(include)], control=control, ...)
+=======
+    opt <- hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower,upper=upper,control=control, ...)
+  } else if(method=='DEoptim')
+  {
+    opt <- DEoptim(optim_modflow,lower=lower,upper=upper, control=control, ...)
+>>>>>>> 3be1694e672761eafc3a041e6dcd0d61c20588a6
   } else {
     stop(paste('Method',method,'is not supported. Please provide one of the optim, hydroPSO or DEoptim methods.'))
   }
