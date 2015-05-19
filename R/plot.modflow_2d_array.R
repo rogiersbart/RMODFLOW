@@ -21,8 +21,8 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
     y <- sum(dis$DELC) - (cumsum(dis$DELC)-dis$DELC/2)
     z <- t(height)*height.exageration
     if(!add) open3d()
-    colorlut <- color.palette(nlevels) # height color lookup table
-    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=nlevels+1),seq(0.5,nlevels+0.5,length=nlevels+1),xout=c(t(modflow_2d_array)),rule=2)$y) ] # assign colors to heights for each point
+    colorlut <- colorRampPalette(color.palette(nlevels))(25) # height color lookup table
+    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(modflow_2d_array)),rule=2)$y) ] # assign colors to heights for each point
     alpha <- rep(1,length(col))
     alpha[which(c(t(mask))==0)] <- 0
     if(type=='fill') surface3d(x,y,z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
