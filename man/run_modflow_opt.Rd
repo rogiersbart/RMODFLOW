@@ -3,14 +3,12 @@
 \alias{run_modflow_opt}
 \title{Run a MODFLOW model optimization, based on the parameter value file}
 \usage{
-run_modflow_opt(file, dir = getwd(), modflow_executable = "mf2005",
-  par = NULL, include = NULL, trans = NULL, method = "Nelder-Mead",
-  lower = -Inf, upper = Inf, control = list(), ...)
+run_modflow_opt(file, modflow_executable = "mf2005", par = NULL,
+  include = NULL, trans = NULL, method = "Nelder-Mead", lower = -Inf,
+  upper = Inf, control = list(), ...)
 }
 \arguments{
-\item{file}{Name file; typically "*.nam"}
-
-\item{dir}{Directory of the namefile}
+\item{file}{Path to name file; typically "*.nam"}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
 
@@ -24,6 +22,6 @@ run_modflow_opt(file, dir = getwd(), modflow_executable = "mf2005",
 \code{optim} results with the full list of parameters
 }
 \description{
-\code{run_modflow_optim} runs a MODFLOW optimization.
+\code{run_modflow_opt} runs a MODFLOW optimization.
 }
 

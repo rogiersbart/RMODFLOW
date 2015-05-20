@@ -2,12 +2,13 @@
 #' 
 #' \code{run_modflow} runs a MODFLOW model.
 #' 
-#' @param file Name file; typically "*.nam"
-#' @param dir Directory of the namefile
+#' @param file Path to name file; typically "*.nam"
 #' @param modflow_executable name of the MODFLOW executable to use
 #' @export
-run_modflow <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL)
+run_modflow <- function(file,modflow_executable='mf2005',par=NULL)
 {
+  dir <- dirname(file)
+  file <- basename(file)
   if(!is.null(par))
   {
     nam <- read_nam(paste0(dir,'/',file))

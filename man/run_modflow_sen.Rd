@@ -3,13 +3,11 @@
 \alias{run_modflow_sen}
 \title{Run a MODFLOW model sensitivity analysis, based on the parameter value file}
 \usage{
-run_modflow_sen(file, dir = getwd(), modflow_executable = "mf2005",
-  par = NULL, include = NULL)
+run_modflow_sen(file, modflow_executable = "mf2005", par = NULL,
+  include = NULL)
 }
 \arguments{
-\item{file}{Name file; typically "*.nam"}
-
-\item{dir}{Directory of the namefile}
+\item{file}{Path to name file; typically "*.nam"}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
 
@@ -21,6 +19,6 @@ run_modflow_sen(file, dir = getwd(), modflow_executable = "mf2005",
 sensitivity analysis results
 }
 \description{
-\code{run_modflow_sens} performs a MODFLOW model sensitivity analysis.
+\code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
 }
 

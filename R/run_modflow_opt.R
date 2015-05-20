@@ -1,9 +1,8 @@
 #' Run a MODFLOW model optimization, based on the parameter value file
 #' 
-#' \code{run_modflow_optim} runs a MODFLOW optimization.
+#' \code{run_modflow_opt} runs a MODFLOW optimization.
 #' 
-#' @param file Name file; typically "*.nam"
-#' @param dir Directory of the namefile
+#' @param file Path to name file; typically "*.nam"
 #' @param modflow_executable name of the MODFLOW executable to use
 #' @param par initial parameter values (for all or only included parameters); parameter value file values are used if par is not provided
 #' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
@@ -12,8 +11,10 @@
 #' @importFrom hydroPSO hydroPSO
 #' @importFrom DEoptim DEoptim
 #' @export
-run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
+run_modflow_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
 {
+  dir <- dirname(file)
+  file <- basename(file)
   nam <- read_nam(paste0(dir,'/',file))
   pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
   hob <- read_hob(paste0(dir,'/',nam$Fname[which(nam$Ftype=='HOB')]))
@@ -43,7 +44,7 @@ run_modflow_opt <- function(file,dir=getwd(),modflow_executable='mf2005',par=NUL
     pvl$Parval[which(include)] <- par_include
     if(!is.null(trans)) pvl$Parval[which(trans=='log')] <- exp(pvl$Parval[which(trans=='log')])
     write_pvl(pvl, file=paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
-    run_modflow(file,dir,modflow_executable)
+    run_modflow(paste0(dir,'/',file),modflow_executable)
     rmse <- performance(read_hpr(paste0(dir,'/',nam$Fname[which(nam$Nunit==hob$IUHOBSV)])))$rmse
     cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'Parval=',paste(format(pvl$Parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
     return(rmse)

@@ -3,13 +3,10 @@
 \alias{run_modflow}
 \title{Run a MODFLOW model}
 \usage{
-run_modflow(file, dir = getwd(), modflow_executable = "mf2005",
-  par = NULL)
+run_modflow(file, modflow_executable = "mf2005", par = NULL)
 }
 \arguments{
-\item{file}{Name file; typically "*.nam"}
-
-\item{dir}{Directory of the namefile}
+\item{file}{Path to name file; typically "*.nam"}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
 }
