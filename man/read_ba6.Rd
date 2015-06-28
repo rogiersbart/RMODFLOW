@@ -7,10 +7,12 @@ read_ba6(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
   ".dis", sep = "")))
 }
 \arguments{
-\item{file}{Filename; typically "*.ba6"}
+\item{file}{filename; typically '*.ba6'}
+
+\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
 }
 \value{
-Object of class ba6
+object of class ba6
 }
 \description{
 \code{read_ba6} reads in a MODFLOW basic file and returns it as an \code{\link{RMODFLOW}} ba6 object.

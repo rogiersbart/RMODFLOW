@@ -6,10 +6,10 @@
 read_nam(file)
 }
 \arguments{
-\item{file}{Filename; typically "*.nam"}
+\item{file}{filename; typically '*.nam'}
 }
 \value{
-Object of class nam
+object of class nam
 }
 \description{
 \code{read_nam} reads in a MODFLOW name file and returns it as an \code{\link{RMODFLOW}} nam object.

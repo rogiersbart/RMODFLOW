@@ -6,14 +6,12 @@
 convert_bud_to_darcy(bud, dis)
 }
 \arguments{
+\item{bud}{bud object}
+
 \item{dis}{dis object}
-
-\item{values}{Vector of parameter values, corresponding to HGUNAM}
-
-\item{huf}{huf object}
 }
 \value{
-object with four 3d arrays: right, front, lower and magnitude
+list of four 3d arrays: right, front, lower and magnitude
 }
 \description{
 Convert bud object fluxes to darcy velocities

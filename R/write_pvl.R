@@ -1,5 +1,8 @@
-#' Write a MODFLOW file
+#' Write a MODFLOW parameter value file
 #' 
+#' @param pvl an \code{\link{RMODFLOW}} pvl object
+#' @param file filename to write to; typically '*.pvl'
+#' @return \code{NULL}
 #' @export
 write_pvl <- function(pvl, file)
 {

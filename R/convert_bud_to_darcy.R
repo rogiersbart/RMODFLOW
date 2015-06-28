@@ -1,9 +1,8 @@
 #' Convert bud object fluxes to darcy velocities
 #' 
-#' @param values Vector of parameter values, corresponding to HGUNAM
-#' @param huf huf object
+#' @param bud bud object
 #' @param dis dis object
-#' @return object with four 3d arrays: right, front, lower and magnitude
+#' @return list of four 3d arrays: right, front, lower and magnitude
 #' @export
 convert_bud_to_darcy <- function(bud,dis)
 {

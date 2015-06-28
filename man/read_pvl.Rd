@@ -6,12 +6,12 @@
 read_pvl(file, read_all = F)
 }
 \arguments{
-\item{file}{Filename; typically "*.pvl"}
+\item{file}{filename; typically '*.pvl'}
 
-\item{read_all}{A logical value indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).}
+\item{read_all}{logical, indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).}
 }
 \value{
-Object of class pvl
+object of class pvl
 }
 \description{
 \code{read_pvl} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pvl object.

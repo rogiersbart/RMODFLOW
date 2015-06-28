@@ -2,11 +2,16 @@
 #' 
 #' \code{run_modflow_opt} runs a MODFLOW optimization.
 #' 
-#' @param file Path to name file; typically "*.nam"
+#' @param file path to name file; typically '*.nam'
 #' @param modflow_executable name of the MODFLOW executable to use
-#' @param par initial parameter values (for all or only included parameters); parameter value file values are used if par is not provided
+#' @param par initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided
 #' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
-#' @param ... further arguments provided to \code{optim}
+#' @param trans vector of transformations; currently only 'log' is supported
+#' @param method optimization method: 'Nelder-Mead','BFGS','CG','SANN','Brent','L-BGFS-B','spso2011','spso2007','ipso','fips','wfips','canonical' or 'DEoptim'
+#' @param lower lower parameter bounds
+#' @param upper upper parameter bounds
+#' @param control list of control arguments
+#' @param ... further arguments provided to \code{optim}, \code{hydroPSO} or \code{DEoptim}
 #' @return \code{optim} results with the full list of parameters
 #' @importFrom hydroPSO hydroPSO
 #' @importFrom DEoptim DEoptim

@@ -1,10 +1,10 @@
 #' Read a MODFLOW hydrogeologic unit flow file
 #' 
-#' \code{read_ba6} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
+#' \code{read_huf} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
 #' 
-#' @param file Filename; typically *.huf
-#' @param dis Corresponding discretization file; typically *.dis
-#' @return Object of class huf
+#' @param file filename; typically '*.huf'
+#' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
+#' @return object of class huf
 #' @importFrom readr read_lines
 #' @export
 read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))

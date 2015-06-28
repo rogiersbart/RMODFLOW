@@ -6,10 +6,10 @@
 read_hob(file)
 }
 \arguments{
-\item{file}{Filename; typically "*.hob"}
+\item{file}{filename; typically '*.hob'}
 }
 \value{
-Object of class hob
+object of class hob
 }
 \description{
 \code{read_hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.

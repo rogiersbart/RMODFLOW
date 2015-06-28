@@ -9,27 +9,33 @@
   c(1:dim(modflow_3d_array)[1]), i), ifelse0(is.null(j),
   c(1:dim(modflow_3d_array)[2]), j), ifelse0(is.null(k),
   c(1:dim(modflow_3d_array)[3]), k)], finite = TRUE),
-  color.palette = rev_rainbow, nlevels = 7, ...)
+  colour_palette = rev_rainbow, nlevels = 7, ...)
 }
 \arguments{
-\item{modflow_3d_array}{An object of class modflow_3d_array}
+\item{modflow_3d_array}{an object of class modflow_3d_array}
 
-\item{k}{The number of the layer to plot}
+\item{i}{row number to plot}
 
-\item{mask}{A 3D ibound array with 1 or TRUE indicating active cells, and 0 or F indicating inactive cells}
+\item{j}{column number to plot}
 
-\item{zlim}{}
+\item{k}{layer number to plot}
 
-\item{color.palette}{A color palette for imaging the parameter values}
+\item{dis}{discretization file object}
 
-\item{nlevels}{}
+\item{ba6}{basic file object; optional}
 
-\item{levels}{}
+\item{mask}{a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if ba6 is provided, ba6$IBOUND}
 
-\item{main}{}
+\item{zlim}{vector of minimum and maximum value for the colour scale}
+
+\item{colour_palette}{a colour palette for imaging the array values}
+
+\item{nlevels}{number of levels for the colour scale; defaults to 7}
+
+\item{...}{parameters provided to plot.modflow_2d_array}
 }
 \value{
-None
+ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
 \code{plot.modflow_3d_array} plots a 2D section through a MODFLOW 3D array.

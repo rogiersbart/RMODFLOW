@@ -8,15 +8,25 @@ run_modflow_opt(file, modflow_executable = "mf2005", par = NULL,
   upper = Inf, control = list(), ...)
 }
 \arguments{
-\item{file}{Path to name file; typically "*.nam"}
+\item{file}{path to name file; typically '*.nam'}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
 
-\item{par}{initial parameter values (for all or only included parameters); parameter value file values are used if par is not provided}
+\item{par}{initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided}
 
 \item{include}{logical vector indicating which parameters in the parameter value file to include in the optimization}
 
-\item{...}{further arguments provided to \code{optim}}
+\item{trans}{vector of transformations; currently only 'log' is supported}
+
+\item{method}{optimization method: 'Nelder-Mead','BFGS','CG','SANN','Brent','L-BGFS-B','spso2011','spso2007','ipso','fips','wfips','canonical' or 'DEoptim'}
+
+\item{lower}{lower parameter bounds}
+
+\item{upper}{upper parameter bounds}
+
+\item{control}{list of control arguments}
+
+\item{...}{further arguments provided to \code{optim}, \code{hydroPSO} or \code{DEoptim}}
 }
 \value{
 \code{optim} results with the full list of parameters

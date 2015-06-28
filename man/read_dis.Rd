@@ -6,10 +6,10 @@
 read_dis(file)
 }
 \arguments{
-\item{file}{Filename; typically *.dis}
+\item{file}{filename; typically '*.dis'}
 }
 \value{
-Object of class dis
+object of class dis
 }
 \description{
 \code{read_dis} reads in a MODFLOW discretization file and returns it as an \code{\link{RMODFLOW}} dis object.

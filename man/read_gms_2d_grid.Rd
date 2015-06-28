@@ -6,12 +6,12 @@
 read_gms_2d_grid(file)
 }
 \arguments{
-\item{file}{Filename}
+\item{file}{filename}
 }
 \value{
-Object of class gms2dgrid
+object of class gms2dgrid
 }
 \description{
-\code{read.gms2dgrid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
+\code{read_gms_2d_grid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
 }
 

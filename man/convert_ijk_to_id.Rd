@@ -5,6 +5,18 @@
 \usage{
 convert_ijk_to_id(i, j, k, dis)
 }
+\arguments{
+\item{i}{vector of row numbers}
+
+\item{j}{vector of column numbers}
+
+\item{k}{vector of layer numbers}
+
+\item{dis}{a discretization file object}
+}
+\value{
+cell ids, providing the place of the cell in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
+}
 \description{
 Convert ijk to id
 }

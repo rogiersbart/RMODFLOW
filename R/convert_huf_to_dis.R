@@ -1,12 +1,14 @@
 #' Convert a parameter defined on the HUF grid to the numerical grid
 #' 
-#' @param values Vector of parameter values, corresponding to HGUNAM
+#' @param values vector of parameter values, in the order of HGUNAM
 #' @param huf huf object
 #' @param dis dis object
+#' @param mask masking 3d array, typically the IBOUND array, to speed up grid conversion; defaults to including all cells
+#' @param type type of averaging that should be performed; either arithmetic (default), harmonic or geometric
 #' @return 3d array
 #' @export
 #' @import RTOOLZ
-convert_huf_to_dis <- function(values,huf,dis,ibound,type='arithmetic')
+convert_huf_to_dis <- function(values,huf,dis,mask=dis$TOP/dis$TOP,type='arithmetic')
 {
   num_grid_array <- dis$BOTM*NA
   huf$BOTM <- huf$THCK*NA
@@ -20,7 +22,7 @@ convert_huf_to_dis <- function(values,huf,dis,ibound,type='arithmetic')
   i <- rep(1:dis$NROW,dis$NCOL*dis$NLAY)
   j <- rep(rep(1:dis$NCOL,each=dis$NROW),dis$NLAY)
   k <- rep(1:dis$NLAY,each=dis$NROW*dis$NCOL)
-  num_grid_array[which(ibound==0)] <- 0
+  num_grid_array[which(mask==0)] <- 0
   get_weighted_mean <- function(cell)
   {
         iCell <- i[cell]
@@ -34,8 +36,8 @@ convert_huf_to_dis <- function(values,huf,dis,ibound,type='arithmetic')
         if(type=='harmonic') return(weighted.harmean(values,thck))
         if(type=='geometric') return(weighted.geomean(values,thck))
   }
-  weighted_means <- lapply(which(ibound!=0),get_weighted_mean)
-  num_grid_array[which(ibound!=0)] <- weighted_means
+  weighted_means <- lapply(which(mask!=0),get_weighted_mean)
+  num_grid_array[which(mask!=0)] <- weighted_means
   num_grid_array <- array(num_grid_array,dim=c(dis$NROW,dis$NCOL,dis$NLAY))
-  return(num_grid_array)
+  return(as.modflow_3d_array(num_grid_array))
 }

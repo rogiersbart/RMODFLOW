@@ -6,12 +6,12 @@
 read_prj(file)
 }
 \arguments{
-\item{file}{Filename; typically *.prj}
+\item{file}{filename; typically '*.prj'}
 }
 \value{
-Object of class prj
+object of class prj
 }
 \description{
-\code{read.prj} reads in projection file and returns it as a prj object.
+\code{read_prj} reads in projection file and returns it as a prj object.
 }
 

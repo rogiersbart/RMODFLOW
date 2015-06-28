@@ -10,10 +10,12 @@ read_kdep(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
 \arguments{
 \item{file}{Filename; typically *.kdep}
 
-\item{dis}{Corresponding discretization file; typically *.dis}
+\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{huf}{hydrogeologic unit file object; defaults to that with the same filename but with extension '.huf'}
 }
 \value{
-Object of class kdep
+object of class kdep
 }
 \description{
 \code{read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{\link{RMODFLOW}} kdep object.

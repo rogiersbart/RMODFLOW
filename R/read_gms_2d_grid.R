@@ -1,9 +1,9 @@
 #' Read a GMS 2D grid file
 #' 
-#' \code{read.gms2dgrid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
+#' \code{read_gms_2d_grid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
 #' 
-#' @param file Filename
-#' @return Object of class gms2dgrid
+#' @param file filename
+#' @return object of class gms2dgrid
 #' @importFrom readr read_lines
 #' @export
 read_gms_2d_grid <- function(file)

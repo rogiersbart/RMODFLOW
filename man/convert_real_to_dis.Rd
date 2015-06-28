@@ -5,7 +5,24 @@
 \usage{
 convert_real_to_dis(x, y, prj, z = NULL, dis = NULL)
 }
+\arguments{
+\item{x}{real world x coordinate}
+
+\item{y}{real world y coordinate}
+
+\item{prj}{prj object}
+
+\item{z}{real world z coordinate; optional}
+
+\item{dis}{dis object; optional}
+}
+\value{
+data frame with x, y, z, i, j, k, roff, coff and loff modflow coordinates
+}
 \description{
 Convert real world coordinates to modflow coordinates
+}
+\details{
+If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned.
 }
 

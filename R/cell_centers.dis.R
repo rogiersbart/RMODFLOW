@@ -1,6 +1,7 @@
-#' Get cell center z coordinates from a dis file
+#' Get cell center z coordinates from a dis object
 #' 
-#' @return \code{NULL}
+#' @param dis dis object
+#' @return 3d array with cell center z coordinates
 #'
 #' @rdname cell_centers
 #' @method cell_centers dis

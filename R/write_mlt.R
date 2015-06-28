@@ -1,5 +1,9 @@
-#' Write a MODFLOW file
+#' Write a MODFLOW multiplier file
 #' 
+#' @param mlt an \code{\link{RMODFLOW}} mlt object
+#' @param file filename to write to; typically '*.mlt'
+#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @return \code{NULL}
 #' @export
 write_mlt <- function(mlt, file, IPRN=-1)
 {

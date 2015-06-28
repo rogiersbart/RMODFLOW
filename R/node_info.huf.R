@@ -1,5 +1,8 @@
 #' Get information from a huf object at a certain grid node
 #' 
+#' @param huf a hydrogeologic unit file object
+#' @param i row number
+#' @param j column number
 #' @return \code{NULL}
 #'
 #' @rdname node_info

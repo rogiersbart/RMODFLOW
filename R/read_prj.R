@@ -1,9 +1,9 @@
 #' Read a projection file
 #' 
-#' \code{read.prj} reads in projection file and returns it as a prj object.
+#' \code{read_prj} reads in projection file and returns it as a prj object.
 #' 
-#' @param file Filename; typically *.prj
-#' @return Object of class prj
+#' @param file filename; typically '*.prj'
+#' @return object of class prj
 #' @importFrom readr read_lines
 #' @export
 read_prj <- function(file)

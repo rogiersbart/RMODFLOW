@@ -2,18 +2,30 @@
 \name{cell_centers}
 \alias{cell_centers}
 \alias{cell_centers.dis}
+\alias{cell_centers.huf}
 \title{Generic function to get cell center z coordinates}
 \usage{
 cell_centers(...)
 
 \method{cell_centers}{dis}(dis)
+
+\method{cell_centers}{huf}(huf)
+}
+\arguments{
+\item{dis}{dis object}
+
+\item{huf}{huf object}
 }
 \value{
-\code{NULL}
+3d array with cell center z coordinates
+
+3d array with cell center z coordinates
 }
 \description{
 Generic function to get cell center z coordinates
 
-Get cell center z coordinates from a dis file
+Get cell center z coordinates from a dis object
+
+Get cell center z coordinates from a huf object
 }
 

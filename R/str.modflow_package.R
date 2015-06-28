@@ -1,6 +1,8 @@
 #' Structure of modflow package object
 #' 
-#' @return \code{NULL}
+#' @param modflow_package RMODFLOW modflow package object
+#' @details
+#' Provides the object comment attribute additional to the standard \code{str} output.
 #'
 #' @rdname str
 #' @method str modflow_package

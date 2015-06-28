@@ -6,7 +6,30 @@
 convert_dis_to_real(x = NULL, y = NULL, z = NULL, i = NULL, j = NULL,
   k = NULL, prj, dis = NULL)
 }
+\arguments{
+\item{x}{modflow x coordinate}
+
+\item{y}{modflow y coordinate}
+
+\item{z}{modflow z coordinate}
+
+\item{i}{modflow row number}
+
+\item{j}{modflow column number}
+
+\item{k}{modflow layer number}
+
+\item{prj}{prj object}
+
+\item{dis}{dis object}
+}
+\value{
+data frame with real world x and y coordinates
+}
 \description{
 Convert modflow coordinates to real world coordinates
+}
+\details{
+Provide either xyz or ijk
 }
 

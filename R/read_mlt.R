@@ -2,8 +2,9 @@
 #' 
 #' \code{read_mlt} reads in a MODFLOW multiplier file and returns it as an \code{\link{RMODFLOW}} mlt object.
 #' 
-#' @param file Filename; typically "*.mlt"
-#' @return Object of class ba6
+#' @param file filename; typically '*.mlt'
+#' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
+#' @return object of class mlt
 #' @importFrom readr read_lines
 #' @export
 read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))

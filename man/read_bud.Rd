@@ -6,10 +6,12 @@
 read_bud(file, binary = TRUE)
 }
 \arguments{
-\item{file}{Filename; typically "Budget.out"}
+\item{file}{filename; typically 'Budget.out'}
+
+\item{binary}{logical; is source file binary?}
 }
 \value{
-Object of class bud
+object of class bud
 }
 \description{
 \code{read_bud} reads in a MODFLOW budget file

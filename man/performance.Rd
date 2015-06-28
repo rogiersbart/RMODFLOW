@@ -6,15 +6,17 @@
 \usage{
 performance(...)
 
-\method{performance}{hpr}(hpr, savePNG = F, file = NULL, residuals = F,
-  doPlot = T)
+\method{performance}{hpr}(hpr)
+}
+\arguments{
+\item{hpr}{head predictions file object}
 }
 \value{
-\code{NULL}
+performance measures
 }
 \description{
 Generic function to get model performance measures
 
-Generic function to get model performance measures
+Get model performance measures from a hpr object
 }
 

@@ -6,16 +6,14 @@
 write_ba6(ba6, file, IPRN = -1)
 }
 \arguments{
-\item{ba6}{An \code{\link{RMODFLOW}} ba6 object}
+\item{ba6}{an \code{\link{RMODFLOW}} ba6 object}
 
-\item{file}{File to write to; typically "*.ba6"}
+\item{file}{filename to write to; typically '*.ba6'}
 
-\item{IPRN}{Needed for the format code.}
-
-\item{info}{Additional information}
+\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
-None
+\code{NULL}
 }
 \description{
 \code{write_ba6} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} ba6 object.

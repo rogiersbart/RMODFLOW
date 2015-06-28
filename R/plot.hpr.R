@@ -1,5 +1,7 @@
 #' Plot a MODFLOW head predictions file
 #' 
+#' @param hpr head predictions file object
+#' @param type plot type: 'scatter' or 'residual'
 #' @method plot hpr
 #' @export
 plot.hpr <- function(hpr,type='scatter')

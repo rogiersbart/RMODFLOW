@@ -5,10 +5,13 @@
 \usage{
 \method{str}{modflow_package}(modflow_package)
 }
-\value{
-\code{NULL}
+\arguments{
+\item{modflow_package}{RMODFLOW modflow package object}
 }
 \description{
 Structure of modflow package object
+}
+\details{
+Provides the object comment attribute additional to the standard \code{str} output.
 }
 

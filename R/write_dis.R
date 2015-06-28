@@ -1,5 +1,9 @@
-#' Write a MODFLOW file
+#' Write a MODFLOW discretization file
 #' 
+#' @param dis an \code{\link{RMODFLOW}} dis object
+#' @param file filename to write to; typically '*.dis'
+#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @return \code{NULL}
 #' @export
 write_dis <- function(dis, file, IPRN=-1)
 {

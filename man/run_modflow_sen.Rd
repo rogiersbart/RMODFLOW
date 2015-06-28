@@ -7,13 +7,13 @@ run_modflow_sen(file, modflow_executable = "mf2005", par = NULL,
   include = NULL)
 }
 \arguments{
-\item{file}{Path to name file; typically "*.nam"}
+\item{file}{path to name file; typically '*.nam'}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
 
-\item{par}{initial parameter values (for all or only included parameters); parameter value file values are used if par is not provided}
+\item{par}{central parameter values (for all or only included parameters); parameter value file values are used if par is not provided}
 
-\item{include}{logical vector indicating which parameters in the parameter value file to include in the optimization}
+\item{include}{logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis}
 }
 \value{
 sensitivity analysis results

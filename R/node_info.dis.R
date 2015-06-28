@@ -1,5 +1,8 @@
 #' Get information from a dis object at a certain grid node
 #' 
+#' @param dis a discretization file object
+#' @param i row number
+#' @param j column number
 #' @return \code{NULL}
 #'
 #' @rdname node_info

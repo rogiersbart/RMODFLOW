@@ -2,10 +2,10 @@
 #' 
 #' \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
 #' 
-#' @param file Path to name file; typically "*.nam"
+#' @param file path to name file; typically '*.nam'
 #' @param modflow_executable name of the MODFLOW executable to use
-#' @param par initial parameter values (for all or only included parameters); parameter value file values are used if par is not provided
-#' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
+#' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided
+#' @param include logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis
 #' @return sensitivity analysis results
 #' @export
 run_modflow_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)

@@ -1,5 +1,6 @@
-#' Add class to object
+#' Add modflow_2d_array class to object
 #' 
+#' @param obj object to add class to
 #' @export
 as.modflow_2d_array <- function(obj)
 {

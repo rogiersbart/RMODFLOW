@@ -5,6 +5,11 @@
 \usage{
 \method{plot}{hpr}(hpr, type = "scatter")
 }
+\arguments{
+\item{hpr}{head predictions file object}
+
+\item{type}{plot type: 'scatter' or 'residual'}
+}
 \description{
 Plot a MODFLOW head predictions file
 }

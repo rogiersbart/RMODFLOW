@@ -8,10 +8,16 @@ read_hed(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
   4), ".ba6", sep = "")), convert_HNOFLO_to_NA = TRUE)
 }
 \arguments{
-\item{file}{Filename; typically "*.hed"}
+\item{file}{filename; typically '*.hed'}
+
+\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{ba6}{basic file object; defaults to that with the same filename but with extension '.ba6'}
+
+\item{convert_HNOFLO_to_NA}{logical; should HNOFLO values be converted to NA?}
 }
 \value{
-Object of class hed
+object of class hed
 }
 \description{
 \code{read_hed} reads in a MODFLOW head file and returns it as an \code{\link{RMODFLOW}} hed object.

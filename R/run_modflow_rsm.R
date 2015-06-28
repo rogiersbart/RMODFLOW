@@ -2,10 +2,14 @@
 #' 
 #' \code{run_modflow_rsm} runs a MODFLOW response surface mapping.
 #' 
-#' @param file Path to name file; typically "*.nam"
+#' @param file path to name file; typically '*.nam'
 #' @param modflow_executable name of the MODFLOW executable to use
-#' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided
+#' @param par central parameter values (for all or only included parameters); current parameter value file values are used if par is not provided
 #' @param include logical vector indicating which parameters in the parameter value file to include in the mapping
+#' @param trans vector of transformations; currently only 'log' is supported
+#' @param lower lower parameter bounds
+#' @param upper upper parameter bounds
+#' @param n number of intervals sampled for each parameter
 #' @return an rsm object with the full list of parameters and the response value
 #' @export
 run_modflow_rsm <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, lower, upper, n)

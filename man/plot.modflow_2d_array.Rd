@@ -5,30 +5,51 @@
 \usage{
 \method{plot}{modflow_2d_array}(modflow_2d_array, dis, ba6 = NULL,
   mask = ifelse0(is.null(ba6), modflow_2d_array * 0 + 1, ba6$IBOUND[, , 1]),
-  color.palette = rev_rainbow, zlim = range(modflow_2d_array, finite =
-  TRUE), levels = pretty(zlim, nlevels), nlevels = 7,
-  main = "MF ARRAY plot", type = "fill", add = FALSE, xOrigin = 0,
-  yOrigin = 0, height.exageration = 100, binwidth = round(diff(zlim)/20),
+  colour_palette = rev_rainbow, zlim = range(modflow_2d_array, finite =
+  TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type = "fill",
+  add = FALSE, height_exaggeration = 100, binwidth = round(diff(zlim)/20),
   label = TRUE, prj = NULL, target_CRS = NULL, alpha = 1,
   plot3d = FALSE, height = NULL)
 }
 \arguments{
-\item{modflow_2d_array}{An object of class modflow_2d_array, or a 2D matrix}
+\item{modflow_2d_array}{an object of class modflow_2d_array, or a 2D matrix}
 
-\item{mask}{An ibound array with 1 or TRUE indicating active cells, and 0 or F indicating inactive cells}
+\item{dis}{discretization file object}
 
-\item{color.palette}{A color palette for imaging the parameter values}
+\item{ba6}{basic file object; optional}
 
-\item{zlim}{}
+\item{mask}{a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if ba6 is provided, the first layer of ba6$IBOUND}
 
-\item{levels}{}
+\item{colour_palette}{a colour palette for imaging the array values}
 
-\item{nlevels}{}
+\item{zlim}{vector of minimum and maximum value for the colour scale}
 
-\item{main}{}
+\item{levels}{levels to indicate on the colour scale; defaults to nlevels pretty breakpoints}
+
+\item{nlevels}{number of levels for the colour scale; defaults to 7}
+
+\item{type}{plot type: 'fill' (default), 'grid' or 'contour'}
+
+\item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
+
+\item{height_exaggeration}{height exaggeration for 3D plot; optional}
+
+\item{binwidth}{binwidth for contour plot; defaults to 1/20 of zlim}
+
+\item{label}{logical; should labels be added to contour plot}
+
+\item{prj}{projection file object}
+
+\item{target_CRS}{coordinate reference system for the plot}
+
+\item{alpha}{transparency value; defaults to 1}
+
+\item{height}{2D array for specifying the 3D plot z coordinate}
+
+\item{plot3D}{logical; should a 3D plot be made}
 }
 \value{
-None
+ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
 \code{plot.modflow_2d_array} plots a MODFLOW 2D array.

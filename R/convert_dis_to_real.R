@@ -1,5 +1,15 @@
 #' Convert modflow coordinates to real world coordinates
 #' 
+#' @param x modflow x coordinate
+#' @param y modflow y coordinate
+#' @param z modflow z coordinate
+#' @param i modflow row number
+#' @param j modflow column number
+#' @param k modflow layer number
+#' @param prj prj object
+#' @param dis dis object
+#' @details Provide either xyz or ijk
+#' @return data frame with real world x and y coordinates
 #' @export
 convert_dis_to_real <- function(x=NULL,y=NULL,z=NULL,i=NULL,j=NULL,k=NULL,prj,dis=NULL)
 {

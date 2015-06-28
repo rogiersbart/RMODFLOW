@@ -1,5 +1,8 @@
-#' Write a MODFLOW file
+#' Write a MODFLOW head observations file
 #' 
+#' @param hob an \code{\link{RMODFLOW}} hob object
+#' @param file filename to write to; typically '*.hob'
+#' @return \code{NULL}
 #' @export
 write_hob <- function(hob, file)
 {

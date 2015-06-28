@@ -6,9 +6,11 @@
 run_modflow(file, modflow_executable = "mf2005", par = NULL)
 }
 \arguments{
-\item{file}{Path to name file; typically "*.nam"}
+\item{file}{path to name file; typically '*.nam'}
 
 \item{modflow_executable}{name of the MODFLOW executable to use}
+
+\item{par}{vector of parameter value file parameter values to run the model with}
 }
 \description{
 \code{run_modflow} runs a MODFLOW model.

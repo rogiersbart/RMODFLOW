@@ -2,11 +2,10 @@
 #' 
 #' \code{write_ba6} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} ba6 object.
 #' 
-#' @param ba6 An \code{\link{RMODFLOW}} ba6 object
-#' @param file File to write to; typically "*.ba6"
-#' @param info Additional information
-#' @param IPRN Needed for the format code.
-#' @return None
+#' @param ba6 an \code{\link{RMODFLOW}} ba6 object
+#' @param file filename to write to; typically '*.ba6'
+#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @return \code{NULL}
 #' @export
 write_ba6 <- function(ba6, file, IPRN=-1)
 {

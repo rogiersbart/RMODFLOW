@@ -6,10 +6,10 @@
 read_hpr(file)
 }
 \arguments{
-\item{file}{Filename; typically *.hpr}
+\item{file}{filename; typically '*.hpr'}
 }
 \value{
-Object of class hpr
+object of class hpr
 }
 \description{
 \code{read_hpr} reads in a MODFLOW head predictions file and returns it as an \code{\link{RMODFLOW}} hpr object.

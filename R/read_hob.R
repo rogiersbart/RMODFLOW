@@ -2,8 +2,8 @@
 #' 
 #' \code{read_hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.
 #' 
-#' @param file Filename; typically "*.hob"
-#' @return Object of class hob
+#' @param file filename; typically '*.hob'
+#' @return object of class hob
 #' @importFrom readr read_lines
 #' @export
 read_hob <- function(file)

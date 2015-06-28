@@ -1,6 +1,8 @@
 #' Summary of modflow package object
 #' 
-#' @return \code{NULL}
+#' @param modflow_package RMODFLOW modflow package object
+#' @details
+#' Provides the object comment attribute additional to the standard \code{summary} output.
 #'
 #' @rdname summary
 #' @method summary modflow_package

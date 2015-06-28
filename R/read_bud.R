@@ -2,8 +2,9 @@
 #' 
 #' \code{read_bud} reads in a MODFLOW budget file
 #' 
-#' @param file Filename; typically "Budget.out"
-#' @return Object of class bud
+#' @param file filename; typically 'Budget.out'
+#' @param binary logical; is source file binary?
+#' @return object of class bud
 #' @importFrom readr read_lines
 #' @export
 read_bud <- function(file,binary=TRUE)

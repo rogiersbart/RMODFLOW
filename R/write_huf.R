@@ -1,5 +1,9 @@
-#' Write a MODFLOW file
+#' Write a MODFLOW hydrogeologic unit flow file
 #' 
+#' @param huf an \code{\link{RMODFLOW}} huf object
+#' @param file filename to write to; typically '*.huf'
+#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @return \code{NULL}
 #' @export
 write_huf <- function(huf, file, IPRN=-1)
 {

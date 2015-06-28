@@ -1,5 +1,7 @@
 #' Plot a MODFLOW sensitivity analysis object
 #' 
+#' @param sen sensitivity analysis object
+#' @param plot type: 'css' or 'dss'
 #' @method plot sen
 #' @export
 plot.sen <- function(sen,type='css')

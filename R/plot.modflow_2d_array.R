@@ -2,26 +2,37 @@
 #' 
 #' \code{plot.modflow_2d_array} plots a MODFLOW 2D array.
 #' 
-#' @param modflow_2d_array An object of class modflow_2d_array, or a 2D matrix
-#' @param mask An ibound array with 1 or TRUE indicating active cells, and 0 or F indicating inactive cells
-#' @param color.palette A color palette for imaging the parameter values
-#' @param zlim
-#' @param levels
-#' @param nlevels
-#' @param main
-#' @return None
+#' @param modflow_2d_array an object of class modflow_2d_array, or a 2D matrix
+#' @param dis discretization file object
+#' @param ba6 basic file object; optional
+#' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if ba6 is provided, the first layer of ba6$IBOUND
+#' @param colour_palette a colour palette for imaging the array values
+#' @param zlim vector of minimum and maximum value for the colour scale
+#' @param levels levels to indicate on the colour scale; defaults to nlevels pretty breakpoints
+#' @param nlevels number of levels for the colour scale; defaults to 7
+#' @param type plot type: 'fill' (default), 'grid' or 'contour'
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
+#' @param height_exaggeration height exaggeration for 3D plot; optional
+#' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
+#' @param label logical; should labels be added to contour plot
+#' @param prj projection file object
+#' @param target_CRS coordinate reference system for the plot
+#' @param alpha transparency value; defaults to 1
+#' @param plot3D logical; should a 3D plot be made
+#' @param height 2D array for specifying the 3D plot z coordinate
+#' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot modflow_2d_array
 #' @export
 #' @import ggplot2 directlabels akima rgl RTOOLZ
-plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_2d_array*0+1,ba6$IBOUND[,,1]), color.palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, main='MF ARRAY plot', type='fill', add=FALSE,xOrigin=0,yOrigin=0,height.exageration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
+plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_2d_array*0+1,ba6$IBOUND[,,1]), colour_palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
 {
   if(plot3d)
   {
     x <- (cumsum(dis$DELR)-dis$DELR/2)
     y <- sum(dis$DELC) - (cumsum(dis$DELC)-dis$DELC/2)
-    z <- t(height)*height.exageration
+    z <- t(height)*height_exaggeration
     if(!add) open3d()
-    colorlut <- colorRampPalette(color.palette(nlevels))(25) # height color lookup table
+    colorlut <- colorRampPalette(colour_palette(nlevels))(25) # height color lookup table
     col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(modflow_2d_array)),rule=2)$y) ] # assign colors to heights for each point
     alpha <- rep(1,length(col))
     alpha[which(c(t(mask))==0)] <- 0
@@ -31,8 +42,6 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
   {
     xy <- expand.grid(cumsum(dis$DELR)-dis$DELR/2,sum(dis$DELC)-(cumsum(dis$DELC)-dis$DELC/2))
     names(xy) <- c('x','y')
-    xy$x <- xy$x + xOrigin
-    xy$y <- xy$y + yOrigin
     mask[which(mask==0)] <- NA
     
     if(type=='fill')
@@ -67,11 +76,11 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
       if(add)
       {
         return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha))# +
-          #scale_fill_gradientn(colours=color.palette(nlevels),limits=zlim)) # solve this issue!
+          #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
           geom_polygon(aes(fill=value, group=id),alpha=alpha) +
-          scale_fill_gradientn(colours=color.palette(nlevels),limits=zlim) +
+          scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
           coord_equal())
       }
     }
@@ -107,7 +116,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
       if(add)
       {
         return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,alpha=alpha,colour='black',fill=NA))# +
-        #scale_fill_gradientn(colours=color.palette(nlevels),limits=zlim)) # solve this issue!
+        #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                  geom_polygon(aes(group=id),alpha=alpha,colour='black',fill=NA) +

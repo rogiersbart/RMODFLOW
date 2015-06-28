@@ -1,9 +1,9 @@
-#' Write a projection file
+#' Write an RMODFLOW projection file
 #' 
 #' \code{write.prj} writes a projection file
 #' 
-#' @param prj prj object
-#' @param file Filename; typically *.prj
+#' @param prj an \code{\link{RMODFLOW}} prj object
+#' @param file filename to write to; typically '*.prj'
 #' @export
 write_prj <- function(prj,file)
 {

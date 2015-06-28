@@ -7,10 +7,12 @@ read_mlt(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
   ".dis", sep = "")))
 }
 \arguments{
-\item{file}{Filename; typically "*.mlt"}
+\item{file}{filename; typically '*.mlt'}
+
+\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
 }
 \value{
-Object of class ba6
+object of class mlt
 }
 \description{
 \code{read_mlt} reads in a MODFLOW multiplier file and returns it as an \code{\link{RMODFLOW}} mlt object.

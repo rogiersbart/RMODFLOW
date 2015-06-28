@@ -1,5 +1,13 @@
 #' Convert real world coordinates to modflow coordinates
 #' 
+#' @param x real world x coordinate
+#' @param y real world y coordinate
+#' @param prj prj object
+#' @param z real world z coordinate; optional
+#' @param dis dis object; optional
+#' @details
+#' If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned.
+#' @return data frame with x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @export
 convert_real_to_dis <- function(x,y,prj,z=NULL,dis=NULL)
 {

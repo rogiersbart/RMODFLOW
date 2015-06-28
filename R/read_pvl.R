@@ -2,9 +2,9 @@
 #' 
 #' \code{read_pvl} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pvl object.
 #' 
-#' @param file Filename; typically "*.pvl"
-#' @param read_all A logical value indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).
-#' @return Object of class pvl
+#' @param file filename; typically '*.pvl'
+#' @param read_all logical, indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).
+#' @return object of class pvl
 #' @importFrom readr read_lines
 #' @export
 read_pvl <- function(file, read_all=F)

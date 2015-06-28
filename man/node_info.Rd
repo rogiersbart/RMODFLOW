@@ -11,6 +11,19 @@ node_info(...)
 
 \method{node_info}{huf}(huf, i, j)
 }
+\arguments{
+\item{dis}{a discretization file object}
+
+\item{i}{row number}
+
+\item{j}{column number}
+
+\item{huf}{a hydrogeologic unit file object}
+
+\item{i}{row number}
+
+\item{j}{column number}
+}
 \value{
 \code{NULL}
 

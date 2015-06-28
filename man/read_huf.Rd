@@ -7,14 +7,14 @@ read_huf(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
   ".dis", sep = "")))
 }
 \arguments{
-\item{file}{Filename; typically *.huf}
+\item{file}{filename; typically '*.huf'}
 
-\item{dis}{Corresponding discretization file; typically *.dis}
+\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
 }
 \value{
-Object of class huf
+object of class huf
 }
 \description{
-\code{read_ba6} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
+\code{read_huf} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
 }
 

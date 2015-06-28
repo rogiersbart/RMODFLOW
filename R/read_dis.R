@@ -2,8 +2,8 @@
 #' 
 #' \code{read_dis} reads in a MODFLOW discretization file and returns it as an \code{\link{RMODFLOW}} dis object.
 #' 
-#' @param file Filename; typically *.dis
-#' @return Object of class dis
+#' @param file filename; typically '*.dis'
+#' @return object of class dis
 #' @importFrom readr read_lines
 #' @export
 read_dis <- function(file)

@@ -5,6 +5,11 @@
 \usage{
 \method{plot}{sen}(sen, type = "css")
 }
+\arguments{
+\item{sen}{sensitivity analysis object}
+
+\item{plot}{type: 'css' or 'dss'}
+}
 \description{
 Plot a MODFLOW sensitivity analysis object
 }

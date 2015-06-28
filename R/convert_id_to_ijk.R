@@ -2,7 +2,6 @@
 #' 
 #' @param id cell id, providing the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @param dis a discretisation file object
-#' 
 #' @export
 convert_id_to_ijk <- function(id,dis)
 {
