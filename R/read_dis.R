@@ -53,13 +53,16 @@ read_dis <- function(file)
     rm(dataSet6)
   
   # Data set 7
-    dataSet7 <- strsplit(dis.lines[1],' ')[[1]]
-    dis.lines <- dis.lines[-1]
-    dis$PERLEN <- as.numeric(dataSet7[1])
-    dis$NSTP <- as.numeric(dataSet7[2])
-    dis$TSMULT <- as.numeric(dataSet7[3])
-    dis$SSTR <- as.character(dataSet7[4])
-    rm(dataSet7)
+    dis$PERLEN <- dis$NSTP <- dis$TSMULT <- dis$SSTR <- rep(NA,dis$NPER)
+    for(i in 1:dis$NPER) {
+      dataSet7 <- strsplit(dis.lines[1],' ')[[1]]
+      dis.lines <- dis.lines[-1]
+      dis$PERLEN[i] <- as.numeric(dataSet7[1])
+      dis$NSTP[i] <- as.numeric(dataSet7[2])
+      dis$TSMULT[i] <- as.numeric(dataSet7[3])
+      dis$SSTR[i] <- as.character(dataSet7[4])
+      rm(dataSet7)
+    }
   
   comment(dis) <- comments
   class(dis) <- c('dis','modflow_package')

@@ -28,15 +28,21 @@ write_dis <- function(dis, file, IPRN=-1)
   
   # Data set 5
   cat(paste('INTERNAL 1.0 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-  write.table(dis$TOP, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
+  if(dim(dis$TOP)[1] == 1) {
+    cat(paste0(paste(dis$TOP, collapse=' '),'\n'), file=file, append=TRUE)
+  } else {
+    write.table(dis$TOP, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
+  }
   
   # Data set 6
   for(i in 1:dim(dis$BOTM)[3])
   {
     cat(paste('INTERNAL 1.0 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-    write.table(dis$BOTM[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
+    if(dim(dis$BOTM)[1] == 1) {
+      cat(paste0(paste(dis$BOTM[,,i], collapse=' '),'\n'), file=file, append=TRUE)
+    } else write.table(dis$BOTM[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
   }
   
   # Data set 7
-  cat(paste(dis$PERLEN,dis$NSTP,dis$TSMULT,dis$SSTR, '\n', sep=' '), file=file, append=TRUE)  
+    for(i in 1:dis$NPER) cat(paste(dis$PERLEN[i],dis$NSTP[i],dis$TSMULT[i],dis$SSTR[i], '\n', sep=' '), file=file, append=TRUE)  
 }
