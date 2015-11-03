@@ -27,9 +27,9 @@ read_kdep <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'
   # Data set 2
     if(kdep$IFKDEP > 0)
     {
-      dataSet2 <- int_get_modflow_array(kdep.lines,dis$NROW,dis$NCOL,1)
-      kdep.lines <- dataSet2$remaining.lines
-      kdep$RS <- dataSet2$mfarray
+      dataSet2 <- read_modflow_array(kdep.lines,dis$NROW,dis$NCOL,1)
+      kdep.lines <- dataSet2$remaining_lines
+      kdep$RS <- dataSet2$modflow_array
       rm(dataSet2)
     }
   

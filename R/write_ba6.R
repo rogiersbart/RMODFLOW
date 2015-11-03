@@ -22,34 +22,24 @@ write_ba6 <- function(ba6, file, IPRN=-1)
     if(ba6$PRINTTIME) options <- paste(options, 'PRINTTIME ',sep='')
     if(ba6$SHOWPROGRESS) options <- paste(options, 'SHOWPROGRESS ',sep='')
     if(ba6$STOPERROR) options <- paste(options,'SHOWPROGRESS ',ba6$STOPER,sep='')
-    cat(paste(options, '\n', sep=''), file=file, append=TRUE)
+    write_modflow_variables(options, file=file)
       
   # Data set 2
     if(ba6$XSECTION)
     {
-      cat(paste('INTERNAL 1 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-      write.table(ba6$IBOUND, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
+      write_modflow_array(ba6$IBOUND, file = file, IPRN = IPRN) # update after changing read_ba6!
     } else {
-      for(i in 1:dim(ba6$IBOUND)[3])
-      {
-        cat(paste('INTERNAL 1 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-        write.table(ba6$IBOUND[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
-      }
+      write_modflow_array(ba6$IBOUND, file = file, IPRN = IPRN)
     }
   
   # Data set 3
-    cat(paste(ba6$HNOFLO, '\n', sep=''), file=file, append=TRUE)
+    write_modflow_variables(ba6$HNOFLO, file=file)
   
   # Data set 4
     if(ba6$XSECTION)
     {
-      cat(paste('INTERNAL 1 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-      write.table(ba6$STRT, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
+      write_modflow_array(ba6$STRT, file = file, IPRN = IPRN) # update after changing read_ba6!
     } else {
-      for(i in 1:dim(ba6$STRT)[3])
-      {
-        cat(paste('INTERNAL 1 (free) ', IPRN, '\n', sep=''), file=file, append=TRUE)
-        write.table(ba6$STRT[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
-      }
+      write_modflow_array(ba6$STRT, file = file, IPRN = IPRN)
     }
 }

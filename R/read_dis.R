@@ -6,6 +6,7 @@
 #' @return object of class dis
 #' @importFrom readr read_lines
 #' @export
+#' @seealso \code{\link{write_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 read_dis <- function(file)
 {
   dis.lines <- read_lines(file)
@@ -41,15 +42,15 @@ read_dis <- function(file)
     dis.lines <- dis.lines[-1]
     
   # Data set 5
-    dataSet5 <- int_get_modflow_array(dis.lines,dis$NROW,dis$NCOL,1)
-    dis.lines <- dataSet5$remaining.lines
-    dis$TOP <- dataSet5$mfarray
+    dataSet5 <- read_modflow_array(dis.lines,dis$NROW,dis$NCOL,1)
+    dis.lines <- dataSet5$remaining_lines
+    dis$TOP <- dataSet5$modflow_array
     rm(dataSet5)
   
   # Data set 6
-    dataSet6 <- int_get_modflow_array(dis.lines,dis$NROW,dis$NCOL,dis$NLAY+sum(dis$LAYCBD))
-    dis.lines <- dataSet6$remaining.lines
-    dis$BOTM <- dataSet6$mfarray
+    dataSet6 <- read_modflow_array(dis.lines,dis$NROW,dis$NCOL,dis$NLAY+sum(dis$LAYCBD))
+    dis.lines <- dataSet6$remaining_lines
+    dis$BOTM <- dataSet6$modflow_array
     rm(dataSet6)
   
   # Data set 7

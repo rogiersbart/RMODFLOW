@@ -45,9 +45,9 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     }
   
   # Data set 5
-    dataSet5 <- int_get_modflow_array(huf.lines,dis$NROW,dis$NCOL,sum(which(huf$LAYWT!=0)))
-    huf.lines <- dataSet5$remaining.lines
-    huf$WETDRY <- dataSet5$mfarray
+    dataSet5 <- read_modflow_array(huf.lines,dis$NROW,dis$NCOL,sum(which(huf$LAYWT!=0)))
+    huf.lines <- dataSet5$remaining_lines
+    huf$WETDRY <- dataSet5$modflow_array
     rm(dataSet5)
   
   # Data set 6-8
@@ -58,10 +58,10 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     {
       huf$HGUNAM[i] <- split_line_words(huf.lines[1])[1]
       huf.lines <- huf.lines[-1]
-      dataSet <- int_get_modflow_array(huf.lines,dis$NROW,dis$NCOL,2)
-      huf.lines <- dataSet$remaining.lines
-      huf$TOP[,,i] <- dataSet$mfarray[,,1]
-      huf$THCK[,,i] <- dataSet$mfarray[,,2]
+      dataSet <- read_modflow_array(huf.lines,dis$NROW,dis$NCOL,2)
+      huf.lines <- dataSet$remaining_lines
+      huf$TOP[,,i] <- dataSet$modflow_array[,,1]
+      huf$THCK[,,i] <- dataSet$modflow_array[,,2]
       rm(dataSet)
     }
   

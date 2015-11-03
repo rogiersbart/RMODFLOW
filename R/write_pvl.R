@@ -12,11 +12,10 @@ write_pvl <- function(pvl, file)
     cat(paste('#', comment(pvl)), sep='\n', file=file, append=TRUE)
     
   # Data set 1
-    cat(paste(pvl$NP, '\n', sep=''), file=file, append=TRUE)
+    write_modflow_variables(pvl$NP, file=file)
   
   # Data set 2
-    for(i in 1:pvl$NP)
-    {
-      cat(paste(pvl$PARNAM[i], ' ', pvl$Parval[i],'\n', sep=''), file=file, append=TRUE)
+    for(i in 1:pvl$NP) {
+      write_modflow_variables(pvl$PARNAM[i], pvl$Parval[i], file=file)
     }  
 }

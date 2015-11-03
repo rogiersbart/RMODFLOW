@@ -28,9 +28,9 @@ read_ba6 <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     ba6.lines <- ba6.lines[-1]
     
   # Data set 2
-    dataSet2 <- int_get_modflow_array(ba6.lines,ifelse(ba6$XSECTION,dis$NLAY,dis$NROW),dis$NCOL,ifelse(ba6$XSECTION,1,dis$NLAY))
-    ba6.lines <- dataSet2$remaining.lines
-    ba6$IBOUND <- dataSet2$mfarray
+    dataSet2 <- read_modflow_array(ba6.lines,ifelse(ba6$XSECTION,dis$NLAY,dis$NROW),dis$NCOL,ifelse(ba6$XSECTION,1,dis$NLAY))
+    ba6.lines <- dataSet2$remaining_lines
+    ba6$IBOUND <- dataSet2$modflow_array
     rm(dataSet2)
   
   # Data set 3
@@ -38,9 +38,9 @@ read_ba6 <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     ba6.lines <- ba6.lines[-1]
     
   # Data set 4
-    dataSet4 <- int_get_modflow_array(ba6.lines,ifelse(ba6$XSECTION,dis$NLAY,dis$NROW),dis$NCOL,ifelse(ba6$XSECTION,1,dis$NLAY))
-    ba6.lines <- dataSet4$remaining.lines
-    ba6$STRT <- dataSet4$mfarray
+    dataSet4 <- read_modflow_array(ba6.lines,ifelse(ba6$XSECTION,dis$NLAY,dis$NROW),dis$NCOL,ifelse(ba6$XSECTION,1,dis$NLAY))
+    ba6.lines <- dataSet4$remaining_lines
+    ba6$STRT <- dataSet4$modflow_array
     rm(dataSet4)
   
   comment(ba6) <- comments

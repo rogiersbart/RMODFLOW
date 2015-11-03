@@ -26,9 +26,9 @@ read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'
     {
       mlt$MLTNAM[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
       mlt.lines <- mlt.lines[-1]
-      dataSet <- int_get_modflow_array(mlt.lines,dis$NROW,dis$NCOL,1)
-      mlt.lines <- dataSet$remaining.lines
-      mlt$RMLT[[i]] <- dataSet$mfarray
+      dataSet <- read_modflow_array(mlt.lines,dis$NROW,dis$NCOL,1)
+      mlt.lines <- dataSet$remaining_lines
+      mlt$RMLT[[i]] <- dataSet$modflow_array
       rm(dataSet)
     }
   

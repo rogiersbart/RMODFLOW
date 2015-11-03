@@ -19,4 +19,7 @@ write_dis(dis, file, IPRN = -1)
 \description{
 Write a MODFLOW discretization file
 }
+\seealso{
+\code{\link{read_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
+}
 
