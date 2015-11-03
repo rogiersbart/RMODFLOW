@@ -58,9 +58,11 @@ create_dis <- function(NLAY = 3,
   
   # Data set 5
     dis$TOP <- TOP
+    class(dis$TOP) <- 'modflow_2d_array'
   
   # Data set 6
     dis$BOTM <- BOTM
+    class(dis$BOTM) <- 'modflow_3d_array'
 
   # Data set 7
     dis$PERLEN <- PERLEN
