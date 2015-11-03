@@ -10,7 +10,8 @@
   c(1:dim(modflow_3d_array)[1]), i), ifelse0(is.null(j),
   c(1:dim(modflow_3d_array)[2]), j), ifelse0(is.null(k),
   c(1:dim(modflow_3d_array)[3]), k)], finite = TRUE),
-  colour_palette = rev_rainbow, nlevels = 7, ...)
+  colour_palette = rev_rainbow, nlevels = 7, type = "fill", add = FALSE,
+  ...)
 }
 \arguments{
 \item{modflow_3d_array}{an object of class modflow_3d_array}

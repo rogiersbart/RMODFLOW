@@ -16,14 +16,14 @@
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot modflow_3d_array
 #' @export
-plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_3d_array*0+1,ba6$IBOUND), zlim = range(modflow_3d_array[ifelse0(is.null(i),c(1:dim(modflow_3d_array)[1]),i),ifelse0(is.null(j),c(1:dim(modflow_3d_array)[2]),j),ifelse0(is.null(k),c(1:dim(modflow_3d_array)[3]),k)], finite=TRUE), colour_palette=rev_rainbow, nlevels = 7, ...)
+plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_3d_array*0+1,ba6$IBOUND), zlim = range(modflow_3d_array[ifelse0(is.null(i),c(1:dim(modflow_3d_array)[1]),i),ifelse0(is.null(j),c(1:dim(modflow_3d_array)[2]),j),ifelse0(is.null(k),c(1:dim(modflow_3d_array)[3]),k)], finite=TRUE), colour_palette=rev_rainbow, nlevels = 7, type='fill', add=FALSE, ...)
 {
   if(!is.null(k))
   {
     modflow_2d_array <- modflow_3d_array[,,k]
     class(modflow_2d_array) <- 'modflow_2d_array'
     mask <- mask[,,k]
-    plot(modflow_2d_array, dis, mask=mask, zlim=zlim, ...)
+    plot(modflow_2d_array, dis, mask=mask, zlim=zlim, type=type, add=add, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$DELR)-dis$DELR/2
@@ -51,9 +51,6 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       values <- data.frame(id = ids,value = c((modflow_3d_array[,j,]*mask[,j,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
-      return(ggplot(datapoly, aes(x=x, y=y)) +
-               geom_polygon(aes(fill=value, group=id)) +
-               scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim))
     } else if(!is.null(i) & is.null(j))
     {
       ids <- factor(1:(dis$NCOL*dis$NLAY))
@@ -71,9 +68,24 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       values <- data.frame(id = ids,value = c((modflow_3d_array[i,,]*mask[i,,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
-      return(ggplot(datapoly, aes(x=x, y=y)) +
+    }
+    if(type=='fill') {
+      if(add) {
+        return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly))# +
+        #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
+      } else {
+        return(ggplot(datapoly, aes(x=x, y=y)) +
                geom_polygon(aes(fill=value, group=id)) +
                scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim))
+      }
+    } else if(type=='grid') {
+      if(add) {
+        return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,colour='black',fill=NA))# +
+        #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
+      } else {
+        return(ggplot(datapoly, aes(x=x, y=y)) +
+               geom_polygon(aes(group=id),colour='black',fill=NA))
+      }
     }
   }
 }
