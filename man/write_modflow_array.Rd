@@ -4,7 +4,8 @@
 \alias{write_modflow_array}
 \title{Write modflow array}
 \usage{
-write_modflow_array(modflow_array, file, IPRN = -1, append = TRUE)
+write_modflow_array(modflow_array, file, CNSTNT = 1, IPRN = -1,
+  append = TRUE)
 }
 \description{
 Write modflow array
