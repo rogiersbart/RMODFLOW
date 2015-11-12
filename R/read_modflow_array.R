@@ -49,7 +49,7 @@ read_modflow_array <- function(remaining_lines,NROW,NCOL,NLAY)
           remaining_lines <- remaining_lines[-1]      
           nPerLine <- length(as.numeric(remove_empty_strings(strsplit((gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ", remaining_lines[1])),' |\t')[[1]])))
           nLines <- (NCOL %/% nPerLine + ifelse((NCOL %% nPerLine)==0, 0, 1))*NROW
-          modflow_array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit0(gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ",paste(remaining_lines[1:nLines],collapse='\n')),' |\t|\n| \n|\n | \t|\t ')[[1]])),nrow=NROW,ncol=NCOL,byrow=TRUE)
+          modflow_array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit0(gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ",paste(remaining_lines[1:nLines],collapse='')),' |\t|\n| \n|\n | \t|\t ')[[1]])),nrow=NROW,ncol=NCOL,byrow=TRUE)
           remaining_lines <- remaining_lines[-c(1:nLines)]
         }   
       }
