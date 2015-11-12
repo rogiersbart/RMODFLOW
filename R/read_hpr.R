@@ -5,8 +5,7 @@
 #' @param file filename; typically '*.hpr'
 #' @return object of class hpr
 #' @export
-read_hpr <- function(file)
-{
+read_hpr <- function(file = {cat('Please select hpr file...\n'); file.choose()}) {
   hpr <- read.table(file,header=T)
   class(hpr) <- c('hpr','data.frame')
   return(hpr)

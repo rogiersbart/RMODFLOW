@@ -7,8 +7,7 @@
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{write_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
-read_dis <- function(file)
-{
+read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()}) {
   dis.lines <- read_lines(file)
   dis <- NULL
   

@@ -6,8 +6,7 @@
 #' @return object of class prj
 #' @importFrom readr read_lines
 #' @export
-read_prj <- function(file)
-{
+read_prj <- function(file = {cat('Please select prj file...\n'); file.choose()}) {
   prj.lines <- read_lines(file)
   prj <- NULL
   prj$projection <- prj.lines[1]

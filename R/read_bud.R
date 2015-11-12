@@ -7,17 +7,15 @@
 #' @return object of class bud
 #' @importFrom readr read_lines
 #' @export
-read_bud <- function(file,binary=TRUE)
-{
-  if(binary)
-  {
+read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
+                     binary = TRUE) {
+  if(binary) {
     con <- file(file,open='rb')
     bud <- list()
     KSTP <- readBin(con,what='integer',n=1)
     KPER <- readBin(con,what='integer',n=1)
     DESC <- readChar(con,nchars=16)
-    while(length(DESC!=0))
-    {
+    while(length(DESC!=0)) {
       if(DESC=='   CONSTANT HEAD') { name <- 'CONSTANT_HEAD'
       } else if(DESC=='         STORAGE') { name <- 'STORAGE'
       } else if(DESC=='FLOW RIGHT FACE ') { name <- 'FLOW_RIGHT_FACE'
@@ -39,53 +37,43 @@ read_bud <- function(file,binary=TRUE)
       bud[[name]][[KPER]][[KSTP]]$NROW <- readBin(con,what='integer',n=1)
       bud[[name]][[KPER]][[KSTP]]$NLAY <- readBin(con,what='integer',n=1)
       
-      if(bud[[name]][[KPER]][[KSTP]]$NLAY > 0)
-      {
+      if(bud[[name]][[KPER]][[KSTP]]$NLAY > 0) {
         bud[[name]][[KPER]][[KSTP]]$data <- array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*bud[[name]][[KPER]][[KSTP]]$NLAY,size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,bud[[name]][[KPER]][[KSTP]]$NLAY))
       } else {
         bud[[name]][[KPER]][[KSTP]]$ITYPE <- readBin(con,what='integer',n=1)
         bud[[name]][[KPER]][[KSTP]]$DELT <- readBin(con,what='numeric',n=1,size=4)
         bud[[name]][[KPER]][[KSTP]]$PERTIM <- readBin(con,what='numeric',n=1,size=4)
         bud[[name]][[KPER]][[KSTP]]$TOTIM <- readBin(con,what='numeric',n=1,size=4)
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE==5)
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$ITYPE==5) {
           bud[[name]][[KPER]][[KSTP]]$NVAL <- readBin(con,what='integer',n=1)
         } else {
           bud[[name]][[KPER]][[KSTP]]$NVAL <- 1
         }
-        if(bud[[name]][[KPER]][[KSTP]]$NVAL > 1)
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$NVAL > 1) {
           bud[[name]][[KPER]][[KSTP]]$CTMP <- rep(NA, (bud[[name]][[KPER]][[KSTP]]$NVAL-1))
-          for(nr in 1:(bud[[name]][[KPER]][[KSTP]]$NVAL-1))
-          {
+          for(nr in 1:(bud[[name]][[KPER]][[KSTP]]$NVAL-1)) {
             bud[[name]][[KPER]][[KSTP]]$CTMP[nr] <- readChar(con,nchars=16)
           }
         }
         
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(2,5))
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(2,5)) {
           bud[[name]][[KPER]][[KSTP]]$NLIST <- readBin(con,what='integer',n=1)
-          if(bud[[name]][[KPER]][[KSTP]]$NLIST > 0)
-          {
+          if(bud[[name]][[KPER]][[KSTP]]$NLIST > 0) {
             bud[[name]][[KPER]][[KSTP]]$data <- as.data.frame(matrix(,nrow=bud[[name]][[KPER]][[KSTP]]$NLIST,ncol=bud[[name]][[KPER]][[KSTP]]$NVAL+1))
             names(bud[[name]][[KPER]][[KSTP]]$data)[1] <- 'ICELL'
-            for(nr in 1:bud[[name]][[KPER]][[KSTP]]$NLIST)
-            {
+            for(nr in 1:bud[[name]][[KPER]][[KSTP]]$NLIST) {
               bud[[name]][[KPER]][[KSTP]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NVAL,size=4))
             }
           }
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1))
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1)) {
           bud[[name]][[KPER]][[KSTP]]$data <- array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY)))
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3)
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3) {
           bud[[name]][[KPER]][[KSTP]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==4)
-        {
+        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==4) {
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
         }
       }
@@ -99,8 +87,7 @@ read_bud <- function(file,binary=TRUE)
   } else {
     bud <- list()
     bud.lines <- read_lines(file)
-    while(length(bud.lines)!=0)
-    {
+    while(length(bud.lines)!=0) {
       name <- substr(bud.lines[1],25,40)
       cat('Processing',name,'...\n')    
       bud[[name]] <- list()
@@ -117,8 +104,7 @@ read_bud <- function(file,binary=TRUE)
       bud[[name]]$totim <- as.numeric(substr(bud.lines[1],43,57))
       bud.lines <- bud.lines[-1]
       
-      if(bud[[name]]$code==1)
-      {
+      if(bud[[name]]$code==1) {
         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows * bud[[name]]$nlays
         nlines <- ceiling(nrecords/5)
         dataVector <- NULL
@@ -129,8 +115,7 @@ read_bud <- function(file,binary=TRUE)
         bud.lines <- bud.lines[-c(1:nlines)]
         bud.lines <- bud.lines[-1]
       }
-      if(bud[[name]]$code==2)
-      {
+      if(bud[[name]]$code==2) {
         nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
         bud.lines <- bud.lines[-1]
         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
@@ -139,8 +124,7 @@ read_bud <- function(file,binary=TRUE)
         bud.lines <- bud.lines[-c(1:nrecords)]
         bud.lines <- bud.lines[-1]
       }
-      if(bud[[name]]$code==3 | bud[[name]]$code==4)
-      {
+      if(bud[[name]]$code==3 | bud[[name]]$code==4) {
         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows
         nlines <- ceiling(nrecords/5)
         dataVector <- NULL
@@ -149,15 +133,12 @@ read_bud <- function(file,binary=TRUE)
         bud.lines <- bud.lines[-c(1:nlines)]
         bud.lines <- bud.lines[-1]
       }
-      if(bud[[name]]$code==5)
-      {
+      if(bud[[name]]$code==5) {
         nvalues <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
         bud.lines <- bud.lines[-1]
-        if(nvalues > 1)
-        {
+        if(nvalues > 1) {
           additionalColumns <- rep(NA,nvalues-1)
-          for(i in 1:(nvalues-1))
-          {
+          for(i in 1:(nvalues-1)) {
             additionalColumns[i] <- remove_empty_strings(strsplit(bud.lines[1],' ')[[1]])
             bud.lines <- bud.lines[-1]
           }
@@ -178,5 +159,4 @@ read_bud <- function(file,binary=TRUE)
     class(bud) <- c('bud','modflow_package')
     return(bud)
   }
-
 }

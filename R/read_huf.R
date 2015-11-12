@@ -7,8 +7,9 @@
 #' @return object of class huf
 #' @importFrom readr read_lines
 #' @export
-read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
-{
+read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
+                     dis = {cat('Please select corresponding dis file...\n'); read_dis(file.choose())}) {
+  
   huf.lines <- read_lines(file)
   huf <- NULL
 
@@ -34,8 +35,7 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     huf$LAYWT <- split_line_numbers(huf.lines[1]); huf.lines <- huf.lines[-1]
   
   # Data set 4
-    if(sum(huf$LAYWT > 0))
-    {
+    if(sum(huf$LAYWT > 0)) {
       dataSet4 <- split_line_numbers(huf.lines[1])
       huf.lines <- huf.lines[-1]
       huf$WETFCT <- dataSet4[1]
@@ -54,8 +54,7 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     huf$HGUNAM <- vector(mode='character',length=huf$NHUF)
     huf$TOP <- array(dim=c(dis$NROW, dis$NCOL, huf$NHUF)); class(huf$TOP) <- 'mf3darray'
     huf$THCK <- array(dim=c(dis$NROW, dis$NCOL, huf$NHUF)); class(huf$THCK) <- 'mf3darray'
-    for(i in 1:huf$NHUF)
-    {
+    for(i in 1:huf$NHUF) {
       huf$HGUNAM[i] <- split_line_words(huf.lines[1])[1]
       huf.lines <- huf.lines[-1]
       dataSet <- read_modflow_array(huf.lines,dis$NROW,dis$NCOL,2)
@@ -68,17 +67,15 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
   # Data set 9
     huf$HGUHANI <- vector(mode='numeric',length=huf$NHUF)   
     huf$HGUVANI <- vector(mode='numeric',length=huf$NHUF)
-    if(as.character(strsplit(huf.lines[1],' ')[[1]][1] == 'ALL'))
-    {
+    if(as.character(strsplit(huf.lines[1],' ')[[1]][1] == 'ALL')) {
       splitted.line <- split_line_words(huf.lines[1])
       huf$HGUHANI[1] <- as.numeric(splitted.line[2])
       huf$HGUVANI[1] <- as.numeric(splitted.line[3])
       huf.lines <- huf.lines[-1]
       for(i in 1:huf$NHUF) huf$HGUHANI[i] <- huf$HGUHANI[1]
       for(i in 1:huf$NHUF) huf$HGUVANI[i] <- huf$HGUVANI[1]
-    }else{
-      for(i in 1:huf$NHUF)
-      {
+    } else {
+      for(i in 1:huf$NHUF) {
         splitted.line <- split_line_words(huf.lines[1])
         k <- which(huf$HGUNAM == splitted.line[1])
         huf$HGUHANI[k] <- as.numeric(splitted.line[2])
@@ -95,15 +92,13 @@ read_huf <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.
     huf$Mltarr <- matrix(nrow=huf$NHUF, ncol=huf$NPHUF)
     huf$Zonarr <- matrix(nrow=huf$NHUF, ncol=huf$NPHUF)
     huf$IZ <- matrix(nrow=huf$NHUF, ncol=huf$NPHUF)
-    for(i in 1:huf$NPHUF)
-    {
+    for(i in 1:huf$NPHUF) {
       line.split <- split_line_words(huf.lines[1]); huf.lines <- huf.lines[-1]
       huf$PARNAM[i] <- line.split[1]
       huf$PARTYP[i] <- line.split[2]
       huf$Parval[i] <- as.numeric(line.split[3])
       huf$NCLU[i] <- as.numeric(line.split[4])
-      for(j in 1:huf$NCLU[i])
-      {
+      for(j in 1:huf$NCLU[i]) {
         line.split <- split_line_words(huf.lines[1]); huf.lines <- huf.lines[-1]
         k <- which(huf$HGUNAM == line.split[1])
         huf$Mltarr[k,i] <- line.split[2]

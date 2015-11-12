@@ -7,9 +7,9 @@
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{write_lpf}}, \code{\link{create_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
-read_lpf <- function(file)
-{
-  lpf.lines <- read_lines(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
+read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()}) {
+  
+  lpf.lines <- read_lines(file)
   lpf <- NULL
   
   # Data set 0
@@ -66,15 +66,13 @@ read_lpf <- function(file)
     lpf$Mltarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
     lpf$Zonarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
     lpf$IZ <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    for(i in 1:lpf$NPLPF)
-    {
+    for(i in 1:lpf$NPLPF) {
       line.split <- split_line_words(lpf.lines[1]); lpf.lines <- lpf.lines[-1]
       lpf$PARNAM[i] <- line.split[1]
       lpf$PARTYP[i] <- line.split[2]
       lpf$Parval[i] <- as.numeric(line.split[3])
       lpf$NCLU[i] <- as.numeric(line.split[4])
-      for(j in 1:lpf$NCLU[i])
-      {
+      for(j in 1:lpf$NCLU[i]) {
         line.split <- split_line_words(lpf.lines[1]); lpf.lines <- lpf.lines[-1]
         k <- line.split[1]
         lpf$Mltarr[k,i] <- line.split[2]

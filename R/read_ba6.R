@@ -7,8 +7,8 @@
 #' @return object of class ba6
 #' @importFrom readr read_lines
 #' @export
-read_ba6 <- function(file, dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
-{
+read_ba6 <- function(file = {cat('Please select ba6 file...\n'); file.choose()},
+                     dis = {cat('Please select dis file...\n'); read_dis(file.choose())}) {
   ba6 <- NULL
   ba6.lines <- read_lines(file)
   

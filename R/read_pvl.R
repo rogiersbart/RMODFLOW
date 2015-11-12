@@ -7,8 +7,9 @@
 #' @return object of class pvl
 #' @importFrom readr read_lines
 #' @export
-read_pvl <- function(file, read_all=F)
-{
+read_pvl <- function(file = {cat('Please select pvl file...\n'); file.choose()},
+                     read_all=F) {
+  
   pvl.lines <- read_lines(file)
   pvl <- NULL
   
@@ -21,8 +22,7 @@ read_pvl <- function(file, read_all=F)
     pvl.lines <- pvl.lines[-1]
   
   # Data set 2
-    for(i in 1:pvl$NP)
-    {
+    for(i in 1:pvl$NP) {
       pvl$PARNAM[i] <- as.character(strsplit(pvl.lines[1],' ')[[1]][1])
       pvl$Parval[i] <- as.numeric(remove_empty_strings(strsplit(pvl.lines[1],' ')[[1]])[2])
       pvl.lines <- pvl.lines[-1]

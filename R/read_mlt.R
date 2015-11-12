@@ -7,8 +7,8 @@
 #' @return object of class mlt
 #' @importFrom readr read_lines
 #' @export
-read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'.dis',sep='')))
-{
+read_mlt <- function(file = {cat('Please select mlt file...\n'); file.choose()},
+                     dis = {cat('Please select dis file...\n'); read_dis(file.choose())}) {
   mlt <- NULL
   mlt.lines <- read_lines(file)
   
@@ -22,8 +22,7 @@ read_mlt <- function(file,  dis=read_dis(paste(substring(file,1,nchar(file)-4),'
   
   # Data set 2 + 3
     mlt$RMLT <- list()
-    for(i in 1:mlt$NML)
-    {
+    for(i in 1:mlt$NML) {
       mlt$MLTNAM[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
       mlt.lines <- mlt.lines[-1]
       dataSet <- read_modflow_array(mlt.lines,dis$NROW,dis$NCOL,1)
