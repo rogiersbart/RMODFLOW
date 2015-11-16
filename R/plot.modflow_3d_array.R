@@ -78,6 +78,15 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
                geom_polygon(aes(fill=value, group=id)) +
                scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim))
       }
+    } else if(type=='factor') {
+        if(add) {
+          return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly))# +
+          #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
+        } else {
+          return(ggplot(datapoly, aes(x=x, y=y)) +
+                   geom_polygon(aes(fill=factor(value), group=id)) +
+                   scale_fill_discrete(limits=zlim))
+        }
     } else if(type=='grid') {
       if(add) {
         return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,colour='black',fill=NA))# +

@@ -4,8 +4,9 @@
 \alias{read_ba6}
 \title{Read a MODFLOW basic file}
 \usage{
-read_ba6(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
-  ".dis", sep = "")))
+read_ba6(file = {     cat("Please select ba6 file...\\n")     file.choose() },
+  dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
+  })
 }
 \arguments{
 \item{file}{filename; typically '*.ba6'}

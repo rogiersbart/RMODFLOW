@@ -4,7 +4,7 @@
 \alias{read_prj}
 \title{Read a projection file}
 \usage{
-read_prj(file)
+read_prj(file = {     cat("Please select prj file...\\n")     file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.prj'}

@@ -4,7 +4,7 @@
 \alias{read_hob}
 \title{Read a MODFLOW head observations file}
 \usage{
-read_hob(file)
+read_hob(file = {     cat("Please select hob file...\\n")     file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.hob'}

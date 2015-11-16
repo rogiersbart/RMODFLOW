@@ -4,7 +4,7 @@
 \alias{read_lpf}
 \title{Read a MODFLOW layer-property flow file}
 \usage{
-read_lpf(file)
+read_lpf(file = {     cat("Please select lpf file...\\n")     file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.lpf'}

@@ -4,7 +4,8 @@
 \alias{run_modflow}
 \title{Run a MODFLOW model}
 \usage{
-run_modflow(file, modflow_executable = "mf2005", par = NULL)
+run_modflow(file, modflow_executable = ifelse(Sys.info()["sysname"] ==
+  "Linux", "wine mf2005.exe", "mf2005"), par = NULL)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}

@@ -4,7 +4,8 @@
 \alias{read_gms_2d_grid}
 \title{Read a GMS 2D grid file}
 \usage{
-read_gms_2d_grid(file)
+read_gms_2d_grid(file = {     cat("Please select gms 2d grid file...\\n")    
+  file.choose() })
 }
 \arguments{
 \item{file}{filename}

@@ -4,7 +4,8 @@
 \alias{read_pvl}
 \title{Read a MODFLOW parameter value file}
 \usage{
-read_pvl(file, read_all = F)
+read_pvl(file = {     cat("Please select pvl file...\\n")     file.choose() },
+  read_all = F)
 }
 \arguments{
 \item{file}{filename; typically '*.pvl'}

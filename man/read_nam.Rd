@@ -4,7 +4,7 @@
 \alias{read_nam}
 \title{Read a MODFLOW name file}
 \usage{
-read_nam(file)
+read_nam(file = {     cat("Please select nam file...\\n")     file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.nam'}

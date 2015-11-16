@@ -4,9 +4,11 @@
 \alias{read_kdep}
 \title{Read a MODFLOW hydraulic conductivity depth-dependence capability file}
 \usage{
-read_kdep(file, dis = read_dis(paste(substring(file, 1, nchar(file) - 4),
-  ".dis", sep = "")), huf = read_huf(paste(substring(file, 1, nchar(file) -
-  4), ".huf", sep = ""), dis))
+read_kdep(file = {     cat("Please select kdep file...\\n")     file.choose()
+  }, dis = {     cat("Please select corresponding dis file...\\n")    
+  read_dis(file.choose()) }, huf = {    
+  cat("Please select corresponding huf file...\\n")     read_huf(file.choose(),
+  dis = dis) })
 }
 \arguments{
 \item{file}{Filename; typically *.kdep}
