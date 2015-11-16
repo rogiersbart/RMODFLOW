@@ -85,7 +85,7 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
         } else {
           return(ggplot(datapoly, aes(x=x, y=y)) +
                    geom_polygon(aes(fill=factor(value), group=id)) +
-                   scale_fill_discrete(limits=zlim))
+                   scale_fill_discrete())
         }
     } else if(type=='grid') {
       if(add) {

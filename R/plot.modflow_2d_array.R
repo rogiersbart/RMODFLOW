@@ -75,6 +75,39 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
           scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
           coord_equal())
       }
+    } else if(type=='factor') {  
+      ids <- factor(1:(dis$NROW*dis$NCOL))
+      xWidth <- rep(dis$DELR,dis$NROW)
+      yWidth <- rep(dis$DELC,each=dis$NCOL)
+      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
+      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+      values <- data.frame(id = ids,value = c(t(modflow_2d_array*mask^2)))
+      if(!is.null(prj)) {
+        new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
+        positions$x <- new_positions$x
+        positions$y <- new_positions$y
+      }
+      if(!is.null(target_CRS)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_CRS)
+      }
+      datapoly <- merge(values, positions, by=c("id"))
+      datapoly <- na.omit(datapoly)
+      if(add) {
+        return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha))# +
+        #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
+      } else {
+        return(ggplot(datapoly, aes(x=x, y=y)) +
+                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha) +
+                 scale_fill_discrete() +
+                 coord_equal())
+      }
     } else if(type=='grid') {  
       ids <- factor(1:(dis$NROW*dis$NCOL))
       xWidth <- rep(dis$DELR,dis$NROW)
