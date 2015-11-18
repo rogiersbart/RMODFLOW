@@ -4,15 +4,22 @@
 \alias{convert_bud_to_darcy}
 \title{Convert bud object fluxes to darcy velocities}
 \usage{
-convert_bud_to_darcy(bud, dis)
+convert_bud_to_darcy(bud, dis, hed = NULL, stress_period = 1,
+  time_step = 1)
 }
 \arguments{
 \item{bud}{bud object}
 
 \item{dis}{dis object}
+
+\item{hed}{hed object; optional; if specified, the saturated cell thickness is used}
+
+\item{stress_period}{stress period; defaults to 1}
+
+\item{time_step}{time step; defaults to 1}
 }
 \value{
-list of four 3d arrays: right, front, lower and magnitude
+list of 3d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities: the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 }
 \description{
 Convert bud object fluxes to darcy velocities

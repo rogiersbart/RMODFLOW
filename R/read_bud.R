@@ -61,6 +61,8 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
           if(bud[[name]][[KPER]][[KSTP]]$NLIST > 0) {
             bud[[name]][[KPER]][[KSTP]]$data <- as.data.frame(matrix(,nrow=bud[[name]][[KPER]][[KSTP]]$NLIST,ncol=bud[[name]][[KPER]][[KSTP]]$NVAL+1))
             names(bud[[name]][[KPER]][[KSTP]]$data)[1] <- 'ICELL'
+            names(bud[[name]][[KPER]][[KSTP]]$data)[2] <- 'value'
+            # add reading CTMPs here!
             for(nr in 1:bud[[name]][[KPER]][[KSTP]]$NLIST) {
               bud[[name]][[KPER]][[KSTP]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NVAL,size=4))
             }
@@ -68,15 +70,26 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1)) {
           bud[[name]][[KPER]][[KSTP]]$data <- array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY)))
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_3d_array'
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3) {
           bud[[name]][[KPER]][[KSTP]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
+          class(bud[[name]][[KPER]][[KSTP]]$layer) <- 'modflow_2d_array'
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_2d_array'
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==4) {
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_2d_array'
         }
       }
+      
+      # set data as the main list item, and include all parameters as attributes
+        for(i in 1:(length(bud[[name]][[KPER]][[KSTP]])-1)) {
+          attr(bud[[name]][[KPER]][[KSTP]]$data,names(bud[[name]][[KPER]][[KSTP]])[i]) <- bud[[name]][[KPER]][[KSTP]][[i]]
+        }
+        bud[[name]][[KPER]][[KSTP]] <- bud[[name]][[KPER]][[KSTP]]$data
+      
       KSTP <- readBin(con,what='integer',n=1)
       KPER <- readBin(con,what='integer',n=1)
       DESC <- readChar(con,nchars=16)
@@ -85,78 +98,80 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
     class(bud) <- c('bud','modflow_package')
     return(bud)
   } else {
-    bud <- list()
-    bud.lines <- read_lines(file)
-    while(length(bud.lines)!=0) {
-      name <- substr(bud.lines[1],25,40)
-      cat('Processing',name,'...\n')    
-      bud[[name]] <- list()
-      bud[[name]]$sp <- as.numeric(substr(bud.lines[1],1,12))
-      bud[[name]]$ts <- as.numeric(substr(bud.lines[1],13,24))
-      bud[[name]]$ncols <- as.numeric(substr(bud.lines[1],41,52))
-      bud[[name]]$nrows <- as.numeric(substr(bud.lines[1],53,64))
-      bud[[name]]$nlays <- as.numeric(substr(bud.lines[1],65,76))
-      bud.lines <- bud.lines[-1]
-      
-      bud[[name]]$code <- as.numeric(substr(bud.lines[1],1,12))
-      bud[[name]]$delt <- as.numeric(substr(bud.lines[1],13,27))
-      bud[[name]]$pertim <- as.numeric(substr(bud.lines[1],28,42))
-      bud[[name]]$totim <- as.numeric(substr(bud.lines[1],43,57))
-      bud.lines <- bud.lines[-1]
-      
-      if(bud[[name]]$code==1) {
-        nrecords <- bud[[name]]$ncols * bud[[name]]$nrows * bud[[name]]$nlays
-        nlines <- ceiling(nrecords/5)
-        dataVector <- NULL
-        dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
-        bud[[name]]$data <- array(dataVector,dim=c(bud[[name]]$ncols,bud[[name]]$nrows,bud[[name]]$nlays))
-        bud[[name]]$data <- aperm(bud[[name]]$data,c(2,1,3))
-        names(bud[[name]]$data) <- c('ID','FLUX')
-        bud.lines <- bud.lines[-c(1:nlines)]
-        bud.lines <- bud.lines[-1]
-      }
-      if(bud[[name]]$code==2) {
-        nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
-        bud.lines <- bud.lines[-1]
-        dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
-        bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=2,byrow=T))
-        names(bud[[name]]$data) <- c('ID','FLUX')
-        bud.lines <- bud.lines[-c(1:nrecords)]
-        bud.lines <- bud.lines[-1]
-      }
-      if(bud[[name]]$code==3 | bud[[name]]$code==4) {
-        nrecords <- bud[[name]]$ncols * bud[[name]]$nrows
-        nlines <- ceiling(nrecords/5)
-        dataVector <- NULL
-        dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
-        bud[[name]]$data <- matrix(dataVector,ncol=bud[[name]]$ncols,nrow=bud[[name]]$nrows,byrow=T)
-        bud.lines <- bud.lines[-c(1:nlines)]
-        bud.lines <- bud.lines[-1]
-      }
-      if(bud[[name]]$code==5) {
-        nvalues <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
-        bud.lines <- bud.lines[-1]
-        if(nvalues > 1) {
-          additionalColumns <- rep(NA,nvalues-1)
-          for(i in 1:(nvalues-1)) {
-            additionalColumns[i] <- remove_empty_strings(strsplit(bud.lines[1],' ')[[1]])
-            bud.lines <- bud.lines[-1]
-          }
-          #bud.lines <- bud.lines[-1] #IFACE
-          #bud.lines <- bud.lines[-1] #CONDFACT
-          #bud.lines <- bud.lines[-1] #CELLGRP
-        }
-        nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
-        bud.lines <- bud.lines[-1]
-        dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
-        bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=nvalues+1,byrow=T))
-        if(nvalues > 1) names(bud[[name]]$data) <- c('ID','FLUX',additionalColumns)
-        if(nvalues == 1)names(bud[[name]]$data) <- c('ID','FLUX')
-        bud.lines <- bud.lines[-c(1:nrecords)]
-        bud.lines <- bud.lines[-1]
-      }
-    }
-    class(bud) <- c('bud','modflow_package')
-    return(bud)
-  }
+    stop('Code not up to date')
+#     # update this to match the above structure!
+#     bud <- list()
+#     bud.lines <- read_lines(file)
+#     while(length(bud.lines)!=0) {
+#       name <- substr(bud.lines[1],25,40)
+#       cat('Processing',name,'...\n')    
+#       bud[[name]] <- list()
+#       bud[[name]]$sp <- as.numeric(substr(bud.lines[1],1,12))
+#       bud[[name]]$ts <- as.numeric(substr(bud.lines[1],13,24))
+#       bud[[name]]$ncols <- as.numeric(substr(bud.lines[1],41,52))
+#       bud[[name]]$nrows <- as.numeric(substr(bud.lines[1],53,64))
+#       bud[[name]]$nlays <- as.numeric(substr(bud.lines[1],65,76))
+#       bud.lines <- bud.lines[-1]
+#       
+#       bud[[name]]$code <- as.numeric(substr(bud.lines[1],1,12))
+#       bud[[name]]$delt <- as.numeric(substr(bud.lines[1],13,27))
+#       bud[[name]]$pertim <- as.numeric(substr(bud.lines[1],28,42))
+#       bud[[name]]$totim <- as.numeric(substr(bud.lines[1],43,57))
+#       bud.lines <- bud.lines[-1]
+#       
+#       if(bud[[name]]$code==1) {
+#         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows * bud[[name]]$nlays
+#         nlines <- ceiling(nrecords/5)
+#         dataVector <- NULL
+#         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
+#         bud[[name]]$data <- array(dataVector,dim=c(bud[[name]]$ncols,bud[[name]]$nrows,bud[[name]]$nlays))
+#         bud[[name]]$data <- aperm(bud[[name]]$data,c(2,1,3))
+#         names(bud[[name]]$data) <- c('ID','FLUX')
+#         bud.lines <- bud.lines[-c(1:nlines)]
+#         bud.lines <- bud.lines[-1]
+#       }
+#       if(bud[[name]]$code==2) {
+#         nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
+#         bud.lines <- bud.lines[-1]
+#         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
+#         bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=2,byrow=T))
+#         names(bud[[name]]$data) <- c('ID','FLUX')
+#         bud.lines <- bud.lines[-c(1:nrecords)]
+#         bud.lines <- bud.lines[-1]
+#       }
+#       if(bud[[name]]$code==3 | bud[[name]]$code==4) {
+#         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows
+#         nlines <- ceiling(nrecords/5)
+#         dataVector <- NULL
+#         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
+#         bud[[name]]$data <- matrix(dataVector,ncol=bud[[name]]$ncols,nrow=bud[[name]]$nrows,byrow=T)
+#         bud.lines <- bud.lines[-c(1:nlines)]
+#         bud.lines <- bud.lines[-1]
+#       }
+#       if(bud[[name]]$code==5) {
+#         nvalues <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
+#         bud.lines <- bud.lines[-1]
+#         if(nvalues > 1) {
+#           additionalColumns <- rep(NA,nvalues-1)
+#           for(i in 1:(nvalues-1)) {
+#             additionalColumns[i] <- remove_empty_strings(strsplit(bud.lines[1],' ')[[1]])
+#             bud.lines <- bud.lines[-1]
+#           }
+#           #bud.lines <- bud.lines[-1] #IFACE
+#           #bud.lines <- bud.lines[-1] #CONDFACT
+#           #bud.lines <- bud.lines[-1] #CELLGRP
+#         }
+#         nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
+#         bud.lines <- bud.lines[-1]
+#         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
+#         bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=nvalues+1,byrow=T))
+#         if(nvalues > 1) names(bud[[name]]$data) <- c('ID','FLUX',additionalColumns)
+#         if(nvalues == 1)names(bud[[name]]$data) <- c('ID','FLUX')
+#         bud.lines <- bud.lines[-c(1:nrecords)]
+#         bud.lines <- bud.lines[-1]
+#       }
+#     }
+#     class(bud) <- c('bud','modflow_package')
+#     return(bud)
+   }
 }
