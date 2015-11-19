@@ -10,7 +10,7 @@ cell_centers(...)
 
 \method{cell_centers}{dis}(dis)
 
-\method{cell_centers}{huf}(huf)
+\method{cell_centers}{huf}(huf, dis = NULL)
 }
 \arguments{
 \item{dis}{dis object}
@@ -25,7 +25,7 @@ cell_centers(...)
 \description{
 Generic function to get cell center z coordinates
 
-Get cell center z coordinates from a dis object
+Get cell center x, y and z coordinates from a dis object
 
 Get cell center z coordinates from a huf object
 }
