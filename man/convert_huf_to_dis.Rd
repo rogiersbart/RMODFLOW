@@ -2,26 +2,19 @@
 % Please edit documentation in R/convert_huf_to_dis.R
 \name{convert_huf_to_dis}
 \alias{convert_huf_to_dis}
-\title{Convert a parameter defined on the HUF grid to the numerical grid}
+\title{Convert a huf to a dis object (for plotting)}
 \usage{
-convert_huf_to_dis(values, huf, dis, mask = dis$TOP/dis$TOP,
-  type = "arithmetic")
+convert_huf_to_dis(huf, dis)
 }
 \arguments{
-\item{values}{vector of parameter values, in the order of HGUNAM}
-
 \item{huf}{huf object}
 
-\item{dis}{dis object}
-
-\item{mask}{masking 3d array, typically the IBOUND array, to speed up grid conversion; defaults to including all cells}
-
-\item{type}{type of averaging that should be performed; either arithmetic (default), harmonic or geometric}
+\item{dis}{dis object, corresponding to the huf object}
 }
 \value{
-3d array
+dis object containing the layers of the huf object
 }
 \description{
-Convert a parameter defined on the HUF grid to the numerical grid
+Convert a huf to a dis object (for plotting)
 }
 

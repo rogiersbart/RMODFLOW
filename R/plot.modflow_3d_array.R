@@ -27,7 +27,7 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$DELR)-dis$DELR/2
-    xy$y <- (cumsum(dis$DELC)-dis$DELC/2)
+    xy$y <- rev(cumsum(dis$DELC)-dis$DELC/2)
     mask[which(mask==0)] <- NA
     dis$THCK <- dis$BOTM
     dis$THCK[,,1] <- dis$TOP-dis$BOTM[,,1]
@@ -37,7 +37,7 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
     if(is.null(i) & !is.null(j))
     {
       ids <- factor(1:(dis$NROW*dis$NLAY))
-      xWidth <- rep(dis$DELC,dis$NLAY)
+      xWidth <- rep(rev(dis$DELC),dis$NLAY)
       yWidth <- dis$THCK[,j,]
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$CENTER[,j,],each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
@@ -51,6 +51,8 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       values <- data.frame(id = ids,value = c((modflow_3d_array[,j,]*mask[,j,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
+      xlabel <- 'y'
+      ylabel <- 'z'
     } else if(!is.null(i) & is.null(j))
     {
       ids <- factor(1:(dis$NCOL*dis$NLAY))
@@ -68,6 +70,8 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       values <- data.frame(id = ids,value = c((modflow_3d_array[i,,]*mask[i,,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
+      xlabel <- 'x'
+      ylabel <- 'z'
     }
     if(type=='fill') {
       if(add) {
@@ -76,7 +80,8 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                geom_polygon(aes(fill=value, group=id)) +
-               scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim))
+               scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
+               xlab(xlabel) + ylab(ylabel))
       }
     } else if(type=='factor') {
         if(add) {
@@ -85,7 +90,8 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
         } else {
           return(ggplot(datapoly, aes(x=x, y=y)) +
                    geom_polygon(aes(fill=factor(value), group=id)) +
-                   scale_fill_discrete())
+                   scale_fill_discrete() +
+                   xlab(xlabel) + ylab(ylabel))
         }
     } else if(type=='grid') {
       if(add) {
@@ -93,7 +99,8 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
         #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-               geom_polygon(aes(group=id),colour='black',fill=NA))
+               geom_polygon(aes(group=id),colour='black',fill=NA) +
+               xlab(xlabel) + ylab(ylabel))
       }
     }
   }
