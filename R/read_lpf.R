@@ -51,12 +51,14 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
     lpf.lines <- lpf.lines[-1]
   
   # Data set 7
-    dataSet7 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
-    lpf.lines <- lpf.lines[-1]  
-    lpf$WETFCT <- as.numeric(dataSet7[1])
-    lpf$IWETIT <- as.numeric(dataSet7[2])
-    lpf$IHDWET <- as.numeric(dataSet7[3])
-    rm(dataSet7)
+    if(!as.logical(prod(lpf$LAYWET==0))) {
+      dataSet7 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
+      lpf.lines <- lpf.lines[-1]  
+      lpf$WETFCT <- as.numeric(dataSet7[1])
+      lpf$IWETIT <- as.numeric(dataSet7[2])
+      lpf$IHDWET <- as.numeric(dataSet7[3])
+      rm(dataSet7)
+    }
   
   # Data set 8-9
     lpf$PARNAM <- vector(mode='character',length=lpf$NPLPF)
@@ -74,7 +76,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
       lpf$NCLU[i] <- as.numeric(line.split[4])
       for(j in 1:lpf$NCLU[i]) {
         line.split <- split_line_words(lpf.lines[1]); lpf.lines <- lpf.lines[-1]
-        k <- line.split[1]
+        k <- as.numeric(line.split[1])
         lpf$Mltarr[k,i] <- line.split[2]
         lpf$Zonarr[k,i] <- line.split[3]
         lpf$IZ[k,i] <- paste(line.split[-c(1:3)],collapse=' ')

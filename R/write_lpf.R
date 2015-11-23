@@ -31,16 +31,11 @@ write_lpf <- function(lpf, file, IPRN=-1)
     write_modflow_variables(lpf$LAYWET, file = file)
     
   # Data set 7
-    write_modflow_variables(lpf$WETFCT,lpf$IWETIT,lpf$IHDWET, file = file)
+    if(!as.logical(prod(lpf$LAYWET==0))) {
+      write_modflow_variables(lpf$WETFCT,lpf$IWETIT,lpf$IHDWET, file = file)
+    }
     
   # Data set 8-9
-    lpf$PARNAM <- vector(mode='character',length=lpf$NPLPF)
-    lpf$PARTYP <- vector(mode='character',length=lpf$NPLPF)
-    lpf$Parval <- vector(mode='numeric',length=lpf$NPLPF)
-    lpf$NCLU <- vector(mode='numeric',length=lpf$NPLPF)
-    lpf$Mltarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    lpf$Zonarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    lpf$IZ <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
     for(i in 1:lpf$NPLPF) {
       write_modflow_variables(lpf$PARNAM[i],lpf$PARTYP[i],lpf$Parval[i],lpf$NCLU[i], file = file)
       layers <- which(!is.na(lpf$Mltarr[,i]))
