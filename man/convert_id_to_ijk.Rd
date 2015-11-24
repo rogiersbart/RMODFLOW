@@ -7,7 +7,7 @@
 convert_id_to_ijk(id, dis)
 }
 \arguments{
-\item{id}{cell id, providing the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)}
+\item{id}{cell id, providing the place of the number in an input file 3d array}
 
 \item{dis}{a discretisation file object}
 }

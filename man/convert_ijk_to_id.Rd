@@ -16,7 +16,7 @@ convert_ijk_to_id(i, j, k, dis)
 \item{dis}{a discretization file object}
 }
 \value{
-cell ids, providing the place of the cell in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
+cell ids, providing the place of the cell in an input file 3d array
 }
 \description{
 Convert ijk to id

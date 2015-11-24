@@ -1,14 +1,14 @@
-#' Get information from a huf object at a certain grid node
+#' Get information from a huf object at a certain grid cell
 #' 
 #' @param huf a hydrogeologic unit file object
 #' @param i row number
 #' @param j column number
 #' @return \code{NULL}
 #'
-#' @rdname node_info
-#' @method node_info huf
+#' @rdname cell_info
+#' @method cell_info huf
 #' @export
-node_info.huf <- function(huf, i, j)
+cell_info.huf <- function(huf, i, j)
 {
   cat('Vertical boundaries:\n')
   

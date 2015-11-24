@@ -1,14 +1,14 @@
-#' Get information from a dis object at a certain grid node
+#' Get information from a dis object at a certain grid cell
 #' 
 #' @param dis a discretization file object
 #' @param i row number
 #' @param j column number
 #' @return \code{NULL}
 #'
-#' @rdname node_info
-#' @method node_info dis
+#' @rdname cell_info
+#' @method cell_info dis
 #' @export
-node_info.dis <- function(dis, i, j)
+cell_info.dis <- function(dis, i, j)
 {
   cat('Column width = ',dis$DELR[j], '\n')
   cat('Row width = ', dis$DELC[i], '\n')

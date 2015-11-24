@@ -9,16 +9,18 @@
 #' If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned.
 #' @return data frame with x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @export
-convert_real_to_dis <- function(x,y,prj,z=NULL,dis=NULL)
+convert_real_to_dis <- function(x,y,prj=NULL,z=NULL,dis=NULL)
 {
-  x <- x-prj$origin[1]
-  y <- y-prj$origin[2]
-  angle <- atan(y/x)*180/pi - prj$rotation
-  angle[which(is.na(angle))] <- 90-prj$rotation
-  s <- sqrt(x^2+y^2)
-  x <- cos(angle*pi/180)*s
-  y <- sin(angle*pi/180)*s
-  if(!is.null(z)) z <- z - prj$origin[3]
+  if(!is.null(prj)) {
+    x <- x-prj$origin[1]
+    y <- y-prj$origin[2]
+    angle <- atan(y/x)*180/pi - prj$rotation
+    angle[which(is.na(angle))] <- 90-prj$rotation
+    s <- sqrt(x^2+y^2)
+    x <- cos(angle*pi/180)*s
+    y <- sin(angle*pi/180)*s
+    if(!is.null(z)) z <- z - prj$origin[3]
+  }
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
   if(!is.null(dis))

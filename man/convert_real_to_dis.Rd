@@ -4,7 +4,7 @@
 \alias{convert_real_to_dis}
 \title{Convert real world coordinates to modflow coordinates}
 \usage{
-convert_real_to_dis(x, y, prj, z = NULL, dis = NULL)
+convert_real_to_dis(x, y, prj = NULL, z = NULL, dis = NULL)
 }
 \arguments{
 \item{x}{real world x coordinate}
