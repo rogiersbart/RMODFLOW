@@ -38,7 +38,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
       bud[[name]][[KPER]][[KSTP]]$NLAY <- readBin(con,what='integer',n=1)
       
       if(bud[[name]][[KPER]][[KSTP]]$NLAY > 0) {
-        bud[[name]][[KPER]][[KSTP]]$data <- array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*bud[[name]][[KPER]][[KSTP]]$NLAY,size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,bud[[name]][[KPER]][[KSTP]]$NLAY))
+        bud[[name]][[KPER]][[KSTP]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*bud[[name]][[KPER]][[KSTP]]$NLAY,size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,bud[[name]][[KPER]][[KSTP]]$NLAY)),c(2,1,3))
       } else {
         bud[[name]][[KPER]][[KSTP]]$ITYPE <- readBin(con,what='integer',n=1)
         bud[[name]][[KPER]][[KSTP]]$DELT <- readBin(con,what='numeric',n=1,size=4)
@@ -69,7 +69,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
           }
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1)) {
-          bud[[name]][[KPER]][[KSTP]]$data <- array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY)))
+          bud[[name]][[KPER]][[KSTP]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY))),c(2,1,3))
           class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_3d_array'
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3) {

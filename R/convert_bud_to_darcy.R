@@ -9,29 +9,34 @@
 #' @export
 convert_bud_to_darcy <- function(bud, dis, hed = NULL, stress_period = 1, time_step = 1) {
   
-  thck <- cell_thickness(dis = dis, hed = hed)
+  thck <- cell_dimensions(dis = dis, hed = hed)$z
   delc <- rep(dis$DELC,dis$NCOL)
   delr <- rep(dis$DELR,each=dis$NROW)
   darcy <- list()
-  darcy$right <- aperm(array(bud$FLOW_RIGHT_FACE[[stress_period]][[time_step]],dim=c(dis$NCOL,dis$NROW,dis$NLAY)),c(2,1,3))/delc/thck
-  darcy$front <- -aperm(array(bud$FLOW_FRONT_FACE[[stress_period]][[time_step]],dim=c(dis$NCOL,dis$NROW,dis$NLAY)),c(2,1,3))/delr/thck
-  darcy$lower <- -aperm(array(bud$FLOW_LOWER_FACE[[stress_period]][[time_step]],dim=c(dis$NCOL,dis$NROW,dis$NLAY)),c(2,1,3))/delc/delr
+  darcy$right <- bud$FLOW_RIGHT_FACE[[stress_period]][[time_step]]
+  darcy$front <- -bud$FLOW_FRONT_FACE[[stress_period]][[time_step]]
+  darcy$lower <- -bud$FLOW_LOWER_FACE[[stress_period]][[time_step]]/delc/delr
   darcy$left <- darcy$back <- darcy$upper <- darcy$right * 0
   darcy$left[,c(2:dis$NCOL),] <- darcy$right[,c(1:(dis$NCOL-1)),]
   darcy$back[c(2:dis$NROW),,] <- darcy$front[c(1:(dis$NROW-1)),,]
   darcy$upper[,,c(2:dis$NLAY)] <- darcy$lower[,,c(1:(dis$NLAY-1))]
+  darcy$right <- darcy$right/delc/thck
+  darcy$left <- darcy$left/delc/thck
+  darcy$front <- darcy$front/delr/thck
+  darcy$back <- darcy$back/delr/thck
+  
   if('RECHARGE' %in% names(bud)) {
     if(attributes(bud$RECHARGE[[stress_period]][[time_step]])$ITYPE == 4) darcy$upper[,,1] <- -bud$RECHARGE[[stress_period]][[time_step]]/delc/delr
     # to do: add functionality for different RECHARGE ITYPE, with recharge in different layers
   }
   if('DRAINS' %in% names(bud)) {
-    bud$DRAINS[[stress_period]][[time_step]] <- cbind(bud$DRAINS[[stress_period]][[time_step]],convert_id_to_ijk(bud$DRAINS[[stress_period]][[time_step]]$ICELL, dis = dis))
+    bud$DRAINS[[stress_period]][[time_step]] <- cbind(bud$DRAINS[[stress_period]][[time_step]],convert_modflow_id_to_ijk(bud$DRAINS[[stress_period]][[time_step]]$ICELL, dis = dis))
     for(i in 1:nrow(bud$DRAINS[[stress_period]][[time_step]])) {
       darcy$upper[bud$DRAINS[[stress_period]][[time_step]][i,'i'],bud$DRAINS[[stress_period]][[time_step]][i,'j'],bud$DRAINS[[stress_period]][[time_step]][i,'k']] <- darcy$upper[bud$DRAINS[[stress_period]][[time_step]][i,'i'],bud$DRAINS[[stress_period]][[time_step]][i,'j'],bud$DRAINS[[stress_period]][[time_step]][i,'k']] - bud$DRAINS[[stress_period]][[time_step]][i,'value']/delc[bud$DRAINS[[stress_period]][[time_step]][i,'i']]/delr[bud$DRAINS[[stress_period]][[time_step]][i,'j']]
     }    
   }
   if('RIVER_LEAKAGE' %in% names(bud)) {
-    bud$RIVER_LEAKAGE[[stress_period]][[time_step]] <- cbind(bud$RIVER_LEAKAGE[[stress_period]][[time_step]],convert_id_to_ijk(bud$RIVER_LEAKAGE[[stress_period]][[time_step]]$ICELL, dis = dis))
+    bud$RIVER_LEAKAGE[[stress_period]][[time_step]] <- cbind(bud$RIVER_LEAKAGE[[stress_period]][[time_step]],convert_modflow_id_to_ijk(bud$RIVER_LEAKAGE[[stress_period]][[time_step]]$ICELL, dis = dis))
     for(i in 1:nrow(bud$RIVER_LEAKAGE[[stress_period]][[time_step]])) {
       darcy$upper[bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'i'],bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'j'],bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'k']] <- darcy$upper[bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'i'],bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'j'],bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'k']] - bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'value']/delc[bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'i']]/delr[bud$RIVER_LEAKAGE[[stress_period]][[time_step]][i,'j']]
     }   
