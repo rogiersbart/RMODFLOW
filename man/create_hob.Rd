@@ -4,10 +4,23 @@
 \alias{create_hob}
 \title{Create an \code{RMODFLOW} hob object}
 \usage{
-create_hob(xFilter, yFilter, topFilter, bottomFilter, head, i, j, xGrid, yGrid,
-  multiLayer = F, dis, useTransmissivity = F, huf = NA, mlt = NA)
+create_hob(name, x, y, z = NULL, top = NULL, bottom = NULL, head_name,
+  head, time = x * 0, STATISTIC = rep(1, length(x)), STAT_FLAG = rep(0,
+  length(x)), PLOT_SYMBOL = rep(1, length(x)), dis, MAXM = dis$NLAY,
+  IUHOBSV = 0, HOBDRY = -999, NOPRINT = TRUE, TOMULTH = 1, prj = NULL,
+  useTransmissivity = F, huf = NA, mlt = NA)
 }
 \arguments{
+\item{head}{}
+
+\item{dis}{}
+
+\item{useTransmissivity}{}
+
+\item{huf}{}
+
+\item{mlt}{}
+
 \item{xFilter}{x coordinates of the monitoring well filter}
 
 \item{yFilter}{y coordinates of the monitoring well filter}
@@ -15,8 +28,6 @@ create_hob(xFilter, yFilter, topFilter, bottomFilter, head, i, j, xGrid, yGrid,
 \item{topFilter}{z coordinate of the top of the filter}
 
 \item{bottomFilter}{z coordinate of the bottom of the filter}
-
-\item{head}{}
 
 \item{i}{}
 
@@ -27,20 +38,12 @@ create_hob(xFilter, yFilter, topFilter, bottomFilter, head, i, j, xGrid, yGrid,
 \item{yGrid}{}
 
 \item{multiLayer}{}
-
-\item{dis}{}
-
-\item{useTransmissivity}{}
-
-\item{huf}{}
-
-\item{mlt}{}
 }
 \value{
 Object of class hob
 }
 \description{
-\code{create.hob} creates in a MODFLOW budget ascii file created from the binary file (typically *.bud) using \code{Read_budget.exe} and returns it as an \code{\link{RMODFLOW}} bud object.
+\code{create_hob} creates an RMODFLOW hob object
 }
 \seealso{
 \code{\link{read.hob}} and \code{\link{write.hob}}
