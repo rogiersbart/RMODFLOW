@@ -71,7 +71,7 @@ write_lpf <- function(lpf, file, IPRN=-1)
       }
       
     # Data set 13
-      if('TS' %in% dis$SSTR) {
+      if('TR' %in% dis$SSTR) {
         if('SS' %in% lpf$PARTYP) {
           cat(paste0(IPRN,'\n'),file=file,append=TRUE)
         } else {
@@ -80,7 +80,7 @@ write_lpf <- function(lpf, file, IPRN=-1)
       }
       
     # Data set 14
-      if('TS' %in% dis$SSTR & lpf$LAYTYP[k] != 0) {
+      if('TR' %in% dis$SSTR & lpf$LAYTYP[k] != 0) {
         if('SY' %in% lpf$PARTYP) {
           cat(paste0(IPRN,'\n'),file=file,append=TRUE)
         } else {
