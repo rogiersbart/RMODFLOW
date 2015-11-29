@@ -5,7 +5,7 @@
 \alias{cell_coordinates.huf}
 \title{Get cell x, y and z coordinates from a dis object}
 \usage{
-\method{cell_coordinates}{dis}(dis)
+\method{cell_coordinates}{dis}(dis, include_faces = FALSE)
 
 \method{cell_coordinates}{huf}(huf, dis = NULL)
 }
