@@ -4,43 +4,33 @@
 \alias{create_hob}
 \title{Create an \code{RMODFLOW} hob object}
 \usage{
-create_hob(name, x, y, z = NULL, top = NULL, bottom = NULL, head_name,
-  head, time = x * 0, STATISTIC = rep(1, length(x)), STAT_FLAG = rep(0,
-  length(x)), PLOT_SYMBOL = rep(1, length(x)), dis, MAXM = dis$NLAY,
-  IUHOBSV = 0, HOBDRY = -999, NOPRINT = TRUE, TOMULTH = 1, prj = NULL,
-  useTransmissivity = F, huf = NA, mlt = NA)
+create_hob(locations, time_series, dis, hydraulic_conductivity = array(1, dim
+  = c(dis$NROW, dis$NCOL, dis$NLAY)), IUHOBSV = 0, HOBDRY = -888,
+  NOPRINT = FALSE, TOMULTH = 1, unique_obsnam = FALSE, prj = NULL)
 }
 \arguments{
-\item{head}{}
+\item{locations}{data.frame with the name, x and y coordinates, and top and bottom of the monitoring well filter}
 
-\item{dis}{}
+\item{time_series}{data.frame with the name of the monitoring well filter and the observation time and head}
 
-\item{useTransmissivity}{}
+\item{dis}{RMODFLOW dis object}
 
-\item{huf}{}
+\item{hydraulic_conductivity}{3d array with hydraulic conductivity values, for calculating the weights for a multilayer observation}
 
-\item{mlt}{}
+\item{IUHOBSV}{file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)}
 
-\item{xFilter}{x coordinates of the monitoring well filter}
+\item{HOBDRY}{value of the simulated equivalent for a dry cell used in the observation output file}
 
-\item{yFilter}{y coordinates of the monitoring well filter}
+\item{NOPRINT}{logical; if TRUE, the input and output are not printed in the listing file}
 
-\item{topFilter}{z coordinate of the top of the filter}
+\item{unique_obsnam}{logical; should an ID number be added to OBSNAM for filters with observations at different times? Defaults to FALSE.}
 
-\item{bottomFilter}{z coordinate of the bottom of the filter}
+\item{prj}{RMODFLOW prj object; provide if coordinates in locations are real world coordinates}
 
-\item{i}{}
-
-\item{j}{}
-
-\item{xGrid}{}
-
-\item{yGrid}{}
-
-\item{multiLayer}{}
+\item{TOMULT}{time offset multiplier, to convert the time unit in time_series to the MODFLOW time unit}
 }
 \value{
-Object of class hob
+RMODFLOW hob object
 }
 \description{
 \code{create_hob} creates an RMODFLOW hob object
