@@ -12,7 +12,6 @@ Imports:
     ggplot2,
     akima,
     rgl,
-    RTOOLZ,
     readr,
     hydroPSO,
     DEoptim
