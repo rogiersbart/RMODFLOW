@@ -7,7 +7,8 @@
 read_hed(file = {     cat("Please select hed file...\\n")     file.choose() },
   dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
   }, ba6 = {     cat("Please select ba6 file...\\n")    
-  read_ba6(file.choose(), dis = dis) }, convert_HNOFLO_to_NA = TRUE)
+  read_ba6(file.choose(), dis = dis) }, convert_HNOFLO_to_NA = TRUE,
+  binary = TRUE)
 }
 \arguments{
 \item{file}{filename; typically '*.hed'}
