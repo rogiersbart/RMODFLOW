@@ -23,7 +23,7 @@
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot modflow_2d_array
 #' @export
-#' @import ggplot2 directlabels akima rgl RTOOLZ
+#' @import ggplot2 directlabels akima rgl
 plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_2d_array*0+1,ba6$IBOUND[,,1]), colour_palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
 {
   if(plot3d) {

@@ -6,7 +6,6 @@
 #' @rdname performance
 #' @method performance hpr
 #' @export
-#' @import RTOOLZ
 performance.hpr <- function(hpr)
 {
   obsAndSims <- data.frame(SIMULATED.EQUIVALENT=hpr$SIMULATED.EQUIVALENT, OBSERVED.VALUE=hpr$OBSERVED.VALUE,OBSERVATION.NAME=hpr$OBSERVATION.NAME)[which(hpr$SIMULATED.EQUIVALENT!=-888),]
