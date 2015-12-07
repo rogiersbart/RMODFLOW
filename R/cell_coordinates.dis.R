@@ -14,7 +14,7 @@ cell_coordinates.dis <- function(dis, include_faces = FALSE)
   for(k in 2:dis$NLAY) {
     cell_coordinates$z[,,k] <- (dis$BOTM[,,(k-1)]+dis$BOTM[,,k])/2
   }
-  class(cell_coordinates$z) <- 'modflow_3d_array'
+  class(cell_coordinates$z) <- '3d_array'
   cell_coordinates$x <- cell_coordinates$z*0
   cell_coordinates$y <- cell_coordinates$z*0
   cell_coordinates$y[,,] <- rev(cumsum(rev(dis$DELC))-rev(dis$DELC)/2)

@@ -12,20 +12,20 @@ read_mlt <- function(file = {cat('Please select mlt file...\n'); file.choose()},
   mlt <- NULL
   mlt.lines <- read_lines(file)
   
-  # Data set 0
+  # data set 0
     comments <- get_comments_from_lines(mlt.lines)
     mlt.lines <- remove_comments_from_lines(mlt.lines)
   
-  # Data set 1
+  # data set 1
     mlt$NML <- as.numeric(mlt.lines[1])
     mlt.lines <- mlt.lines[-1]
   
-  # Data set 2 + 3
+  # data set 2 + 3
     mlt$RMLT <- list()
     for(i in 1:mlt$NML) {
       mlt$MLTNAM[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
       mlt.lines <- mlt.lines[-1]
-      dataSet <- read_modflow_array(mlt.lines,dis$NROW,dis$NCOL,1)
+      dataSet <- read_array(mlt.lines,dis$NROW,dis$NCOL,1)
       mlt.lines <- dataSet$remaining_lines
       mlt$RMLT[[i]] <- dataSet$modflow_array
       rm(dataSet)

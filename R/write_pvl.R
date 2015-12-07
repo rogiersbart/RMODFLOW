@@ -6,16 +6,16 @@
 #' @export
 write_pvl <- function(pvl, file)
 {
-  # Data set 0
+  # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Parameter Value File created by RMODFLOW, version',v,'at',date(),'\n'), file=file)
     cat(paste('#', comment(pvl)), sep='\n', file=file, append=TRUE)
     
-  # Data set 1
-    write_modflow_variables(pvl$NP, file=file)
+  # data set 1
+    write_variables(pvl$NP, file=file)
   
-  # Data set 2
+  # data set 2
     for(i in 1:pvl$NP) {
-      write_modflow_variables(pvl$PARNAM[i], pvl$Parval[i], file=file)
+      write_variables(pvl$PARNAM[i], pvl$Parval[i], file=file)
     }  
 }

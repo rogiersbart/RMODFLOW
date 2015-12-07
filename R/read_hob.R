@@ -11,11 +11,11 @@ read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()})
   hob.lines <- read_lines(file)
   hob <- NULL
   
-  # Data set 0
+  # data set 0
     comments <- get_comments_from_lines(hob.lines)
     hob.lines <- remove_comments_from_lines(hob.lines)
   
-  # Data set 1
+  # data set 1
     line.split <- split_line_words(hob.lines[1]); hob.lines <- hob.lines[-1]
     hob$NH <- as.numeric(line.split[1])
     hob$MOBS <- as.numeric(line.split[2])
@@ -25,12 +25,12 @@ read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()})
     hob$NOPRINT <- F
     if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$NOPRINT <- TRUE
   
-  # Data set 2
+  # data set 2
     line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
     hob$TOMULTH <- line.split[1]
     hob$EVH <- line.split[2]
   
-  # Data set 3 - 6
+  # data set 3 - 6
     hob$OBSNAM <- NULL; hob$LAYER <- NULL; hob$ROW <- NULL; hob$COLUMN <- NULL; hob$IREFSP <- NULL; hob$TOFFSET <- NULL
     hob$ROFF <- NULL; hob$COFF <- NULL; hob$HOBS <- NULL; hob$STATISTIC <- NULL; hob$STATFLAG <- NULL; hob$PLOTSYMBOL <- NULL
     hob$STATh <- NULL; hob$STATdd <- NULL; IREFSP <- NULL
@@ -59,10 +59,10 @@ read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()})
         }
       }
       if(hob$IREFSP[nr] < 0) {
-        # Data set 5
+        # data set 5
         line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
         hob$ITT <- line.split[1]    
-        # Data set 6
+        # data set 6
         line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
         for(time in 1:abs(hob$IREFSP)) {
           hob$OBSNAM[[nr]][time] <- line.split[1]

@@ -13,11 +13,11 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
   huf.lines <- read_lines(file)
   huf <- NULL
 
-  # Data set 0
+  # data set 0
     comments <- get_comments_from_lines(huf.lines)
     huf.lines <- remove_comments_from_lines(huf.lines)
   
-  # Data set 1
+  # data set 1
     dataSet1 <- split_line_numbers(huf.lines[1])
     huf.lines <- huf.lines[-1]
     huf$IHUFCB <- dataSet1[1]
@@ -28,13 +28,13 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
     huf$IOHUFFLOWS <- dataSet1[6]
     rm(dataSet1)
   
-  # Data set 2
+  # data set 2
     huf$LTHUF <- split_line_numbers(huf.lines[1]); huf.lines <- huf.lines[-1]
   
-  # Data set 3                            
+  # data set 3                            
     huf$LAYWT <- split_line_numbers(huf.lines[1]); huf.lines <- huf.lines[-1]
   
-  # Data set 4
+  # data set 4
     if(sum(huf$LAYWT > 0)) {
       dataSet4 <- split_line_numbers(huf.lines[1])
       huf.lines <- huf.lines[-1]
@@ -44,27 +44,27 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
       rm(dataSet4)
     }
   
-  # Data set 5
-    dataSet5 <- read_modflow_array(huf.lines,dis$NROW,dis$NCOL,sum(which(huf$LAYWT!=0)))
+  # data set 5
+    dataSet5 <- read_array(huf.lines,dis$NROW,dis$NCOL,sum(which(huf$LAYWT!=0)))
     huf.lines <- dataSet5$remaining_lines
     huf$WETDRY <- dataSet5$modflow_array
     rm(dataSet5)
   
-  # Data set 6-8
+  # data set 6-8
     huf$HGUNAM <- vector(mode='character',length=huf$NHUF)
     huf$TOP <- array(dim=c(dis$NROW, dis$NCOL, huf$NHUF)); class(huf$TOP) <- 'mf3darray'
     huf$THCK <- array(dim=c(dis$NROW, dis$NCOL, huf$NHUF)); class(huf$THCK) <- 'mf3darray'
     for(i in 1:huf$NHUF) {
       huf$HGUNAM[i] <- split_line_words(huf.lines[1])[1]
       huf.lines <- huf.lines[-1]
-      dataSet <- read_modflow_array(huf.lines,dis$NROW,dis$NCOL,2)
+      dataSet <- read_array(huf.lines,dis$NROW,dis$NCOL,2)
       huf.lines <- dataSet$remaining_lines
       huf$TOP[,,i] <- dataSet$modflow_array[,,1]
       huf$THCK[,,i] <- dataSet$modflow_array[,,2]
       rm(dataSet)
     }
   
-  # Data set 9
+  # data set 9
     huf$HGUHANI <- vector(mode='numeric',length=huf$NHUF)   
     huf$HGUVANI <- vector(mode='numeric',length=huf$NHUF)
     if(as.character(strsplit(huf.lines[1],' ')[[1]][1] == 'ALL')) {
@@ -84,7 +84,7 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
       }      
     }
   
-  # Data set 10-11
+  # data set 10-11
     huf$PARNAM <- vector(mode='character',length=huf$NPHUF)
     huf$PARTYP <- vector(mode='character',length=huf$NPHUF)
     huf$Parval <- vector(mode='numeric',length=huf$NPHUF)
@@ -107,7 +107,7 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
       } 
     }
   
-  # Data set 12
+  # data set 12
     # These are print options, not implemented yet...
   
   comment(huf) <- comments

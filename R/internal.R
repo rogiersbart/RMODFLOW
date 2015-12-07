@@ -118,7 +118,7 @@ performance_measures <- function(observations, predictions,print=F)
 #' Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param object MODFLOW input file text object, starting with the free-format control record
 #' @return A list containing the array and the remaining text of the MODFLOW input file
-read_modflow_array <- function(remaining_lines,NROW,NCOL,NLAY)
+read_array <- function(remaining_lines,NROW,NCOL,NLAY)
 {
   # Initialize array object
   modflow_array <- array(dim=c(NROW,NCOL,NLAY))
@@ -173,11 +173,23 @@ read_modflow_array <- function(remaining_lines,NROW,NCOL,NLAY)
   }
   
   # Set class of object (2darray; 3darray)
-  if(NLAY==1){modflow_array <- as.matrix(modflow_array[,,1]); class(modflow_array) <- 'modflow_2d_array'}
-  if(NLAY!=1) class(modflow_array) <- 'modflow_3d_array'
+  if(NLAY==1){modflow_array <- as.matrix(modflow_array[,,1]); class(modflow_array) <- '2d_array'}
+  if(NLAY!=1) class(modflow_array) <- '3d_array'
   
   # Return output of reading function 
   return(list(modflow_array=modflow_array,remaining_lines=remaining_lines))
+}
+#' Read modflow variables
+#' If all are numbers, returns numeric, otherwise returns character vector
+read_variables <- function(remaining_lines) {
+  variables <- remove_empty_strings(strsplit(remove_comments_end_of_line(remaining_lines[1]),' |\t')[[1]])
+  if(!any(is.na(as.numeric(variables)))) variables <- as.numeric(variables)
+  return(list(variables=variables,remaining_lines= remaining_lines[-1]))
+}
+#' Read comments
+#' 
+read_comments <- function(remaining_lines) {
+  # replace get_comments and remove_comments by this function, and add write_comments function!
 }
 #' Reversed rainbow color palette
 #' 
@@ -189,7 +201,7 @@ rev_rainbow <- function(...)
 #' Write modflow array
 #' 
 #' Internal function used in the write_* functions for writing array datasets
-write_modflow_array <- function(modflow_array, file, CNSTNT=1, IPRN=-1, append=TRUE) {
+write_array <- function(modflow_array, file, CNSTNT=1, IPRN=-1, append=TRUE) {
 
   if(is.null(dim(modflow_array))) {
     if(prod(c(modflow_array)[1] == c(modflow_array))==1) {
@@ -226,6 +238,6 @@ write_modflow_array <- function(modflow_array, file, CNSTNT=1, IPRN=-1, append=T
 #' Write modflow variables
 #' 
 #' Internal function used in the write_* functions for writing single line datasets
-write_modflow_variables <- function(..., file, append=TRUE) {
+write_variables <- function(..., file, append=TRUE) {
   cat(paste0(paste(..., sep=' ',collapse=' '), '\n'), file=file, append=append)
 }

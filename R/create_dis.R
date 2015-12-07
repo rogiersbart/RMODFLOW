@@ -37,10 +37,10 @@ create_dis <- function(NLAY = 3,
                        SSTR = c('SS', rep('TS', NPER - 1))) {
   dis <- NULL
   
-  # Data set 0
+  # data set 0
     #comments <- get_comments_from_lines(dis.lines)
     
-  # Data set 1
+  # data set 1
     dis$NLAY <- NLAY
     dis$NROW <- NROW
     dis$NCOL <- NCOL
@@ -48,23 +48,23 @@ create_dis <- function(NLAY = 3,
     dis$ITMUNI <- ITMUNI
     dis$LENUNI <- LENUNI
   
-  # Data set 2
+  # data set 2
     dis$LAYCBD <- LAYCBD
   
-  # Data set 3
+  # data set 3
     dis$DELR <- DELR
-  # Data set 4
+  # data set 4
     dis$DELC <- DELC
   
-  # Data set 5
+  # data set 5
     dis$TOP <- TOP
-    class(dis$TOP) <- 'modflow_2d_array'
+    class(dis$TOP) <- '2d_array'
   
-  # Data set 6
+  # data set 6
     dis$BOTM <- BOTM
-    class(dis$BOTM) <- 'modflow_3d_array'
+    class(dis$BOTM) <- '3d_array'
 
-  # Data set 7
+  # data set 7
     dis$PERLEN <- PERLEN
     dis$NSTP <- NSTP
     dis$TSMULT <- TSMULT

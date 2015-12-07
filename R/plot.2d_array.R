@@ -1,11 +1,11 @@
 #' Plot a MODFLOW 2D array
 #' 
-#' \code{plot.modflow_2d_array} plots a MODFLOW 2D array.
+#' \code{plot.2d_array} plots a MODFLOW 2D array.
 #' 
-#' @param modflow_2d_array an object of class modflow_2d_array, or a 2D matrix
+#' @param rmodflow_array an object of class 2d_array
 #' @param dis discretization file object
-#' @param ba6 basic file object; optional
-#' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if ba6 is provided, the first layer of ba6$IBOUND
+#' @param bas basic file object; optional
+#' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$IBOUND
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param levels levels to indicate on the colour scale; defaults to nlevels pretty breakpoints
@@ -21,10 +21,10 @@
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
-#' @method plot modflow_2d_array
+#' @method plot 2d_array
 #' @export
 #' @import ggplot2 directlabels akima rgl
-plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_2d_array*0+1,ba6$IBOUND[,,1]), colour_palette=rev_rainbow, zlim = range(modflow_2d_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
+plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(bas),rmodflow_array*0+1,bas$IBOUND[,,1]), colour_palette=rev_rainbow, zlim = range(rmodflow_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
 {
   if(plot3d) {
     x <- (cumsum(dis$DELR)-dis$DELR/2)
@@ -32,7 +32,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
     z <- t(height)*height_exaggeration
     if(!add) rgl::open3d()
     colorlut <- colorRampPalette(colour_palette(nlevels))(25) # height color lookup table
-    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(modflow_2d_array)),rule=2)$y) ] # assign colors to heights for each point
+    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(rmodflow_array)),rule=2)$y) ] # assign colors to heights for each point
     alpha <- rep(1,length(col))
     alpha[which(c(t(mask))==0)] <- 0
     if(type=='fill') rgl::surface3d(x,y,z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
@@ -55,7 +55,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(modflow_2d_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
@@ -88,7 +88,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(modflow_2d_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
@@ -121,7 +121,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(modflow_2d_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
@@ -141,7 +141,7 @@ plot.modflow_2d_array <- function(modflow_2d_array, dis, ba6=NULL, mask=ifelse0(
                  coord_equal())
       }
     } else if(type=='contour') {
-      xy$z <- c(t(modflow_2d_array*mask^2))
+      xy$z <- c(t(rmodflow_array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)
       xy <- interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$DELR)/min(dis$DELR))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$DELC)/min(dis$DELC))))

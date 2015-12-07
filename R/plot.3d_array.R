@@ -1,29 +1,29 @@
 #' Plot a 2D section through a MODFLOW 3D array
 #' 
-#' \code{plot.modflow_3d_array} plots a 2D section through a MODFLOW 3D array.
+#' \code{plot.3d_array} plots a 2D section through a MODFLOW 3D array.
 #' 
-#' @param modflow_3d_array an object of class modflow_3d_array
+#' @param rmodflow_array an object of class 3d_array
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
 #' @param dis discretization file object
-#' @param ba6 basic file object; optional
-#' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if ba6 is provided, ba6$IBOUND
+#' @param bas basic file object; optional
+#' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$IBOUND
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param ... parameters provided to plot.modflow_2d_array
+#' @param ... parameters provided to plot.2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
-#' @method plot modflow_3d_array
+#' @method plot 3d_array
 #' @export
-plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis, ba6=NULL, mask=ifelse0(is.null(ba6),modflow_3d_array*0+1,ba6$IBOUND), zlim = range(modflow_3d_array[ifelse0(is.null(i),c(1:dim(modflow_3d_array)[1]),i),ifelse0(is.null(j),c(1:dim(modflow_3d_array)[2]),j),ifelse0(is.null(k),c(1:dim(modflow_3d_array)[3]),k)], finite=TRUE), colour_palette=rev_rainbow, nlevels = 7, type='fill', add=FALSE, ...)
+plot.3d_array <- function(rmodflow_array, i=NULL, j=NULL, k=NULL, dis, bas=NULL, mask=ifelse0(is.null(bas),rmodflow_array*0+1,bas$IBOUND), zlim = range(rmodflow_array[ifelse0(is.null(i),c(1:dim(rmodflow_array)[1]),i),ifelse0(is.null(j),c(1:dim(rmodflow_array)[2]),j),ifelse0(is.null(k),c(1:dim(rmodflow_array)[3]),k)], finite=TRUE), colour_palette=rev_rainbow, nlevels = 7, type='fill', add=FALSE, ...)
 {
   if(!is.null(k))
   {
-    modflow_2d_array <- modflow_3d_array[,,k]
-    class(modflow_2d_array) <- 'modflow_2d_array'
+    rmodflow_array <- rmodflow_array[,,k]
+    class(rmodflow_array) <- '2d_array'
     mask <- mask[,,k]
-    plot(modflow_2d_array, dis, mask=mask, zlim=zlim, type=type, add=add, ...)
+    plot(rmodflow_array, dis, mask=mask, zlim=zlim, type=type, add=add, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$DELR)-dis$DELR/2
@@ -48,7 +48,7 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((modflow_3d_array[,j,]*mask[,j,]^2)))
+      values <- data.frame(id = ids,value = c((rmodflow_array[,j,]*mask[,j,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
       xlabel <- 'y'
@@ -67,7 +67,7 @@ plot.modflow_3d_array <- function(modflow_3d_array, i=NULL, j=NULL, k=NULL, dis,
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((modflow_3d_array[i,,]*mask[i,,]^2)))
+      values <- data.frame(id = ids,value = c((rmodflow_array[i,,]*mask[i,,]^2)))
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
       xlabel <- 'x'

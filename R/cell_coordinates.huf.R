@@ -10,7 +10,7 @@ cell_coordinates.huf <- function(huf, dis = NULL)
 {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$TOP - huf$THCK/2
-  class(cell_coordinates$z) <- 'modflow_3d_array'
+  class(cell_coordinates$z) <- '3d_array'
   if(!is.null(dis)) {
     cell_coordinates$x <- cell_coordinates$z*0
     cell_coordinates$y <- cell_coordinates$z*0

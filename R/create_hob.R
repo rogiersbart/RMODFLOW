@@ -28,10 +28,10 @@ create_hob <- function(locations,
   
   hob <- NULL
   
-  # Data set 0
+  # data set 0
     # comments should be provided with ?comment
   
-  # Data set 1
+  # data set 1
     hob$NH <- nrow(time_series)
     hob$MOBS <- NA # set later
     hob$MAXM <- NA # set later
@@ -39,11 +39,11 @@ create_hob <- function(locations,
     hob$HOBDRY <- HOBDRY
     hob$NOPRINT <- NOPRINT
   
-  # Data set 2
+  # data set 2
     hob$TOMULTH <- TOMULTH
     # hob$EVH # MODFLOW-2000
   
-  # Data set 3-6
+  # data set 3-6
   
     hob$OBSNAM <- hob$TOFFSET <- hob$HOBS <- hob$MLAY <- hob$PR <- hob$IREFSP <- list()
     locations_top <- cbind(locations[,c('x','y','top')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])

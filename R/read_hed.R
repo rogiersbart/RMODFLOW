@@ -4,14 +4,14 @@
 #' 
 #' @param file filename; typically '*.hed'
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
-#' @param ba6 basic file object; defaults to that with the same filename but with extension '.ba6'
+#' @param bas basic file object; defaults to that with the same filename but with extension '.bas'
 #' @param convert_HNOFLO_to_NA logical; should HNOFLO values be converted to NA?
 #' @return object of class hed
 #' @importFrom readr read_lines
 #' @export
 read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
                      dis = {cat('Please select dis file...\n'); read_dis(file.choose())},
-                     ba6 = {cat('Please select ba6 file...\n'); read_ba6(file.choose(), dis = dis)},
+                     bas = {cat('Please select bas file...\n'); read_bas(file.choose(), dis = dis)},
                      convert_HNOFLO_to_NA=TRUE,
                      binary = TRUE) {
   if(binary) {
@@ -44,7 +44,6 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       TOTIM <- readBin(con,what='numeric',n = 1, size = 4)
       DESC <- readChar(con,nchars=16)
     }
-    class(hed) <- c('hed','4d_array')
     no_data <- which(is.na(attr(hed, 'KSTP')))
     hed <- hed[,,,-no_data]
     attr(hed, 'KSTP') <- attr(hed, 'KSTP')[-no_data]
@@ -55,7 +54,6 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
     attr(hed, 'NCOL') <- attr(hed, 'NCOL')[-no_data]
     attr(hed, 'NROW') <- attr(hed, 'NROW')[-no_data]
     attr(hed, 'ILAY') <- attr(hed, 'ILAY')[-no_data]
-    return(hed)
   } else {
     hed.lines <- read_lines(file)
     hed <- array(NA, dim = c(dis$NROW, dis$NCOL, dis$NLAY, sum(dis$NSTP)))
@@ -72,7 +70,7 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       NROW <- as.numeric(variables[7])
       ILAY <- as.numeric(variables[8])
       stp_nr <- ifelse(KPER==1,KSTP,cumsum(dis$NSTP)[KPER-1]+KSTP)
-      dataSet <- read_modflow_array(hed.lines,NROW,NCOL,1)
+      dataSet <- read_array(hed.lines,NROW,NCOL,1)
       hed[,,ILAY,stp_nr] <- dataSet$modflow_array
       hed.lines <- dataSet$remaining_lines
       attr(hed, 'KSTP')[stp_nr] <- KSTP
@@ -84,7 +82,6 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       attr(hed, 'NROW')[stp_nr] <- NROW
       attr(hed, 'ILAY')[stp_nr] <- ILAY
     }
-    class(hed) <- c('hed','4d_array')
     no_data <- which(is.na(attr(hed, 'KSTP')))
     if(length(no_data != 0)) {
       hed <- hed[,,,-no_data]
@@ -97,8 +94,8 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       attr(hed, 'NROW') <- attr(hed, 'NROW')[-no_data]
       attr(hed, 'ILAY') <- attr(hed, 'ILAY')[-no_data]
     }
-    return(hed)
   }
-  if(convert_HNOFLO_to_NA) hed[which(hed==ba6$HNOFLO)] <- NA
+  class(hed) <- c('hed','4d_array')
+  if(convert_HNOFLO_to_NA) hed[which(hed==bas$HNOFLO)] <- NA
   return(hed)
 }

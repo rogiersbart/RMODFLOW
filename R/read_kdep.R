@@ -15,26 +15,26 @@ read_kdep <- function(file = {cat('Please select kdep file...\n'); file.choose()
   kdep.lines <- read_lines(file)
   kdep <- NULL
   
-  # Data set 0
+  # data set 0
     comments <- get_comments_from_lines(kdep.lines)
     kdep.lines <- remove_comments_from_lines(kdep.lines)
   
-  # Data set 1
+  # data set 1
     dataSet1 <- split_line_numbers(kdep.lines[1])
     kdep.lines <- kdep.lines[-1]
     kdep$NPKDEP <- dataSet1[1]
     kdep$IFKDEP <- dataSet1[2]
     rm(dataSet1)
   
-  # Data set 2
+  # data set 2
     if(kdep$IFKDEP > 0) {
-      dataSet2 <- read_modflow_array(kdep.lines,dis$NROW,dis$NCOL,1)
+      dataSet2 <- read_array(kdep.lines,dis$NROW,dis$NCOL,1)
       kdep.lines <- dataSet2$remaining_lines
       kdep$RS <- dataSet2$modflow_array
       rm(dataSet2)
     }
   
-  # Data set 3-4
+  # data set 3-4
     kdep$PARNAM <- vector(mode='character',length=kdep$NPKDEP)
     kdep$PARTYP <- vector(mode='character',length=kdep$NPKDEP)
     kdep$Parval <- vector(mode='numeric',length=kdep$NPKDEP)

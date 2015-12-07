@@ -70,17 +70,17 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1)) {
           bud[[name]][[KPER]][[KSTP]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY))),c(2,1,3))
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_3d_array'
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- '3d_array'
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3) {
           bud[[name]][[KPER]][[KSTP]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$layer) <- 'modflow_2d_array'
+          class(bud[[name]][[KPER]][[KSTP]]$layer) <- '2d_array'
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_2d_array'
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- '2d_array'
         }
         if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==4) {
           bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- 'modflow_2d_array'
+          class(bud[[name]][[KPER]][[KSTP]]$data) <- '2d_array'
         }
       }
       
