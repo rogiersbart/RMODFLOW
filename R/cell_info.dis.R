@@ -10,16 +10,16 @@
 #' @export
 cell_info.dis <- function(dis, i, j)
 {
-  cat('Column width = ',dis$DELR[j], '\n')
-  cat('Row width = ', dis$DELC[i], '\n')
+  cat('Column width = ',dis$delr[j], '\n')
+  cat('Row width = ', dis$delc[i], '\n')
   cat('Vertical boundaries:\n')
   
   # layers: top bottom thickness
   cat('\t\t Top \t\t Bottom \t Thickness\n', sep='')
-  cat('Layer 1:\t', dis$TOP[i, j], '\t', dis$BOTM[i,j,1],'\t', dis$TOP[i, j]-dis$BOTM[i,j,1],'\n', sep='')
+  cat('Layer 1:\t', dis$top[i, j], '\t', dis$botm[i,j,1],'\t', dis$top[i, j]-dis$botm[i,j,1],'\n', sep='')
   
-  for(i in 2:dis$NLAY)
+  for(i in 2:dis$nlay)
   {
-    cat('Layer ',i,':\t', dis$BOTM[i, j, i-1], '\t', dis$BOTM[i,j,i],'\t', dis$BOTM[i, j, i-1]-dis$BOTM[i,j,i],'\n', sep='')
+    cat('Layer ',i,':\t', dis$botm[i, j, i-1], '\t', dis$botm[i,j,i],'\t', dis$botm[i, j, i-1]-dis$botm[i,j,i],'\n', sep='')
   }
 }

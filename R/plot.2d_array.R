@@ -5,7 +5,7 @@
 #' @param rmodflow_array an object of class 2d_array
 #' @param dis discretization file object
 #' @param bas basic file object; optional
-#' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$IBOUND
+#' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param levels levels to indicate on the colour scale; defaults to nlevels pretty breakpoints
@@ -16,19 +16,19 @@
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
 #' @param label logical; should labels be added to contour plot
 #' @param prj projection file object
-#' @param target_CRS coordinate reference system for the plot
+#' @param target_crs coordinate reference system for the plot
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot 2d_array
 #' @export
-#' @import ggplot2 directlabels akima rgl
-plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(bas),rmodflow_array*0+1,bas$IBOUND[,,1]), colour_palette=rev_rainbow, zlim = range(rmodflow_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_CRS=NULL,alpha=1,plot3d=FALSE,height=NULL)
+#' @import ggplot2 directlabels akima rgl grid quadprog
+plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(bas),rmodflow_array*0+1,bas$ibound[,,1]), colour_palette=rev_rainbow, zlim = range(rmodflow_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_crs=NULL,alpha=1,plot3d=FALSE,height=NULL)
 {
   if(plot3d) {
-    x <- (cumsum(dis$DELR)-dis$DELR/2)
-    y <- sum(dis$DELC) - (cumsum(dis$DELC)-dis$DELC/2)
+    x <- (cumsum(dis$delr)-dis$delr/2)
+    y <- sum(dis$delc) - (cumsum(dis$delc)-dis$delc/2)
     z <- t(height)*height_exaggeration
     if(!add) rgl::open3d()
     colorlut <- colorRampPalette(colour_palette(nlevels))(25) # height color lookup table
@@ -38,14 +38,14 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
     if(type=='fill') rgl::surface3d(x,y,z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
     if(type=='grid') rgl::surface3d(x,y,z,front='lines',alpha=alpha,back='lines',smooth=FALSE) 
   } else {
-    xy <- expand.grid(cumsum(dis$DELR)-dis$DELR/2,sum(dis$DELC)-(cumsum(dis$DELC)-dis$DELC/2))
+    xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
     
     if(type=='fill') {  
-      ids <- factor(1:(dis$NROW*dis$NCOL))
-      xWidth <- rep(dis$DELR,dis$NROW)
-      yWidth <- rep(dis$DELC,each=dis$NCOL)
+      ids <- factor(1:(dis$nrow*dis$ncol))
+      xWidth <- rep(dis$delr,dis$nrow)
+      yWidth <- rep(dis$delc,each=dis$ncol)
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
       positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
@@ -61,8 +61,8 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_CRS)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_CRS)
+      if(!is.null(target_crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
@@ -76,9 +76,9 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
           coord_equal())
       }
     } else if(type=='factor') {  
-      ids <- factor(1:(dis$NROW*dis$NCOL))
-      xWidth <- rep(dis$DELR,dis$NROW)
-      yWidth <- rep(dis$DELC,each=dis$NCOL)
+      ids <- factor(1:(dis$nrow*dis$ncol))
+      xWidth <- rep(dis$delr,dis$nrow)
+      yWidth <- rep(dis$delc,each=dis$ncol)
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
       positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
@@ -94,8 +94,8 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_CRS)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_CRS)
+      if(!is.null(target_crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
@@ -109,9 +109,9 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
                  coord_equal())
       }
     } else if(type=='grid') {  
-      ids <- factor(1:(dis$NROW*dis$NCOL))
-      xWidth <- rep(dis$DELR,dis$NROW)
-      yWidth <- rep(dis$DELC,each=dis$NCOL)
+      ids <- factor(1:(dis$nrow*dis$ncol))
+      xWidth <- rep(dis$delr,dis$nrow)
+      yWidth <- rep(dis$delc,each=dis$ncol)
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
       positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
@@ -127,8 +127,8 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_CRS)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_CRS)                    
+      if(!is.null(target_crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)                    
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
@@ -144,9 +144,9 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
       xy$z <- c(t(rmodflow_array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)
-      xy <- interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$DELR)/min(dis$DELR))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$DELC)/min(dis$DELC))))
-      xy$x <- rep(xy$x,ceiling(sum(dis$DELC)/min(dis$DELC)))
-      xy$y <- rep(xy$y,each=ceiling(sum(dis$DELR)/min(dis$DELR)))
+      xy <- interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
+      xy$x <- rep(xy$x,ceiling(sum(dis$delc)/min(dis$delc)))
+      xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
       xy$z <- c(xy$z)
       xy <- as.data.frame(xy)
       xy <- xy[which(xy$z >= zlim[1] & xy$z <= zlim[2]),]

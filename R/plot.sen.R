@@ -8,9 +8,9 @@ plot.sen <- function(sen,type='css')
 {
   if(type=='css')
   {
-    dat <- data.frame(PARNAM=sen$PARNAM,css=sen$css)
-    dat$PARNAM <- factor(as.character(dat$PARNAM),levels=dat$PARNAM[order(dat$css,decreasing=TRUE)])
-    return(  ggplot(dat,aes(x=PARNAM,y=css))+
+    dat <- data.frame(parnam=sen$parnam,css=sen$css)
+    dat$parnam <- factor(as.character(dat$parnam),levels=dat$parnam[order(dat$css,decreasing=TRUE)])
+    return(  ggplot(dat,aes(x=parnam,y=css))+
                geom_bar(stat='identity')
     )
   } else if(type=='dss')

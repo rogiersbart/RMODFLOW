@@ -5,7 +5,7 @@
 #' @return dis object
 #' @export
 convert_dis_to_saturated_dis <- function(dis, hed) {
-  dis$BOTM[,,1:(dis$NLAY-1)][which(hed[,,2:(dis$NLAY)] < dis$BOTM[,,1:(dis$NLAY-1)])] <- hed[,,2:(dis$NLAY)][which(hed[,,2:(dis$NLAY)] < dis$BOTM[,,1:(dis$NLAY-1)])]
-  dis$TOP <- hed[,,1]
+  dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
+  dis$top <- hed[,,1]
   return(dis)
 }

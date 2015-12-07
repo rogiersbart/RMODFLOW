@@ -5,9 +5,9 @@
 #' @export
 convert_modflow_id_to_ijk <- function(id,dis)
 {
-  k <- id %/% (dis$NROW*dis$NCOL)
-  id <- id-k*(dis$NROW*dis$NCOL)
-  i <- id %/% dis$NCOL
-  j <- id-i*dis$NCOL
+  k <- id %/% (dis$nrow*dis$ncol)
+  id <- id-k*(dis$nrow*dis$ncol)
+  i <- id %/% dis$ncol
+  j <- id-i*dis$ncol
   return(data.frame(i=i+1,j=j,k=k+1))
 }

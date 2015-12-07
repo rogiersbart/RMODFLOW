@@ -7,22 +7,22 @@
 #' @param dis RMODFLOW dis object
 #' @param hydraulic_conductivity 3d array with hydraulic conductivity values, for calculating the weights for a multilayer observation
 #' @param prj RMODFLOW prj object; provide if coordinates in locations are real world coordinates
-#' @param IUHOBSV file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)
-#' @param HOBDRY value of the simulated equivalent for a dry cell used in the observation output file
-#' @param NOPRINT logical; if TRUE, the input and output are not printed in the listing file
+#' @param iuhobsv file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)
+#' @param hobdry value of the simulated equivalent for a dry cell used in the observation output file
+#' @param noprint logical; if TRUE, the input and output are not printed in the listing file
 #' @param TOMULT time offset multiplier, to convert the time unit in time_series to the MODFLOW time unit
-#' @param unique_obsnam logical; should an ID number be added to OBSNAM for filters with observations at different times? Defaults to FALSE.
+#' @param unique_obsnam logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.
 #' @return RMODFLOW hob object
 #' @export
 #' @seealso \code{\link{read.hob}} and \code{\link{write.hob}}
 create_hob <- function(locations,
                        time_series,
                        dis,
-                       hydraulic_conductivity = array(1, dim = c(dis$NROW, dis$NCOL, dis$NLAY)),
-                       IUHOBSV = 0,
-                       HOBDRY = -888,
-                       NOPRINT = FALSE,
-                       TOMULTH = 1,
+                       hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                       iuhobsv = 0,
+                       hobdry = -888,
+                       noprint = FALSE,
+                       tomulth = 1,
                        unique_obsnam = FALSE,
                        prj = NULL) {
   
@@ -32,66 +32,64 @@ create_hob <- function(locations,
     # comments should be provided with ?comment
   
   # data set 1
-    hob$NH <- nrow(time_series)
-    hob$MOBS <- NA # set later
-    hob$MAXM <- NA # set later
-    hob$IUHOBSV <- IUHOBSV
-    hob$HOBDRY <- HOBDRY
-    hob$NOPRINT <- NOPRINT
+    hob$nh <- nrow(time_series)
+    hob$mobs <- NA # set later
+    hob$maxm <- NA # set later
+    hob$iuhobsv <- iuhobsv
+    hob$hobdry <- hobdry
+    hob$noprint <- noprint
   
   # data set 2
-    hob$TOMULTH <- TOMULTH
+    hob$tomulth <- tomulth
     # hob$EVH # MODFLOW-2000
   
   # data set 3-6
   
-    hob$OBSNAM <- hob$TOFFSET <- hob$HOBS <- hob$MLAY <- hob$PR <- hob$IREFSP <- list()
+    hob$obsnam <- hob$toffset <- hob$hobs <- hob$mlay <- hob$pr <- hob$irefsp <- list()
     locations_top <- cbind(locations[,c('x','y','top')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])
     locations_bottom <- cbind(locations[,c('x','y','bottom')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])
     for(i in 1:nrow(locations)) {
       
-      hob$ROW[i] <- locations_top$i[i]
-      hob$COLUMN[i] <- locations_top$j[i]
+      hob$row[i] <- locations_top$i[i]
+      hob$column[i] <- locations_top$j[i]
       first_greater_than <- function(x, y) which(y > x)[1]
-      if(sum(time_series$name == locations$name[i]) > 1) hob$IREFSP[[i]] <- -sum(time_series$name == locations$name[i])
-      if(sum(time_series$name == locations$name[i]) == 1) hob$IREFSP[[i]] <- first_greater_than(time_series$time[which(time_series$name == locations$name[i])],cumsum(dis$PERLEN))
-      hob$ROFF[i] <- locations_top$roff[i]
-      hob$COFF[i] <- locations_top$coff[i]
+      if(sum(time_series$name == locations$name[i]) > 1) hob$irefsp[[i]] <- -sum(time_series$name == locations$name[i])
+      if(sum(time_series$name == locations$name[i]) == 1) hob$irefsp[[i]] <- first_greater_than(time_series$time[which(time_series$name == locations$name[i])],cumsum(dis$perlen))
+      hob$roff[i] <- locations_top$roff[i]
+      hob$coff[i] <- locations_top$coff[i]
       if(locations_top$k[i] == locations_bottom$k[i]) {
-        hob$LAYER[i] <- locations_top$k[i]
+        hob$layer[i] <- locations_top$k[i]
       } else {
-        hob$LAYER[i] <- - (locations_bottom$k[i] - locations_top$k[i] + 1)
+        hob$layer[i] <- - (locations_bottom$k[i] - locations_top$k[i] + 1)
       }
-      hob$MLAY[[i]] <- hob$PR[[i]] <- NA
-      if(hob$LAYER[i] < 0) {
-        hob$MLAY[[i]] <- locations_top$k[i]:locations_bottom$k[i]
-        length_in_cell <- rep(NA, abs(hob$LAYER[[i]]))
-        for(j in 1:abs(hob$LAYER[[i]])) {
+      hob$mlay[[i]] <- hob$pr[[i]] <- NA
+      if(hob$layer[i] < 0) {
+        hob$mlay[[i]] <- locations_top$k[i]:locations_bottom$k[i]
+        length_in_cell <- rep(NA, abs(hob$layer[[i]]))
+        for(j in 1:abs(hob$layer[[i]])) {
           layer_tops <- cell_coordinates(dis, include_faces = TRUE)$upper
-          length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i],hob$MLAY[[i]][j]]) - max(locations$bottom[i], dis$BOTM[locations_top$i[i],locations_top$j[i],hob$MLAY[[i]][j]])
+          length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]]) - max(locations$bottom[i], dis$BOTM[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]])
         }
-        hob$PR[[i]] <- hydraulic_conductivity[locations_top$i[i],locations_top$j[i],hob$MLAY[[i]]] * length_in_cell
-        hob$PR[[i]] <- hob$PR[[i]]/sum(hob$PR[[i]])
+        hob$pr[[i]] <- hydraulic_conductivity[locations_top$i[i],locations_top$j[i],hob$mlay[[i]]] * length_in_cell
+        hob$pr[[i]] <- hob$pr[[i]]/sum(hob$pr[[i]])
       }
-      if(hob$IREFSP[[i]] > 0) {
-        hob$TOFFSET[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$PERLEN)[1:(dis$NPER-1)])[hob$IREFSP[[i]]]
-        hob$HOBS[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
-        hob$OBSNAM[[i]] <- locations$name[i]
+      if(hob$irefsp[[i]] > 0) {
+        hob$toffset[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[hob$irefsp[[i]]]
+        hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
+        hob$obsnam[[i]] <- locations$name[i]
       } else {
         hob$ITT[i] <- 1 # to do: enable suppport for ITT = 2!
         if(unique_obsnam) {
-          hob$OBSNAM[[i]] <- paste(locations$name[i], c(1:abs(hob$IREFSP[[i]])), sep = '_')
+          hob$obsnam[[i]] <- paste(locations$name[i], c(1:abs(hob$irefsp[[i]])), sep = '_')
         } else {
-          hob$OBSNAM[[i]] <- rep(locations$name[i], abs(hob$IREFSP[[i]]))
+          hob$obsnam[[i]] <- rep(locations$name[i], abs(hob$irefsp[[i]]))
         }        
-        hob$IREFSP[[i]] <- apply(array(time_series$time[which(time_series$name == locations$name[i])],dim=c(length(time_series$time[which(time_series$name == locations$name[i])]))),1,first_greater_than,cumsum(dis$PERLEN))
-        hob$TOFFSET[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$PERLEN)[1:(dis$NPER-1)])[hob$IREFSP[[i]]]
-        hob$HOBS[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
+        hob$irefsp[[i]] <- apply(array(time_series$time[which(time_series$name == locations$name[i])],dim=c(length(time_series$time[which(time_series$name == locations$name[i])]))),1,first_greater_than,cumsum(dis$perlen))
+        hob$toffset[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[hob$irefsp[[i]]]
+        hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
       }
   }
-  
-  hob$MOBS <- length(which(hob$LAYER < 0))
-  hob$MAXM <- abs(min(hob$LAYER[which(hob$LAYER <= 1)]))
-
+  hob$mobs <- length(which(hob$layer < 0))
+  hob$maxm <- abs(min(hob$layer[which(hob$layer <= 1)]))
   return(hob)
 }

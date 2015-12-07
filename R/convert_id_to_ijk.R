@@ -5,9 +5,9 @@
 #' @export
 convert_id_to_ijk <- function(id,dis)
 {
-  k <- id %/% (dis$NROW*dis$NCOL)
-  id <- id-k*(dis$NROW*dis$NCOL)
-  j <- id %/% dis$NROW
-  i <- id-j*dis$NROW
+  k <- id %/% (dis$nrow*dis$ncol)
+  id <- id-k*(dis$nrow*dis$ncol)
+  j <- id %/% dis$nrow
+  i <- id-j*dis$nrow
   return(data.frame(i=i,j=j+1,k=k+1))
 }

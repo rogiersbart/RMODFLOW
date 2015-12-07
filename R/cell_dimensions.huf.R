@@ -7,15 +7,14 @@
 #' @rdname cell_dimensions
 #' @method cell_dimensions huf
 #' @export
-cell_dimensions.huf <- function(huf, dis = NULL, hed = NULL, include_volume = FALSE, include_faces = FALSE)
-{
+cell_dimensions.huf <- function(huf, dis = NULL, hed = NULL, include_volume = FALSE, include_faces = FALSE) {
   cell_dimensions <- list()
-  huf_top <- huf$TOP
-  for(k in 2:huf$NHUF) huf_top[,,k] <- huf_top[,,(k-1)] - huf$THCK[,,k-1]
-  huf_thickness <- huf$THCK
+  huf_top <- huf$top
+  for(k in 2:huf$nhuf) huf_top[,,k] <- huf_top[,,(k-1)] - huf$thck[,,k-1]
+  huf_thickness <- huf$thck
   huf_bottom <- huf_top
-  huf_bottom[,,1:(huf$NHUF-1)] <- huf_top[,,2:huf$NHUF]
-  huf_bottom[,,huf$NHUF] <- huf_top[,,huf$NHUF] - huf_thickness[,,huf$NHUF]
+  huf_bottom[,,1:(huf$nhuf-1)] <- huf_top[,,2:huf$nhuf]
+  huf_bottom[,,huf$nhuf] <- huf_top[,,huf$nhuf] - huf_thickness[,,huf$nhuf]
   if(!is.null(hed)) {
     huf_top[which(huf_top > hed)] <- hed[which(huf_top > hed)]
   }

@@ -12,87 +12,87 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
   if(binary) {
     con <- file(file,open='rb')
     bud <- list()
-    KSTP <- readBin(con,what='integer',n=1)
-    KPER <- readBin(con,what='integer',n=1)
-    DESC <- readChar(con,nchars=16)
-    while(length(DESC!=0)) {
-      if(DESC=='   CONSTANT HEAD') { name <- 'CONSTANT_HEAD'
-      } else if(DESC=='         STORAGE') { name <- 'STORAGE'
-      } else if(DESC=='FLOW RIGHT FACE ') { name <- 'FLOW_RIGHT_FACE'
-      } else if(DESC=='FLOW FRONT FACE ') { name <- 'FLOW_FRONT_FACE'
-      } else if(DESC=='FLOW LOWER FACE ') { name <- 'FLOW_LOWER_FACE'
-      } else if(DESC=='           WELLS') { name <- 'WELLS'
-      } else if(DESC=='   RIVER LEAKAGE') { name <- 'RIVER_LEAKAGE'
-      } else if(DESC=='        RECHARGE') { name <- 'RECHARGE'
-      } else if(DESC=='          DRAINS') { name <- 'DRAINS'
-      } else if(DESC==' HEAD DEP BOUNDS') { name <- 'HEAD_DEP_BOUNDS'
-      } else {name <- DESC}
+    kstp <- readBin(con,what='integer',n=1)
+    kper <- readBin(con,what='integer',n=1)
+    desc <- readChar(con,nchars=16)
+    while(length(desc!=0)) {
+      if(desc=='   CONSTANT HEAD') { name <- 'constant_head'
+      } else if(desc=='         STORAGE') { name <- 'storage'
+      } else if(desc=='FLOW RIGHT FACE ') { name <- 'flow_right_face'
+      } else if(desc=='FLOW FRONT FACE ') { name <- 'flow_front_face'
+      } else if(desc=='FLOW LOWER FACE ') { name <- 'flow_lower_face'
+      } else if(desc=='           WELLS') { name <- 'wells'
+      } else if(desc=='   RIVER LEAKAGE') { name <- 'river_leakage'
+      } else if(desc=='        RECHARGE') { name <- 'recharge'
+      } else if(desc=='          DRAINS') { name <- 'drains'
+      } else if(desc==' HEAD DEP BOUNDS') { name <- 'head_dep_bounds'
+      } else {name <- desc}
       
-      bud[[name]][[KPER]] <- list()
-      bud[[name]][[KPER]][[KSTP]] <- list()
-      bud[[name]][[KPER]][[KSTP]]$KSTP <- KSTP
-      bud[[name]][[KPER]][[KSTP]]$KPER <- KPER
-      bud[[name]][[KPER]][[KSTP]]$DESC <- DESC
-      bud[[name]][[KPER]][[KSTP]]$NCOL <- readBin(con,what='integer',n=1)
-      bud[[name]][[KPER]][[KSTP]]$NROW <- readBin(con,what='integer',n=1)
-      bud[[name]][[KPER]][[KSTP]]$NLAY <- readBin(con,what='integer',n=1)
+      bud[[name]][[kper]] <- list()
+      bud[[name]][[kper]][[kstp]] <- list()
+      bud[[name]][[kper]][[kstp]]$kstp <- kstp
+      bud[[name]][[kper]][[kstp]]$kper <- kper
+      bud[[name]][[kper]][[kstp]]$desc <- desc
+      bud[[name]][[kper]][[kstp]]$ncol <- readBin(con,what='integer',n=1)
+      bud[[name]][[kper]][[kstp]]$nrow <- readBin(con,what='integer',n=1)
+      bud[[name]][[kper]][[kstp]]$nlay <- readBin(con,what='integer',n=1)
       
-      if(bud[[name]][[KPER]][[KSTP]]$NLAY > 0) {
-        bud[[name]][[KPER]][[KSTP]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*bud[[name]][[KPER]][[KSTP]]$NLAY,size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,bud[[name]][[KPER]][[KSTP]]$NLAY)),c(2,1,3))
+      if(bud[[name]][[kper]][[kstp]]$nlay > 0) {
+        bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*bud[[name]][[kper]][[kstp]]$nlay,size=4),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,bud[[name]][[kper]][[kstp]]$nlay)),c(2,1,3))
       } else {
-        bud[[name]][[KPER]][[KSTP]]$ITYPE <- readBin(con,what='integer',n=1)
-        bud[[name]][[KPER]][[KSTP]]$DELT <- readBin(con,what='numeric',n=1,size=4)
-        bud[[name]][[KPER]][[KSTP]]$PERTIM <- readBin(con,what='numeric',n=1,size=4)
-        bud[[name]][[KPER]][[KSTP]]$TOTIM <- readBin(con,what='numeric',n=1,size=4)
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE==5) {
-          bud[[name]][[KPER]][[KSTP]]$NVAL <- readBin(con,what='integer',n=1)
+        bud[[name]][[kper]][[kstp]]$itype <- readBin(con,what='integer',n=1)
+        bud[[name]][[kper]][[kstp]]$delt <- readBin(con,what='numeric',n=1,size=4)
+        bud[[name]][[kper]][[kstp]]$pertim <- readBin(con,what='numeric',n=1,size=4)
+        bud[[name]][[kper]][[kstp]]$totim <- readBin(con,what='numeric',n=1,size=4)
+        if(bud[[name]][[kper]][[kstp]]$itype==5) {
+          bud[[name]][[kper]][[kstp]]$nval <- readBin(con,what='integer',n=1)
         } else {
-          bud[[name]][[KPER]][[KSTP]]$NVAL <- 1
+          bud[[name]][[kper]][[kstp]]$nval <- 1
         }
-        if(bud[[name]][[KPER]][[KSTP]]$NVAL > 1) {
-          bud[[name]][[KPER]][[KSTP]]$CTMP <- rep(NA, (bud[[name]][[KPER]][[KSTP]]$NVAL-1))
-          for(nr in 1:(bud[[name]][[KPER]][[KSTP]]$NVAL-1)) {
-            bud[[name]][[KPER]][[KSTP]]$CTMP[nr] <- readChar(con,nchars=16)
+        if(bud[[name]][[kper]][[kstp]]$nval > 1) {
+          bud[[name]][[kper]][[kstp]]$ctmp <- rep(NA, (bud[[name]][[kper]][[kstp]]$nval-1))
+          for(nr in 1:(bud[[name]][[kper]][[kstp]]$nval-1)) {
+            bud[[name]][[kper]][[kstp]]$ctmp[nr] <- readChar(con,nchars=16)
           }
         }
         
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(2,5)) {
-          bud[[name]][[KPER]][[KSTP]]$NLIST <- readBin(con,what='integer',n=1)
-          if(bud[[name]][[KPER]][[KSTP]]$NLIST > 0) {
-            bud[[name]][[KPER]][[KSTP]]$data <- as.data.frame(matrix(,nrow=bud[[name]][[KPER]][[KSTP]]$NLIST,ncol=bud[[name]][[KPER]][[KSTP]]$NVAL+1))
-            names(bud[[name]][[KPER]][[KSTP]]$data)[1] <- 'ICELL'
-            names(bud[[name]][[KPER]][[KSTP]]$data)[2] <- 'value'
-            # add reading CTMPs here!
-            for(nr in 1:bud[[name]][[KPER]][[KSTP]]$NLIST) {
-              bud[[name]][[KPER]][[KSTP]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NVAL,size=4))
+        if(bud[[name]][[kper]][[kstp]]$itype %in% c(2,5)) {
+          bud[[name]][[kper]][[kstp]]$nlist <- readBin(con,what='integer',n=1)
+          if(bud[[name]][[kper]][[kstp]]$nlist > 0) {
+            bud[[name]][[kper]][[kstp]]$data <- as.data.frame(matrix(,nrow=bud[[name]][[kper]][[kstp]]$nlist,ncol=bud[[name]][[kper]][[kstp]]$nval+1))
+            names(bud[[name]][[kper]][[kstp]]$data)[1] <- 'icell'
+            names(bud[[name]][[kper]][[kstp]]$data)[2] <- 'value'
+            # add reading ctmps here!
+            for(nr in 1:bud[[name]][[kper]][[kstp]]$nlist) {
+              bud[[name]][[kper]][[kstp]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$nval,size=4))
             }
           }
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE %in% c(0,1)) {
-          bud[[name]][[KPER]][[KSTP]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW*abs(bud[[name]][[KPER]][[KSTP]]$NLAY),size=4),dim=c(bud[[name]][[KPER]][[KSTP]]$NCOL,bud[[name]][[KPER]][[KSTP]]$NROW,abs(bud[[name]][[KPER]][[KSTP]]$NLAY))),c(2,1,3))
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- '3d_array'
+        if(bud[[name]][[kper]][[kstp]]$itype %in% c(0,1)) {
+          bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*abs(bud[[name]][[kper]][[kstp]]$nlay),size=4),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,abs(bud[[name]][[kper]][[kstp]]$nlay))),c(2,1,3))
+          class(bud[[name]][[kper]][[kstp]]$data) <- '3d_array'
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==3) {
-          bud[[name]][[KPER]][[KSTP]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$layer) <- '2d_array'
-          bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- '2d_array'
+        if(bud[[name]][[kper]][[kstp]]$itype ==3) {
+          bud[[name]][[kper]][[kstp]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
+          class(bud[[name]][[kper]][[kstp]]$layer) <- '2d_array'
+          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
+          class(bud[[name]][[kper]][[kstp]]$data) <- '2d_array'
         }
-        if(bud[[name]][[KPER]][[KSTP]]$ITYPE ==4) {
-          bud[[name]][[KPER]][[KSTP]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[KPER]][[KSTP]]$NCOL*bud[[name]][[KPER]][[KSTP]]$NROW,size=4),ncol=bud[[name]][[KPER]][[KSTP]]$NCOL,nrow=bud[[name]][[KPER]][[KSTP]]$NROW,byrow=TRUE)
-          class(bud[[name]][[KPER]][[KSTP]]$data) <- '2d_array'
+        if(bud[[name]][[kper]][[kstp]]$itype ==4) {
+          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
+          class(bud[[name]][[kper]][[kstp]]$data) <- '2d_array'
         }
       }
       
       # set data as the main list item, and include all parameters as attributes
-        for(i in 1:(length(bud[[name]][[KPER]][[KSTP]])-1)) {
-          attr(bud[[name]][[KPER]][[KSTP]]$data,names(bud[[name]][[KPER]][[KSTP]])[i]) <- bud[[name]][[KPER]][[KSTP]][[i]]
+        for(i in 1:(length(bud[[name]][[kper]][[kstp]])-1)) {
+          attr(bud[[name]][[kper]][[kstp]]$data,names(bud[[name]][[kper]][[kstp]])[i]) <- bud[[name]][[kper]][[kstp]][[i]]
         }
-        bud[[name]][[KPER]][[KSTP]] <- bud[[name]][[KPER]][[KSTP]]$data
+        bud[[name]][[kper]][[kstp]] <- bud[[name]][[kper]][[kstp]]$data
       
-      KSTP <- readBin(con,what='integer',n=1)
-      KPER <- readBin(con,what='integer',n=1)
-      DESC <- readChar(con,nchars=16)
+      kstp <- readBin(con,what='integer',n=1)
+      kper <- readBin(con,what='integer',n=1)
+      desc <- readChar(con,nchars=16)
     }
     close(con)
     class(bud) <- c('bud','modflow_package')

@@ -17,66 +17,66 @@ read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()})
   
   # data set 1
     line.split <- split_line_words(hob.lines[1]); hob.lines <- hob.lines[-1]
-    hob$NH <- as.numeric(line.split[1])
-    hob$MOBS <- as.numeric(line.split[2])
-    hob$MAXM <- as.numeric(line.split[3])
-    hob$IUHOBSV <- as.numeric(line.split[4])
-    hob$HOBDRY <- as.numeric(line.split[5])
-    hob$NOPRINT <- F
-    if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$NOPRINT <- TRUE
+    hob$nh <- as.numeric(line.split[1])
+    hob$mobs <- as.numeric(line.split[2])
+    hob$maxm <- as.numeric(line.split[3])
+    hob$iuhobsv <- as.numeric(line.split[4])
+    hob$hobdry <- as.numeric(line.split[5])
+    hob$noprint <- F
+    if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
   
   # data set 2
     line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
-    hob$TOMULTH <- line.split[1]
-    hob$EVH <- line.split[2]
+    hob$tomulth <- line.split[1]
+    hob$evh <- line.split[2]
   
   # data set 3 - 6
-    hob$OBSNAM <- NULL; hob$LAYER <- NULL; hob$ROW <- NULL; hob$COLUMN <- NULL; hob$IREFSP <- NULL; hob$TOFFSET <- NULL
-    hob$ROFF <- NULL; hob$COFF <- NULL; hob$HOBS <- NULL; hob$STATISTIC <- NULL; hob$STATFLAG <- NULL; hob$PLOTSYMBOL <- NULL
-    hob$STATh <- NULL; hob$STATdd <- NULL; IREFSP <- NULL
-    hob$MLAY <- NULL; hob$PR <- NULL
-    for(nr in 1:hob$NH) {
+    hob$obsnam <- NULL; hob$layer <- NULL; hob$row <- NULL; hob$column <- NULL; hob$irefsp <- NULL; hob$toffset <- NULL
+    hob$roff <- NULL; hob$coff <- NULL; hob$hobs <- NULL; hob$statistic <- NULL; hob$statflag <- NULL; hob$plotsymbol <- NULL
+    hob$stath <- NULL; hob$statdd <- NULL; irefsp <- NULL
+    hob$mlay <- NULL; hob$pr <- NULL
+    for(nr in 1:hob$nh) {
       line.split <- split_line_words(hob.lines[1]); hob.lines <- hob.lines[-1]
-      hob$LAYER[nr] <- as.numeric(line.split[2])
-      hob$ROW[nr] <- as.numeric(line.split[3])
-      hob$COLUMN[nr] <- as.numeric(line.split[4])
-      hob$IREFSP[nr] <- as.numeric(line.split[5])
-      hob$ROFF[nr] <- as.numeric(line.split[7])
-      hob$COFF[nr] <- as.numeric(line.split[8])
-      if(hob$IREFSP[nr] >= 0) {
-        hob$OBSNAM[nr] <- line.split[1]
-        hob$TOFFSET[nr] <- as.numeric(line.split[6])
-        hob$HOBS[nr] <- as.numeric(line.split[9])
-        hob$STATISTIC[nr] <- as.numeric(line.split[10])
-        hob$STATFLAG[nr] <- as.numeric(line.split[11])
-        hob$PLOTSYMBOL[nr] <- as.numeric(line.split[12]) 
+      hob$layer[nr] <- as.numeric(line.split[2])
+      hob$row[nr] <- as.numeric(line.split[3])
+      hob$column[nr] <- as.numeric(line.split[4])
+      hob$irefsp[nr] <- as.numeric(line.split[5])
+      hob$roff[nr] <- as.numeric(line.split[7])
+      hob$coff[nr] <- as.numeric(line.split[8])
+      if(hob$irefsp[nr] >= 0) {
+        hob$obsnam[nr] <- line.split[1]
+        hob$toffset[nr] <- as.numeric(line.split[6])
+        hob$hobs[nr] <- as.numeric(line.split[9])
+        hob$statistic[nr] <- as.numeric(line.split[10])
+        hob$statflag[nr] <- as.numeric(line.split[11])
+        hob$plotsymbol[nr] <- as.numeric(line.split[12]) 
       }
-      if(hob$LAYER[nr] < 0) {
+      if(hob$layer[nr] < 0) {
         line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
-        for(layerNr in 1:abs(hob$LAYER[nr])) {
-          hob$MLAY[[nr]][layerNr] <- line.split[(2*layerNr)-1]
-          hob$PR[[nr]][layerNr] <- line.split[2*layerNr]
+        for(layerNr in 1:abs(hob$layer[nr])) {
+          hob$mlay[[nr]][layerNr] <- line.split[(2*layerNr)-1]
+          hob$pr[[nr]][layerNr] <- line.split[2*layerNr]
         }
       }
-      if(hob$IREFSP[nr] < 0) {
+      if(hob$irefsp[nr] < 0) {
         # data set 5
         line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
-        hob$ITT <- line.split[1]    
+        hob$itt <- line.split[1]    
         # data set 6
         line.split <- split_line_numbers(hob.lines[1]); hob.lines <- hob.lines[-1]
-        for(time in 1:abs(hob$IREFSP)) {
-          hob$OBSNAM[[nr]][time] <- line.split[1]
-          IREFSP[[nr]][time] <- line.split[2]
-          hob$TOFFSET[[nr]][time] <- as.numeric(line.split[3])
-          hob$HOBS[[nr]][time] <- as.numeric(line.split[4])
-          hob$STATh[[nr]][time] <- as.numeric(line.split[5])
-          hob$STATdd[[nr]][time] <- as.numeric(line.split[6])
-          hob$STATFLAG[[nr]][time] <- as.numeric(line.split[7])
-          hob$PLOTSYMBOL[[nr]][time] <- as.numeric(line.split[8]) 
+        for(time in 1:abs(hob$irefsp)) {
+          hob$obsnam[[nr]][time] <- line.split[1]
+          irefsp[[nr]][time] <- line.split[2]
+          hob$toffset[[nr]][time] <- as.numeric(line.split[3])
+          hob$hobs[[nr]][time] <- as.numeric(line.split[4])
+          hob$stath[[nr]][time] <- as.numeric(line.split[5])
+          hob$statdd[[nr]][time] <- as.numeric(line.split[6])
+          hob$statflag[[nr]][time] <- as.numeric(line.split[7])
+          hob$plotsymbol[[nr]][time] <- as.numeric(line.split[8]) 
         }
       }       
     }
-    if(length(IREFSP) != 0) hob$IREFSP <- IREFSP
+    if(length(irefsp) != 0) hob$irefsp <- irefsp
   
   comment(hob) <- comments
   class(hob) <- c('hob','modflow_package')

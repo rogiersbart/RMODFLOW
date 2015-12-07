@@ -14,7 +14,9 @@ Imports:
     rgl,
     readr,
     hydroPSO,
-    DEoptim
-Depends:
-    directlabels
+    hydroGOF,
+    DEoptim,
+    directlabels,
+    grid,
+    quadprog
 URL: https://github.com/rogiersbart/RMODFLOW

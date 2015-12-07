@@ -1,6 +1,6 @@
-#' Convert an IBOUND array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
+#' Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 #' 
-#' @param ibound modflow basic file IBOUND array
+#' @param ibound modflow basic file \code{ibound} array
 #' @return list of lower, upper, left, right, front and back logical 3d arrays
 #' @export
 convert_ibound_to_neighbours <- function(ibound)

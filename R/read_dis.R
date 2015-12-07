@@ -18,49 +18,49 @@ read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()})
   # data set 1
     dataSet1 <- remove_empty_strings(strsplit(dis_lines[1],' ')[[1]])
     dis_lines <- dis_lines[-1]  
-    dis$NLAY <- as.numeric(dataSet1[1])
-    dis$NROW <- as.numeric(dataSet1[2])
-    dis$NCOL <- as.numeric(dataSet1[3])
-    dis$NPER <- as.numeric(dataSet1[4])
-    dis$ITMUNI <- as.numeric(dataSet1[5])
-    dis$LENUNI <- as.numeric(dataSet1[6])
+    dis$nlay <- as.numeric(dataSet1[1])
+    dis$nrow <- as.numeric(dataSet1[2])
+    dis$ncol <- as.numeric(dataSet1[3])
+    dis$nper <- as.numeric(dataSet1[4])
+    dis$itmuni <- as.numeric(dataSet1[5])
+    dis$lenuni <- as.numeric(dataSet1[6])
     rm(dataSet1)
     
   # data set 2
-    dis$LAYCBD <- as.numeric(remove_empty_strings(strsplit(dis_lines[1],' ')[[1]]))
+    dis$laycbd <- as.numeric(remove_empty_strings(strsplit(dis_lines[1],' ')[[1]]))
     dis_lines <- dis_lines[-1]
     
   # data set 3
     dis_lines <- dis_lines[-1]
-    dis$DELR <- as.numeric(strsplit(dis_lines[1],' ')[[1]])
+    dis$delr <- as.numeric(strsplit(dis_lines[1],' ')[[1]])
     dis_lines <- dis_lines[-1]
     
   # data set 4
     dis_lines <- dis_lines[-1]
-    dis$DELC <- as.numeric(strsplit(dis_lines[1],' ')[[1]])
+    dis$delc <- as.numeric(strsplit(dis_lines[1],' ')[[1]])
     dis_lines <- dis_lines[-1]
     
   # data set 5
-    dataSet5 <- read_array(dis_lines,dis$NROW,dis$NCOL,1)
+    dataSet5 <- read_array(dis_lines,dis$nrow,dis$ncol,1)
     dis_lines <- dataSet5$remaining_lines
-    dis$TOP <- dataSet5$modflow_array
+    dis$top <- dataSet5$modflow_array
     rm(dataSet5)
   
   # data set 6
-    dataSet6 <- read_array(dis_lines,dis$NROW,dis$NCOL,dis$NLAY+sum(dis$LAYCBD))
+    dataSet6 <- read_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd))
     dis_lines <- dataSet6$remaining_lines
-    dis$BOTM <- dataSet6$modflow_array
+    dis$botm <- dataSet6$modflow_array
     rm(dataSet6)
   
   # data set 7
-    dis$PERLEN <- dis$NSTP <- dis$TSMULT <- dis$SSTR <- rep(NA,dis$NPER)
-    for(i in 1:dis$NPER) {
+    dis$perlen <- dis$nstp <- dis$tsmult <- dis$sstr <- rep(NA,dis$nper)
+    for(i in 1:dis$nper) {
       dataSet7 <- strsplit(dis_lines[1],' ')[[1]]
       dis_lines <- dis_lines[-1]
-      dis$PERLEN[i] <- as.numeric(dataSet7[1])
-      dis$NSTP[i] <- as.numeric(dataSet7[2])
-      dis$TSMULT[i] <- as.numeric(dataSet7[3])
-      dis$SSTR[i] <- as.character(dataSet7[4])
+      dis$perlen[i] <- as.numeric(dataSet7[1])
+      dis$nstp[i] <- as.numeric(dataSet7[2])
+      dis$tsmult[i] <- as.numeric(dataSet7[3])
+      dis$sstr[i] <- as.character(dataSet7[4])
       rm(dataSet7)
     }
   
