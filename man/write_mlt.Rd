@@ -4,14 +4,14 @@
 \alias{write_mlt}
 \title{Write a MODFLOW multiplier file}
 \usage{
-write_mlt(mlt, file, IPRN = -1)
+write_mlt(mlt, file, iprn = -1)
 }
 \arguments{
 \item{mlt}{an \code{\link{RMODFLOW}} mlt object}
 
 \item{file}{filename to write to; typically '*.mlt'}
 
-\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

@@ -4,10 +4,10 @@
 \alias{remove_empty_strings}
 \title{Remove empty elements from a vector of strings.}
 \usage{
-remove_empty_strings(stringArray)
+remove_empty_strings(vector_of_strings)
 }
 \arguments{
-\item{stringArray}{Vector of strings.}
+\item{vector_of_strings}{Vector of strings.}
 }
 \value{
 Vector of strings without the empty items.

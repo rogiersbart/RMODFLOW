@@ -2,10 +2,10 @@
 #' 
 #' @param lpf an \code{\link{RMODFLOW}} lpf object
 #' @param file filename to write to; typically '*.lpf'
-#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_lpf <- function(lpf, file, IPRN=-1)
+write_lpf <- function(lpf, file, iprn=-1)
 {
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
@@ -13,34 +13,34 @@ write_lpf <- function(lpf, file, IPRN=-1)
     cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
     
   # data set 1
-    write_variables(lpf$ILPFCB,lpf$HDRY,lpf$NPLPF,ifelse(lpf$STORAGECOEFFICIENT,'STORAGECOEFFICIENT',''),ifelse(lpf$CONSTANTCV,'CONSTANTCV',''),ifelse(lpf$THICKSTRT,'THICKSTRT',''),ifelse(lpf$NOCVCORRECTION,'NOCVCORRECTION',''),ifelse(lpf$NOVFC,'NOVFC',''),ifelse(lpf$NOPARCHECK,'NOPARCHECK',''), file=file)
+    write_variables(lpf$ilpfcb,lpf$hdry,lpf$nplpf,ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
     
   # data set 2
-    write_variables(lpf$LAYTYP, file = file)
+    write_variables(lpf$laytyp, file = file)
     
   # data set 3
-    write_variables(lpf$LAYAVG, file = file)
+    write_variables(lpf$layavg, file = file)
     
   # data set 4
-    write_variables(lpf$CHANI, file = file)
+    write_variables(lpf$chani, file = file)
     
   # data set 5
-    write_variables(lpf$LAYVKA, file = file)
+    write_variables(lpf$layvka, file = file)
     
   # data set 6
-    write_variables(lpf$LAYWET, file = file)
+    write_variables(lpf$laywet, file = file)
     
   # data set 7
-    if(!as.logical(prod(lpf$LAYWET==0))) {
-      write_variables(lpf$WETFCT,lpf$IWETIT,lpf$IHDWET, file = file)
+    if(!as.logical(prod(lpf$laywet==0))) {
+      write_variables(lpf$wetfct,lpf$iwetit,lpf$ihdwet, file = file)
     }
     
   # data set 8-9
-    for(i in 1:lpf$NPLPF) {
-      write_variables(lpf$PARNAM[i],lpf$PARTYP[i],lpf$Parval[i],lpf$NCLU[i], file = file)
-      layers <- which(!is.na(lpf$Mltarr[,i]))
-      for(j in 1:lpf$NCLU[i]) {
-        write_variables(layers[j],lpf$Mltarr[layers[j],i],lpf$Zonarr[layers[j],i],lpf$IZ[layers[j],i], file=file)
+    for(i in 1:lpf$nplpf) {
+      write_variables(lpf$parnam[i],lpf$partyp[i],lpf$parval[i],lpf$nclu[i], file = file)
+      layers <- which(!is.na(lpf$mltarr[,i]))
+      for(j in 1:lpf$nclu[i]) {
+        write_variables(layers[j],lpf$mltarr[layers[j],i],lpf$zonarr[layers[j],i],lpf$iz[layers[j],i], file=file)
       } 
     }
     
@@ -48,58 +48,58 @@ write_lpf <- function(lpf, file, IPRN=-1)
     for(k in 1:dis$NLAY) {
       
     # data set 10
-      if('HK' %in% lpf$PARTYP) {
-        cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if('HK' %in% lpf$partyp) {
+        cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        write_array(lpf$HK[,,k], file = file, IPRN = IPRN)
+        write_array(lpf$hk[,,k], file = file, iprn = iprn)
       }
       
     # data set 11
-      if(lpf$CHANI[k] <= 0) {
-        if('HANI' %in% lpf$PARTYP) {
-          cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if(lpf$chani[k] <= 0) {
+        if('HANI' %in% lpf$partyp) {
+          cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$HANI[,,k], file = file, IPRN = IPRN)
+          write_array(lpf$hani[,,k], file = file, iprn = iprn)
         }
       }
       
     # data set 12
-      if('VK' %in% lpf$PARTYP | 'VANI' %in% lpf$PARTYP) {
-        cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if('VK' %in% lpf$partyp | 'VANI' %in% lpf$partyp) {
+        cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        write_array(lpf$VKA[,,k], file = file, IPRN = IPRN)
+        write_array(lpf$vka[,,k], file = file, iprn = iprn)
       }
       
     # data set 13
-      if('TR' %in% dis$SSTR) {
-        if('SS' %in% lpf$PARTYP) {
-          cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if('TR' %in% dis$sstr) {
+        if('SS' %in% lpf$partyp) {
+          cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$Ss[,,k], file = file, IPRN = IPRN)
+          write_array(lpf$ss[,,k], file = file, iprn = iprn)
         }
       }
       
     # data set 14
-      if('TR' %in% dis$SSTR & lpf$LAYTYP[k] != 0) {
-        if('SY' %in% lpf$PARTYP) {
-          cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if('TR' %in% dis$sstr & lpf$laytyp[k] != 0) {
+        if('SY' %in% lpf$partyp) {
+          cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$Sy[,,k], file = file, IPRN = IPRN)
+          write_array(lpf$sy[,,k], file = file, iprn = iprn)
         }
       }
       
     # data set 15
-      if(dis$LAYCBD[k] != 0) {
-        if('VKCB' %in% lpf$PARTYP) {
-          cat(paste0(IPRN,'\n'),file=file,append=TRUE)
+      if(dis$laycbd[k] != 0) {
+        if('VKCB' %in% lpf$partyp) {
+          cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$VKCB[,,k], file = file, IPRN = IPRN)
+          write_array(lpf$vkcb[,,k], file = file, iprn = iprn)
         }
       }
       
     # data set 16
-      if(lpf$LAYWET[k] != 0 & lpf$LAYTYP[k] != 0) {
-        write_array(lpf$WETDRY[,,k], file = file, IPRN = IPRN)
+      if(lpf$laywet[k] != 0 & lpf$laytyp[k] != 0) {
+        write_array(lpf$wetdry[,,k], file = file, iprn = iprn)
       }     
     }
 }

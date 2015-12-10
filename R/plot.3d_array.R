@@ -20,6 +20,7 @@ plot.3d_array <- function(rmodflow_array, i=NULL, j=NULL, k=NULL, dis, bas=NULL,
 {
   if(!is.null(k))
   {
+    zlim <- zlim
     rmodflow_array <- rmodflow_array[,,k]
     class(rmodflow_array) <- '2d_array'
     mask <- mask[,,k]
@@ -30,7 +31,7 @@ plot.3d_array <- function(rmodflow_array, i=NULL, j=NULL, k=NULL, dis, bas=NULL,
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
     mask[which(mask==0)] <- NA
     dis$thck <- dis$botm
-    dis$thck[,,1] <- dis$TOP-dis$botm[,,1]
+    dis$thck[,,1] <- dis$top-dis$botm[,,1]
     for(a in 2:dis$nlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
     dis$center <- dis$botm
     for(a in 1:dis$nlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2

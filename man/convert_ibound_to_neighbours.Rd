@@ -2,17 +2,17 @@
 % Please edit documentation in R/convert_ibound_to_neighbours.R
 \name{convert_ibound_to_neighbours}
 \alias{convert_ibound_to_neighbours}
-\title{Convert an IBOUND array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell}
+\title{Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell}
 \usage{
 convert_ibound_to_neighbours(ibound)
 }
 \arguments{
-\item{ibound}{modflow basic file IBOUND array}
+\item{ibound}{modflow basic file \code{ibound} array}
 }
 \value{
 list of lower, upper, left, right, front and back logical 3d arrays
 }
 \description{
-Convert an IBOUND array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
+Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 }
 

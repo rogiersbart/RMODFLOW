@@ -4,11 +4,11 @@
 #' 
 #' @param bas an \code{\link{RMODFLOW}} bas object
 #' @param file filename to write to; typically '*.bas'
-#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_bas <- function(bas, file, IPRN=-1)
-{
+write_bas <- function(bas, file, iprn=-1) {
+  
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Basic Package created by RMODFLOW, version',v,'\n'), file=file)
@@ -16,30 +16,28 @@ write_bas <- function(bas, file, IPRN=-1)
     
   # data set 1
     options <- NULL
-    if(bas$XSECTION) options <- paste(options, 'XSECTION ',sep='')
-    if(bas$CHTOCH) options <- paste(options, 'CHTOCH ',sep='')
-    if(bas$FREE) options <- paste(options, 'FREE ',sep='')
-    if(bas$PRINTTIME) options <- paste(options, 'PRINTTIME ',sep='')
-    if(bas$SHOWPROGRESS) options <- paste(options, 'SHOWPROGRESS ',sep='')
-    if(bas$STOPERROR) options <- paste(options,'SHOWPROGRESS ',bas$STOPER,sep='')
+    if(bas$xsection) options <- paste(options, 'XSECTION ',sep='')
+    if(bas$chtoch) options <- paste(options, 'CHTOCH ',sep='')
+    if(bas$free) options <- paste(options, 'FREE ',sep='')
+    if(bas$printtime) options <- paste(options, 'PRINTTIME ',sep='')
+    if(bas$showprogress) options <- paste(options, 'SHOWPROGRESS ',sep='')
+    if(bas$stoperror) options <- paste(options,'STOPERROR ',bas$stoper,sep='')
     write_variables(options, file=file)
       
   # data set 2
-    if(bas$XSECTION)
-    {
-      write_array(bas$IBOUND, file = file, IPRN = IPRN) # update after changing read_bas!
+    if(bas$xsection) {
+      write_array(bas$ibound, file = file, iprn = iprn) # update after changing read_bas!
     } else {
-      write_array(bas$IBOUND, file = file, IPRN = IPRN)
+      write_array(bas$ibound, file = file, iprn = iprn)
     }
   
   # data set 3
-    write_variables(bas$HNOFLO, file=file)
+    write_variables(bas$hnoflo, file=file)
   
   # data set 4
-    if(bas$XSECTION)
-    {
-      write_array(bas$STRT, file = file, IPRN = IPRN) # update after changing read_bas!
+    if(bas$xsection) {
+      write_array(bas$strt, file = file, iprn = iprn) # update after changing read_bas!
     } else {
-      write_array(bas$STRT, file = file, IPRN = IPRN)
+      write_array(bas$strt, file = file, iprn = iprn)
     }
 }

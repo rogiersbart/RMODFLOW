@@ -10,7 +10,7 @@ read_pvl(file = {     cat("Please select pvl file...\\n")     file.choose() },
 \arguments{
 \item{file}{filename; typically '*.pvl'}
 
-\item{read_all}{logical, indicating if \code{NP} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).}
+\item{read_all}{logical, indicating if \code{np} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).}
 }
 \value{
 object of class pvl

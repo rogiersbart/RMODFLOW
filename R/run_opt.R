@@ -16,23 +16,23 @@
 #' @importFrom hydroPSO hydroPSO
 #' @importFrom DEoptim DEoptim
 #' @export
-run_modflow_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
+run_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
 {
   dir <- dirname(file)
   file <- basename(file)
   nam <- read_nam(paste0(dir,'/',file))
-  pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
-  hob <- read_hob(paste0(dir,'/',nam$Fname[which(nam$Ftype=='HOB')]))
-  if(is.null(par)) par <- pvl$Parval
+  pvl <- read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
+  hob <- read_hob(paste0(dir,'/',nam$fname[which(nam$ftype=='HOB')]))
+  if(is.null(par)) par <- pvl$parval
   if(is.null(include)) include <- rep(TRUE,length(par))
-  if(length(par)!=length(pvl$Parval)) 
+  if(length(par)!=length(pvl$parval)) 
   {
     par2 <- par
-    par <- pvl$Parval
+    par <- pvl$parval
     par[which(include)] <- par2
   }
-  if(is.infinite(lower)) lower <- rep(lower,pvl$NP)
-  if(is.infinite(upper)) upper <- rep(upper,pvl$NP)
+  if(is.infinite(lower)) lower <- rep(lower,pvl$np)
+  if(is.infinite(upper)) upper <- rep(upper,pvl$np)
   if(!is.null(trans))
   {
     par[which(trans=='log')] <- log(par[which(trans=='log')])
@@ -45,13 +45,13 @@ run_modflow_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NU
   }
   optim_modflow <- function(par_include)
   {
-    pvl$Parval <- par
-    pvl$Parval[which(include)] <- par_include
-    if(!is.null(trans)) pvl$Parval[which(trans=='log')] <- exp(pvl$Parval[which(trans=='log')])
-    write_pvl(pvl, file=paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
+    pvl$parval <- par
+    pvl$parval[which(include)] <- par_include
+    if(!is.null(trans)) pvl$parval[which(trans=='log')] <- exp(pvl$parval[which(trans=='log')])
+    write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
     run_modflow(paste0(dir,'/',file),modflow_executable)
-    rmse <- performance(read_hpr(paste0(dir,'/',nam$Fname[which(nam$Nunit==hob$IUHOBSV)])))$rmse
-    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'Parval=',paste(format(pvl$Parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
+    rmse <- performance(read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)])))$rmse
+    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'parval=',paste(format(pvl$parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
     return(rmse)
   }
   if(method %in% c('Nelder-Mead','BFGS','CG','SANN','Brent'))

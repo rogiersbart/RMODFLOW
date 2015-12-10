@@ -12,10 +12,10 @@ write_pvl <- function(pvl, file)
     cat(paste('#', comment(pvl)), sep='\n', file=file, append=TRUE)
     
   # data set 1
-    write_variables(pvl$NP, file=file)
+    write_variables(pvl$np, file=file)
   
   # data set 2
-    for(i in 1:pvl$NP) {
-      write_variables(pvl$PARNAM[i], pvl$Parval[i], file=file)
+    for(i in 1:pvl$np) {
+      write_variables(pvl$parnam[i], pvl$parval[i], file=file)
     }  
 }

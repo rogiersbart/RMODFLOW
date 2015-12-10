@@ -4,14 +4,14 @@
 \alias{write_lpf}
 \title{Write a MODFLOW layer-property flow file}
 \usage{
-write_lpf(lpf, file, IPRN = -1)
+write_lpf(lpf, file, iprn = -1)
 }
 \arguments{
 \item{lpf}{an \code{\link{RMODFLOW}} lpf object}
 
 \item{file}{filename to write to; typically '*.lpf'}
 
-\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

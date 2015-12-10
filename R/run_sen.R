@@ -8,37 +8,37 @@
 #' @param include logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis
 #' @return sensitivity analysis results
 #' @export
-run_modflow_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)
+run_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)
 {
   dir <- dirname(file)
   file <- basename(file)
   nam <- read_nam(paste0(dir,'/',file))
-  pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
-  hob <- read_hob(paste0(dir,'/',nam$Fname[which(nam$Ftype=='HOB')]))
-  if(is.null(par)) par <- pvl$Parval
+  pvl <- read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
+  hob <- read_hob(paste0(dir,'/',nam$fname[which(nam$ftype=='HOB')]))
+  if(is.null(par)) par <- pvl$parval
   if(is.null(include)) include <- rep(TRUE,length(par))
-  if(length(par)!=length(pvl$Parval)) 
+  if(length(par)!=length(pvl$parval)) 
   {
     par2 <- par
-    par <- pvl$Parval
+    par <- pvl$parval
     par[which(include)] <- par2
   } 
   run_modflow(paste0(dir,'/',file),modflow_executable,par)
-  hpr_orig <- read_hpr(paste0(dir,'/',nam$Fname[which(nam$Nunit==hob$IUHOBSV)]))
+  hpr_orig <- read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
   sens <- list()
-  sens$dss <- matrix(NA,nrow=length(hob$OBSNAM),ncol=length(pvl$Parval))
-  sens$css <- pvl$Parval*NA
+  sens$dss <- matrix(NA,nrow=length(hob$obsnam),ncol=length(pvl$parval))
+  sens$css <- pvl$parval*NA
   for(i in which(include))
   {
-    pvl$Parval <- par
-    pvl$Parval[i] <- pvl$Parval[i]*1.01
-    write_pvl(pvl, file=paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
+    pvl$parval <- par
+    pvl$parval[i] <- pvl$parval[i]*1.01
+    write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
     run_modflow(paste0(dir,'/',file),modflow_executable)
-    hpr <- read_hpr(paste0(dir,'/',nam$Fname[which(nam$Nunit==hob$IUHOBSV)]))
-    sens$dss[,i] <- (hpr$SIMULATED.EQUIVALENT-hpr_orig$SIMULATED.EQUIVALENT)/(0.01)
-    sens$css[i] <- sqrt(sum(sens$dss[,i]^2)/hob$NH)
+    hpr <- read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
+    sens$dss[,i] <- (hpr$simulated_equivalent-hpr_orig$simulated_equivalent)/(0.01)
+    sens$css[i] <- sqrt(sum(sens$dss[,i]^2)/hob$nh)
   }
-  sens$PARNAM <- pvl$PARNAM
+  sens$parnam <- pvl$parnam
   class(sens) <- 'sen'
   return(sens)
 }

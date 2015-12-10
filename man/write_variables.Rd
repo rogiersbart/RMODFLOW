@@ -2,11 +2,13 @@
 % Please edit documentation in R/internal.R
 \name{write_variables}
 \alias{write_variables}
-\title{Write modflow variables}
+\title{Write modflow variables
+Internal function used in the write_* functions for writing single line datasets}
 \usage{
 write_variables(..., file, append = TRUE)
 }
 \description{
+Write modflow variables
 Internal function used in the write_* functions for writing single line datasets
 }
 

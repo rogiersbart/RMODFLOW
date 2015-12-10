@@ -12,9 +12,9 @@ run_modflow <- function(file,modflow_executable=ifelse(Sys.info()['sysname']=='L
   if(!is.null(par))
   {
     nam <- read_nam(paste0(dir,'/',file))
-    pvl <- read_pvl(paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
-    pvl$Parval <- par
-    write_pvl(pvl, file=paste0(dir,'/',nam$Fname[which(nam$Ftype=='PVAL')]))
+    pvl <- read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
+    pvl$parval <- par
+    write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
   }
   if(Sys.info()['sysname']=='Linux') system(paste('cd',dir,'&',modflow_executable,file))
   if(Sys.info()['sysname']=='Windows') shell(paste('cd',dir,'&',modflow_executable,file),mustWork=TRUE)

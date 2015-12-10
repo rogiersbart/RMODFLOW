@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{3d_array}(rmodflow_array, i = NULL, j = NULL, k = NULL, dis,
   bas = NULL, mask = ifelse0(is.null(bas), rmodflow_array * 0 + 1,
-  bas$IBOUND), zlim = range(rmodflow_array[ifelse0(is.null(i),
+  bas$ibound), zlim = range(rmodflow_array[ifelse0(is.null(i),
   c(1:dim(rmodflow_array)[1]), i), ifelse0(is.null(j),
   c(1:dim(rmodflow_array)[2]), j), ifelse0(is.null(k),
   c(1:dim(rmodflow_array)[3]), k)], finite = TRUE),
@@ -26,7 +26,7 @@
 
 \item{bas}{basic file object; optional}
 
-\item{mask}{a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$IBOUND}
+\item{mask}{a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound}
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 

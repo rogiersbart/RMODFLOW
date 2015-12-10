@@ -70,9 +70,9 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       nrow <- as.numeric(variables[7])
       ilay <- as.numeric(variables[8])
       stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
-      dataSet <- read_array(hed.lines,nrow,ncol,1)
-      hed[,,ilay,stp_nr] <- dataSet$modflow_array
-      hed.lines <- dataSet$remaining_lines
+      data_set <- read_array(hed.lines,nrow,ncol,1)
+      hed[,,ilay,stp_nr] <- data_set$array
+      hed.lines <- data_set$remaining_lines
       attr(hed, 'kstp')[stp_nr] <- kstp
       attr(hed, 'kper')[stp_nr] <- kper
       attr(hed, 'pertim')[stp_nr] <- pertim

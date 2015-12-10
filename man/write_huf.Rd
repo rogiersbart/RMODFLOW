@@ -4,14 +4,14 @@
 \alias{write_huf}
 \title{Write a MODFLOW hydrogeologic unit flow file}
 \usage{
-write_huf(huf, file, IPRN = -1)
+write_huf(huf, file, iprn = -1)
 }
 \arguments{
 \item{huf}{an \code{\link{RMODFLOW}} huf object}
 
 \item{file}{filename to write to; typically '*.huf'}
 
-\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

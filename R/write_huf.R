@@ -2,53 +2,53 @@
 #' 
 #' @param huf an \code{\link{RMODFLOW}} huf object
 #' @param file filename to write to; typically '*.huf'
-#' @param IPRN format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_huf <- function(huf, file, IPRN=-1)
-{
+write_huf <- function(huf, file, iprn=-1) {
+  
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Hydrogeologic Unit Flow Package created by RMODFLOW, version',v,'\n'), file = file)
     cat(paste('#', comment(huf)), sep='\n', file=file, append=TRUE)
     
   # data set 1
-    write_variables(huf$IHUFCB,huf$HDRY,huf$NHUF,huf$NPHUF,huf$IOHUFHEADS,huf$IOHUFFLOWS, file = file)
+    write_variables(huf$ihufcb,huf$hdry,huf$nhuf,huf$nphuf,huf$iohufheads,huf$iohufflows, file = file)
   
   # data set 2
-    write_variables(huf$LTHUF, file=file)
+    write_variables(huf$lthuf, file=file)
   
   # data set 3
-    write_variables(huf$LAYWT, file=file)
+    write_variables(huf$laywt, file=file)
   
   # data set 4
-    if(sum(huf$LAYWT > 0)) {
-      write_variables(huf$WETFCT, huf$IWETIT, huf$IHDWET, file = file)
+    if(sum(huf$laywt > 0)) {
+      write_variables(huf$wetfct, huf$iwetit, huf$ihdwet, file = file)
     }
 
   # data set 5
-    if(dim(huf$WETDRY)[3]>0) {
-      write_array(huf$WETDRY, file = file, IPRN = IPRN) 
+    if(dim(huf$wetdry)[3]>0) {
+      write_array(huf$wetdry, file = file, iprn = iprn) 
     }
   
   # data set 6-8
-    for(i in 1:huf$NHUF) {
-      write_variables(huf$HGUNAM[i], file=file)   
-      write_array(huf$TOP[,,i], file = file, IPRN = IPRN)
-      write_array(huf$THCK[,,i], file = file, IPRN = IPRN)
+    for(i in 1:huf$nhuf) {
+      write_variables(huf$hgunam[i], file=file)   
+      write_array(huf$top[,,i], file = file, iprn = iprn)
+      write_array(huf$thck[,,i], file = file, iprn = iprn)
     }
   
   # data set 9
-    for(i in 1:huf$NHUF) {
-      write_variables(huf$HGUNAM[i],huf$HGUHANI[i],huf$HGUVANI[i], file=file)
+    for(i in 1:huf$nhuf) {
+      write_variables(huf$hgunam[i],huf$hguhani[i],huf$hguvani[i], file=file)
     }
   
   # data set 10-11
-    for(i in 1:huf$NPHUF) {
-      write_variables(huf$PARNAM[i],huf$PARTYP[i],huf$Parval[i],huf$NCLU[i], file=file)
-      HGUNAMs <- which(!is.na(huf$Mltarr[,i]))
-      for(j in 1:huf$NCLU[i]) {
-        write_variables(huf$HGUNAM[HGUNAMs[j]],huf$Mltarr[HGUNAMs[j],i],huf$Zonarr[HGUNAMs[j],i],huf$IZ[HGUNAMs[j],i], file=file)      
+    for(i in 1:huf$nphuf) {
+      write_variables(huf$parnam[i],huf$partyp[i],huf$parval[i],huf$nclu[i], file=file)
+      hgunams <- which(!is.na(huf$mltarr[,i]))
+      for(j in 1:huf$nclu[i]) {
+        write_variables(huf$hgunam[hgunams[j]],huf$mltarr[hgunams[j],i],huf$zonarr[hgunams[j],i],huf$iz[hgunams[j],i], file=file)      
       }
     }
   

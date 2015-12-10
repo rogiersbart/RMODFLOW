@@ -2,11 +2,13 @@
 % Please edit documentation in R/internal.R
 \name{write_array}
 \alias{write_array}
-\title{Write modflow array}
+\title{Write modflow array
+Internal function used in the write_* functions for writing array datasets}
 \usage{
-write_array(modflow_array, file, CNSTNT = 1, IPRN = -1, append = TRUE)
+write_array(array, file, cnstnt = 1, iprn = -1, append = TRUE)
 }
 \description{
+Write modflow array
 Internal function used in the write_* functions for writing array datasets
 }
 

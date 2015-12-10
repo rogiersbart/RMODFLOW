@@ -20,40 +20,40 @@ read_kdep <- function(file = {cat('Please select kdep file...\n'); file.choose()
     kdep.lines <- remove_comments_from_lines(kdep.lines)
   
   # data set 1
-    dataSet1 <- split_line_numbers(kdep.lines[1])
+    data_set1 <- split_line_numbers(kdep.lines[1])
     kdep.lines <- kdep.lines[-1]
-    kdep$NPKDEP <- dataSet1[1]
-    kdep$IFKDEP <- dataSet1[2]
-    rm(dataSet1)
+    kdep$npkdep <- data_set1[1]
+    kdep$ifkdep <- data_set1[2]
+    rm(data_set1)
   
   # data set 2
-    if(kdep$IFKDEP > 0) {
-      dataSet2 <- read_array(kdep.lines,dis$NROW,dis$NCOL,1)
-      kdep.lines <- dataSet2$remaining_lines
-      kdep$RS <- dataSet2$modflow_array
-      rm(dataSet2)
+    if(kdep$ifkdep > 0) {
+      data_set2 <- read_array(kdep.lines,dis$nrow,dis$ncol,1)
+      kdep.lines <- data_set2$remaining_lines
+      kdep$rs <- data_set2$array
+      rm(data_set2)
     }
   
   # data set 3-4
-    kdep$PARNAM <- vector(mode='character',length=kdep$NPKDEP)
-    kdep$PARTYP <- vector(mode='character',length=kdep$NPKDEP)
-    kdep$Parval <- vector(mode='numeric',length=kdep$NPKDEP)
-    kdep$NCLU <- vector(mode='numeric',length=kdep$NPKDEP)
-    kdep$Mltarr <- matrix(nrow=huf$NHUF, ncol=kdep$NPKDEP)
-    kdep$Zonarr <- matrix(nrow=huf$NHUF, ncol=kdep$NPKDEP)
-    kdep$IZ <- matrix(nrow=huf$NHUF, ncol=kdep$NPKDEP)
-    for(i in 1:kdep$NPKDEP) {
+    kdep$parnam <- vector(mode='character',length=kdep$npkdep)
+    kdep$partyp <- vector(mode='character',length=kdep$npkdep)
+    kdep$parval <- vector(mode='numeric',length=kdep$npkdep)
+    kdep$nclu <- vector(mode='numeric',length=kdep$npkdep)
+    kdep$mltarr <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
+    kdep$zonarr <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
+    kdep$iz <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
+    for(i in 1:kdep$npkdep) {
       line.split <- split_line_words(kdep.lines[1]); kdep.lines <- kdep.lines[-1]
-      kdep$PARNAM[i] <- line.split[1]
-      kdep$PARTYP[i] <- line.split[2]
-      kdep$Parval[i] <- as.numeric(line.split[3])
-      kdep$NCLU[i] <- as.numeric(line.split[4])
-      for(j in 1:kdep$NCLU[i]) {
+      kdep$parnam[i] <- line.split[1]
+      kdep$partyp[i] <- line.split[2]
+      kdep$parval[i] <- as.numeric(line.split[3])
+      kdep$nclu[i] <- as.numeric(line.split[4])
+      for(j in 1:kdep$nclu[i]) {
         line.split <- split_line_words(kdep.lines[1]); kdep.lines <- kdep.lines[-1]
-        k <- which(huf$HGUNAM == line.split[1])
-        kdep$Mltarr[k,i] <- line.split[2]
-        kdep$Zonarr[k,i] <- line.split[3]
-        kdep$IZ[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
+        k <- which(huf$hgunam == line.split[1])
+        kdep$mltarr[k,i] <- line.split[2]
+        kdep$zonarr[k,i] <- line.split[3]
+        kdep$iz[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
       } 
     }
   

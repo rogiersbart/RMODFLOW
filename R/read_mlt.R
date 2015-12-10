@@ -17,18 +17,18 @@ read_mlt <- function(file = {cat('Please select mlt file...\n'); file.choose()},
     mlt.lines <- remove_comments_from_lines(mlt.lines)
   
   # data set 1
-    mlt$NML <- as.numeric(mlt.lines[1])
+    mlt$nml <- as.numeric(mlt.lines[1])
     mlt.lines <- mlt.lines[-1]
   
   # data set 2 + 3
-    mlt$RMLT <- list()
-    for(i in 1:mlt$NML) {
-      mlt$MLTNAM[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
+    mlt$rmlt <- list()
+    for(i in 1:mlt$nml) {
+      mlt$mltnam[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
       mlt.lines <- mlt.lines[-1]
-      dataSet <- read_array(mlt.lines,dis$NROW,dis$NCOL,1)
-      mlt.lines <- dataSet$remaining_lines
-      mlt$RMLT[[i]] <- dataSet$modflow_array
-      rm(dataSet)
+      data_set <- read_array(mlt.lines,dis$nrow,dis$ncol,1)
+      mlt.lines <- data_set$remaining_lines
+      mlt$rmlt[[i]] <- data_set$array
+      rm(data_set)
     }
   
   comment(mlt) <- comments

@@ -2,11 +2,13 @@
 % Please edit documentation in R/internal.R
 \name{read_comments}
 \alias{read_comments}
-\title{Read comments}
+\title{Read comments
+Internal function used in the read_* functions to read comments}
 \usage{
 read_comments(remaining_lines)
 }
 \description{
 Read comments
+Internal function used in the read_* functions to read comments
 }
 

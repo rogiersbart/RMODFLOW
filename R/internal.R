@@ -8,6 +8,20 @@ harmean <- function(x, ...) {
   return(1 / (mean(1 / x, ...)))
 }
 
+#' Conditional return
+#' 
+#' \code{ifelse0} returns \code{yes} if \code{test} is \code{TRUE}. If \code{test} is \code{FALSE}, it returns \code{no}.
+#' @param test an object which can be coerced to logical mode.
+#' @param yes return value for \code{test==TRUE}
+#' @param no return value for \code{test==FALSE}
+ifelse0 <- function(test, yes, no) {
+  if(test)   {
+    return(yes)
+  } else {
+    return(no)
+  }
+}
+
 #' Calculate a geometric mean
 #' @param x An R object.
 #' @param ... further arguments passed to \code{\link{prod}}
@@ -40,10 +54,10 @@ performance_measures <- function(observations, predictions,print=F) {
 #' @return A list containing the array and the remaining text of the MODFLOW input file
 read_array <- function(remaining_lines,nrow,ncol,nlay) {
   # Initialize array object
-  modflow_array <- array(dim=c(nrow,ncol,nlay))
+  array <- array(dim=c(nrow,ncol,nlay))
   
   # Read array according to format type if there is anything to be read
-  if(prod(dim(modflow_array))!=0)
+  if(prod(dim(array))!=0)
   {
     for(k in 1:nlay) 
     { 
@@ -54,11 +68,11 @@ read_array <- function(remaining_lines,nrow,ncol,nlay) {
       {
         if(nlay==1)
         {
-          modflow_array <- as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2])
+          array <- as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2])
           remaining_lines <- remaining_lines[-1]
-          return(list(modflow_array=modflow_array,remaining_lines=remaining_lines))
+          return(list(array=array,remaining_lines=remaining_lines))
         } else {
-          modflow_array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2]),nrow=nrow,ncol=ncol)
+          array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2]),nrow=nrow,ncol=ncol)
           remaining_lines <- remaining_lines[-1]
         }
       }
@@ -67,7 +81,7 @@ read_array <- function(remaining_lines,nrow,ncol,nlay) {
         remaining_lines <- remaining_lines[-1] 
         nPerLine <- length(as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])))
         nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-        modflow_array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+        array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
         remaining_lines <- remaining_lines[-c(1:nLines)]
       }
       else if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='EXTERNAL')
@@ -77,7 +91,7 @@ read_array <- function(remaining_lines,nrow,ncol,nlay) {
       else if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='OPEN/CLOSE')
       {
         warning('Reading OPEN/CLOSE arrays is not fully implemented yet...')
-        modflow_array[,,k] <- as.matrix(read.table(file=remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2]))
+        array[,,k] <- as.matrix(read.table(file=remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2]))
         remaining_lines <- remaining_lines[-1] 
       } else {
         # in case of output file arrays without INTERNAL in format line
@@ -85,18 +99,18 @@ read_array <- function(remaining_lines,nrow,ncol,nlay) {
         remaining_lines <- remaining_lines[-1]      
         nPerLine <- length(as.numeric(remove_empty_strings(strsplit((gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ", remaining_lines[1])),' |\t')[[1]])))
         nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-        modflow_array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ",paste(remaining_lines[1:nLines],collapse='')),' |\t|\n| \n|\n | \t|\t ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+        array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(gsub(paste0("([[:alnum:]*[:punct:]*[:space:]]{",nPerNum,"})"), "\\1 ",paste(remaining_lines[1:nLines],collapse='')),' |\t|\n| \n|\n | \t|\t ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
         remaining_lines <- remaining_lines[-c(1:nLines)]
       }   
     }
   }
   
   # Set class of object (2darray; 3darray)
-  if(nlay==1){modflow_array <- as.matrix(modflow_array[,,1]); class(modflow_array) <- '2d_array'}
-  if(nlay!=1) class(modflow_array) <- '3d_array'
+  if(nlay==1){array <- as.matrix(array[,,1]); class(array) <- '2d_array'}
+  if(nlay!=1) class(array) <- '3d_array'
   
   # Return output of reading function 
-  return(list(modflow_array=modflow_array,remaining_lines=remaining_lines))
+  return(list(array=array,remaining_lines=remaining_lines))
 }
 
 #' Read comments
@@ -135,7 +149,6 @@ remove_empty_strings <- function(vector_of_strings) {
 }
 
 #' Reversed rainbow color palette
-#' @export
 rev_rainbow <- function(...) {
   return(rev(rainbow(...)))
 }
@@ -158,36 +171,36 @@ weighted.harmean <- function(x, w, ...) {
 
 #' Write modflow array
 #' Internal function used in the write_* functions for writing array datasets
-write_array <- function(modflow_array, file, cnstnt=1, iprn=-1, append=TRUE) {
+write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE) {
 
-  if(is.null(dim(modflow_array))) {
-    if(prod(c(modflow_array)[1] == c(modflow_array))==1) {
-      cat(paste('CONSTANT ',cnstnt * c(modflow_array)[1], '\n', sep=''), file=file, append=append)
+  if(is.null(dim(array))) {
+    if(prod(c(array)[1] == c(array))==1) {
+      cat(paste('CONSTANT ',cnstnt * c(array)[1], '\n', sep=''), file=file, append=append)
     } else {
       cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
-      cat(paste(paste(modflow_array, collapse=' '), '\n', sep=' '), file=file, append=append)     
+      cat(paste(paste(array, collapse=' '), '\n', sep=' '), file=file, append=append)     
     }
-  } else if(length(dim(modflow_array))==2) {
-    if(prod(c(modflow_array)[1] == c(modflow_array))==1) {
-      cat(paste('CONSTANT ',cnstnt * c(modflow_array)[1], '\n', sep=''), file=file, append=append)
+  } else if(length(dim(array))==2) {
+    if(prod(c(array)[1] == c(array))==1) {
+      cat(paste('CONSTANT ',cnstnt * c(array)[1], '\n', sep=''), file=file, append=append)
     } else {
       cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
-      if(dim(modflow_array)[1] == 1) {
-        cat(paste0(paste(modflow_array, collapse=' '),'\n'), file=file, append=append)
+      if(dim(array)[1] == 1) {
+        cat(paste0(paste(array, collapse=' '),'\n'), file=file, append=append)
       } else {
-        write.table(modflow_array, file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE) 
+        write.table(array, file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE) 
       }
     }
   } else {
-    for(i in 1:dim(modflow_array)[3])
+    for(i in 1:dim(array)[3])
     {
-      if(prod(c(modflow_array[,,i])[1] == c(modflow_array[,,i]))==1) {
-        cat(paste('CONSTANT ',cnstnt * c(modflow_array[,,i])[1], '\n', sep=''), file=file, append=append)
+      if(prod(c(array[,,i])[1] == c(array[,,i]))==1) {
+        cat(paste('CONSTANT ',cnstnt * c(array[,,i])[1], '\n', sep=''), file=file, append=append)
       } else {
         cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
-        if(dim(modflow_array)[1] == 1) {
-          cat(paste0(paste(modflow_array[,,i], collapse=' '),'\n'), file=file, append=append)
-        } else write.table(modflow_array[,,i], file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE)       
+        if(dim(array)[1] == 1) {
+          cat(paste0(paste(array[,,i], collapse=' '),'\n'), file=file, append=append)
+        } else write.table(array[,,i], file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE)       
       }
     }
   }

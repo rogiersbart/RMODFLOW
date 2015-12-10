@@ -4,14 +4,14 @@
 \alias{write_bas}
 \title{Write a MODFLOW basic file}
 \usage{
-write_bas(bas, file, IPRN = -1)
+write_bas(bas, file, iprn = -1)
 }
 \arguments{
 \item{bas}{an \code{\link{RMODFLOW}} bas object}
 
 \item{file}{filename to write to; typically '*.bas'}
 
-\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

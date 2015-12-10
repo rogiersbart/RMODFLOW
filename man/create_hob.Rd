@@ -5,8 +5,8 @@
 \title{Create an \code{RMODFLOW} hob object}
 \usage{
 create_hob(locations, time_series, dis, hydraulic_conductivity = array(1, dim
-  = c(dis$NROW, dis$NCOL, dis$NLAY)), IUHOBSV = 0, HOBDRY = -888,
-  NOPRINT = FALSE, TOMULTH = 1, unique_obsnam = FALSE, prj = NULL)
+  = c(dis$nrow, dis$ncol, dis$nlay)), iuhobsv = 0, hobdry = -888,
+  noprint = FALSE, tomulth = 1, unique_obsnam = FALSE, prj = NULL)
 }
 \arguments{
 \item{locations}{data.frame with the name, x and y coordinates, and top and bottom of the monitoring well filter}
@@ -17,13 +17,13 @@ create_hob(locations, time_series, dis, hydraulic_conductivity = array(1, dim
 
 \item{hydraulic_conductivity}{3d array with hydraulic conductivity values, for calculating the weights for a multilayer observation}
 
-\item{IUHOBSV}{file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)}
+\item{iuhobsv}{file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)}
 
-\item{HOBDRY}{value of the simulated equivalent for a dry cell used in the observation output file}
+\item{hobdry}{value of the simulated equivalent for a dry cell used in the observation output file}
 
-\item{NOPRINT}{logical; if TRUE, the input and output are not printed in the listing file}
+\item{noprint}{logical; if TRUE, the input and output are not printed in the listing file}
 
-\item{unique_obsnam}{logical; should an ID number be added to OBSNAM for filters with observations at different times? Defaults to FALSE.}
+\item{unique_obsnam}{logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.}
 
 \item{prj}{RMODFLOW prj object; provide if coordinates in locations are real world coordinates}
 

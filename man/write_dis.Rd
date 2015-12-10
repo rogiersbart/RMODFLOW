@@ -4,14 +4,14 @@
 \alias{write_dis}
 \title{Write a MODFLOW discretization file}
 \usage{
-write_dis(dis, file, IPRN = -1)
+write_dis(dis, file, iprn = -1)
 }
 \arguments{
 \item{dis}{an \code{\link{RMODFLOW}} dis object}
 
 \item{file}{filename to write to; typically '*.dis'}
 
-\item{IPRN}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

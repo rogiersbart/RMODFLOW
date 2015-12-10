@@ -7,7 +7,7 @@
 read_hed(file = {     cat("Please select hed file...\\n")     file.choose() },
   dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
   }, bas = {     cat("Please select bas file...\\n")    
-  read_bas(file.choose(), dis = dis) }, convert_HNOFLO_to_NA = TRUE,
+  read_bas(file.choose(), dis = dis) }, convert_hnoflo_to_NA = TRUE,
   binary = TRUE)
 }
 \arguments{
@@ -17,7 +17,7 @@ read_hed(file = {     cat("Please select hed file...\\n")     file.choose() },
 
 \item{bas}{basic file object; defaults to that with the same filename but with extension '.bas'}
 
-\item{convert_HNOFLO_to_NA}{logical; should HNOFLO values be converted to NA?}
+\item{convert_hnoflo_to_NA}{logical; should hnoflo values be converted to NA?}
 }
 \value{
 object of class hed

@@ -4,7 +4,7 @@
 \alias{read_array}
 \title{Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
 \usage{
-read_array(remaining_lines, NROW, NCOL, NLAY)
+read_array(remaining_lines, nrow, ncol, nlay)
 }
 \arguments{
 \item{object}{MODFLOW input file text object, starting with the free-format control record}

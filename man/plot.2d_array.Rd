@@ -5,11 +5,11 @@
 \title{Plot a MODFLOW 2D array}
 \usage{
 \method{plot}{2d_array}(rmodflow_array, dis, bas = NULL,
-  mask = ifelse0(is.null(bas), rmodflow_array * 0 + 1, bas$IBOUND[, , 1]),
+  mask = ifelse0(is.null(bas), rmodflow_array * 0 + 1, bas$ibound[, , 1]),
   colour_palette = rev_rainbow, zlim = range(rmodflow_array, finite = TRUE),
   levels = pretty(zlim, nlevels), nlevels = 7, type = "fill",
   add = FALSE, height_exaggeration = 100, binwidth = round(diff(zlim)/20),
-  label = TRUE, prj = NULL, target_CRS = NULL, alpha = 1,
+  label = TRUE, prj = NULL, target_crs = NULL, alpha = 1,
   plot3d = FALSE, height = NULL)
 }
 \arguments{
@@ -19,7 +19,7 @@
 
 \item{bas}{basic file object; optional}
 
-\item{mask}{a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$IBOUND}
+\item{mask}{a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound}
 
 \item{colour_palette}{a colour palette for imaging the array values}
 
@@ -41,7 +41,7 @@
 
 \item{prj}{projection file object}
 
-\item{target_CRS}{coordinate reference system for the plot}
+\item{target_crs}{coordinate reference system for the plot}
 
 \item{alpha}{transparency value; defaults to 1}
 

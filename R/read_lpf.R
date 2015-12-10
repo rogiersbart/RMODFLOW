@@ -17,158 +17,158 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
     lpf.lines <- remove_comments_from_lines(lpf.lines)
   
   # data set 1
-    dataSet1 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
+    data_set1 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
     lpf.lines <- lpf.lines[-1]  
-    lpf$ILPFCB <- as.numeric(dataSet1[1])
-    lpf$HDRY <- as.numeric(dataSet1[2])
-    lpf$NPLPF <- as.numeric(dataSet1[3])
-    lpf$STORAGECOEFFICIENT <- 'STORAGECOEFFICIENT' %in% dataSet1
-    lpf$CONSTANTCV <- 'CONSTANTCV' %in% dataSet1
-    lpf$THICKSTRT <- 'THICKSTRT' %in% dataSet1
-    lpf$NOCVCORRECTION <- 'NOCVCORRECTION' %in% dataSet1
-    lpf$NOVFC <- 'NOVFC' %in% dataSet1
-    lpf$NOPARCHECK <- 'NOPARCHECK' %in% dataSet1
-    rm(dataSet1)
+    lpf$ilpfcb <- as.numeric(data_set1[1])
+    lpf$hdry <- as.numeric(data_set1[2])
+    lpf$nplpf <- as.numeric(data_set1[3])
+    lpf$storagecoefficient <- 'STORAGECOEFFICIENT' %in% data_set1
+    lpf$constantcv <- 'CONSTANTCV' %in% data_set1
+    lpf$thickstrt <- 'THICKSTRT' %in% data_set1
+    lpf$nocvcorrection <- 'NOCVCORRECTION' %in% data_set1
+    lpf$novfc <- 'NOVFC' %in% data_set1
+    lpf$noparcheck <- 'NOPARCHECK' %in% data_set1
+    rm(data_set1)
   
   # data set 2
-    lpf$LAYTYP <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
+    lpf$laytyp <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
     lpf.lines <- lpf.lines[-1]
   
   # data set 3
-    lpf$LAYAVG <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
+    lpf$layavg <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
     lpf.lines <- lpf.lines[-1]
   
   # data set 4
-    lpf$CHANI <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
+    lpf$chani <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
     lpf.lines <- lpf.lines[-1]
   
   # data set 5
-    lpf$LAYVKA <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
+    lpf$layvka <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
     lpf.lines <- lpf.lines[-1]
     
   # data set 6
-    lpf$LAYWET <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
+    lpf$laywet <- as.numeric(remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]]))
     lpf.lines <- lpf.lines[-1]
   
   # data set 7
-    if(!as.logical(prod(lpf$LAYWET==0))) {
-      dataSet7 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
+    if(!as.logical(prod(lpf$laywet==0))) {
+      data_set7 <- remove_empty_strings(strsplit(lpf.lines[1],' ')[[1]])
       lpf.lines <- lpf.lines[-1]  
-      lpf$WETFCT <- as.numeric(dataSet7[1])
-      lpf$IWETIT <- as.numeric(dataSet7[2])
-      lpf$IHDWET <- as.numeric(dataSet7[3])
-      rm(dataSet7)
+      lpf$wetfct <- as.numeric(data_set7[1])
+      lpf$iwetit <- as.numeric(data_set7[2])
+      lpf$ihdwet <- as.numeric(data_set7[3])
+      rm(data_set7)
     }
   
   # data set 8-9
-    lpf$PARNAM <- vector(mode='character',length=lpf$NPLPF)
-    lpf$PARTYP <- vector(mode='character',length=lpf$NPLPF)
-    lpf$Parval <- vector(mode='numeric',length=lpf$NPLPF)
-    lpf$NCLU <- vector(mode='numeric',length=lpf$NPLPF)
-    lpf$Mltarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    lpf$Zonarr <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    lpf$IZ <- matrix(nrow=dis$NLAY, ncol=lpf$NPLPF)
-    for(i in 1:lpf$NPLPF) {
+    lpf$parnam <- vector(mode='character',length=lpf$nplpf)
+    lpf$partyp <- vector(mode='character',length=lpf$nplpf)
+    lpf$parval <- vector(mode='numeric',length=lpf$nplpf)
+    lpf$nclu <- vector(mode='numeric',length=lpf$nplpf)
+    lpf$mltarr <- matrix(nrow=dis$nlay, ncol=lpf$nplpf)
+    lpf$zonarr <- matrix(nrow=dis$nlay, ncol=lpf$nplpf)
+    lpf$iz <- matrix(nrow=dis$nlay, ncol=lpf$nplpf)
+    for(i in 1:lpf$nplpf) {
       line.split <- split_line_words(lpf.lines[1]); lpf.lines <- lpf.lines[-1]
-      lpf$PARNAM[i] <- line.split[1]
-      lpf$PARTYP[i] <- line.split[2]
-      lpf$Parval[i] <- as.numeric(line.split[3])
-      lpf$NCLU[i] <- as.numeric(line.split[4])
-      for(j in 1:lpf$NCLU[i]) {
+      lpf$parnam[i] <- line.split[1]
+      lpf$partyp[i] <- line.split[2]
+      lpf$parval[i] <- as.numeric(line.split[3])
+      lpf$nclu[i] <- as.numeric(line.split[4])
+      for(j in 1:lpf$nclu[i]) {
         line.split <- split_line_words(lpf.lines[1]); lpf.lines <- lpf.lines[-1]
         k <- as.numeric(line.split[1])
-        lpf$Mltarr[k,i] <- line.split[2]
-        lpf$Zonarr[k,i] <- line.split[3]
-        lpf$IZ[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
+        lpf$mltarr[k,i] <- line.split[2]
+        lpf$zonarr[k,i] <- line.split[3]
+        lpf$iz[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
       } 
     }
   
   # data set 10-16
-    lpf$HK <- array(dim=c(dis$NROW, dis$NCOL, dis$NLAY))
-    class(lpf$HK) <- '3d_array'
-    lpf$HANI <- lpf$VKA <- lpf$Ss <- lpf$Sy <- lpf$VKCB <- lpf$WETDRY <- lpf$HK
-    for(k in 1:dis$NLAY) {
+    lpf$hk <- array(dim=c(dis$nrow, dis$ncol, dis$nlay))
+    class(lpf$hk) <- '3d_array'
+    lpf$hani <- lpf$vka <- lpf$ss <- lpf$sy <- lpf$vkcb <- lpf$wetdry <- lpf$hk
+    for(k in 1:dis$nlay) {
       
       # data set 10
-        if('HK' %in% lpf$PARTYP) {
+        if('HK' %in% lpf$partyp) {
           lpf.lines <- lpf.lines[-1]  
-          lpf$HK[,,k] <- NA
+          lpf$hk[,,k] <- NA
         } else {
-          dataSet10 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-          lpf.lines <- dataSet10$remaining_lines
-          lpf$HK[,,k] <- dataSet10$modflow_array
-          rm(dataSet10)
+          data_set10 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          lpf.lines <- data_set10$remaining_lines
+          lpf$hk[,,k] <- data_set10$array
+          rm(data_set10)
         }
         
       # data set 11
-        if(lpf$CHANI[k] <= 0) {
-          if('HANI' %in% lpf$PARTYP) {
+        if(lpf$Chani[k] <= 0) {
+          if('HANI' %in% lpf$partyp) {
             lpf.lines <- lpf.lines[-1]  
-            lpf$HANI[,,k] <- NA
+            lpf$hani[,,k] <- NA
           } else {
-            dataSet11 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-            lpf.lines <- dataSet11$remaining_lines
-            lpf$HANI[,,k] <- dataSet11$modflow_array
-            rm(dataSet11)
+            data_set11 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            lpf.lines <- data_set11$remaining_lines
+            lpf$hani[,,k] <- data_set11$array
+            rm(data_set11)
           }
         }
         
       # data set 12
-        if('VK' %in% lpf$PARTYP | 'VANI' %in% lpf$PARTYP) {
+        if('VK' %in% lpf$partyp | 'VANI' %in% lpf$partyp) {
           lpf.lines <- lpf.lines[-1]  
-          lpf$VKA[,,k] <- NA
+          lpf$vka[,,k] <- NA
         } else {
-          dataSet12 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-          lpf.lines <- dataSet12$remaining_lines
-          lpf$VKA[,,k] <- dataSet12$modflow_array
-          rm(dataSet12)
+          data_set12 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          lpf.lines <- data_set12$remaining_lines
+          lpf$vka[,,k] <- data_set12$array
+          rm(data_set12)
         }
         
       # data set 13
-        if('TS' %in% dis$SSTR) {
-          if('SS' %in% lpf$PARTYP) {
+        if('TS' %in% dis$sstr) {
+          if('SS' %in% lpf$partyp) {
             lpf.lines <- lpf.lines[-1]  
-            lpf$Ss[,,k] <- NA
+            lpf$ss[,,k] <- NA
           } else {
-            dataSet13 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-            lpf.lines <- dataSet13$remaining_lines
-            lpf$Ss[,,k] <- dataSet13$modflow_array
-            rm(dataSet13)
+            data_set13 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            lpf.lines <- data_set13$remaining_lines
+            lpf$ss[,,k] <- data_set13$array
+            rm(data_set13)
           }
         }
         
       # data set 14
-        if('TS' %in% dis$SSTR & lpf$LAYTYP[k] != 0) {
-          if('SY' %in% lpf$PARTYP) {
+        if('TS' %in% dis$sstr & lpf$laytyp[k] != 0) {
+          if('SY' %in% lpf$partyp) {
             lpf.lines <- lpf.lines[-1]  
-            lpf$Sy[,,k] <- NA
+            lpf$sy[,,k] <- NA
           } else {
-            dataSet14 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-            lpf.lines <- dataSet14$remaining_lines
-            lpf$Sy[,,k] <- dataSet14$modflow_array
-            rm(dataSet14)
+            data_set14 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            lpf.lines <- data_set14$remaining_lines
+            lpf$sy[,,k] <- data_set14$array
+            rm(data_set14)
           }
         }
         
       # data set 15
-        if(dis$LAYCBD[k] != 0) {
-          if('VKCB' %in% lpf$PARTYP) {
+        if(dis$laycbd[k] != 0) {
+          if('VKCB' %in% lpf$partyp) {
             lpf.lines <- lpf.lines[-1]  
-            lpf$VKCB[,,k] <- NA
+            lpf$vkcb[,,k] <- NA
           } else {
-            dataSet15 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-            lpf.lines <- dataSet15$remaining_lines
-            lpf$VKCB[,,k] <- dataSet15$modflow_array
-            rm(dataSet15)
+            data_set15 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            lpf.lines <- data_set15$remaining_lines
+            lpf$vkcb[,,k] <- data_set15$array
+            rm(data_set15)
           }
         }
         
       # data set 16
-        if(lpf$LAYWET[k] != 0 & lpf$LAYTYP[k] != 0) {
-          dataSet16 <- read_array(lpf.lines,dis$NROW,dis$NCOL,1)
-          lpf.lines <- dataSet16$remaining_lines
-          lpf$WETDRY[,,k] <- dataSet16$modflow_array
-          rm(dataSet16)
+        if(lpf$laywet[k] != 0 & lpf$laytyp[k] != 0) {
+          data_set16 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          lpf.lines <- data_set16$remaining_lines
+          lpf$wetdry[,,k] <- data_set16$array
+          rm(data_set16)
         }     
     }
   
