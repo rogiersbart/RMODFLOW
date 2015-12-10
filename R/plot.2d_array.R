@@ -2,7 +2,7 @@
 #' 
 #' \code{plot.2d_array} plots a MODFLOW 2D array.
 #' 
-#' @param rmodflow_array an object of class 2d_array
+#' @param array an object of class 2d_array
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
@@ -16,7 +16,7 @@
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
 #' @param label logical; should labels be added to contour plot
 #' @param prj projection file object
-#' @param target_crs coordinate reference system for the plot
+#' @param crs coordinate reference system for the plot
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
@@ -24,15 +24,32 @@
 #' @method plot 2d_array
 #' @export
 #' @import ggplot2 directlabels akima rgl grid quadprog
-plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(bas),rmodflow_array*0+1,bas$ibound[,,1]), colour_palette=rev_rainbow, zlim = range(rmodflow_array, finite=TRUE), levels = pretty(zlim, nlevels), nlevels = 7, type='fill', add=FALSE,height_exaggeration=100,binwidth=round(diff(zlim)/20),label=TRUE,prj=NULL,target_crs=NULL,alpha=1,plot3d=FALSE,height=NULL)
-{
+plot.2d_array <- function(array,
+                          dis,
+                          bas = NULL,
+                          mask = ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),
+                          colour_palette = rev_rainbow,
+                          zlim = range(array, finite=TRUE),
+                          levels = pretty(zlim, nlevels),
+                          nlevels = 7,
+                          type = 'fill',
+                          grid = TRUE,
+                          add = FALSE,
+                          height_exaggeration = 100,
+                          binwidth=round(diff(zlim)/20),
+                          label=TRUE,
+                          prj=NULL,
+                          crs=NULL,
+                          alpha=1,
+                          plot3d=FALSE,
+                          height=NULL) {
   if(plot3d) {
     x <- (cumsum(dis$delr)-dis$delr/2)
     y <- sum(dis$delc) - (cumsum(dis$delc)-dis$delc/2)
     z <- t(height)*height_exaggeration
     if(!add) rgl::open3d()
     colorlut <- colorRampPalette(colour_palette(nlevels))(25) # height color lookup table
-    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(rmodflow_array)),rule=2)$y) ] # assign colors to heights for each point
+    col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(array)),rule=2)$y) ] # assign colors to heights for each point
     alpha <- rep(1,length(col))
     alpha[which(c(t(mask))==0)] <- 0
     if(type=='fill') rgl::surface3d(x,y,z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
@@ -55,23 +72,23 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_crs)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)
+      if(!is.null(crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha))# +
+        return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(grid,'black',NA)))# +
           #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-          geom_polygon(aes(fill=value, group=id),alpha=alpha) +
+          geom_polygon(aes(fill=value, group=id),alpha=alpha, colour = ifelse(grid,'black',NA)) +
           scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
           coord_equal())
       }
@@ -88,23 +105,23 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_crs)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)
+      if(!is.null(crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha))# +
+        return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(grid,'black',NA)))# +
         #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha) +
+                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid,'black',NA)) +
                  scale_fill_discrete() +
                  coord_equal())
       }
@@ -121,14 +138,14 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
       positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
       positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
       positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(rmodflow_array*mask^2)))
+      values <- data.frame(id = ids,value = c(t(array*mask^2)))
       if(!is.null(prj)) {
         new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
         positions$x <- new_positions$x
         positions$y <- new_positions$y
       }
-      if(!is.null(target_crs)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=target_crs)                    
+      if(!is.null(crs)) {
+        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)                    
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
@@ -141,7 +158,7 @@ plot.2d_array <- function(rmodflow_array, dis, bas=NULL, mask=ifelse0(is.null(ba
                  coord_equal())
       }
     } else if(type=='contour') {
-      xy$z <- c(t(rmodflow_array*mask^2))
+      xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)
       xy <- interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
