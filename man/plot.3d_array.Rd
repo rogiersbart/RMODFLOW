@@ -4,17 +4,15 @@
 \alias{plot.3d_array}
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
-\method{plot}{3d_array}(rmodflow_array, i = NULL, j = NULL, k = NULL, dis,
-  bas = NULL, mask = ifelse0(is.null(bas), rmodflow_array * 0 + 1,
-  bas$ibound), zlim = range(rmodflow_array[ifelse0(is.null(i),
-  c(1:dim(rmodflow_array)[1]), i), ifelse0(is.null(j),
-  c(1:dim(rmodflow_array)[2]), j), ifelse0(is.null(k),
-  c(1:dim(rmodflow_array)[3]), k)], finite = TRUE),
-  colour_palette = rev_rainbow, nlevels = 7, type = "fill", add = FALSE,
-  ...)
+\method{plot}{3d_array}(array, i = NULL, j = NULL, k = NULL, dis,
+  bas = NULL, mask = ifelse0(is.null(bas), array * 0 + 1, bas$ibound),
+  zlim = range(array[ifelse0(is.null(i), c(1:dim(array)[1]), i),
+  ifelse0(is.null(j), c(1:dim(array)[2]), j), ifelse0(is.null(k),
+  c(1:dim(array)[3]), k)], finite = TRUE), colour_palette = rev_rainbow,
+  nlevels = 7, type = "fill", grid = FALSE, add = FALSE, ...)
 }
 \arguments{
-\item{rmodflow_array}{an object of class 3d_array}
+\item{array}{an object of class 3d_array}
 
 \item{i}{row number to plot}
 
@@ -33,6 +31,10 @@
 \item{colour_palette}{a colour palette for imaging the array values}
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
+
+\item{type}{plot type: 'fill' (default), 'factor' or 'grid'}
+
+\item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
 \item{...}{parameters provided to plot.2d_array}
 }

@@ -10,7 +10,8 @@
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param levels levels to indicate on the colour scale; defaults to nlevels pretty breakpoints
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'grid' or 'contour'
+#' @param type plot type: 'fill' (default), 'factor', 'grid' or 'contour'
+#' @param grid logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param height_exaggeration height exaggeration for 3D plot; optional
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
@@ -33,7 +34,7 @@ plot.2d_array <- function(array,
                           levels = pretty(zlim, nlevels),
                           nlevels = 7,
                           type = 'fill',
-                          grid = TRUE,
+                          grid = FALSE,
                           add = FALSE,
                           height_exaggeration = 100,
                           binwidth=round(diff(zlim)/20),
@@ -58,8 +59,7 @@ plot.2d_array <- function(array,
     xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
-    
-    if(type=='fill') {  
+    if(type %in% c('fill','factor','grid')) {
       ids <- factor(1:(dis$nrow*dis$ncol))
       xWidth <- rep(dis$delr,dis$nrow)
       yWidth <- rep(dis$delc,each=dis$ncol)
@@ -83,78 +83,34 @@ plot.2d_array <- function(array,
       }
       datapoly <- merge(values, positions, by=c("id"))
       datapoly <- na.omit(datapoly)
+    }
+    if(type=='fill') {  
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(grid,'black',NA)))# +
+        return(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))))# +
           #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-          geom_polygon(aes(fill=value, group=id),alpha=alpha, colour = ifelse(grid,'black',NA)) +
+          geom_polygon(aes(fill=value, group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
           scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
           coord_equal())
       }
     } else if(type=='factor') {  
-      ids <- factor(1:(dis$nrow*dis$ncol))
-      xWidth <- rep(dis$delr,dis$nrow)
-      yWidth <- rep(dis$delc,each=dis$ncol)
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(array*mask^2)))
-      if(!is.null(prj)) {
-        new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
-        positions$x <- new_positions$x
-        positions$y <- new_positions$y
-      }
-      if(!is.null(crs)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
-      }
-      datapoly <- merge(values, positions, by=c("id"))
-      datapoly <- na.omit(datapoly)
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(grid,'black',NA)))# +
+        return(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))))# +
         #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid,'black',NA)) +
+                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
                  scale_fill_discrete() +
                  coord_equal())
       }
     } else if(type=='grid') {  
-      ids <- factor(1:(dis$nrow*dis$ncol))
-      xWidth <- rep(dis$delr,dis$nrow)
-      yWidth <- rep(dis$delc,each=dis$ncol)
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(array*mask^2)))
-      if(!is.null(prj)) {
-        new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
-        positions$x <- new_positions$x
-        positions$y <- new_positions$y
-      }
-      if(!is.null(crs)) {
-        positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)                    
-      }
-      datapoly <- merge(values, positions, by=c("id"))
-      datapoly <- na.omit(datapoly)
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,alpha=alpha,colour='black',fill=NA))# +
+        return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,alpha=alpha,colour=ifelse(is.logical(grid),'black',grid),fill=NA))# +
         #scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim)) # solve this issue!
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(group=id),alpha=alpha,colour='black',fill=NA) +
+                 geom_polygon(aes(group=id),alpha=alpha,colour=ifelse(is.logical(grid),'black',grid),fill=NA) +
                  coord_equal())
       }
     } else if(type=='contour') {

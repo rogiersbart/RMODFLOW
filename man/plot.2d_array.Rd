@@ -4,16 +4,16 @@
 \alias{plot.2d_array}
 \title{Plot a MODFLOW 2D array}
 \usage{
-\method{plot}{2d_array}(rmodflow_array, dis, bas = NULL,
-  mask = ifelse0(is.null(bas), rmodflow_array * 0 + 1, bas$ibound[, , 1]),
-  colour_palette = rev_rainbow, zlim = range(rmodflow_array, finite = TRUE),
-  levels = pretty(zlim, nlevels), nlevels = 7, type = "fill",
-  add = FALSE, height_exaggeration = 100, binwidth = round(diff(zlim)/20),
-  label = TRUE, prj = NULL, target_crs = NULL, alpha = 1,
-  plot3d = FALSE, height = NULL)
+\method{plot}{2d_array}(array, dis, bas = NULL, mask = ifelse0(is.null(bas),
+  array * 0 + 1, bas$ibound[, , 1]), colour_palette = rev_rainbow,
+  zlim = range(array, finite = TRUE), levels = pretty(zlim, nlevels),
+  nlevels = 7, type = "fill", grid = FALSE, add = FALSE,
+  height_exaggeration = 100, binwidth = round(diff(zlim)/20),
+  label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
+  height = NULL)
 }
 \arguments{
-\item{rmodflow_array}{an object of class 2d_array}
+\item{array}{an object of class 2d_array}
 
 \item{dis}{discretization file object}
 
@@ -29,7 +29,9 @@
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 
-\item{type}{plot type: 'fill' (default), 'grid' or 'contour'}
+\item{type}{plot type: 'fill' (default), 'factor', 'grid' or 'contour'}
+
+\item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
 \item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
 
@@ -41,7 +43,7 @@
 
 \item{prj}{projection file object}
 
-\item{target_crs}{coordinate reference system for the plot}
+\item{crs}{coordinate reference system for the plot}
 
 \item{alpha}{transparency value; defaults to 1}
 
