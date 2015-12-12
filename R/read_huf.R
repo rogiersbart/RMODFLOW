@@ -52,8 +52,8 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
   
   # data set 6-8
     huf$hgunam <- vector(mode='character',length=huf$nhuf)
-    huf$top <- array(dim=c(dis$nrow, dis$ncol, huf$nhuf)); class(huf$top) <- 'mf3darray'
-    huf$thck <- array(dim=c(dis$nrow, dis$ncol, huf$nhuf)); class(huf$thck) <- 'mf3darray'
+    huf$top <- create_array(array(dim=c(dis$nrow, dis$ncol, huf$nhuf)))
+    huf$thck <- create_array(array(dim=c(dis$nrow, dis$ncol, huf$nhuf)))
     for(i in 1:huf$nhuf) {
       huf$hgunam[i] <- split_line_words(huf.lines[1])[1]
       huf.lines <- huf.lines[-1]

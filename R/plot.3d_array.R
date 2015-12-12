@@ -37,6 +37,7 @@ plot.3d_array <- function(array,
   }
   if(!is.null(k)) {
     zlim <- zlim
+    mask <- mask
     array <- array[,,k]
     class(array) <- '2d_array'
     mask <- mask[,,k]
