@@ -1,0 +1,59 @@
+#' Generic function to export vectors
+#' 
+#' @rdname export_vector
+#' @importFrom sp Polygon Polygons SpatialPolygons SpatialPolygonsDataFrame
+#' @importFrom rgdal writeOGR
+#' @export
+export_vector.2d_array <- function(array,
+                                  dis,
+                                  bas = NULL,
+                                  mask = ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),
+                                  prj=NULL,
+                                  crs=NULL,
+                                  file='rmodflow_vector',
+                                  type = 'ESRI Shapefile') {
+
+  
+  xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
+  names(xy) <- c('x','y')
+  mask[which(mask==0)] <- NA
+  ids <- factor(1:(dis$nrow*dis$ncol))
+  xWidth <- rep(dis$delr,dis$nrow)
+  yWidth <- rep(dis$delc,each=dis$ncol)
+  positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
+  positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+  positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+  positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+  positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+  positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+  positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+  positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+  positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+  if(!is.null(prj)) {
+    new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
+    positions$x <- new_positions$x
+    positions$y <- new_positions$y
+  }
+  if(!is.null(crs)) {
+    positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
+  }
+  
+  positions_matrix_x <- matrix(positions$x,nrow=length(ids),ncol=4)
+  positions_matrix_y <- matrix(positions$y,nrow=length(ids),ncol=4)
+  positions_matrix <- cbind(ids,positions_matrix_x, positions_matrix_y)
+  create_polygon_from_row <- function(dat) Polygons(list(Polygon(data.frame(x=dat[2:5],y=dat[6:9]))), ID = dat[1])
+  polygons_list <- apply(positions_matrix, 1, create_polygon_from_row)
+  
+  
+#   # takes too long
+#   polygons_list <- list(length=length(ids))
+#   for(i in 1:length(ids)) {
+#     polygons_list[[i]] <- Polygons(list(Polygon(positions[which(positions$id==ids[i]),c('x','y')])), ID = ids[i])
+#   }
+  
+  # apply mask!!
+  # add i, j to data.frame
+  
+  SPDF <- SpatialPolygonsDataFrame(SpatialPolygons(polygons_list, proj4string=CRS(prj$projection)), data.frame(value = c(t(array*mask^2)), row.names = ids))
+  writeOGR(SPDF, dsn = '.', layer = file, driver = type)
+}

@@ -8,7 +8,7 @@
 #' @param names_from names from the data frame coordinate columns
 #' @param names_to names to use for the converted coordinates
 #' @return data frame with converted coordinates
-#' @import sp
+#' @importFrom sp spTransform SpatialPoints
 convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
   nrs <- which(!is.na(dat$x+dat$y))
   dat_names <- names(dat)
