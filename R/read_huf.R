@@ -24,8 +24,8 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
     huf$hdry <- data_set1[2]
     huf$nhuf <- data_set1[3]
     huf$nphuf <- data_set1[4]
-    huf$iohufheads <- data_set1[5]
-    huf$iohufflows <- data_set1[6]
+    huf$iohufheads <- ifelse(is.na(data_set1[5]),0,data_set1[5])
+    huf$iohufflows <- ifelse(is.na(data_set1[6]),0,data_set1[6])
     rm(data_set1)
   
   # data set 2
