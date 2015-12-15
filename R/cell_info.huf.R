@@ -15,8 +15,8 @@ cell_info.huf <- function(huf, i, j)
   # layers: top bottom thickness
   cat('\t\t Name \t\t Top \t\t Bottom \t Thickness\n', sep='')
   
-  for(i in 1:huf$nhuf)
+  for(k in 1:huf$nhuf)
   {
-    cat('Layer ',i,':\t',huf$hgunam[i],'\t', huf$top[i, j, i], '\t', huf$top[i, j, i]-huf$thck[i, j, i],'\t', huf$thck[i, j, i],'\n', sep='')
+    cat('Layer ',k,':\t',huf$hgunam[k],'\t', huf$top[i, j, k], '\t', huf$top[i, j, k]-huf$thck[i, j, k],'\t', huf$thck[i, j, k],'\n', sep='')
   }
 }

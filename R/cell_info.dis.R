@@ -18,8 +18,8 @@ cell_info.dis <- function(dis, i, j)
   cat('\t\t Top \t\t Bottom \t Thickness\n', sep='')
   cat('Layer 1:\t', dis$top[i, j], '\t', dis$botm[i,j,1],'\t', dis$top[i, j]-dis$botm[i,j,1],'\n', sep='')
   
-  for(i in 2:dis$nlay)
+  for(k in 2:dis$nlay)
   {
-    cat('Layer ',i,':\t', dis$botm[i, j, i-1], '\t', dis$botm[i,j,i],'\t', dis$botm[i, j, i-1]-dis$botm[i,j,i],'\n', sep='')
+    cat('Layer ',k,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
   }
 }
