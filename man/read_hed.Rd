@@ -7,15 +7,17 @@
 read_hed(file = {     cat("Please select hed file...\\n")     file.choose() },
   dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
   }, bas = {     cat("Please select bas file...\\n")    
-  read_bas(file.choose(), dis = dis) }, convert_hnoflo_to_NA = TRUE,
-  binary = TRUE)
+  read_bas(file.choose(), dis = dis) }, huf = NULL,
+  convert_hnoflo_to_NA = TRUE, binary = TRUE)
 }
 \arguments{
 \item{file}{filename; typically '*.hed'}
 
-\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+\item{dis}{discretization file object}
 
-\item{bas}{basic file object; defaults to that with the same filename but with extension '.bas'}
+\item{bas}{basic file object}
+
+\item{huf}{huf object; optional; provide only if huf heads are being read}
 
 \item{convert_hnoflo_to_NA}{logical; should hnoflo values be converted to NA?}
 }

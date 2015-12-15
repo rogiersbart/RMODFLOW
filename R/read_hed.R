@@ -3,8 +3,9 @@
 #' \code{read_hed} reads in a MODFLOW head file and returns it as an \code{\link{RMODFLOW}} hed object.
 #' 
 #' @param file filename; typically '*.hed'
-#' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
-#' @param bas basic file object; defaults to that with the same filename but with extension '.bas'
+#' @param dis discretization file object
+#' @param bas basic file object
+#' @param huf huf object; optional; provide only if huf heads are being read
 #' @param convert_hnoflo_to_NA logical; should hnoflo values be converted to NA?
 #' @return object of class hed
 #' @importFrom readr read_lines
@@ -12,9 +13,13 @@
 read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
                      dis = {cat('Please select dis file...\n'); read_dis(file.choose())},
                      bas = {cat('Please select bas file...\n'); read_bas(file.choose(), dis = dis)},
+                     huf = NULL,
                      convert_hnoflo_to_NA=TRUE,
                      binary = TRUE) {
   if(binary) {
+    if(!is.null(huf)) {
+      dis$nlay <- huf$nhuf
+    }
     con <- file(file,open='rb')
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
     attr(hed, 'kstp') <- attr(hed, 'kper') <- attr(hed, 'pertim') <- attr(hed, 'totim') <- attr(hed, 'desc') <- attr(hed, 'ncol') <- attr(hed, 'nrow') <- attr(hed, 'ilay') <- NULL
@@ -45,15 +50,17 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       desc <- readChar(con,nchars=16)
     }
     no_data <- which(is.na(attr(hed, 'kstp')))
-    hed <- hed[,,,-no_data]
-    attr(hed, 'kstp') <- attr(hed, 'kstp')[-no_data]
-    attr(hed, 'kper') <- attr(hed, 'kper')[-no_data]
-    attr(hed, 'pertim') <- attr(hed, 'pertim')[-no_data]
-    attr(hed, 'totim') <- attr(hed, 'totim')[-no_data]
-    attr(hed, 'desc') <- attr(hed, 'desc')[-no_data]
-    attr(hed, 'ncol') <- attr(hed, 'ncol')[-no_data]
-    attr(hed, 'nrow') <- attr(hed, 'nrow')[-no_data]
-    attr(hed, 'ilay') <- attr(hed, 'ilay')[-no_data]
+    if(length(no_data) != 0) {
+      hed <- hed[,,,-no_data]
+      attr(hed, 'kstp') <- attr(hed, 'kstp')[-no_data]
+      attr(hed, 'kper') <- attr(hed, 'kper')[-no_data]
+      attr(hed, 'pertim') <- attr(hed, 'pertim')[-no_data]
+      attr(hed, 'totim') <- attr(hed, 'totim')[-no_data]
+      attr(hed, 'desc') <- attr(hed, 'desc')[-no_data]
+      attr(hed, 'ncol') <- attr(hed, 'ncol')[-no_data]
+      attr(hed, 'nrow') <- attr(hed, 'nrow')[-no_data]
+      attr(hed, 'ilay') <- attr(hed, 'ilay')[-no_data]
+    }
   } else {
     hed.lines <- read_lines(file)
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
