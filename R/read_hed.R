@@ -61,6 +61,7 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       attr(hed, 'nrow') <- attr(hed, 'nrow')[-no_data]
       attr(hed, 'ilay') <- attr(hed, 'ilay')[-no_data]
     }
+    close(con)
   } else {
     hed.lines <- read_lines(file)
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
