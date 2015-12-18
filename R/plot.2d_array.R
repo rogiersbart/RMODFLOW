@@ -43,7 +43,8 @@ plot.2d_array <- function(array,
                           crs=NULL,
                           alpha=1,
                           plot3d=FALSE,
-                          height=NULL) {
+                          height=NULL,
+                          title = NULL) {
   if(plot3d) {
     x <- (cumsum(dis$delr)-dis$delr/2)
     y <- sum(dis$delc) - (cumsum(dis$delc)-dis$delc/2)
@@ -92,7 +93,7 @@ plot.2d_array <- function(array,
         return(ggplot(datapoly, aes(x=x, y=y)) +
           geom_polygon(aes(fill=value, group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
           scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
-          coord_equal())
+          coord_equal() + ggtitle(title))
       }
     } else if(type=='factor') {  
       if(add) {
@@ -102,7 +103,7 @@ plot.2d_array <- function(array,
         return(ggplot(datapoly, aes(x=x, y=y)) +
                  geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
                  scale_fill_discrete() +
-                 coord_equal())
+                 coord_equal() + ggtitle(title))
       }
     } else if(type=='grid') {  
       if(add) {
@@ -111,7 +112,7 @@ plot.2d_array <- function(array,
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                  geom_polygon(aes(group=id),alpha=alpha,colour=ifelse(is.logical(grid),'black',grid),fill=NA) +
-                 coord_equal())
+                 coord_equal() + ggtitle(title))
       }
     } else if(type=='contour') {
       xy$z <- c(t(array*mask^2))
@@ -131,9 +132,9 @@ plot.2d_array <- function(array,
         if(!label) return(stat_contour(aes(x=x,y=y,z=z),colour='black',data=xy,binwidth=binwidth))
       } else {
         if(label) {
-          return(ggplot(xy, aes(x=x, y=y, z=z)) + stat_contour(aes(colour = ..level..),binwidth=binwidth) +geom_dl(aes(label=..level.., colour=..level..),method="top.pieces", stat="contour") + coord_equal() +theme(legend.position="none"))
+          return(ggplot(xy, aes(x=x, y=y, z=z)) + stat_contour(aes(colour = ..level..),binwidth=binwidth) +geom_dl(aes(label=..level.., colour=..level..),method="top.pieces", stat="contour") + coord_equal() +theme(legend.position="none") + ggtitle(title))
         } else {
-          return(ggplot(xy, aes(x=x, y=y, z=z)) + stat_contour(colour = 'black',binwidth=binwidth) + coord_equal())
+          return(ggplot(xy, aes(x=x, y=y, z=z)) + stat_contour(colour = 'black',binwidth=binwidth) + coord_equal() + ggtitle(title))
         }
       }
     } else {

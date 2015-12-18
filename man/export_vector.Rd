@@ -7,7 +7,7 @@
 \method{export_vector}{2d_array}(array, dis, bas = NULL,
   mask = ifelse0(is.null(bas), array * 0 + 1, bas$ibound[, , 1]),
   prj = NULL, crs = NULL, file = "rmodflow_vector",
-  type = "ESRI Shapefile")
+  type = "ESRI Shapefile", include_ijk = FALSE)
 }
 \description{
 Generic function to export vectors

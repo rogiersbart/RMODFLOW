@@ -1,7 +1,7 @@
 #' Generic function to export vectors
 #' 
 #' @rdname export_vector
-#' @importFrom sp Polygon Polygons SpatialPolygons SpatialPolygonsDataFrame
+#' @importFrom sp Polygon Polygons SpatialPolygons SpatialPolygonsDataFrame CRS
 #' @importFrom rgdal writeOGR
 #' @export
 export_vector.2d_array <- function(array,
@@ -11,7 +11,8 @@ export_vector.2d_array <- function(array,
                                   prj=NULL,
                                   crs=NULL,
                                   file='rmodflow_vector',
-                                  type = 'ESRI Shapefile') {
+                                  type = 'ESRI Shapefile',
+                                  include_ijk = FALSE) {
 
   
   xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
@@ -38,8 +39,8 @@ export_vector.2d_array <- function(array,
     positions <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
   }
   
-  positions_matrix_x <- matrix(positions$x,nrow=length(ids),ncol=4)
-  positions_matrix_y <- matrix(positions$y,nrow=length(ids),ncol=4)
+  positions_matrix_x <- matrix(positions$x,nrow=length(ids),ncol=4,byrow=TRUE)
+  positions_matrix_y <- matrix(positions$y,nrow=length(ids),ncol=4,byrow=TRUE)
   positions_matrix <- cbind(ids,positions_matrix_x, positions_matrix_y)
   create_polygon_from_row <- function(dat) Polygons(list(Polygon(data.frame(x=dat[2:5],y=dat[6:9]))), ID = dat[1])
   polygons_list <- apply(positions_matrix, 1, create_polygon_from_row)
@@ -54,6 +55,15 @@ export_vector.2d_array <- function(array,
   # apply mask!!
   # add i, j to data.frame
   
-  SPDF <- SpatialPolygonsDataFrame(SpatialPolygons(polygons_list, proj4string=CRS(prj$projection)), data.frame(value = c(t(array*mask^2)), row.names = ids))
-  writeOGR(SPDF, dsn = '.', layer = file, driver = type)
+  SP <- SpatialPolygons(polygons_list, proj4string=CRS(prj$projection))
+  DF <- data.frame(value = c(t(array*mask^2)), row.names = ids)
+  if(include_ijk) {
+    ijk <- convert_modflow_id_to_ijk(1:(dis$nrow*dis$ncol), dis)
+    DF$i <- ijk$i
+    DF$j <- ijk$j
+    DF$k <- ijk$k
+  }
+  ids_to_keep <- row.names(na.omit(DF))
+  SPDF <- SpatialPolygonsDataFrame(SP[which(1:(dis$nrow*dis$ncol) %in% ids_to_keep)], na.omit(DF))
+  writeOGR(SPDF, dsn = '.', layer = file, driver = type, overwrite_layer = TRUE)
 }

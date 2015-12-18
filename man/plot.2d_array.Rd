@@ -10,7 +10,7 @@
   nlevels = 7, type = "fill", grid = FALSE, add = FALSE,
   height_exaggeration = 100, binwidth = round(diff(zlim)/20),
   label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
-  height = NULL)
+  height = NULL, title = NULL)
 }
 \arguments{
 \item{array}{an object of class 2d_array}

@@ -31,6 +31,7 @@ plot.3d_array <- function(array,
                           type='fill',
                           grid = FALSE,
                           add=FALSE,
+                          title = NULL,
                           ...) {
   if(is.null(i) & is.null(j) & is.null(k)) {
     stop('Please provide i, j or k.')
@@ -41,7 +42,7 @@ plot.3d_array <- function(array,
     array <- array[,,k]
     class(array) <- '2d_array'
     mask <- mask[,,k]
-    plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, ...)
+    plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
@@ -97,7 +98,7 @@ plot.3d_array <- function(array,
         return(ggplot(datapoly, aes(x=x, y=y)) +
                geom_polygon(aes(fill=value, group=id), colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
                scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim) +
-               xlab(xlabel) + ylab(ylabel))
+               xlab(xlabel) + ylab(ylabel) + ggtitle(title))
       }
     } else if(type=='factor') {
         if(add) {
@@ -107,7 +108,7 @@ plot.3d_array <- function(array,
           return(ggplot(datapoly, aes(x=x, y=y)) +
                    geom_polygon(aes(fill=factor(value), group=id), colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
                    scale_fill_discrete() +
-                   xlab(xlabel) + ylab(ylabel))
+                   xlab(xlabel) + ylab(ylabel) + ggtitle(title))
         }
     } else if(type=='grid') {
       if(add) {
@@ -116,7 +117,7 @@ plot.3d_array <- function(array,
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                geom_polygon(aes(group=id),colour=ifelse(is.logical(grid),'black',grid),fill=NA) +
-               xlab(xlabel) + ylab(ylabel))
+               xlab(xlabel) + ylab(ylabel) + ggtitle(title))
       }
     }
   }

@@ -20,5 +20,7 @@ Imports:
     grid,
     quadprog,
     sp,
-    rgdal
+    rgdal,
+    animation,
+    tools
 URL: https://github.com/rogiersbart/RMODFLOW
