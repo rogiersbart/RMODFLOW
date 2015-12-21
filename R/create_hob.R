@@ -48,6 +48,7 @@ create_hob <- function(locations,
     hob$obsnam <- hob$toffset <- hob$hobs <- hob$mlay <- hob$pr <- hob$irefsp <- list()
     locations_top <- cbind(locations[,c('x','y','top')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])
     locations_bottom <- cbind(locations[,c('x','y','bottom')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj)[,c('i','j','k','roff','coff','loff')])
+    if(locations_bottom$loff == -0.5) locations_bottom$k <- locations_bottom$k - 1
   
     for(i in 1:nrow(locations)) {
       
