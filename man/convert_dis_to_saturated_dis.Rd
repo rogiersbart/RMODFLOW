@@ -4,7 +4,7 @@
 \alias{convert_dis_to_saturated_dis}
 \title{Convert a dis object to correspond to the saturated volume}
 \usage{
-convert_dis_to_saturated_dis(dis, hed)
+convert_dis_to_saturated_dis(dis, hed, l = NULL)
 }
 \arguments{
 \item{dis}{dis object}

@@ -21,5 +21,8 @@ plot.4d_array <- function(array,
     plot(create_array(array(array[,,,l],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     ggplot(data.frame(value=array[i,j,k,], time = attributes(array)$totim),aes(x=time,y=value))+geom_path()
+  } else {
+    warning('Plotting final stress period results.', call. = FALSE)
+    plot(create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
   }
 }

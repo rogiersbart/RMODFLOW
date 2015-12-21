@@ -12,7 +12,7 @@
   c(1:dim(array)[1]), i), ifelse0(is.null(j), c(1:dim(array)[2]), j),
   ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
   colour_palette = rev_rainbow, nlevels = 7, type = "fill",
-  grid = FALSE, add = FALSE, title = NULL, ...)
+  grid = FALSE, add = FALSE, title = NULL, hed = NULL, l = NULL, ...)
 }
 \arguments{
 \item{array}{an object of class 3d_array}

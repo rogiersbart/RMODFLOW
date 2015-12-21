@@ -14,6 +14,9 @@
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor' or 'grid'
 #' @param grid logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
+#' @param title plot title
+#' @param hed hed object for only plotting the saturated part of the grid
+#' @param l time step number for subsetting the hed object
 #' @param ... parameters provided to plot.2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot 3d_array
@@ -32,10 +35,22 @@ plot.3d_array <- function(array,
                           grid = FALSE,
                           add=FALSE,
                           title = NULL,
+                          hed = NULL,
+                          l = NULL,
                           ...) {
   if(is.null(i) & is.null(j) & is.null(k)) {
     stop('Please provide i, j or k.', call. = FALSE)
   }
+  if(!is.null(hed)) {
+    satdis <- convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+    p <- plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,title=title)
+    if(grid) {
+      return(p + plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
+    } else {
+      return(p)
+    }
+  }
+  
   if(!is.null(k)) {
     zlim <- zlim
     mask <- mask
