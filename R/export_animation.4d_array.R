@@ -5,11 +5,12 @@
 #' @param j column number
 #' @param k layer number
 #' @param l vector of time step numbers; defaults to 1 to the size of the fourth dimension of array
+#' @param dis dis object
 #' @param ... other parameters passed to plot.4d_array
 #' @param file animation filename
 #' @param type animation filetype; options are 'gif' (default), 'html' and 'pdf'; defaults to file extension
 #' @param plot_type type of plot for plot.4d_array
-#' @param title animation title; if equal to 'totim', the total time is shown for each frame, as taken from the 4d_array attributes
+#' @param title animation title; if equal to 'totim', the total time is shown for each frame, as taken from the 4d_array attributes, if equal to 'totim_unit', the time unit obtained from dis$itmuni is pasted to the totim times
 #' @param width animation width; defaults to 600 pixels or 8 inch in case of pdf
 #' @param height animation height; default equal to width
 #' @param clean logical; should files other than the animation (e.g. frames) be removed?
@@ -25,7 +26,8 @@ export_animation.4d_array <- function(array,
                                       j = NULL,
                                       k = NULL,
                                       l = 1:dim(array)[4],
-                                      title = NULL,
+                                      title = 'totim_unit',
+                                      dis = dis,
                                       ...,
                                       file='rmodflow_animation.gif',
                                       type = tools::file_ext(file),
@@ -39,14 +41,18 @@ export_animation.4d_array <- function(array,
   if(!is.null(title)){
     if(title == 'totim') {
       title <- attributes(array)$totim[l]
+    } else if(title == 'totim_unit') {
+      title <- paste(attributes(array)$totim[l],c('??','s','min','h','d','y')[dis$itmuni+1])
+    } else {
+      stop('Please provide valid title argument.')
     }
   }
   delayedAssign('expr', {
     for(m in 1:length(l)) {
       if(is.null(background)) {
-        p <- plot(array, i = i, j = j, k = k, l = l[m], title = title[m], ..., type = plot_type)
+        p <- plot(array, i = i, j = j, k = k, l = l[m], title = title[m], dis = dis, ..., type = plot_type)
       } else {
-        p <- background + plot(array, i = i, j = j, k = k, l = l[m], title = title[m], ..., type = plot_type, add = TRUE)
+        p <- background + plot(array, i = i, j = j, k = k, l = l[m], title = title[m], dis = dis, ..., type = plot_type, add = TRUE)
       }
       if(!is.null(overlay)) p <- p + overlay
       print(p)

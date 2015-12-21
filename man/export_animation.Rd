@@ -6,10 +6,11 @@
 \title{Export animations from rmodflow 4d arrays}
 \usage{
 \method{export_animation}{4d_array}(array, i = NULL, j = NULL, k = NULL,
-  l = 1:dim(array)[4], title = NULL, ..., file = "rmodflow_animation.gif",
-  type = tools::file_ext(file), plot_type = "fill", width = c(600, 600,
-  8)[type == c("gif", "html", "pdf")], height = width, clean = TRUE,
-  interval = 0.5, overlay = NULL, background = NULL)
+  l = 1:dim(array)[4], title = "totim_unit", dis = dis, ...,
+  file = "rmodflow_animation.gif", type = tools::file_ext(file),
+  plot_type = "fill", width = c(600, 600, 8)[type == c("gif", "html",
+  "pdf")], height = width, clean = TRUE, interval = 0.5, overlay = NULL,
+  background = NULL)
 
 export_animation(...)
 }
@@ -24,7 +25,9 @@ export_animation(...)
 
 \item{l}{vector of time step numbers; defaults to 1 to the size of the fourth dimension of array}
 
-\item{title}{animation title; if equal to 'totim', the total time is shown for each frame, as taken from the 4d_array attributes}
+\item{title}{animation title; if equal to 'totim', the total time is shown for each frame, as taken from the 4d_array attributes, if equal to 'totim_unit', the time unit obtained from dis$itmuni is pasted to the totim times}
+
+\item{dis}{dis object}
 
 \item{...}{other parameters passed to plot.4d_array}
 
