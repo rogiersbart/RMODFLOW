@@ -47,7 +47,8 @@ create_hob <- function(locations,
   
     hob$obsnam <- hob$toffset <- hob$hobs <- hob$mlay <- hob$pr <- hob$irefsp <- list()
     locations_top <- cbind(locations[,c('x','y','top')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])
-    locations_bottom <- cbind(locations[,c('x','y','bottom')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj)[,c('i','j','k','roff','coff')])
+    locations_bottom <- cbind(locations[,c('x','y','bottom')],convert_real_to_dis(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj)[,c('i','j','k','roff','coff','loff')])
+  
     for(i in 1:nrow(locations)) {
       
       hob$row[i] <- locations_top$i[i]
@@ -89,7 +90,8 @@ create_hob <- function(locations,
         hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
       }
   }
-  hob$mobs <- length(which(hob$layer < 0))
+  hob$mobs <- 0
+  for(i in which(hob$layer < 0)) hob$mobs <- hob$mobs + length(hob$irefsp[[i]])
   hob$maxm <- abs(min(hob$layer[which(hob$layer <= 1)]))
   return(hob)
 }
