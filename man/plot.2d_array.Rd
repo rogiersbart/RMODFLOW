@@ -5,12 +5,13 @@
 \title{Plot a MODFLOW 2D array}
 \usage{
 \method{plot}{2d_array}(array, dis, bas = NULL, mask = ifelse0(is.null(bas),
-  array * 0 + 1, bas$ibound[, , 1]), colour_palette = rev_rainbow,
-  zlim = range(array, finite = TRUE), levels = pretty(zlim, nlevels),
-  nlevels = 7, type = "fill", grid = FALSE, add = FALSE,
-  height_exaggeration = 100, binwidth = round(diff(zlim)/20),
-  label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
-  height = NULL, title = NULL)
+  array * 0 + 1, {     warning("Using first ibound layer as mask.")    
+  bas$ibound[, , 1] }), colour_palette = rev_rainbow,
+  zlim = range(array[as.logical(mask)], finite = TRUE),
+  levels = pretty(zlim, nlevels), nlevels = 7, type = "fill",
+  grid = FALSE, add = FALSE, height_exaggeration = 100,
+  binwidth = round(diff(zlim)/20), label = TRUE, prj = NULL, crs = NULL,
+  alpha = 1, plot3d = FALSE, height = NULL, title = NULL)
 }
 \arguments{
 \item{array}{an object of class 2d_array}

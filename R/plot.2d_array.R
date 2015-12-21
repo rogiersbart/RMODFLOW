@@ -28,9 +28,9 @@
 plot.2d_array <- function(array,
                           dis,
                           bas = NULL,
-                          mask = ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),
+                          mask = ifelse0(is.null(bas),array*0+1,{warning('Using first ibound layer as mask.', call. = FALSE);bas$ibound[,,1]}),
                           colour_palette = rev_rainbow,
-                          zlim = range(array, finite=TRUE),
+                          zlim = range(array[as.logical(mask)], finite=TRUE),
                           levels = pretty(zlim, nlevels),
                           nlevels = 7,
                           type = 'fill',
@@ -138,7 +138,7 @@ plot.2d_array <- function(array,
         }
       }
     } else {
-      stop('Please provide valid plot type.')
+      stop('Please provide valid plot type.', call. = FALSE)
     }
   }
 }

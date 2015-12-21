@@ -22,5 +22,4 @@ plot.4d_array <- function(array,
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     ggplot(data.frame(value=array[i,j,k,], time = attributes(array)$totim),aes(x=time,y=value))+geom_path()
   }
-
 }
