@@ -7,11 +7,11 @@
 \method{plot}{2d_array}(array, dis, bas = NULL, mask = ifelse0(is.null(bas),
   array * 0 + 1, {     warning("Using first ibound layer as mask.", call. =
   FALSE)     bas$ibound[, , 1] }), colour_palette = rev_rainbow,
-  zlim = range(array[as.logical(mask)], finite = TRUE),
-  levels = pretty(zlim, nlevels), nlevels = 7, type = "fill",
-  grid = FALSE, add = FALSE, height_exaggeration = 100,
-  binwidth = round(diff(zlim)/20), label = TRUE, prj = NULL, crs = NULL,
-  alpha = 1, plot3d = FALSE, height = NULL, title = NULL)
+  zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
+  type = "fill", levels = NULL, grid = FALSE, add = FALSE,
+  height_exaggeration = 100, binwidth = round(diff(zlim)/20),
+  label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
+  height = NULL, title = NULL)
 }
 \arguments{
 \item{array}{an object of class 2d_array}
@@ -26,11 +26,11 @@
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 
-\item{levels}{levels to indicate on the colour scale; defaults to nlevels pretty breakpoints}
-
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 
 \item{type}{plot type: 'fill' (default), 'factor', 'grid' or 'contour'}
+
+\item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
 
 \item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
@@ -51,6 +51,8 @@
 \item{plot3d}{logical; should a 3D plot be made}
 
 \item{height}{2D array for specifying the 3D plot z coordinate}
+
+\item{title}{plot title}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly

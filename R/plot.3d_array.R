@@ -13,9 +13,10 @@
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor' or 'grid'
+#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param grid logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param title plot title
-#' @param hed hed object for only plotting the saturated part of the grid
+#' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param ... parameters provided to plot.2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -32,6 +33,7 @@ plot.3d_array <- function(array,
                           colour_palette = rev_rainbow,
                           nlevels = 7,
                           type='fill',
+                          levels = NULL,
                           grid = FALSE,
                           add=FALSE,
                           title = NULL,
@@ -122,7 +124,7 @@ plot.3d_array <- function(array,
         } else {
           return(ggplot(datapoly, aes(x=x, y=y)) +
                    geom_polygon(aes(fill=factor(value), group=id), colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
-                   scale_fill_discrete() +
+                   scale_fill_discrete('value',labels=ifelse0(is.null(levels),levels(factor(value)),levels)) +
                    xlab(xlabel) + ylab(ylabel) + ggtitle(title))
         }
     } else if(type=='grid') {

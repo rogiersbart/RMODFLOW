@@ -12,7 +12,8 @@
   c(1:dim(array)[1]), i), ifelse0(is.null(j), c(1:dim(array)[2]), j),
   ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
   colour_palette = rev_rainbow, nlevels = 7, type = "fill",
-  grid = FALSE, add = FALSE, title = NULL, hed = NULL, l = NULL, ...)
+  levels = NULL, grid = FALSE, add = FALSE, title = NULL, hed = NULL,
+  l = NULL, ...)
 }
 \arguments{
 \item{array}{an object of class 3d_array}
@@ -37,7 +38,15 @@
 
 \item{type}{plot type: 'fill' (default), 'factor' or 'grid'}
 
+\item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
+
 \item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
+
+\item{title}{plot title}
+
+\item{hed}{hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used}
+
+\item{l}{time step number for subsetting the hed object}
 
 \item{...}{parameters provided to plot.2d_array}
 }

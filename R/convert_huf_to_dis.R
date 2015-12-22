@@ -17,5 +17,7 @@ convert_huf_to_dis <- function(huf, dis) {
     new_dis$botm[,,k][which(new_dis$botm[,,k] > dis$top)] <- dis$top[which(new_dis$botm[,,k] > dis$top)]
     new_dis$botm[,,k][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])] <- dis$botm[,,dis$nlay][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])]
   }
+  new_dis$botm <- create_array(new_dis$botm)
+  new_dis$top <- create_array(new_dis$top)
   return(new_dis)
 }

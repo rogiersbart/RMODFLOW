@@ -8,9 +8,9 @@
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
-#' @param levels levels to indicate on the colour scale; defaults to nlevels pretty breakpoints
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid' or 'contour'
+#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param grid logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param height_exaggeration height exaggeration for 3D plot; optional
@@ -32,9 +32,9 @@ plot.2d_array <- function(array,
                           mask = ifelse0(is.null(bas),array*0+1,{warning('Using first ibound layer as mask.', call. = FALSE);bas$ibound[,,1]}),
                           colour_palette = rev_rainbow,
                           zlim = range(array[as.logical(mask)], finite=TRUE),
-                          levels = pretty(zlim, nlevels),
                           nlevels = 7,
                           type = 'fill',
+                          levels = NULL,
                           grid = FALSE,
                           add = FALSE,
                           height_exaggeration = 100,
@@ -103,7 +103,7 @@ plot.2d_array <- function(array,
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                  geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
-                 scale_fill_discrete() +
+                 scale_fill_discrete('value',labels=ifelse0(is.null(levels),levels(factor(value)),levels)) +
                  coord_equal() + ggtitle(title))
       }
     } else if(type=='grid') {  

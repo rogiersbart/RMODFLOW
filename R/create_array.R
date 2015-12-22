@@ -2,7 +2,8 @@
 #' 
 #' @param obj object to add class to
 #' @export
-create_array <- function(obj) {
+create_array <- function(obj, dim = NULL) {
+  if(!is.null(dim)) obj <- array(obj, dim = dim)
   if(length(dim(obj))==2) {
     class(obj) <- '2d_array'
   } else if(length(dim(obj))==3) {
