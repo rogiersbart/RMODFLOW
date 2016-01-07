@@ -22,7 +22,7 @@ write_mlt <- function(mlt, file, iprn=-1)
     if(length(mlt$rmlt[[i]])==1) {
       cat(paste('CONSTANT ', mlt$rmlt[[i]], '\n', sep=''), file=file, append=TRUE)
     } else {
-      write_array(mlt$rmlt[[i]], file = file, iprn = iprn)
+      write_modflow_array(mlt$rmlt[[i]], file = file, iprn = iprn)
     }
   }  
 }

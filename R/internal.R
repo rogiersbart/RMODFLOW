@@ -93,7 +93,7 @@ performance_measures <- function(observations, predictions,print=F) {
 #' Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param object MODFLOW input file text object, starting with the free-format control record
 #' @return A list containing the array and the remaining text of the MODFLOW input file
-read_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
+read_modflow_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
   # Initialize array object
   array <- array(dim=c(nrow,ncol,nlay))
   
@@ -105,7 +105,7 @@ read_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
       # Read in first row with format code
       # If constant and nlay==1, return constant
       # If constant and nlay!=1, fill layer with constant (is part of mf3darray!?)
-      if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='CONSTANT') 
+      if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('CONSTANT', '0'))
       {
         if(nlay==1)
         {
@@ -117,7 +117,7 @@ read_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
           remaining_lines <- remaining_lines[-1]
         }
       }
-      else if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='INTERNAL')
+      else if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('INTERNAL', '100', '103'))
       {
         remaining_lines <- remaining_lines[-1] 
         nPerLine <- length(as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])))
@@ -155,7 +155,7 @@ read_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
     if(nlay!=1) class(array) <- 'rmodflow_3d_array'
   } else if(ndim == 1) {
     array <- array(array,dim=length(array))
-    class(array) <- '1d_array'
+    class(array) <- 'rmodflow_1d_array'
   }
 
   # Return output of reading function 
@@ -224,7 +224,7 @@ weighted.harmean <- function(x, w, ...) {
 
 #' Write modflow array
 #' Internal function used in the write_* functions for writing array datasets
-write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE) {
+write_modflow_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE) {
 
   if(is.null(dim(array))) {
     if(prod(c(array)[1] == c(array))==1) {

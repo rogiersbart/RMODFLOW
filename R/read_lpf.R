@@ -94,7 +94,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
           lpf.lines <- lpf.lines[-1]  
           lpf$hk[,,k] <- NA
         } else {
-          data_set10 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          data_set10 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
           lpf.lines <- data_set10$remaining_lines
           lpf$hk[,,k] <- data_set10$array
           rm(data_set10)
@@ -106,7 +106,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
             lpf.lines <- lpf.lines[-1]  
             lpf$hani[,,k] <- NA
           } else {
-            data_set11 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            data_set11 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
             lpf.lines <- data_set11$remaining_lines
             lpf$hani[,,k] <- data_set11$array
             rm(data_set11)
@@ -118,7 +118,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
           lpf.lines <- lpf.lines[-1]  
           lpf$vka[,,k] <- NA
         } else {
-          data_set12 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          data_set12 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
           lpf.lines <- data_set12$remaining_lines
           lpf$vka[,,k] <- data_set12$array
           rm(data_set12)
@@ -130,7 +130,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
             lpf.lines <- lpf.lines[-1]  
             lpf$ss[,,k] <- NA
           } else {
-            data_set13 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            data_set13 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
             lpf.lines <- data_set13$remaining_lines
             lpf$ss[,,k] <- data_set13$array
             rm(data_set13)
@@ -143,7 +143,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
             lpf.lines <- lpf.lines[-1]  
             lpf$sy[,,k] <- NA
           } else {
-            data_set14 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            data_set14 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
             lpf.lines <- data_set14$remaining_lines
             lpf$sy[,,k] <- data_set14$array
             rm(data_set14)
@@ -156,7 +156,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
             lpf.lines <- lpf.lines[-1]  
             lpf$vkcb[,,k] <- NA
           } else {
-            data_set15 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+            data_set15 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
             lpf.lines <- data_set15$remaining_lines
             lpf$vkcb[,,k] <- data_set15$array
             rm(data_set15)
@@ -165,7 +165,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
         
       # data set 16
         if(lpf$laywet[k] != 0 & lpf$laytyp[k] != 0) {
-          data_set16 <- read_array(lpf.lines,dis$nrow,dis$ncol,1)
+          data_set16 <- read_modflow_array(lpf.lines,dis$nrow,dis$ncol,1)
           lpf.lines <- data_set16$remaining_lines
           lpf$wetdry[,,k] <- data_set16$array
           rm(data_set16)

@@ -22,16 +22,16 @@ write_dis <- function(dis, file, iprn=-1) {
 #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
   # data set 3
-    write_array(dis$delr,file=file,iprn=iprn)  
+    write_modflow_array(dis$delr,file=file,iprn=iprn)  
   
   # data set 4
-    write_array(dis$delc,file=file,iprn=iprn)
+    write_modflow_array(dis$delc,file=file,iprn=iprn)
   
   # data set 5
-    write_array(dis$top,file=file,iprn=iprn)
+    write_modflow_array(dis$top,file=file,iprn=iprn)
   
   # data set 6
-    write_array(dis$botm,file=file,iprn=iprn)
+    write_modflow_array(dis$botm,file=file,iprn=iprn)
     
   # data set 7
     for(i in 1:dis$nper) {

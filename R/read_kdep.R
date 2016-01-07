@@ -30,7 +30,7 @@ read_kdep <- function(file = {cat('Please select kdep file...\n'); file.choose()
   
   # data set 2
     if(kdep$ifkdep > 0) {
-      data_set2 <- read_array(kdep_lines,dis$nrow,dis$ncol,1)
+      data_set2 <- read_modflow_array(kdep_lines,dis$nrow,dis$ncol,1)
       kdep_lines <- data_set2$remaining_lines
       kdep$rs <- data_set2$array
       rm(data_set2)

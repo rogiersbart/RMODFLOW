@@ -53,7 +53,7 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
     }
   
   # data set 5
-    data_set_5 <- read_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)))
+    data_set_5 <- read_modflow_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)))
     huf$wetdry <- data_set_5$array
     huf_lines <- data_set_5$remaining_lines
     rm(data_set_5)
@@ -66,7 +66,7 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
       data_set <- read_variables(huf_lines)
       huf$hgunam[i] <- data_set$variables[1]
       huf_lines <- data_set$remaining_lines
-      data_set <- read_array(huf_lines,dis$nrow,dis$ncol,2)
+      data_set <- read_modflow_array(huf_lines,dis$nrow,dis$ncol,2)
       huf_lines <- data_set$remaining_lines
       huf$top[,,i] <- data_set$array[,,1]
       huf$thck[,,i] <- data_set$array[,,2]  

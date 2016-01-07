@@ -32,7 +32,7 @@ read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
     rm(data_set_1)
     
   # data set 2
-    data_set_2 <- read_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
+    data_set_2 <- read_modflow_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
     bas$ibound <- data_set_2$array
     bas_lines <- data_set_2$remaining_lines
     rm(data_set_2)
@@ -44,7 +44,7 @@ read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
     rm(data_set_3)
     
   # data set 4
-    data_set_4 <- read_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
+    data_set_4 <- read_modflow_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
     bas$strt <- data_set_4$array
     bas_lines <- data_set_4$remaining_lines
     rm(data_set_4)

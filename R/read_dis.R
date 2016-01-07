@@ -36,25 +36,25 @@ read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()})
     rm(data_set_2)
     
   # data set 3
-    data_set_3 <- read_array(dis_lines, 1, dis$ncol, 1, ndim = 1)
+    data_set_3 <- read_modflow_array(dis_lines, 1, dis$ncol, 1, ndim = 1)
     dis$delr <- data_set_3$array
     dis_lines <- data_set_3$remaining_lines
     rm(data_set_3)
     
   # data set 4
-    data_set_4 <- read_array(dis_lines, 1, dis$nrow, 1, ndim = 1)
+    data_set_4 <- read_modflow_array(dis_lines, 1, dis$nrow, 1, ndim = 1)
     dis$delc <- data_set_4$array
     dis_lines <- data_set_4$remaining_lines
     rm(data_set_4)
     
   # data set 5
-    data_set_5 <- read_array(dis_lines,dis$nrow,dis$ncol,1)
+    data_set_5 <- read_modflow_array(dis_lines,dis$nrow,dis$ncol,1)
     dis_lines <- data_set_5$remaining_lines
     dis$top <- data_set_5$array
     rm(data_set_5)
   
   # data set 6
-    data_set_6 <- read_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd))
+    data_set_6 <- read_modflow_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd))
     dis_lines <- data_set_6$remaining_lines
     dis$botm <- data_set_6$array
     rm(data_set_6)

@@ -26,9 +26,9 @@ write_bas <- function(bas, file, iprn=-1) {
       
   # data set 2
     if(bas$xsection) {
-      write_array(bas$ibound, file = file, iprn = iprn) # update after changing read_bas!
+      write_modflow_array(bas$ibound, file = file, iprn = iprn) # update after changing read_bas!
     } else {
-      write_array(bas$ibound, file = file, iprn = iprn)
+      write_modflow_array(bas$ibound, file = file, iprn = iprn)
     }
   
   # data set 3
@@ -36,8 +36,8 @@ write_bas <- function(bas, file, iprn=-1) {
   
   # data set 4
     if(bas$xsection) {
-      write_array(bas$strt, file = file, iprn = iprn) # update after changing read_bas!
+      write_modflow_array(bas$strt, file = file, iprn = iprn) # update after changing read_bas!
     } else {
-      write_array(bas$strt, file = file, iprn = iprn)
+      write_modflow_array(bas$strt, file = file, iprn = iprn)
     }
 }

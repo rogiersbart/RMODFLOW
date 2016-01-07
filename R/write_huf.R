@@ -28,14 +28,14 @@ write_huf <- function(huf, file, iprn=-1) {
 
   # data set 5
     if(dim(huf$wetdry)[3]>0) {
-      write_array(huf$wetdry, file = file, iprn = iprn) 
+      write_modflow_array(huf$wetdry, file = file, iprn = iprn) 
     }
   
   # data set 6-8
     for(i in 1:huf$nhuf) {
       write_variables(huf$hgunam[i], file=file)   
-      write_array(huf$top[,,i], file = file, iprn = iprn)
-      write_array(huf$thck[,,i], file = file, iprn = iprn)
+      write_modflow_array(huf$top[,,i], file = file, iprn = iprn)
+      write_modflow_array(huf$thck[,,i], file = file, iprn = iprn)
     }
   
   # data set 9

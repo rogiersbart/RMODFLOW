@@ -25,7 +25,7 @@ read_mlt <- function(file = {cat('Please select mlt file...\n'); file.choose()},
     for(i in 1:mlt$nml) {
       mlt$mltnam[i] <- as.character(strsplit(mlt.lines[1],' ')[1])
       mlt.lines <- mlt.lines[-1]
-      data_set <- read_array(mlt.lines,dis$nrow,dis$ncol,1)
+      data_set <- read_modflow_array(mlt.lines,dis$nrow,dis$ncol,1)
       mlt.lines <- data_set$remaining_lines
       mlt$rmlt[[i]] <- data_set$array
       rm(data_set)

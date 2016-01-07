@@ -51,7 +51,7 @@ write_lpf <- function(lpf, file, iprn=-1)
       if('HK' %in% lpf$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        write_array(lpf$hk[,,k], file = file, iprn = iprn)
+        write_modflow_array(lpf$hk[,,k], file = file, iprn = iprn)
       }
       
     # data set 11
@@ -59,7 +59,7 @@ write_lpf <- function(lpf, file, iprn=-1)
         if('HANI' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$hani[,,k], file = file, iprn = iprn)
+          write_modflow_array(lpf$hani[,,k], file = file, iprn = iprn)
         }
       }
       
@@ -67,7 +67,7 @@ write_lpf <- function(lpf, file, iprn=-1)
       if('VK' %in% lpf$partyp | 'VANI' %in% lpf$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        write_array(lpf$vka[,,k], file = file, iprn = iprn)
+        write_modflow_array(lpf$vka[,,k], file = file, iprn = iprn)
       }
       
     # data set 13
@@ -75,7 +75,7 @@ write_lpf <- function(lpf, file, iprn=-1)
         if('SS' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$ss[,,k], file = file, iprn = iprn)
+          write_modflow_array(lpf$ss[,,k], file = file, iprn = iprn)
         }
       }
       
@@ -84,7 +84,7 @@ write_lpf <- function(lpf, file, iprn=-1)
         if('SY' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$sy[,,k], file = file, iprn = iprn)
+          write_modflow_array(lpf$sy[,,k], file = file, iprn = iprn)
         }
       }
       
@@ -93,13 +93,13 @@ write_lpf <- function(lpf, file, iprn=-1)
         if('VKCB' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          write_array(lpf$vkcb[,,k], file = file, iprn = iprn)
+          write_modflow_array(lpf$vkcb[,,k], file = file, iprn = iprn)
         }
       }
       
     # data set 16
       if(lpf$laywet[k] != 0 & lpf$laytyp[k] != 0) {
-        write_array(lpf$wetdry[,,k], file = file, iprn = iprn)
+        write_modflow_array(lpf$wetdry[,,k], file = file, iprn = iprn)
       }     
     }
 }
