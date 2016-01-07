@@ -41,7 +41,7 @@ plot.huf <- function(huf,
                           l = NULL,
                           ...) {
     hufdis <- convert_huf_to_dis(huf = huf, dis = dis)
-    huf_array <- create_array(rep(1:huf$nhuf,each=dis$nrow*dis$ncol),dim=c(dis$nrow,dis$ncol,huf$nhuf))
+    huf_array <- create_rmodflow_array(rep(1:huf$nhuf,each=dis$nrow*dis$ncol),dim=c(dis$nrow,dis$ncol,huf$nhuf))
     p <- plot(huf_array, dis = hufdis, i=i,j=j,k=k,colour_palette=colour_palette,nlevels=nlevels,type='factor',add=add,title=title,levels=levels)
     if(grid == TRUE) {
       return(p + plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',add=TRUE))

@@ -2,7 +2,7 @@
 #' 
 #' @param obj object to add class to
 #' @export
-create_array <- function(obj = NA, dim = NULL) {
+create_rmodflow_array <- function(obj = NA, dim = NULL) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)
   if(length(dim(obj))==2) {
     class(obj) <- 'rmodflow_2d_array'

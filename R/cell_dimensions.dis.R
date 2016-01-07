@@ -15,16 +15,16 @@ cell_dimensions.dis <- function(dis, hed = NULL, include_volume = FALSE, include
   if(!is.null(hed)) {
     cell_top[which(cell_top > hed)] <- hed[which(cell_top > hed)] # adapt for transient hed objects!
   }
-  cell_dimensions$z <- create_array(cell_top - dis$botm)
-  cell_dimensions$x <- create_array(array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay)))
-  cell_dimensions$y <- create_array(array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay)))
-  if(include_volume) cell_dimensions$volume <- create_array(with(cell_dimensions, x * y * z))
+  cell_dimensions$z <- create_rmodflow_array(cell_top - dis$botm)
+  cell_dimensions$x <- create_rmodflow_array(array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay)))
+  cell_dimensions$y <- create_rmodflow_array(array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay)))
+  if(include_volume) cell_dimensions$volume <- create_rmodflow_array(with(cell_dimensions, x * y * z))
   if(include_faces) {
-    cell_dimensions$front <- create_array(with(cell_dimensions, x * z))
+    cell_dimensions$front <- create_rmodflow_array(with(cell_dimensions, x * z))
     cell_dimensions$back <- cell_dimensions$front
-    cell_dimensions$left <- create_array(with(cell_dimensions, y * z))
+    cell_dimensions$left <- create_rmodflow_array(with(cell_dimensions, y * z))
     cell_dimensions$right <- cell_dimensions$left
-    cell_dimensions$lower <- create_array(with(cell_dimensions, x * y))
+    cell_dimensions$lower <- create_rmodflow_array(with(cell_dimensions, x * y))
     cell_dimensions$upper <- cell_dimensions$lower
   }  
   return(cell_dimensions)

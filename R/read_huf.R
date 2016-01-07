@@ -60,8 +60,8 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
   
   # data set 6-8
     huf$hgunam <- vector(mode='character',length=huf$nhuf)
-    huf$top <- create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
-    huf$thck <- create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
+    huf$top <- create_rmodflow_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
+    huf$thck <- create_rmodflow_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
     for(i in 1:huf$nhuf) {
       data_set <- read_variables(huf_lines)
       huf$hgunam[i] <- data_set$variables[1]
