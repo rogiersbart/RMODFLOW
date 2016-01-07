@@ -25,7 +25,7 @@
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot 2d_array
 #' @export
-#' @import ggplot2 directlabels akima rgl grid quadprog
+#' @import ggplot2 directlabels akima rgl quadprog
 plot.2d_array <- function(array,
                           dis,
                           bas = NULL,

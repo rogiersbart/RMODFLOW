@@ -24,3 +24,4 @@ Imports:
     animation,
     tools
 URL: https://github.com/rogiersbart/RMODFLOW
+RoxygenNote: 5.0.1
