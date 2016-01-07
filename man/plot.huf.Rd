@@ -38,7 +38,7 @@
 
 \item{l}{time step number for subsetting the hed object}
 
-\item{...}{parameters provided to plot.2d_array}
+\item{...}{parameters provided to plot.rmodflow_2d_array}
 
 \item{mask}{a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound}
 

@@ -6,11 +6,11 @@
 #' @param k layer number
 #' @param l vector of time step numbers; defaults to 1 to the size of the fourth dimension of array
 #' @param dis dis object
-#' @param ... other parameters passed to plot.4d_array
+#' @param ... other parameters passed to plot.rmodflow_4d_array
 #' @param file animation filename
 #' @param type animation filetype; options are 'gif' (default), 'html' and 'pdf'; defaults to file extension
-#' @param plot_type type of plot for plot.4d_array
-#' @param title animation title; if equal to 'totim', the total time is shown for each frame, as taken from the 4d_array attributes, if equal to 'totim_unit', the time unit obtained from dis$itmuni is pasted to the totim times
+#' @param plot_type type of plot for plot.rmodflow_4d_array
+#' @param title animation title; if equal to 'totim', the total time is shown for each frame, as taken from the rmodflow_4d_array attributes, if equal to 'totim_unit', the time unit obtained from dis$itmuni is pasted to the totim times
 #' @param width animation width; defaults to 600 pixels or 8 inch in case of pdf
 #' @param height animation height; default equal to width
 #' @param clean logical; should files other than the animation (e.g. frames) be removed?
@@ -21,7 +21,7 @@
 #' @importFrom animation saveLatex saveGIF saveHTML
 #' @importFrom tools file_ext file_path_sans_ext
 #' @export
-export_animation.4d_array <- function(array,
+export_animation.rmodflow_4d_array <- function(array,
                                       i = NULL,
                                       j = NULL,
                                       k = NULL,

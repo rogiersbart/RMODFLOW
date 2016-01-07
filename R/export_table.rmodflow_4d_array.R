@@ -2,7 +2,7 @@
 #' 
 #' @rdname export_table
 #' @export
-export_table.4d_array <- function(array,
+export_table.rmodflow_4d_array <- function(array,
                                   k,
                                   l,
                                   dis,

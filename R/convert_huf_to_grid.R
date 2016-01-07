@@ -34,5 +34,5 @@ convert_huf_to_grid <- function(values,huf,dis,mask=dis$top/dis$top,type='arithm
   weighted_means <- lapply(which(mask!=0),get_weighted_mean)
   num_grid_array[which(mask!=0)] <- weighted_means
   num_grid_array <- array(num_grid_array,dim=c(dis$nrow,dis$ncol,dis$nlay))
-  return(as.3d_array(num_grid_array))
+  return(as.rmodflow_3d_array(num_grid_array))
 }

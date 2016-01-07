@@ -58,11 +58,11 @@ create_dis <- function(nlay = 3,
   
   # data set 5
     dis$top <- top
-    class(dis$top) <- '2d_array'
+    class(dis$top) <- 'rmodflow_2d_array'
   
   # data set 6
     dis$botm <- botm
-    class(dis$botm) <- '3d_array'
+    class(dis$botm) <- 'rmodflow_3d_array'
 
   # data set 7
     dis$perlen <- perlen

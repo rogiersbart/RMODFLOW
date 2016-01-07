@@ -4,7 +4,7 @@
 \alias{create_array}
 \title{Add rmodflow array class to object based on object dimensions}
 \usage{
-create_array(obj, dim = NULL)
+create_array(obj = NA, dim = NULL)
 }
 \arguments{
 \item{obj}{object to add class to}

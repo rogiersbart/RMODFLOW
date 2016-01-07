@@ -85,7 +85,7 @@ read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()})
   
   # data set 10-16
     lpf$hk <- array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-    class(lpf$hk) <- '3d_array'
+    class(lpf$hk) <- 'rmodflow_3d_array'
     lpf$hani <- lpf$vka <- lpf$ss <- lpf$sy <- lpf$vkcb <- lpf$wetdry <- lpf$hk
     for(k in 1:dis$nlay) {
       

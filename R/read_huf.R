@@ -8,81 +8,93 @@
 #' @importFrom readr read_lines
 #' @export
 read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
-                     dis = {cat('Please select corresponding dis file...\n'); read_dis(file.choose())}) {
+                     dis = read_dis()) {
   
-  huf.lines <- read_lines(file)
+  huf_lines <- read_lines(file)
   huf <- NULL
 
   # data set 0
-    comments <- get_comments_from_lines(huf.lines)
-    huf.lines <- remove_comments_from_lines(huf.lines)
+    data_set_0 <- read_comments(huf_lines)
+    comment(huf) <- data_set_0$comments
+    huf_lines <- data_set_0$remaining_lines
+    rm(data_set_0)
   
   # data set 1
-    data_set1 <- split_line_numbers(huf.lines[1])
-    huf.lines <- huf.lines[-1]
-    huf$ihufcb <- data_set1[1]
-    huf$hdry <- data_set1[2]
-    huf$nhuf <- data_set1[3]
-    huf$nphuf <- data_set1[4]
-    huf$iohufheads <- ifelse(is.na(data_set1[5]),0,data_set1[5])
-    huf$iohufflows <- ifelse(is.na(data_set1[6]),0,data_set1[6])
-    rm(data_set1)
+    data_set_1 <- read_variables(huf_lines)
+    huf$ihufcb <- data_set_1$variables[1]
+    huf$hdry <- data_set_1$variables[2]
+    huf$nhuf <- data_set_1$variables[3]
+    huf$nphuf <- data_set_1$variables[4]
+    huf$iohufheads <- ifelse(is.na(data_set_1$variables[5]),0,data_set_1$variables[5])
+    huf$iohufflows <- ifelse(is.na(data_set_1$variables[6]),0,data_set_1$variables[6])
+    huf_lines <- data_set_1$remaining_lines
+    rm(data_set_1)
   
   # data set 2
-    huf$lthuf <- split_line_numbers(huf.lines[1]); huf.lines <- huf.lines[-1]
+    data_set_2 <- read_variables(huf_lines)
+    huf$lthuf <- data_set_2$variables
+    huf_lines <- data_set_2$remaining_lines
+    rm(data_set_2)
   
-  # data set 3                            
-    huf$laywt <- split_line_numbers(huf.lines[1]); huf.lines <- huf.lines[-1]
+  # data set 3   
+    data_set_3 <- read_variables(huf_lines)
+    huf$laywt <- data_set_3$variables
+    huf_lines <- data_set_3$remaining_lines
+    rm(data_set_3)
   
   # data set 4
     if(sum(huf$laywt > 0)) {
-      data_set4 <- split_line_numbers(huf.lines[1])
-      huf.lines <- huf.lines[-1]
-      huf$wetfct <- data_set4[1]
-      huf$iwetit <- data_set4[2]
-      huf$ihdwet <- data_set4[3]
-      rm(data_set4)
+      data_set_4 <- read_variables(huf_lines)
+      huf$wetfct <- data_set_4$variables[1]
+      huf$iwetit <- data_set_4$variables[2]
+      huf$ihdwet <- data_set_4$variables[3]
+      huf_lines <- data_set_4$remaining_lines
+      rm(data_set_4)
     }
   
   # data set 5
-    data_set5 <- read_array(huf.lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)))
-    huf.lines <- data_set5$remaining_lines
-    huf$wetdry <- data_set5$array
-    rm(data_set5)
+    data_set_5 <- read_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)))
+    huf$wetdry <- data_set_5$array
+    huf_lines <- data_set_5$remaining_lines
+    rm(data_set_5)
   
   # data set 6-8
     huf$hgunam <- vector(mode='character',length=huf$nhuf)
-    huf$top <- create_array(array(dim=c(dis$nrow, dis$ncol, huf$nhuf)))
-    huf$thck <- create_array(array(dim=c(dis$nrow, dis$ncol, huf$nhuf)))
+    huf$top <- create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
+    huf$thck <- create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
     for(i in 1:huf$nhuf) {
-      huf$hgunam[i] <- split_line_words(huf.lines[1])[1]
-      huf.lines <- huf.lines[-1]
-      data_set <- read_array(huf.lines,dis$nrow,dis$ncol,2)
-      huf.lines <- data_set$remaining_lines
+      data_set <- read_variables(huf_lines)
+      huf$hgunam[i] <- data_set$variables[1]
+      huf_lines <- data_set$remaining_lines
+      data_set <- read_array(huf_lines,dis$nrow,dis$ncol,2)
+      huf_lines <- data_set$remaining_lines
       huf$top[,,i] <- data_set$array[,,1]
-      huf$thck[,,i] <- data_set$array[,,2]
-      rm(data_set)
+      huf$thck[,,i] <- data_set$array[,,2]  
     }
+    rm(data_set)
   
   # data set 9
     huf$hguhani <- vector(mode='numeric',length=huf$nhuf)   
     huf$hguvani <- vector(mode='numeric',length=huf$nhuf)
-    if(as.character(strsplit(huf.lines[1],' ')[[1]][1] == 'ALL')) {
-      splitted.line <- split_line_words(huf.lines[1])
-      huf$hguhani[1] <- as.numeric(splitted.line[2])
-      huf$hguvani[1] <- as.numeric(splitted.line[3])
-      huf.lines <- huf.lines[-1]
-      for(i in 1:huf$nhuf) huf$hguhani[i] <- huf$hguhani[1]
-      for(i in 1:huf$nhuf) huf$hguvani[i] <- huf$hguvani[1]
+    data_set_9 <- read_variables(huf_lines)
+    if(data_set_9$variables[1] == 'ALL') {
+      huf$hguhani <- rep(as.numeric(data_set_9$variables[2]),huf$nhuf)
+      huf$hguvani <- rep(as.numeric(data_set_9$variables[3]),huf$nhuf)
+      huf_lines <- data_set_9$remaining_lines
     } else {
-      for(i in 1:huf$nhuf) {
-        splitted.line <- split_line_words(huf.lines[1])
-        k <- which(huf$hgunam == splitted.line[1])
-        huf$hguhani[k] <- as.numeric(splitted.line[2])
-        huf$hguvani[k] <- as.numeric(splitted.line[3])
-        huf.lines <- huf.lines[-1]
+      k <- which(huf$hgunam == data_set_9$variables[1])
+      huf$hguhani[k] <- as.numeric(data_set_9$variables[2])
+      huf$hguvani[k] <- as.numeric(data_set_9$variables[3])
+      huf_lines <- data_set_9$remaining_lines
+      for(i in 2:huf$nhuf) {
+        data_set_9 <- read_variables(huf_lines)
+        k <- which(huf$hgunam == data_set_9$variables[1])
+        huf$hguhani[k] <- as.numeric(data_set_9$variables[2])
+        huf$hguvani[k] <- as.numeric(data_set_9$variables[3])
+        huf_lines <- data_set_9$remaining_lines
       }      
     }
+    rm(data_set_9)
   
   # data set 10-11
     huf$parnam <- vector(mode='character',length=huf$nphuf)
@@ -93,24 +105,26 @@ read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
     huf$zonarr <- matrix(nrow=huf$nhuf, ncol=huf$nphuf)
     huf$iz <- matrix(nrow=huf$nhuf, ncol=huf$nphuf)
     for(i in 1:huf$nphuf) {
-      line.split <- split_line_words(huf.lines[1]); huf.lines <- huf.lines[-1]
-      huf$parnam[i] <- line.split[1]
-      huf$partyp[i] <- line.split[2]
-      huf$parval[i] <- as.numeric(line.split[3])
-      huf$nclu[i] <- as.numeric(line.split[4])
+      data_set_10 <- read_variables(huf_lines)
+      huf_lines <- data_set_10$remaining_lines
+      huf$parnam[i] <- data_set_10$variables[1]
+      huf$partyp[i] <- data_set_10$variables[2]
+      huf$parval[i] <- as.numeric(data_set_10$variables[3])
+      huf$nclu[i] <- as.numeric(data_set_10$variables[4])
       for(j in 1:huf$nclu[i]) {
-        line.split <- split_line_words(huf.lines[1]); huf.lines <- huf.lines[-1]
-        k <- which(huf$hgunam == line.split[1])
-        huf$mltarr[k,i] <- line.split[2]
-        huf$zonarr[k,i] <- line.split[3]
-        huf$iz[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
+        data_set_11 <- read_variables(huf_lines)
+        huf_lines <- data_set_11$remaining_lines
+        k <- which(huf$hgunam == data_set_11$variables[1])
+        huf$mltarr[k,i] <- data_set_11$variables[2]
+        huf$zonarr[k,i] <- data_set_11$variables[3]
+        huf$iz[k,i] <- paste(data_set_11$variables[-c(1:3)],collapse=' ')
       } 
     }
+    rm(data_set_10, data_set_11)
   
   # data set 12
     # These are print options, not implemented yet...
   
-  comment(huf) <- comments
   class(huf) <- c('huf','modflow_package')
   return(huf)
 }

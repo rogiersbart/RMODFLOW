@@ -93,7 +93,7 @@ performance_measures <- function(observations, predictions,print=F) {
 #' Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param object MODFLOW input file text object, starting with the free-format control record
 #' @return A list containing the array and the remaining text of the MODFLOW input file
-read_array <- function(remaining_lines,nrow,ncol,nlay) {
+read_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
   # Initialize array object
   array <- array(dim=c(nrow,ncol,nlay))
   
@@ -147,9 +147,17 @@ read_array <- function(remaining_lines,nrow,ncol,nlay) {
   }
   
   # Set class of object (2darray; 3darray)
-  if(nlay==1){array <- as.matrix(array[,,1]); class(array) <- '2d_array'}
-  if(nlay!=1) class(array) <- '3d_array'
-  
+  if(is.null(ndim)) {
+    if(nlay==1){
+      array <- as.matrix(array[,,1])
+      class(array) <- 'rmodflow_2d_array'     
+    }
+    if(nlay!=1) class(array) <- 'rmodflow_3d_array'
+  } else if(ndim == 1) {
+    array <- array(array,dim=length(array))
+    class(array) <- '1d_array'
+  }
+
   # Return output of reading function 
   return(list(array=array,remaining_lines=remaining_lines))
 }
@@ -160,8 +168,12 @@ read_comments <- function(remaining_lines) {
   i <- 0
   comments <- NULL
   while(i==0) {
-    ifelse(substr(remaining_lines[1], 1, 1) == '#', comments <- append(comments, substr(remaining_lines[1], 2, nchar(remaining_lines[1]))), i <- 1)
-    remaining_lines <- remaining_lines[-1]
+    if(substr(remaining_lines[1], 1, 1) == '#') {
+      comments <- append(comments, substr(remaining_lines[1], 2, nchar(remaining_lines[1])))
+      remaining_lines <- remaining_lines[-1]
+    } else {
+      i <- 1
+    }
   }
   return(list(comments = comments, remaining_lines = remaining_lines))
 }
@@ -170,7 +182,7 @@ read_comments <- function(remaining_lines) {
 #' If all are numbers, returns numeric, otherwise returns character vector
 read_variables <- function(remaining_lines) {
   variables <- remove_empty_strings(strsplit(remove_comments_end_of_line(remaining_lines[1]),' |\t')[[1]])
-  if(!any(is.na(as.numeric(variables)))) variables <- as.numeric(variables)
+  if(!any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   return(list(variables=variables,remaining_lines= remaining_lines[-1]))
 }
 

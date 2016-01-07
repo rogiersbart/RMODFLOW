@@ -44,15 +44,15 @@ convert_bud_to_darcy <- function(bud, dis, hed = NULL, stress_period = 1, time_s
   darcy$qy <- (darcy$front + darcy$back) / 2
   darcy$qz <- (darcy$lower + darcy$upper) / 2
   darcy$q <- sqrt((darcy$qx)^2 + (darcy$qy)^2 + (darcy$qz)^2)
-  class(darcy$right) <- '3d_array'
-  class(darcy$front) <- '3d_array'
-  class(darcy$lower) <- '3d_array'
-  class(darcy$left) <- '3d_array'
-  class(darcy$back) <- '3d_array'
-  class(darcy$upper) <- '3d_array'
-  class(darcy$qx) <- '3d_array'
-  class(darcy$qy) <- '3d_array'
-  class(darcy$qz) <- '3d_array'
-  class(darcy$q) <- '3d_array'
+  class(darcy$right) <- 'rmodflow_3d_array'
+  class(darcy$front) <- 'rmodflow_3d_array'
+  class(darcy$lower) <- 'rmodflow_3d_array'
+  class(darcy$left) <- 'rmodflow_3d_array'
+  class(darcy$back) <- 'rmodflow_3d_array'
+  class(darcy$upper) <- 'rmodflow_3d_array'
+  class(darcy$qx) <- 'rmodflow_3d_array'
+  class(darcy$qy) <- 'rmodflow_3d_array'
+  class(darcy$qz) <- 'rmodflow_3d_array'
+  class(darcy$q) <- 'rmodflow_3d_array'
   return(darcy)
 }

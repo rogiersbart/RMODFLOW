@@ -103,7 +103,7 @@ read_hed <- function(file = {cat('Please select hed file...\n'); file.choose()},
       attr(hed, 'ilay') <- attr(hed, 'ilay')[-no_data]
     }
   }
-  class(hed) <- c('hed','4d_array')
+  class(hed) <- c('hed','rmodflow_4d_array')
   if(convert_hnoflo_to_NA) hed[which(hed==bas$hnoflo)] <- NA
   return(hed)
 }

@@ -70,17 +70,17 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
         }
         if(bud[[name]][[kper]][[kstp]]$itype %in% c(0,1)) {
           bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*abs(bud[[name]][[kper]][[kstp]]$nlay),size=4),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,abs(bud[[name]][[kper]][[kstp]]$nlay))),c(2,1,3))
-          class(bud[[name]][[kper]][[kstp]]$data) <- '3d_array'
+          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_3d_array'
         }
         if(bud[[name]][[kper]][[kstp]]$itype ==3) {
           bud[[name]][[kper]][[kstp]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$layer) <- '2d_array'
+          class(bud[[name]][[kper]][[kstp]]$layer) <- 'rmodflow_2d_array'
           bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$data) <- '2d_array'
+          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_2d_array'
         }
         if(bud[[name]][[kper]][[kstp]]$itype ==4) {
           bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$data) <- '2d_array'
+          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_2d_array'
         }
       }
       
@@ -122,6 +122,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
 #       if(bud[[name]]$code==1) {
 #         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows * bud[[name]]$nlays
 #         nlines <- ceiling(nrecords/5)
+#         # use read_array or read_variables instead!!
 #         dataVector <- NULL
 #         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
 #         bud[[name]]$data <- array(dataVector,dim=c(bud[[name]]$ncols,bud[[name]]$nrows,bud[[name]]$nlays))
@@ -133,6 +134,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
 #       if(bud[[name]]$code==2) {
 #         nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
 #         bud.lines <- bud.lines[-1]
+#         # use read_array or read_variables instead!!
 #         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
 #         bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=2,byrow=T))
 #         names(bud[[name]]$data) <- c('ID','FLUX')
@@ -143,6 +145,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
 #         nrecords <- bud[[name]]$ncols * bud[[name]]$nrows
 #         nlines <- ceiling(nrecords/5)
 #         dataVector <- NULL
+#         # use read_array or read_variables instead!!
 #         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nlines],collapse=' ')))
 #         bud[[name]]$data <- matrix(dataVector,ncol=bud[[name]]$ncols,nrow=bud[[name]]$nrows,byrow=T)
 #         bud.lines <- bud.lines[-c(1:nlines)]
@@ -163,6 +166,7 @@ read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
 #         }
 #         nrecords <- as.numeric(remove_empty_strings(strsplit(bud.lines[1],' ')[[1]]))
 #         bud.lines <- bud.lines[-1]
+#         # use read_array or read_variables instead!!
 #         dataVector <- as.numeric(split_line_numbers(paste(bud.lines[1:nrecords],collapse=' ')))
 #         bud[[name]]$data <- as.data.frame(matrix(dataVector,nrow=nrecords,ncol=nvalues+1,byrow=T))
 #         if(nvalues > 1) names(bud[[name]]$data) <- c('ID','FLUX',additionalColumns)

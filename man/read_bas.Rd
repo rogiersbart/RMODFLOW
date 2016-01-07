@@ -5,8 +5,7 @@
 \title{Read a MODFLOW basic file}
 \usage{
 read_bas(file = {     cat("Please select bas file...\\n")     file.choose() },
-  dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
-  })
+  dis = read_dis())
 }
 \arguments{
 \item{file}{filename; typically '*.bas'}

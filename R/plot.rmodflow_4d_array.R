@@ -1,17 +1,17 @@
 #' Plot a 2D section through a MODFLOW 4D array
 #' 
-#' \code{plot.4d_array} plots a 2D section through a MODFLOW 4D array.
+#' \code{plot.rmodflow_4d_array} plots a 2D section through a MODFLOW 4D array.
 #' 
-#' @param array an object of class 3d_array
+#' @param array an object of class rmodflow_3d_array
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
 #' @param l time step number to plot
-#' @param ... parameters provided to plot.3d_array
+#' @param ... parameters provided to plot.rmodflow_3d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
-#' @method plot 4d_array
+#' @method plot rmodflow_4d_array
 #' @export
-plot.4d_array <- function(array,
+plot.rmodflow_4d_array <- function(array,
                           i = NULL,
                           j = NULL,
                           k = NULL,

@@ -1,8 +1,8 @@
 #' Plot a MODFLOW 2D array
 #' 
-#' \code{plot.2d_array} plots a MODFLOW 2D array.
+#' \code{plot.rmodflow_2d_array} plots a MODFLOW 2D array.
 #' 
-#' @param array an object of class 2d_array
+#' @param array an object of class rmodflow_2d_array
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
@@ -23,10 +23,10 @@
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param title plot title
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
-#' @method plot 2d_array
+#' @method plot rmodflow_2d_array
 #' @export
 #' @import ggplot2 directlabels akima rgl quadprog
-plot.2d_array <- function(array,
+plot.rmodflow_2d_array <- function(array,
                           dis,
                           bas = NULL,
                           mask = ifelse0(is.null(bas),array*0+1,{warning('Using first ibound layer as mask.', call. = FALSE);bas$ibound[,,1]}),

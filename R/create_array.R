@@ -2,14 +2,14 @@
 #' 
 #' @param obj object to add class to
 #' @export
-create_array <- function(obj, dim = NULL) {
+create_array <- function(obj = NA, dim = NULL) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)
   if(length(dim(obj))==2) {
-    class(obj) <- '2d_array'
+    class(obj) <- 'rmodflow_2d_array'
   } else if(length(dim(obj))==3) {
-    class(obj) <- '3d_array'
+    class(obj) <- 'rmodflow_3d_array'
   } else if(length(dim(obj))==4) {
-    class(obj) <- '4d_array'
+    class(obj) <- 'rmodflow_4d_array'
   } else {
     stop('Please provide 2d matrix, or 2d, 3d or 4d array.')
   }

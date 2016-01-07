@@ -8,42 +8,47 @@
 #' @importFrom readr read_lines
 #' @export
 read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
-                     dis = {cat('Please select dis file...\n'); read_dis(file.choose())}) {
+                     dis = read_dis()) {
+  
   bas <- NULL
-  bas.lines <- read_lines(file)
+  bas_lines <- read_lines(file)
   
   # data set 0
-    comments <- get_comments_from_lines(bas.lines)
-    bas.lines <- remove_comments_from_lines(bas.lines)
+    data_set_0 <- read_comments(bas_lines)
+    comment(bas) <- data_set_0$comments
+    bas_lines <- data_set_0$remaining_lines
+    rm(data_set_0)
   
   # data set 1
-    data_set1 <- remove_empty_strings(strsplit(bas.lines[1],' '))
-    bas$xsection <- 'XSECTION' %in% data_set1
-    bas$chtoch <- 'CHTOCH' %in% data_set1
-    bas$free <- 'FREE' %in% data_set1
-    bas$printtime <- 'PRINTTIME' %in% data_set1
-    bas$showprogress <- 'SHOWPROGRESS' %in% data_set1
-    bas$stoperror <- 'STOPERROR' %in% data_set1
-    if(bas$stoperror) bas$stoper <- as.numeric(data_set1[match('stoperror',data_set1)+1]) else bas$stoper <- as.numeric(NA)
-    bas.lines <- bas.lines[-1]
+    data_set_1 <- read_variables(bas_lines)
+    bas$xsection <- 'XSECTION' %in% data_set_1$variables
+    bas$chtoch <- 'CHTOCH' %in% data_set_1$variables
+    bas$free <- 'FREE' %in% data_set_1$variables
+    bas$printtime <- 'PRINTTIME' %in% data_set_1$variables
+    bas$showprogress <- 'SHOWPROGRESS' %in% data_set_1$variables
+    bas$stoperror <- 'STOPERROR' %in% data_set_1$variables
+    if(bas$stoperror) bas$stoper <- as.numeric(data_set_1$variables[match('stoperror',data_set_1$variables)+1]) else bas$stoper <- as.numeric(NA)
+    bas_lines <- data_set_1$remaining_lines
+    rm(data_set_1)
     
   # data set 2
-    data_set2 <- read_array(bas.lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
-    bas.lines <- data_set2$remaining_lines
-    bas$ibound <- data_set2$array
-    rm(data_set2)
+    data_set_2 <- read_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
+    bas$ibound <- data_set_2$array
+    bas_lines <- data_set_2$remaining_lines
+    rm(data_set_2)
   
   # data set 3
-    bas$hnoflo <- as.numeric(strsplit(bas.lines[1],' ')[[1]])
-    bas.lines <- bas.lines[-1]
+    data_set_3 <- read_variables(bas_lines)
+    bas$hnoflo <- data_set_3$variables
+    bas_lines <- data_set_3$remaining_lines
+    rm(data_set_3)
     
   # data set 4
-    data_set4 <- read_array(bas.lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
-    bas.lines <- data_set4$remaining_lines
-    bas$strt <- data_set4$array
-    rm(data_set4)
+    data_set_4 <- read_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay))
+    bas$strt <- data_set_4$array
+    bas_lines <- data_set_4$remaining_lines
+    rm(data_set_4)
   
-  comment(bas) <- comments
   class(bas) <- c('bas','modflow_package')
   return(bas)
 }

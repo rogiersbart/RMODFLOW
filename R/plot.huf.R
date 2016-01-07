@@ -18,7 +18,7 @@
 #' @param title plot title
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
-#' @param ... parameters provided to plot.2d_array
+#' @param ... parameters provided to plot.rmodflow_2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method plot huf
 #' @export

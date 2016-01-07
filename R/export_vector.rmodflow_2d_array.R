@@ -4,7 +4,7 @@
 #' @importFrom sp Polygon Polygons SpatialPolygons SpatialPolygonsDataFrame CRS
 #' @importFrom rgdal writeOGR
 #' @export
-export_vector.2d_array <- function(array,
+export_vector.rmodflow_2d_array <- function(array,
                                   dis,
                                   bas = NULL,
                                   mask = ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),

@@ -1,8 +1,8 @@
 #' Plot a 2D section through a MODFLOW 3D array
 #' 
-#' \code{plot.3d_array} plots a 2D section through a MODFLOW 3D array.
+#' \code{plot.rmodflow_3d_array} plots a 2D section through a MODFLOW 3D array.
 #' 
-#' @param array an object of class 3d_array
+#' @param array an object of class rmodflow_3d_array
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
@@ -18,11 +18,11 @@
 #' @param title plot title
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
-#' @param ... parameters provided to plot.2d_array
+#' @param ... parameters provided to plot.rmodflow_2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
-#' @method plot 3d_array
+#' @method plot rmodflow_3d_array
 #' @export
-plot.3d_array <- function(array,
+plot.rmodflow_3d_array <- function(array,
                           i = NULL,
                           j = NULL,
                           k = NULL,
@@ -57,7 +57,7 @@ plot.3d_array <- function(array,
     zlim <- zlim
     mask <- mask
     array <- array[,,k]
-    class(array) <- '2d_array'
+    class(array) <- 'rmodflow_2d_array'
     mask <- mask[,,k]
     plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, ...)
   } else {
