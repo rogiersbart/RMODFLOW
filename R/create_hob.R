@@ -23,6 +23,7 @@ create_hob <- function(locations,
                        hobdry = -888,
                        noprint = FALSE,
                        tomulth = 1,
+                       itt = 1,
                        unique_obsnam = FALSE,
                        prj = NULL) {
   
@@ -70,7 +71,7 @@ create_hob <- function(locations,
         length_in_cell <- rep(NA, abs(hob$layer[[i]]))
         for(j in 1:abs(hob$layer[[i]])) {
           layer_tops <- cell_coordinates(dis, include_faces = TRUE)$upper
-          length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]]) - max(locations$bottom[i], dis$BOTM[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]])
+          length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]]) - max(locations$bottom[i], dis$botm[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]])
         }
         hob$pr[[i]] <- hydraulic_conductivity[locations_top$i[i],locations_top$j[i],hob$mlay[[i]]] * length_in_cell
         hob$pr[[i]] <- hob$pr[[i]]/sum(hob$pr[[i]])
@@ -80,7 +81,7 @@ create_hob <- function(locations,
         hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
         hob$obsnam[[i]] <- locations$name[i]
       } else {
-        hob$ITT[i] <- 1 # to do: enable suppport for ITT = 2!
+        hob$itt[i] <- ifelse(length(itt)==1,itt,itt[i])
         if(unique_obsnam) {
           hob$obsnam[[i]] <- paste(locations$name[i], c(1:abs(hob$irefsp[[i]])), sep = '_')
         } else {
