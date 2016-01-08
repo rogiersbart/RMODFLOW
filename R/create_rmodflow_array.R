@@ -1,6 +1,7 @@
 #' Add rmodflow array class to object based on object dimensions
 #' 
 #' @param obj object to add class to
+#' @param dim the dim attribute for the array to be created; by default, dim(obj) is used
 #' @export
 create_rmodflow_array <- function(obj = NA, dim = NULL) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)

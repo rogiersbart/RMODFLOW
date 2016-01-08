@@ -13,12 +13,12 @@ write_mlt <- function(mlt, file, iprn=-1)
     cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
     
   # data set 1
-    write_variables(mlt$nml, file=file)
+    write_modflow_variables(mlt$nml, file=file)
   
   # data set 2 + 3 
   for(i in 1:mlt$nml)
   {
-    write_variables(mlt$mltnam[i], file=file) 
+    write_modflow_variables(mlt$mltnam[i], file=file) 
     if(length(mlt$rmlt[[i]])==1) {
       cat(paste('CONSTANT ', mlt$rmlt[[i]], '\n', sep=''), file=file, append=TRUE)
     } else {

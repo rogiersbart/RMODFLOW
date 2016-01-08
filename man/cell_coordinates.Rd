@@ -12,6 +12,8 @@
 \arguments{
 \item{dis}{dis object}
 
+\item{include_faces}{logical; should face coordinates be included?}
+
 \item{huf}{huf object}
 }
 \value{

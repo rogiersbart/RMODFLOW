@@ -1,13 +1,13 @@
 #' Get cell x, y and z coordinates from a dis object
 #' 
 #' @param dis dis object
+#' @param include_faces logical; should face coordinates be included?
 #' @return list with with cell coordinate 3d arrays
-#'
 #' @rdname cell_coordinates
 #' @method cell_coordinates dis
 #' @export
-cell_coordinates.dis <- function(dis, include_faces = FALSE)
-{
+cell_coordinates.dis <- function(dis,
+                                 include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- dis$botm*NA
   cell_coordinates$z[,,1] <- (dis$top+dis$botm[,,1])/2

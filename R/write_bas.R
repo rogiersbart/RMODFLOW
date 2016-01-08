@@ -22,7 +22,7 @@ write_bas <- function(bas, file, iprn=-1) {
     if(bas$printtime) options <- paste(options, 'PRINTTIME ',sep='')
     if(bas$showprogress) options <- paste(options, 'SHOWPROGRESS ',sep='')
     if(bas$stoperror) options <- paste(options,'STOPERROR ',bas$stoper,sep='')
-    write_variables(options, file=file)
+    write_modflow_variables(options, file=file)
       
   # data set 2
     if(bas$xsection) {
@@ -32,7 +32,7 @@ write_bas <- function(bas, file, iprn=-1) {
     }
   
   # data set 3
-    write_variables(bas$hnoflo, file=file)
+    write_modflow_variables(bas$hnoflo, file=file)
   
   # data set 4
     if(bas$xsection) {

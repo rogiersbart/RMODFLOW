@@ -16,7 +16,7 @@ read_kdep <- function(file = {cat('Please select kdep file...\n'); file.choose()
   kdep <- NULL
   
   # data set 0
-    data_set_0 <- read_comments(kdep_lines)
+    data_set_0 <- read_modflow_comments(kdep_lines)
     comments <- data_set_0$comments
     kdep_lines <- data_set_0$remaining_lines
     rm(data_set_0)

@@ -2,12 +2,16 @@
 #' 
 #' @param dis dis object
 #' @param hed hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned
+#' @param include_volume logical; should the cell volumes be included?
+#' @param include_faces logical; should face areas be included?
 #' @return list with cell dimension 3d arrays
-#'
 #' @rdname cell_dimensions
 #' @method cell_dimensions dis
 #' @export
-cell_dimensions.dis <- function(dis, hed = NULL, include_volume = FALSE, include_faces = FALSE) {
+cell_dimensions.dis <- function(dis,
+                                hed = NULL,
+                                include_volume = FALSE,
+                                include_faces = FALSE) {
   cell_dimensions <- list()
   cell_top <- dis$botm
   cell_top[,,1] <- dis$top

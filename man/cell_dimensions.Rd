@@ -19,6 +19,10 @@ cell_dimensions(...)
 
 \item{hed}{hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned}
 
+\item{include_volume}{logical; should the cell volumes be included?}
+
+\item{include_faces}{logical; should face areas be included?}
+
 \item{huf}{huf object}
 
 \item{hed}{hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned}

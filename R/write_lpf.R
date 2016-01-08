@@ -13,34 +13,34 @@ write_lpf <- function(lpf, file, iprn=-1)
     cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
     
   # data set 1
-    write_variables(lpf$ilpfcb,lpf$hdry,lpf$nplpf,ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
+    write_modflow_variables(lpf$ilpfcb,lpf$hdry,lpf$nplpf,ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
     
   # data set 2
-    write_variables(lpf$laytyp, file = file)
+    write_modflow_variables(lpf$laytyp, file = file)
     
   # data set 3
-    write_variables(lpf$layavg, file = file)
+    write_modflow_variables(lpf$layavg, file = file)
     
   # data set 4
-    write_variables(lpf$chani, file = file)
+    write_modflow_variables(lpf$chani, file = file)
     
   # data set 5
-    write_variables(lpf$layvka, file = file)
+    write_modflow_variables(lpf$layvka, file = file)
     
   # data set 6
-    write_variables(lpf$laywet, file = file)
+    write_modflow_variables(lpf$laywet, file = file)
     
   # data set 7
     if(!as.logical(prod(lpf$laywet==0))) {
-      write_variables(lpf$wetfct,lpf$iwetit,lpf$ihdwet, file = file)
+      write_modflow_variables(lpf$wetfct,lpf$iwetit,lpf$ihdwet, file = file)
     }
     
   # data set 8-9
     for(i in 1:lpf$nplpf) {
-      write_variables(lpf$parnam[i],lpf$partyp[i],lpf$parval[i],lpf$nclu[i], file = file)
+      write_modflow_variables(lpf$parnam[i],lpf$partyp[i],lpf$parval[i],lpf$nclu[i], file = file)
       layers <- which(!is.na(lpf$mltarr[,i]))
       for(j in 1:lpf$nclu[i]) {
-        write_variables(layers[j],lpf$mltarr[layers[j],i],lpf$zonarr[layers[j],i],lpf$iz[layers[j],i], file=file)
+        write_modflow_variables(layers[j],lpf$mltarr[layers[j],i],lpf$zonarr[layers[j],i],lpf$iz[layers[j],i], file=file)
       } 
     }
     

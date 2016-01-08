@@ -14,13 +14,13 @@ read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
   bas_lines <- read_lines(file)
   
   # data set 0
-    data_set_0 <- read_comments(bas_lines)
+    data_set_0 <- read_modflow_comments(bas_lines)
     comment(bas) <- data_set_0$comments
     bas_lines <- data_set_0$remaining_lines
     rm(data_set_0)
   
   # data set 1
-    data_set_1 <- read_variables(bas_lines)
+    data_set_1 <- read_modflow_variables(bas_lines)
     bas$xsection <- 'XSECTION' %in% data_set_1$variables
     bas$chtoch <- 'CHTOCH' %in% data_set_1$variables
     bas$free <- 'FREE' %in% data_set_1$variables
@@ -38,7 +38,7 @@ read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
     rm(data_set_2)
   
   # data set 3
-    data_set_3 <- read_variables(bas_lines)
+    data_set_3 <- read_modflow_variables(bas_lines)
     bas$hnoflo <- data_set_3$variables
     bas_lines <- data_set_3$remaining_lines
     rm(data_set_3)

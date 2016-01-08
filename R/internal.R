@@ -111,6 +111,10 @@ read_modflow_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
         {
           array <- as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2])
           remaining_lines <- remaining_lines[-1]
+          if(ndim == 1) {
+            array <- array(array,dim=nrow*ncol*nlay)
+            class(array) <- 'rmodflow_1d_array'
+          }
           return(list(array=array,remaining_lines=remaining_lines))
         } else {
           array[,,k] <- matrix(as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2]),nrow=nrow,ncol=ncol)
@@ -154,17 +158,17 @@ read_modflow_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
     }
     if(nlay!=1) class(array) <- 'rmodflow_3d_array'
   } else if(ndim == 1) {
-    array <- array(array,dim=length(array))
+    array <- array(array,dim=nrow*ncol*nlay)
     class(array) <- 'rmodflow_1d_array'
   }
-
+  
   # Return output of reading function 
   return(list(array=array,remaining_lines=remaining_lines))
 }
 
 #' Read comments
 #' Internal function used in the read_* functions to read comments
-read_comments <- function(remaining_lines) {
+read_modflow_comments <- function(remaining_lines) {
   i <- 0
   comments <- NULL
   while(i==0) {
@@ -180,7 +184,7 @@ read_comments <- function(remaining_lines) {
 
 #' Read modflow variables
 #' If all are numbers, returns numeric, otherwise returns character vector
-read_variables <- function(remaining_lines) {
+read_modflow_variables <- function(remaining_lines) {
   variables <- remove_empty_strings(strsplit(remove_comments_end_of_line(remaining_lines[1]),' |\t')[[1]])
   if(!any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   return(list(variables=variables,remaining_lines= remaining_lines[-1]))
@@ -261,7 +265,7 @@ write_modflow_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE) {
 
 #' Write modflow variables
 #' Internal function used in the write_* functions for writing single line datasets
-write_variables <- function(..., file, append=TRUE) {
+write_modflow_variables <- function(..., file, append=TRUE) {
   cat(paste0(paste(..., sep=' ',collapse=' '), '\n'), file=file, append=append)
 }
 

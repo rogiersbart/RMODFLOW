@@ -12,7 +12,7 @@ read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()})
   hob <- NULL
   
   # data set 0
-    data_set_0 <- read_comments(hob_lines)
+    data_set_0 <- read_modflow_comments(hob_lines)
     comment(hob) <- data_set_0$comments
     hob_lines <- data_set_0$remaining_lines
     rm(data_set_0)

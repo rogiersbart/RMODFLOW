@@ -14,11 +14,11 @@ write_dis <- function(dis, file, iprn=-1) {
     cat(paste('#', comment(dis)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-    write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file)
+    write_modflow_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file)
 #  cat(paste(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni, '\n', sep=' '), file=file, append=TRUE)
   
   # data set 2
-    write_variables(dis$laycbd,file=file)
+    write_modflow_variables(dis$laycbd,file=file)
 #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
   # data set 3
@@ -35,6 +35,6 @@ write_dis <- function(dis, file, iprn=-1) {
     
   # data set 7
     for(i in 1:dis$nper) {
-      write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],dis$sstr[i], file=file)  
+      write_modflow_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],dis$sstr[i], file=file)  
     }
 }

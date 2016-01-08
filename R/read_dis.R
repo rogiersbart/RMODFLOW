@@ -13,13 +13,13 @@ read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()})
   dis <- NULL
   
   # data set 0
-    data_set_0 <- read_comments(dis_lines)
+    data_set_0 <- read_modflow_comments(dis_lines)
     comment(dis) <- data_set_0$comments
     dis_lines <- data_set_0$remaining_lines
     rm(data_set_0)
   
   # data set 1
-    data_set_1 <- read_variables(dis_lines)
+    data_set_1 <- read_modflow_variables(dis_lines)
     dis$nlay <- as.numeric(data_set_1$variables[1])
     dis$nrow <- as.numeric(data_set_1$variables[2])
     dis$ncol <- as.numeric(data_set_1$variables[3])
@@ -30,7 +30,7 @@ read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()})
     rm(data_set_1)
     
   # data set 2
-    data_set_2 <- read_variables(dis_lines)
+    data_set_2 <- read_modflow_variables(dis_lines)
     dis$laycbd <- data_set_2$variables
     dis_lines <- data_set_2$remaining_lines
     rm(data_set_2)
@@ -61,7 +61,7 @@ read_dis <- function(file = {cat('Please select dis file...\n'); file.choose()})
   
   # data set 7
     for(i in 1:dis$nper) {
-      data_set_7 <- read_variables(dis_lines)
+      data_set_7 <- read_modflow_variables(dis_lines)
       dis$perlen[i] <- as.numeric(data_set_7$variables[1])
       dis$nstp[i] <- as.numeric(data_set_7$variables[2])
       dis$tsmult[i] <- as.numeric(data_set_7$variables[3])
