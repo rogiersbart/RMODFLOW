@@ -4,7 +4,9 @@
 \alias{write_mlt}
 \title{Write a MODFLOW multiplier file}
 \usage{
-write_mlt(mlt, file, iprn = -1)
+write_mlt(mlt, file = {    
+  cat("Please select mlt file to overwrite or provide new filename ...\\n")    
+  file.choose() }, iprn = -1)
 }
 \arguments{
 \item{mlt}{an \code{\link{RMODFLOW}} mlt object}

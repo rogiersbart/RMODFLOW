@@ -5,7 +5,9 @@
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_huf <- function(huf, file, iprn=-1) {
+write_huf <- function(huf,
+                      file = {cat('Please select huf file to overwrite or provide new filename ...\n'); file.choose()},
+                      iprn=-1) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version

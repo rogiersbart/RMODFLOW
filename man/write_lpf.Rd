@@ -4,7 +4,9 @@
 \alias{write_lpf}
 \title{Write a MODFLOW layer-property flow file}
 \usage{
-write_lpf(lpf, file, iprn = -1)
+write_lpf(lpf, file = {    
+  cat("Please select lpf file to overwrite or provide new filename ...\\n")    
+  file.choose() }, iprn = -1)
 }
 \arguments{
 \item{lpf}{an \code{\link{RMODFLOW}} lpf object}

@@ -4,8 +4,9 @@
 #' @param file filename to write to; typically '*.pvl'
 #' @return \code{NULL}
 #' @export
-write_pvl <- function(pvl, file)
-{
+write_pvl <- function(pvl,
+                      file = {cat('Please select pvl file to overwrite or provide new filename ...\n'); file.choose()}) {
+  
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Parameter Value File created by RMODFLOW, version',v,'at',date(),'\n'), file=file)

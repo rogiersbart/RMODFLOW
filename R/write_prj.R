@@ -5,8 +5,8 @@
 #' @param prj an \code{\link{RMODFLOW}} prj object
 #' @param file filename to write to; typically '*.prj'
 #' @export
-write_prj <- function(prj,file)
-{
+write_prj <- function(prj,
+                      file = {cat('Please select prj file to overwrite or provide new filename ...\n'); file.choose()}) {
   cat(paste0(prj$projection,'\n'), file=file)
   cat(paste0(paste0(prj$origin,collapse=' '),'\n'), file=file, append=TRUE)
   cat(paste0(prj$rotation,'\n'), file=file, append=TRUE)

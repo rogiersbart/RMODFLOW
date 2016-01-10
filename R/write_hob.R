@@ -4,7 +4,8 @@
 #' @param file filename to write to; typically '*.hob'
 #' @return \code{NULL}
 #' @export
-write_hob <- function(hob, file) {
+write_hob <- function(hob,
+                      file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version

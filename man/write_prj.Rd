@@ -4,7 +4,9 @@
 \alias{write_prj}
 \title{Write an RMODFLOW projection file}
 \usage{
-write_prj(prj, file)
+write_prj(prj, file = {    
+  cat("Please select prj file to overwrite or provide new filename ...\\n")    
+  file.choose() })
 }
 \arguments{
 \item{prj}{an \code{\link{RMODFLOW}} prj object}

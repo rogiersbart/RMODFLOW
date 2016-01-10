@@ -6,7 +6,7 @@
 #' @return object of class hob
 #' @importFrom readr read_lines
 #' @export
-read_hob <- function(file = {cat('Please select hob file...\n'); file.choose()}) {
+read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}) {
   
   hob_lines <- read_lines(file)
   hob <- NULL

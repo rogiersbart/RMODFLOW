@@ -4,7 +4,8 @@
 \alias{read_dis}
 \title{Read a MODFLOW discretization file}
 \usage{
-read_dis(file = {     cat("Please select dis file...\\n")     file.choose() })
+read_dis(file = {     cat("Please select dis file ...\\n")     file.choose()
+  })
 }
 \arguments{
 \item{file}{filename; typically '*.dis'}

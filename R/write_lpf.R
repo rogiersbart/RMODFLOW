@@ -5,8 +5,10 @@
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_lpf <- function(lpf, file, iprn=-1)
-{
+write_lpf <- function(lpf,
+                      file = {cat('Please select lpf file to overwrite or provide new filename ...\n'); file.choose()},
+                      iprn=-1) {
+  
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Layer-Property Flow Package created by RMODFLOW, version',v,'\n'), file = file)

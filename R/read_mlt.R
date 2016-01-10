@@ -7,8 +7,8 @@
 #' @return object of class mlt
 #' @importFrom readr read_lines
 #' @export
-read_mlt <- function(file = {cat('Please select mlt file...\n'); file.choose()},
-                     dis = {cat('Please select dis file...\n'); read_dis(file.choose())}) {
+read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choose()},
+                     dis = {cat('Please select dis file ...\n'); read_dis(file.choose())}) {
   mlt <- NULL
   mlt.lines <- read_lines(file)
   

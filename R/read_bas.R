@@ -7,7 +7,7 @@
 #' @return object of class bas
 #' @importFrom readr read_lines
 #' @export
-read_bas <- function(file = {cat('Please select bas file...\n'); file.choose()},
+read_bas <- function(file = {cat('Please select bas file ...\n'); file.choose()},
                      dis = read_dis()) {
   
   bas <- NULL

@@ -4,7 +4,9 @@
 \alias{write_hob}
 \title{Write a MODFLOW head observations file}
 \usage{
-write_hob(hob, file)
+write_hob(hob, file = {    
+  cat("Please select hob file to overwrite or provide new filename ...\\n")    
+  file.choose() })
 }
 \arguments{
 \item{hob}{an \code{\link{RMODFLOW}} hob object}

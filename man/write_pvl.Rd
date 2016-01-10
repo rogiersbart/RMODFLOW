@@ -4,7 +4,9 @@
 \alias{write_pvl}
 \title{Write a MODFLOW parameter value file}
 \usage{
-write_pvl(pvl, file)
+write_pvl(pvl, file = {    
+  cat("Please select pvl file to overwrite or provide new filename ...\\n")    
+  file.choose() })
 }
 \arguments{
 \item{pvl}{an \code{\link{RMODFLOW}} pvl object}

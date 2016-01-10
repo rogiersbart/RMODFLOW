@@ -4,7 +4,8 @@
 \alias{read_hpr}
 \title{Read a MODFLOW head predictions file}
 \usage{
-read_hpr(file = {     cat("Please select hpr file...\\n")     file.choose() })
+read_hpr(file = {     cat("Please select hpr file ...\\n")     file.choose()
+  })
 }
 \arguments{
 \item{file}{filename; typically '*.hpr'}

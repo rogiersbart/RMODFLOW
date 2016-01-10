@@ -7,7 +7,7 @@
 #' @return object of class bud
 #' @importFrom readr read_lines
 #' @export
-read_bud <- function(file = {cat('Please select bud file...\n'); file.choose()},
+read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()},
                      binary = TRUE) {
   if(binary) {
     con <- file(file,open='rb')

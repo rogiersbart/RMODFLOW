@@ -8,9 +8,9 @@
 #' @return object of class kdep
 #' @importFrom readr read_lines
 #' @export
-read_kdep <- function(file = {cat('Please select kdep file...\n'); file.choose()},
-                      dis = {cat('Please select corresponding dis file...\n'); read_dis(file.choose())},
-                      huf = {cat('Please select corresponding huf file...\n'); read_huf(file.choose(), dis = dis)}) {
+read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.choose()},
+                      dis = {cat('Please select corresponding dis file ...\n'); read_dis(file.choose())},
+                      huf = {cat('Please select corresponding huf file ...\n'); read_huf(file.choose(), dis = dis)}) {
   
   kdep_lines <- read_lines(file)
   kdep <- NULL

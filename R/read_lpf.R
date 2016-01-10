@@ -7,7 +7,7 @@
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{write_lpf}}, \code{\link{create_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
-read_lpf <- function(file = {cat('Please select lpf file...\n'); file.choose()}) {
+read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choose()}) {
   
   lpf.lines <- read_lines(file)
   lpf <- NULL

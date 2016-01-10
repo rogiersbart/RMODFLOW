@@ -4,7 +4,9 @@
 \alias{write_dis}
 \title{Write a MODFLOW discretization file}
 \usage{
-write_dis(dis, file, iprn = -1)
+write_dis(dis, file = {    
+  cat("Please select dis file to overwrite or provide new filename ...\\n")    
+  file.choose() }, iprn = -1)
 }
 \arguments{
 \item{dis}{an \code{\link{RMODFLOW}} dis object}

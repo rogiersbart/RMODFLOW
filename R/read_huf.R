@@ -7,7 +7,7 @@
 #' @return object of class huf
 #' @importFrom readr read_lines
 #' @export
-read_huf <- function(file = {cat('Please select huf file...\n'); file.choose()},
+read_huf <- function(file = {cat('Please select huf file ...\n'); file.choose()},
                      dis = read_dis()) {
   
   huf_lines <- read_lines(file)

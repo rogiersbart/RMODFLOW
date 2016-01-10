@@ -4,7 +4,9 @@
 \alias{write_huf}
 \title{Write a MODFLOW hydrogeologic unit flow file}
 \usage{
-write_huf(huf, file, iprn = -1)
+write_huf(huf, file = {    
+  cat("Please select huf file to overwrite or provide new filename ...\\n")    
+  file.choose() }, iprn = -1)
 }
 \arguments{
 \item{huf}{an \code{\link{RMODFLOW}} huf object}

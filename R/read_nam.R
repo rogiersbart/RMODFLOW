@@ -5,7 +5,7 @@
 #' @param file filename; typically '*.nam'
 #' @return object of class nam
 #' @export
-read_nam <- function(file = {cat('Please select nam file...\n'); file.choose()}) {
+read_nam <- function(file = {cat('Please select nam file ...\n'); file.choose()}) {
   warning('LSTLVL, Option and comments not implemented yet.')
   nam <- read.table(file)
   names(nam) <- c('ftype','nunit','fname')

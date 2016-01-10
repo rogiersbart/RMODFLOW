@@ -6,7 +6,9 @@
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{read_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
-write_dis <- function(dis, file, iprn=-1) {
+write_dis <- function(dis,
+                      file = {cat('Please select dis file to overwrite or provide new filename ...\n'); file.choose()},
+                      iprn=-1) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version

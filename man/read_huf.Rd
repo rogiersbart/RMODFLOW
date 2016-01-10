@@ -4,8 +4,8 @@
 \alias{read_huf}
 \title{Read a MODFLOW hydrogeologic unit flow file}
 \usage{
-read_huf(file = {     cat("Please select huf file...\\n")     file.choose() },
-  dis = read_dis())
+read_huf(file = {     cat("Please select huf file ...\\n")     file.choose()
+  }, dis = read_dis())
 }
 \arguments{
 \item{file}{filename; typically '*.huf'}

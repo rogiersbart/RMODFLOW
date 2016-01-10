@@ -4,10 +4,10 @@
 \alias{read_hed}
 \title{Read a MODFLOW head file}
 \usage{
-read_hed(file = {     cat("Please select hed file...\\n")     file.choose() },
-  dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
-  }, bas = {     cat("Please select bas file...\\n")    
-  read_bas(file.choose(), dis = dis) }, huf = NULL,
+read_hed(file = {     cat("Please select hed file ...\\n")     file.choose()
+  }, dis = {     cat("Please select dis file ...\\n")    
+  read_dis(file.choose()) }, bas = {     cat("Please select bas file ...\\n") 
+     read_bas(file.choose(), dis = dis) }, huf = NULL,
   convert_hnoflo_to_NA = TRUE, binary = TRUE)
 }
 \arguments{

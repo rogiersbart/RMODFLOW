@@ -4,9 +4,9 @@
 \alias{read_mlt}
 \title{Read a MODFLOW multiplier file}
 \usage{
-read_mlt(file = {     cat("Please select mlt file...\\n")     file.choose() },
-  dis = {     cat("Please select dis file...\\n")     read_dis(file.choose())
-  })
+read_mlt(file = {     cat("Please select mlt file ...\\n")     file.choose()
+  }, dis = {     cat("Please select dis file ...\\n")    
+  read_dis(file.choose()) })
 }
 \arguments{
 \item{file}{filename; typically '*.mlt'}

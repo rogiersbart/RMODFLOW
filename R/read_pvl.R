@@ -7,7 +7,7 @@
 #' @return object of class pvl
 #' @importFrom readr read_lines
 #' @export
-read_pvl <- function(file = {cat('Please select pvl file...\n'); file.choose()},
+read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choose()},
                      read_all=F) {
   
   pvl_lines <- read_lines(file)

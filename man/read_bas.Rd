@@ -4,8 +4,8 @@
 \alias{read_bas}
 \title{Read a MODFLOW basic file}
 \usage{
-read_bas(file = {     cat("Please select bas file...\\n")     file.choose() },
-  dis = read_dis())
+read_bas(file = {     cat("Please select bas file ...\\n")     file.choose()
+  }, dis = read_dis())
 }
 \arguments{
 \item{file}{filename; typically '*.bas'}

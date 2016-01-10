@@ -5,8 +5,10 @@
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
-write_mlt <- function(mlt, file, iprn=-1)
-{
+write_mlt <- function(mlt,
+                      file = {cat('Please select mlt file to overwrite or provide new filename ...\n'); file.choose()},
+                      iprn=-1) {
+  
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
     cat(paste('# MODFLOW Multiplier File created by RMODFLOW, version',v,'\n'), file=file)
