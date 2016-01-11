@@ -11,7 +11,7 @@
 #' @details Provide either xyz or ijk
 #' @return data frame with real world x and y coordinates
 #' @export
-convert_dis_to_real <- function(x=NULL,y=NULL,z=NULL,i=NULL,j=NULL,k=NULL,prj,dis=NULL) {
+convert_grid_to_xyz <- function(x=NULL,y=NULL,z=NULL,i=NULL,j=NULL,k=NULL,prj,dis=NULL) {
   if(!is.null(x)) {
     angle <- atan(y/x)*180/pi+prj$rotation
     angle[which(is.na(angle))] <- prj$rotation + 90

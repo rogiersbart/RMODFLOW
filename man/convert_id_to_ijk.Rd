@@ -4,14 +4,19 @@
 \alias{convert_id_to_ijk}
 \title{Convert id to ijk}
 \usage{
-convert_id_to_ijk(id, dis)
+convert_id_to_ijk(id, dis, type = "r")
 }
 \arguments{
 \item{id}{cell id, providing the place of the number in an input file 3d array}
 
 \item{dis}{a discretisation file object}
+
+\item{type}{'r' or 'modflow'; defaults to 'r'}
 }
 \description{
 Convert id to ijk
+}
+\details{
+a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 }
 

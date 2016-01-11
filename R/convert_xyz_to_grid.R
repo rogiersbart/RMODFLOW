@@ -9,7 +9,7 @@
 #' If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned.
 #' @return data frame with x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @export
-convert_real_to_dis <- function(x,y,prj=NULL,z=NULL,dis=NULL) {
+convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL) {
   if(!is.null(prj)) {
     x <- x-prj$origin[1]
     y <- y-prj$origin[2]

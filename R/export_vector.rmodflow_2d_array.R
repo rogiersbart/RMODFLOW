@@ -31,7 +31,7 @@ export_vector.rmodflow_2d_array <- function(array,
   positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
   positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
   if(!is.null(prj)) {
-    new_positions <- convert_dis_to_real(x=positions$x,y=positions$y,prj=prj)
+    new_positions <- convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
   }

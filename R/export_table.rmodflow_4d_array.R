@@ -16,7 +16,7 @@ export_table.rmodflow_4d_array <- function(array,
     
     cell_coord <- cell_coordinates(dis)
     if(!is.null(prj)) {
-      cell_coord <- convert_dis_to_real(x=c(cell_coord$x[,,k]),y=c(cell_coord$y[,,k]),prj=prj,dis=dis)
+      cell_coord <- convert_grid_to_xyz(x=c(cell_coord$x[,,k]),y=c(cell_coord$y[,,k]),prj=prj,dis=dis)
     } else {
       cell_coord <- data.frame(x = c(cell_coord$x[,,k]), y = c(cell_coord$y[,,k]))
     }

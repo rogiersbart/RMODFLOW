@@ -4,7 +4,7 @@
 \alias{convert_ijk_to_id}
 \title{Convert ijk to id}
 \usage{
-convert_ijk_to_id(i, j, k, dis)
+convert_ijk_to_id(i, j, k, dis, type = "r")
 }
 \arguments{
 \item{i}{vector of row numbers}
@@ -20,5 +20,8 @@ cell ids, providing the place of the cell in an input file 3d array
 }
 \description{
 Convert ijk to id
+}
+\details{
+a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 }
 
