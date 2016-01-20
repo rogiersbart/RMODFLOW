@@ -6,7 +6,7 @@
 \usage{
 write_lpf(lpf, file = {    
   cat("Please select lpf file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  file.choose() }, dis = read_dis(), iprn = -1)
 }
 \arguments{
 \item{lpf}{an \code{\link{RMODFLOW}} lpf object}

@@ -7,6 +7,7 @@
 #' @export
 write_lpf <- function(lpf,
                       file = {cat('Please select lpf file to overwrite or provide new filename ...\n'); file.choose()},
+                      dis = read_dis(),
                       iprn=-1) {
   
   # data set 0
