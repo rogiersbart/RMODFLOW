@@ -59,7 +59,7 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
         if(bud[[name]][[kper]][[kstp]]$itype %in% c(2,5)) {
           bud[[name]][[kper]][[kstp]]$nlist <- readBin(con,what='integer',n=1)
           if(bud[[name]][[kper]][[kstp]]$nlist > 0) {
-            bud[[name]][[kper]][[kstp]]$data <- as.data.frame(matrix(,nrow=bud[[name]][[kper]][[kstp]]$nlist,ncol=bud[[name]][[kper]][[kstp]]$nval+1))
+            bud[[name]][[kper]][[kstp]]$data <- as.data.frame(matrix(NA,nrow=bud[[name]][[kper]][[kstp]]$nlist,ncol=bud[[name]][[kper]][[kstp]]$nval+1))
             names(bud[[name]][[kper]][[kstp]]$data)[1] <- 'icell'
             names(bud[[name]][[kper]][[kstp]]$data)[2] <- 'value'
             # add reading ctmps here!
@@ -89,11 +89,27 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
           attr(bud[[name]][[kper]][[kstp]]$data,names(bud[[name]][[kper]][[kstp]])[i]) <- bud[[name]][[kper]][[kstp]][[i]]
         }
         bud[[name]][[kper]][[kstp]] <- bud[[name]][[kper]][[kstp]]$data
-      
+        
       kstp <- readBin(con,what='integer',n=1)
       kper <- readBin(con,what='integer',n=1)
       desc <- readChar(con,nchars=16)
     }
+    
+    # create rmodflow_4d_array for list items with itype 0 or 1
+      for (i in 1:length(bud)) {
+        if (attr(bud[[i]][[1]][[1]],'itype') %in% c(0,1)) {
+          bud_item <- bud[[i]]
+          bud[[i]] <- unlist(bud_item)
+          bud[[i]] <- create_rmodflow_array(bud[[i]], dim = c(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')), length(bud[[i]])/prod(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')))))
+          ats <- attributes(bud_item[[length(bud_item)]][[length(bud_item[[length(bud_item)]])]])
+          ats <- ats[-which(names(ats) == 'dim')]
+          for(at in 1:length(ats)) {
+            attr(bud[[i]], names(ats)[at]) <- ats[at][[1]]
+          } 
+          class(bud[[i]]) <- 'rmodflow_4d_array'
+        }
+      }
+        
     close(con)
     class(bud) <- c('bud','modflow_package')
     return(bud)
