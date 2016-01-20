@@ -59,7 +59,7 @@ plot.rmodflow_3d_array <- function(array,
     array <- array[,,k]
     class(array) <- 'rmodflow_2d_array'
     mask <- mask[,,k]
-    plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, ...)
+    plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, grid = grid, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
