@@ -13,23 +13,42 @@ cell_dimensions.dis <- function(dis,
                                 include_volume = FALSE,
                                 include_faces = FALSE) {
   cell_dimensions <- list()
-  cell_top <- dis$botm
-  cell_top[,,1] <- dis$top
-  cell_top[,,2:dis$nlay] <- dis$botm[,,c(1:(dis$nlay-1))]
-  if(!is.null(hed)) {
-    cell_top[which(cell_top > hed)] <- hed[which(cell_top > hed)] # adapt for transient hed objects!
+  if (is.null(hed) | dim(hed)[4] == 1) {
+    cell_top <- dis$botm
+    cell_top[,,1] <- dis$top
+    cell_top[,,2:dis$nlay] <- dis$botm[,,c(1:(dis$nlay-1))]
+    if(!is.null(hed)) {
+      cell_top[which(cell_top > hed[,,,1])] <- hed[which(cell_top > hed[,,,1])]
+    }
+    cell_dimensions$z <- create_rmodflow_array(cell_top - dis$botm)
+    cell_dimensions$x <- create_rmodflow_array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    cell_dimensions$y <- create_rmodflow_array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    if(include_volume) cell_dimensions$volume <- create_rmodflow_array(with(cell_dimensions, x * y * z))
+    if(include_faces) {
+      cell_dimensions$front <- create_rmodflow_array(with(cell_dimensions, x * z))
+      cell_dimensions$back <- cell_dimensions$front
+      cell_dimensions$left <- create_rmodflow_array(with(cell_dimensions, y * z))
+      cell_dimensions$right <- cell_dimensions$left
+      cell_dimensions$lower <- create_rmodflow_array(with(cell_dimensions, x * y))
+      cell_dimensions$upper <- cell_dimensions$lower
+    }  
+  } else {
+    cell_top <- create_rmodflow_array(dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
+    cell_top[,,1,] <- dis$top
+    cell_top[,,2:dis$nlay,] <- dis$botm[,,c(1:(dis$nlay-1))]
+    cell_top[which(cell_top > hed[,,,])] <- hed[which(cell_top > hed[,,,])] 
+    cell_dimensions$z <- create_rmodflow_array(cell_top - dis$botm)
+    cell_dimensions$x <- create_rmodflow_array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    cell_dimensions$y <- create_rmodflow_array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    if(include_volume) cell_dimensions$volume <- create_rmodflow_array(with(cell_dimensions, x * y * z))
+    if(include_faces) {
+      cell_dimensions$front <- create_rmodflow_array(with(cell_dimensions, x * z))
+      cell_dimensions$back <- cell_dimensions$front
+      cell_dimensions$left <- create_rmodflow_array(with(cell_dimensions, y * z))
+      cell_dimensions$right <- cell_dimensions$left
+      cell_dimensions$lower <- create_rmodflow_array(with(cell_dimensions, x * y))
+      cell_dimensions$upper <- cell_dimensions$lower
+    }
   }
-  cell_dimensions$z <- create_rmodflow_array(cell_top - dis$botm)
-  cell_dimensions$x <- create_rmodflow_array(array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay)))
-  cell_dimensions$y <- create_rmodflow_array(array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay)))
-  if(include_volume) cell_dimensions$volume <- create_rmodflow_array(with(cell_dimensions, x * y * z))
-  if(include_faces) {
-    cell_dimensions$front <- create_rmodflow_array(with(cell_dimensions, x * z))
-    cell_dimensions$back <- cell_dimensions$front
-    cell_dimensions$left <- create_rmodflow_array(with(cell_dimensions, y * z))
-    cell_dimensions$right <- cell_dimensions$left
-    cell_dimensions$lower <- create_rmodflow_array(with(cell_dimensions, x * y))
-    cell_dimensions$upper <- cell_dimensions$lower
-  }  
   return(cell_dimensions)
 }
