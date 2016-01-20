@@ -39,16 +39,18 @@ write_lpf <- function(lpf,
     }
     
   # data set 8-9
-    for(i in 1:lpf$nplpf) {
-      write_modflow_variables(lpf$parnam[i],lpf$partyp[i],lpf$parval[i],lpf$nclu[i], file = file)
-      layers <- which(!is.na(lpf$mltarr[,i]))
-      for(j in 1:lpf$nclu[i]) {
-        write_modflow_variables(layers[j],lpf$mltarr[layers[j],i],lpf$zonarr[layers[j],i],lpf$iz[layers[j],i], file=file)
-      } 
+    if(lpf$nplpf != 0) {
+      for(i in 1:lpf$nplpf) {
+        write_modflow_variables(lpf$parnam[i],lpf$partyp[i],lpf$parval[i],lpf$nclu[i], file = file)
+        layers <- which(!is.na(lpf$mltarr[,i]))
+        for(j in 1:lpf$nclu[i]) {
+          write_modflow_variables(layers[j],lpf$mltarr[layers[j],i],lpf$zonarr[layers[j],i],lpf$iz[layers[j],i], file=file)
+        } 
+      }
     }
     
   # data set 10-16
-    for(k in 1:dis$NLAY) {
+    for(k in 1:dis$nlay) {
       
     # data set 10
       if('HK' %in% lpf$partyp) {
