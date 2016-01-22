@@ -2,6 +2,7 @@
 #' 
 #' \code{create_lpf} creates an \code{RMODFLOW} lpf object.
 #' 
+#' @param dis RMODFLOW dis object
 #' @param ilpfcb flag and unit number for writing cell-by-cell flow terms; defaults to 0
 #' @param hdry head assigned to cells that are converted to dry cells; defaults to -888
 #' @param nplpf number of lpf parameters; defaults to 0
@@ -61,7 +62,7 @@ create_lpf <- function(dis = create_dis(),
                        mltarr = NULL,
                        zonarr = NULL,
                        iz = NULL,
-                       hk = create_rmodflow_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                       hk = create_rmodflow_array(0.0001, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                        hani = create_rmodflow_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                        vka = hk,
                        ss = create_rmodflow_array(1E-5, dim = c(dis$nrow, dis$ncol, dis$nlay)),

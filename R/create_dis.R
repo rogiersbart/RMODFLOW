@@ -6,8 +6,8 @@
 #' @param nrow number of rows; defaults to 10
 #' @param ncol number of columns; defaults to 10
 #' @param nper number of stress periods; defaults to 1
-#' @param itmuni time unit; defaults to 0 (undefined)
-#' @param lenuni length unit; defaults to 0 (undefined)
+#' @param itmuni time unit; defaults to 1 (seconds)
+#' @param lenuni length unit; defaults to 2 (metres)
 #' @param laycbd vector of quasi-3D confining bed flags; defaults to 0 for all layers
 #' @param delr vector of cell widths along rows; defaults to 100 for all columns
 #' @param delc vector of cell widths along columns; defaults to 100 for all rows
@@ -24,13 +24,13 @@ create_dis <- function(nlay = 3,
                        nrow = 10,
                        ncol = 10,
                        nper = 1,
-                       itmuni = 0,
-                       lenuni = 0,
+                       itmuni = 1,
+                       lenuni = 2,
                        laycbd = rep(0, nlay),
                        delr = rep(100, ncol),
                        delc = rep(100, nrow),
                        top = matrix(0, nrow = nrow, ncol = ncol),
-                       botm = array(rep(seq(0,-100,length = nlay + 1)[2:(nlay + 1)], each = nrow * ncol), dim = c(nrow, ncol, nlay)),
+                       botm = array(rep(seq(0,-10 * nlay,length = nlay + 1)[2:(nlay + 1)], each = nrow * ncol), dim = c(nrow, ncol, nlay)),
                        perlen = rep(1, nper),
                        nstp = rep(1, nper),
                        tsmult = rep(1, nper),
@@ -38,7 +38,7 @@ create_dis <- function(nlay = 3,
   dis <- NULL
   
   # data set 0
-    #comments <- get_comments_from_lines(dis.lines)
+    # to provide comments, use ?comment on the resulting dis object
     
   # data set 1
     dis$nlay <- nlay

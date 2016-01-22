@@ -4,12 +4,13 @@
 \alias{create_dis}
 \title{Create an \code{RMODFLOW} dis object}
 \usage{
-create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1, itmuni = 0,
-  lenuni = 0, laycbd = rep(0, nlay), delr = rep(100, ncol),
+create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1, itmuni = 1,
+  lenuni = 2, laycbd = rep(0, nlay), delr = rep(100, ncol),
   delc = rep(100, nrow), top = matrix(0, nrow = nrow, ncol = ncol),
-  botm = array(rep(seq(0, -100, length = nlay + 1)[2:(nlay + 1)], each = nrow
-  * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1, nper), nstp = rep(1,
-  nper), tsmult = rep(1, nper), sstr = c("SS", rep("TS", nper - 1)))
+  botm = array(rep(seq(0, -10 * nlay, length = nlay + 1)[2:(nlay + 1)], each =
+  nrow * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1, nper),
+  nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS", rep("TS",
+  nper - 1)))
 }
 \arguments{
 \item{nlay}{number of layers; defaults to 3}
@@ -20,9 +21,9 @@ create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1, itmuni = 0,
 
 \item{nper}{number of stress periods; defaults to 1}
 
-\item{itmuni}{time unit; defaults to 0 (undefined)}
+\item{itmuni}{time unit; defaults to 1 (seconds)}
 
-\item{lenuni}{length unit; defaults to 0 (undefined)}
+\item{lenuni}{length unit; defaults to 2 (metres)}
 
 \item{laycbd}{vector of quasi-3D confining bed flags; defaults to 0 for all layers}
 

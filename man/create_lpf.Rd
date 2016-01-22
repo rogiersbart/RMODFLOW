@@ -12,7 +12,7 @@ create_lpf(dis = create_dis(), ilpfcb = 0, hdry = -888, nplpf = 0,
   layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay), wetfct = 0.1,
   iwetit = 1, ihdwet = 0, parnam = NULL, partyp = NULL, parval = NULL,
   nclu = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
-  hk = create_rmodflow_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  hk = create_rmodflow_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
   hani = create_rmodflow_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
   vka = hk, ss = create_rmodflow_array(1e-05, dim = c(dis$nrow, dis$ncol,
   dis$nlay)), sy = create_rmodflow_array(0.15, dim = c(dis$nrow, dis$ncol,
@@ -21,6 +21,8 @@ create_lpf(dis = create_dis(), ilpfcb = 0, hdry = -888, nplpf = 0,
   dis$ncol, dis$nlay)))
 }
 \arguments{
+\item{dis}{RMODFLOW dis object}
+
 \item{ilpfcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
 
 \item{hdry}{head assigned to cells that are converted to dry cells; defaults to -888}
