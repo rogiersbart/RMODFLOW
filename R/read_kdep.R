@@ -13,7 +13,7 @@ read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.choose(
                       huf = {cat('Please select corresponding huf file ...\n'); read_huf(file.choose(), dis = dis)}) {
   
   kdep_lines <- read_lines(file)
-  kdep <- NULL
+  kdep <- list()
   
   # data set 0
     data_set_0 <- read_modflow_comments(kdep_lines)

@@ -10,7 +10,7 @@
 read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choose()}) {
   
   lpf.lines <- read_lines(file)
-  lpf <- NULL
+  lpf <- list()
   
   # data set 0
     comments <- get_comments_from_lines(lpf.lines)

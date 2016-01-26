@@ -9,7 +9,7 @@
 read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}) {
   
   hob_lines <- read_lines(file)
-  hob <- NULL
+  hob <- list()
   
   # data set 0
     data_set_0 <- read_modflow_comments(hob_lines)

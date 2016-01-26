@@ -11,7 +11,7 @@ read_huf <- function(file = {cat('Please select huf file ...\n'); file.choose()}
                      dis = read_dis()) {
   
   huf_lines <- read_lines(file)
-  huf <- NULL
+  huf <- list()
 
   # data set 0
     data_set_0 <- read_modflow_comments(huf_lines)

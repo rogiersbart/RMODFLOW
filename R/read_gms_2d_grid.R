@@ -7,7 +7,7 @@
 #' @importFrom readr read_lines
 #' @export
 read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...\n'); file.choose()}) {
-  grid2d <- NULL
+  grid2d <- list()
   grid2d.lines <- read_lines(file)
   #2dgrid.lines <- remove.comments.from.lines(mlt.lines)
   grid2d.lines <- grid2d.lines[-1]    

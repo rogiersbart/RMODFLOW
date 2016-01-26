@@ -10,7 +10,7 @@
 read_bas <- function(file = {cat('Please select bas file ...\n'); file.choose()},
                      dis = read_dis()) {
   
-  bas <- NULL
+  bas <- list()
   bas_lines <- read_lines(file)
   
   # data set 0

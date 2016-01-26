@@ -10,7 +10,7 @@
 read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}) {
   
   dis_lines <- read_lines(file)
-  dis <- NULL
+  dis <- list()
   
   # data set 0
     data_set_0 <- read_modflow_comments(dis_lines)

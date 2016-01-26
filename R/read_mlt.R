@@ -9,7 +9,7 @@
 #' @export
 read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choose()},
                      dis = {cat('Please select dis file ...\n'); read_dis(file.choose())}) {
-  mlt <- NULL
+  mlt <- list()
   mlt.lines <- read_lines(file)
   
   # data set 0

@@ -8,7 +8,7 @@
 #' @export
 read_prj <- function(file = {cat('Please select prj file ...\n'); file.choose()}) {
   prj.lines <- read_lines(file)
-  prj <- NULL
+  prj <- list()
   prj$projection <- prj.lines[1]
   prj$origin <- as.numeric(remove_empty_strings(strsplit(prj.lines[2],' ')[[1]]))
   prj$rotation <- as.numeric(remove_empty_strings(strsplit(prj.lines[3],' ')[[1]])[1])

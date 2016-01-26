@@ -11,7 +11,7 @@ read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choose()}
                      read_all=F) {
   
   pvl_lines <- read_lines(file)
-  pvl <- NULL
+  pvl <- list()
   
   # data set 0
     comments <- get_comments_from_lines(pvl_lines)
