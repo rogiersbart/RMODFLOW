@@ -6,8 +6,8 @@
 \usage{
 create_oc(dis = create_dis(), ihedfm = NA, chedfm = NA, ihedun = 666,
   iddnfm = NA, cddnfm = NA, iddnun = NA, cboufm = NA, ibouun = NA,
-  compact_budget = TRUE, aux = FALSE, head_label = FALSE,
-  drawdown_label = FALSE, ibound_label = FALSE, iperoc = rep(1:dis$nper,
+  compact_budget = TRUE, aux = FALSE, head_label = TRUE,
+  drawdown_label = TRUE, ibound_label = TRUE, iperoc = rep(1:dis$nper,
   dis$nstp), itsoc = unlist(apply(data.frame(1, dis$nstp), 1, FUN =
   function(x) x[1]:x[2])), print_head = rep(FALSE, length(iperoc)),
   print_drawdown = rep(FALSE, length(iperoc)), print_budget = rep(FALSE,
