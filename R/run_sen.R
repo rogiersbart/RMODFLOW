@@ -3,12 +3,12 @@
 #' \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
 #' 
 #' @param file path to name file; typically '*.nam'
-#' @param modflow_executable name of the MODFLOW executable to use
+#' @param executable name of the MODFLOW executable to use
 #' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided
 #' @param include logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis
 #' @return sensitivity analysis results
 #' @export
-run_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)
+run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
 {
   dir <- dirname(file)
   file <- basename(file)
@@ -23,7 +23,7 @@ run_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)
     par <- pvl$parval
     par[which(include)] <- par2
   } 
-  run_modflow(paste0(dir,'/',file),modflow_executable,par)
+  run_modflow(paste0(dir,'/',file),executable,par)
   hpr_orig <- read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
   sens <- list()
   sens$dss <- matrix(NA,nrow=length(hob$obsnam),ncol=length(pvl$parval))
@@ -33,7 +33,7 @@ run_sen <- function(file,modflow_executable='mf2005',par=NULL,include=NULL)
     pvl$parval <- par
     pvl$parval[i] <- pvl$parval[i]*1.01
     write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    run_modflow(paste0(dir,'/',file),modflow_executable)
+    run_modflow(paste0(dir,'/',file),executable)
     hpr <- read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
     sens$dss[,i] <- (hpr$simulated_equivalent-hpr_orig$simulated_equivalent)/(0.01)
     sens$css[i] <- sqrt(sum(sens$dss[,i]^2)/hob$nh)

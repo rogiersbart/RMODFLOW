@@ -4,12 +4,12 @@
 \alias{run_sen}
 \title{Run a MODFLOW model sensitivity analysis, based on the parameter value file}
 \usage{
-run_sen(file, modflow_executable = "mf2005", par = NULL, include = NULL)
+run_sen(file, executable = "mf2005", par = NULL, include = NULL)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
 
-\item{modflow_executable}{name of the MODFLOW executable to use}
+\item{executable}{name of the MODFLOW executable to use}
 
 \item{par}{central parameter values (for all or only included parameters); parameter value file values are used if par is not provided}
 

@@ -4,13 +4,13 @@
 \alias{run_rsm}
 \title{Run a MODFLOW model response surface mapping}
 \usage{
-run_rsm(file, modflow_executable = "mf2005", par = NULL, include = NULL,
+run_rsm(file, executable = "mf2005", par = NULL, include = NULL,
   trans = NULL, lower, upper, n)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
 
-\item{modflow_executable}{name of the MODFLOW executable to use}
+\item{executable}{name of the MODFLOW executable to use}
 
 \item{par}{central parameter values (for all or only included parameters); current parameter value file values are used if par is not provided}
 

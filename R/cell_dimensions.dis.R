@@ -13,7 +13,7 @@ cell_dimensions.dis <- function(dis,
                                 include_volume = FALSE,
                                 include_faces = FALSE) {
   cell_dimensions <- list()
-  if (is.null(hed) | dim(hed)[4] == 1) {
+  if (is.null(hed) | ifelse(is.null(hed),FALSE,dim(hed)[4] == 1)) {
     cell_top <- dis$botm
     cell_top[,,1] <- dis$top
     cell_top[,,2:dis$nlay] <- dis$botm[,,c(1:(dis$nlay-1))]

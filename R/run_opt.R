@@ -3,7 +3,7 @@
 #' \code{run_modflow_opt} runs a MODFLOW optimization.
 #' 
 #' @param file path to name file; typically '*.nam'
-#' @param modflow_executable name of the MODFLOW executable to use
+#' @param executable name of the MODFLOW executable to use
 #' @param par initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided
 #' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
 #' @param trans vector of transformations; currently only 'log' is supported
@@ -16,7 +16,7 @@
 #' @importFrom hydroPSO hydroPSO
 #' @importFrom DEoptim DEoptim
 #' @export
-run_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
+run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
 {
   dir <- dirname(file)
   file <- basename(file)
@@ -49,7 +49,7 @@ run_opt <- function(file,modflow_executable='mf2005',par=NULL,include=NULL, tran
     pvl$parval[which(include)] <- par_include
     if(!is.null(trans)) pvl$parval[which(trans=='log')] <- exp(pvl$parval[which(trans=='log')])
     write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    run_modflow(paste0(dir,'/',file),modflow_executable)
+    run_modflow(paste0(dir,'/',file),executable)
     rmse <- performance(read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)])))$rmse
     cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'parval=',paste(format(pvl$parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
     return(rmse)

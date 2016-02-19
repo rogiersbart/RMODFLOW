@@ -2,7 +2,6 @@
 #' 
 #' @rdname cell_info
 #' @export
-cell_info <- function(...)
-{
+cell_info <- function(...) {
   UseMethod('cell_info')
 }
