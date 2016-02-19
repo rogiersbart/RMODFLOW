@@ -48,7 +48,7 @@ read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}
     rm(data_set_4)
     
   # data set 5
-    data_set_5 <- read_modflow_array(dis_lines,dis$nrow,dis$ncol,1)
+    data_set_5 <- read_modflow_array(dis_lines,dis$nrow,dis$ncol,1, ndim = 2)
     dis_lines <- data_set_5$remaining_lines
     dis$top <- data_set_5$array
     rm(data_set_5)

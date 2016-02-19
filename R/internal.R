@@ -102,18 +102,17 @@ read_modflow_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
   {
     for(k in 1:nlay) 
     { 
-      # Read in first row with format code
-      # If constant and nlay==1, return constant
-      # If constant and nlay!=1, fill layer with constant (is part of mf3darray!?)
-      if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('CONSTANT', '0'))
-      {
-        if(nlay==1)
-        {
-          array <- as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2])
+      if(remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('CONSTANT', '0')) {
+        if(nlay==1) {
+          array[1:length(array)] <- as.numeric(remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])[2])
           remaining_lines <- remaining_lines[-1]
-          if(ndim == 1) {
-            array <- array(array,dim=nrow*ncol*nlay)
-            class(array) <- 'rmodflow_1d_array'
+          if(!is.null(ndim)) {
+            if(ndim == 1) {
+              array <- array(array,dim=nrow*ncol*nlay)
+              class(array) <- 'rmodflow_1d_array'
+            } else if(ndim == 2) {
+              array <- array(array, dim = c(nrow, ncol))
+            }
           }
           return(list(array=array,remaining_lines=remaining_lines))
         } else {
