@@ -28,7 +28,7 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
       } else if(desc==' HEAD DEP BOUNDS') { name <- 'head_dep_bounds'
       } else {name <- desc}
       
-      if(kper == 1) bud[[name]][[kper]] <- list()
+      if(kstp == 1) bud[[name]][[kper]] <- list() # modify for cases where not all time steps are saved!
       bud[[name]][[kper]][[kstp]] <- list()
       bud[[name]][[kper]][[kstp]]$kstp <- kstp
       bud[[name]][[kper]][[kstp]]$kper <- kper
