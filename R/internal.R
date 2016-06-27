@@ -159,6 +159,11 @@ read_modflow_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
   } else if(ndim == 1) {
     array <- array(array,dim=nrow*ncol*nlay)
     class(array) <- 'rmodflow_1d_array'
+  } else if(ndim == 2) {
+    array <- as.matrix(array[,,1])
+    class(array) <- 'rmodflow_2d_array'     
+  } else if(ndim == 3) {
+    class(array) <- 'rmodflow_3d_array'
   }
   
   # Return output of reading function 
