@@ -128,8 +128,7 @@ plot.rmodflow_2d_array <- function(array,
         xy$y <- new_xy$y
       }
       if(!is.null(crs)) {
-        warning('crs with contours not implemented yet')
-        # xy <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
+        xy <- RMODFLOW:::convert_coordinates(xy,from=CRS(prj$projection),to=crs)
       }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
