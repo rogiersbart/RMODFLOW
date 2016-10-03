@@ -22,7 +22,8 @@ Imports:
     sp,
     rgdal,
     animation,
-    tools
+    tools,
+    lubridate
 URL: https://github.com/rogiersbart/RMODFLOW
 RoxygenNote: 5.0.1
 Suggests: knitr,
