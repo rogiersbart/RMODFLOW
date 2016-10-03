@@ -122,6 +122,15 @@ plot.rmodflow_2d_array <- function(array,
                  coord_equal() + ggtitle(title))
       }
     } else if(type=='contour') {
+      if(!is.null(prj)) {
+        new_xy <- convert_grid_to_xyz(x=xy$x,y=xy$y,prj=prj)
+        xy$x <- new_xy$x
+        xy$y <- new_xy$y
+      }
+      if(!is.null(crs)) {
+        warning('crs with contours not implemented yet')
+        # xy <- convert_coordinates(positions,from=CRS(prj$projection),to=crs)
+      }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)
