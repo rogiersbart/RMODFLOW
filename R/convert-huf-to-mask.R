@@ -9,5 +9,6 @@ convert_huf_to_mask <- function(huf, dis, bas) {
   mask <- RMODFLOW::convert_huf_to_nlay(huf = huf, dis = dis, bas = bas)
   mask[which(mask==0)] <- NA
   mask <- mask/mask
+  mask[which(huf$thck==0)] <- NA
   return(mask)
 }
