@@ -1,0 +1,29 @@
+templates:
+  params:
+    bootswatch: united
+    
+authors:
+  Bart Rogiers:
+    href: https://rogiersbart.github.io/
+    
+reference:
+  - title: "Read MODFLOW files"
+    desc: "Functions to read MODFLOW files and return RMODFLOW objects"
+    contents: 
+      - starts_with("read_")
+  - title: "Write MODFLOW files"
+    desc: "Functions to write RMODFLOW objects as MODFLOW files"
+    contents: 
+      - starts_with("write_")
+  - title: "Create RMODFLOW objects"
+    desc: "Functions to create RMODFLOW objects"
+    contents: 
+      - starts_with("create_")
+  - title: "Convert"
+    desc: "Convert"
+    contents:
+      - starts_with("convert_")
+  - title: "Other"
+    desc: "Other"
+    contents:
+      - !(starts_with("read_") | starts_with("write_") | starts_with("create_") | starts_with("convert_"))
