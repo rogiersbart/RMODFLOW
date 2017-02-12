@@ -13,7 +13,7 @@ vignette: >
 
 Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
 
-```{r, message = TRUE, results= 'asis'}
+```{r, message = TRUE, results= 'asis', eval = FALSE}
 library(RMODFLOW)
 dis <- create_dis()
 bas <- create_bas(dis=dis)

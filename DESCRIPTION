@@ -3,6 +3,7 @@ Type: Package
 Title: Pre- and post-processing of MODFLOW files
 Version: 0.4.0
 Date: 2016-06-27
+Authors@R: person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be")
 Author: Bart Rogiers <brogiers@sckcen.be>
 Maintainer: Bart Rogiers <brogiers@sckcen.be>
 Description: The RMODFLOW package provides a set of tools for groundwater flow
@@ -22,8 +23,10 @@ Imports:
     sp,
     rgdal,
     animation,
-    tools
+    tools,
+    lubridate
 URL: https://github.com/rogiersbart/RMODFLOW
+BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 5.0.1
 Suggests: knitr,
     rmarkdown

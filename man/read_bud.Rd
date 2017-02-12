@@ -5,7 +5,7 @@
 \title{Read a MODFLOW budget file}
 \usage{
 read_bud(file = {     cat("Please select bud file ...\\n")     file.choose()
-  }, binary = TRUE)
+  }, binary = TRUE, double_precision = FALSE)
 }
 \arguments{
 \item{file}{filename; typically 'Budget.out'}

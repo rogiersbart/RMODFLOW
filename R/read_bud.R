@@ -8,7 +8,9 @@
 #' @importFrom readr read_lines
 #' @export
 read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()},
-                     binary = TRUE) {
+                     binary = TRUE,
+                     double_precision = FALSE) {
+  if(double_precision) nbytes <- 8 else nbytes <- 4
   if(binary) {
     con <- file(file,open='rb')
     bud <- list()
@@ -38,12 +40,12 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
       bud[[name]][[kper]][[kstp]]$nlay <- readBin(con,what='integer',n=1)
       
       if(bud[[name]][[kper]][[kstp]]$nlay > 0) {
-        bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*bud[[name]][[kper]][[kstp]]$nlay,size=4),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,bud[[name]][[kper]][[kstp]]$nlay)),c(2,1,3))
+        bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*bud[[name]][[kper]][[kstp]]$nlay,size = nbytes),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,bud[[name]][[kper]][[kstp]]$nlay)),c(2,1,3))
       } else {
         bud[[name]][[kper]][[kstp]]$itype <- readBin(con,what='integer',n=1)
-        bud[[name]][[kper]][[kstp]]$delt <- readBin(con,what='numeric',n=1,size=4)
-        bud[[name]][[kper]][[kstp]]$pertim <- readBin(con,what='numeric',n=1,size=4)
-        bud[[name]][[kper]][[kstp]]$totim <- readBin(con,what='numeric',n=1,size=4)
+        bud[[name]][[kper]][[kstp]]$delt <- readBin(con,what='numeric',n=1,size = nbytes)
+        bud[[name]][[kper]][[kstp]]$pertim <- readBin(con,what='numeric',n=1,size = nbytes)
+        bud[[name]][[kper]][[kstp]]$totim <- readBin(con,what='numeric',n=1,size = nbytes)
         if(bud[[name]][[kper]][[kstp]]$itype==5) {
           bud[[name]][[kper]][[kstp]]$nval <- readBin(con,what='integer',n=1)
         } else {
@@ -64,32 +66,34 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
             names(bud[[name]][[kper]][[kstp]]$data)[2] <- 'value'
             # add reading ctmps here!
             for(nr in 1:bud[[name]][[kper]][[kstp]]$nlist) {
-              bud[[name]][[kper]][[kstp]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$nval,size=4))
+              bud[[name]][[kper]][[kstp]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$nval,size = nbytes))
             }
           }
         }
         if(bud[[name]][[kper]][[kstp]]$itype %in% c(0,1)) {
-          bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*abs(bud[[name]][[kper]][[kstp]]$nlay),size=4),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,abs(bud[[name]][[kper]][[kstp]]$nlay))),c(2,1,3))
+          bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*abs(bud[[name]][[kper]][[kstp]]$nlay),size = nbytes),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,abs(bud[[name]][[kper]][[kstp]]$nlay))),c(2,1,3))
           class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_3d_array'
         }
         if(bud[[name]][[kper]][[kstp]]$itype ==3) {
           bud[[name]][[kper]][[kstp]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
           class(bud[[name]][[kper]][[kstp]]$layer) <- 'rmodflow_2d_array'
-          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
+          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size = nbytes),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
           class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_2d_array'
         }
         if(bud[[name]][[kper]][[kstp]]$itype ==4) {
-          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size=4),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
+          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size = nbytes),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
           class(bud[[name]][[kper]][[kstp]]$data) <- 'rmodflow_2d_array'
         }
       }
       
       # set data as the main list item, and include all parameters as attributes
-        for(i in 1:(length(bud[[name]][[kper]][[kstp]])-1)) {
-          attr(bud[[name]][[kper]][[kstp]]$data,names(bud[[name]][[kper]][[kstp]])[i]) <- bud[[name]][[kper]][[kstp]][[i]]
+        if("data" %in% names(bud[[name]][[kper]][[kstp]])) {
+          for(i in 1:(length(bud[[name]][[kper]][[kstp]])-1)) {
+            attr(bud[[name]][[kper]][[kstp]]$data,names(bud[[name]][[kper]][[kstp]])[i]) <- bud[[name]][[kper]][[kstp]][[i]]
+          }
+          bud[[name]][[kper]][[kstp]] <- bud[[name]][[kper]][[kstp]]$data
         }
-        bud[[name]][[kper]][[kstp]] <- bud[[name]][[kper]][[kstp]]$data
-        
+
       kstp <- readBin(con,what='integer',n=1)
       kper <- readBin(con,what='integer',n=1)
       desc <- readChar(con,nchars=16)
@@ -97,16 +101,20 @@ read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()}
     
     # create rmodflow_4d_array for list items with itype 0 or 1
       for (i in 1:length(bud)) {
-        if (attr(bud[[i]][[1]][[1]],'itype') %in% c(0,1)) {
-          bud_item <- bud[[i]]
-          bud[[i]] <- unlist(bud_item)
-          bud[[i]] <- create_rmodflow_array(bud[[i]], dim = c(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')), length(bud[[i]])/prod(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')))))
-          ats <- attributes(bud_item[[length(bud_item)]][[length(bud_item[[length(bud_item)]])]])
-          ats <- ats[-which(names(ats) == 'dim')]
-          for(at in 1:length(ats)) {
-            attr(bud[[i]], names(ats)[at]) <- ats[at][[1]]
-          } 
-          class(bud[[i]]) <- 'rmodflow_4d_array'
+        # problems when nlist is 0 and hence no data is present -> check for itype in names
+        # also for storage the first timestep seems to be empty -> not changed into 4d array at the moment
+        if (! "itype" %in% names(bud[[i]][[1]][[1]]) & !is.null(bud[[i]][[1]][[1]])) {
+          if (attr(bud[[i]][[1]][[1]],'itype') %in% c(0,1)) {
+            bud_item <- bud[[i]]
+            bud[[i]] <- unlist(bud_item)
+            bud[[i]] <- create_rmodflow_array(bud[[i]], dim = c(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')), length(bud[[i]])/prod(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')))))
+            ats <- attributes(bud_item[[length(bud_item)]][[length(bud_item[[length(bud_item)]])]])
+            ats <- ats[-which(names(ats) == 'dim')]
+            for(at in 1:length(ats)) {
+              attr(bud[[i]], names(ats)[at]) <- ats[at][[1]]
+            } 
+            class(bud[[i]]) <- 'rmodflow_4d_array'
+          }
         }
       }
         

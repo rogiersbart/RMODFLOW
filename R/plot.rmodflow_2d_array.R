@@ -47,16 +47,22 @@ plot.rmodflow_2d_array <- function(array,
                           height=NULL,
                           title = NULL) {
   if(plot3d) {
-    x <- (cumsum(dis$delr)-dis$delr/2)
-    y <- sum(dis$delc) - (cumsum(dis$delc)-dis$delc/2)
+    xyz <- cell_coordinates(dis)
+    x <- xyz$x[,,1]
+    y <- xyz$y[,,1]
+    if(!is.null(prj)) {
+      xyz <- convert_grid_to_xyz(x=c(x),y=c(y),prj=prj)
+      x[,] <- xyz$x
+      y[,] <- xyz$y
+    }
     z <- t(height)*height_exaggeration
     if(!add) rgl::open3d()
     colorlut <- colorRampPalette(colour_palette(nlevels))(25) # height color lookup table
     col <- colorlut[ round(approx(seq(zlim[1],zlim[2],length=25+1),seq(0.5,25+0.5,length=25+1),xout=c(t(array)),rule=2)$y) ] # assign colors to heights for each point
     alpha <- rep(1,length(col))
     alpha[which(c(t(mask))==0)] <- 0
-    if(type=='fill') rgl::surface3d(x,y,z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
-    if(type=='grid') rgl::surface3d(x,y,z,front='lines',alpha=alpha,back='lines',smooth=FALSE) 
+    if(type=='fill') rgl::surface3d(t(x),t(y),z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
+    if(type=='grid') rgl::surface3d(t(x),t(y),z,front='lines',alpha=alpha,back='lines',smooth=FALSE) 
   } else {
     xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
@@ -116,6 +122,14 @@ plot.rmodflow_2d_array <- function(array,
                  coord_equal() + ggtitle(title))
       }
     } else if(type=='contour') {
+      if(!is.null(prj)) {
+        new_xy <- convert_grid_to_xyz(x=xy$x,y=xy$y,prj=prj)
+        xy$x <- new_xy$x
+        xy$y <- new_xy$y
+      }
+      if(!is.null(crs)) {
+        xy <- RMODFLOW:::convert_coordinates(xy,from=CRS(prj$projection),to=crs)
+      }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)

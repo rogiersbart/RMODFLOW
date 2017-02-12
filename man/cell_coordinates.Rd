@@ -7,7 +7,7 @@
 \usage{
 \method{cell_coordinates}{dis}(dis, include_faces = FALSE)
 
-\method{cell_coordinates}{huf}(huf, dis = NULL)
+\method{cell_coordinates}{huf}(huf, dis = NULL, include_faces = FALSE)
 }
 \arguments{
 \item{dis}{dis object}
@@ -15,6 +15,10 @@
 \item{include_faces}{logical; should face coordinates be included?}
 
 \item{huf}{huf object}
+
+\item{dis}{dis object, corresponding to the huf object}
+
+\item{include_faces}{logical; should face coordinates be included?}
 }
 \value{
 list with with cell coordinate 3d arrays

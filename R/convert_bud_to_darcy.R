@@ -10,13 +10,16 @@ convert_bud_to_darcy <- function(bud, dis, hed = NULL) {
   delc <- create_rmodflow_array(rep(dis$delc,dis$ncol),dim=dim(bud$flow_right_face))
   delr <- create_rmodflow_array(rep(dis$delr,each=dis$nrow),dim=dim(bud$flow_right_face))
   darcy <- list()
+  ## temp fix for Cas' files
+  ## TODO: fix this when either of the components is missing
+    if(!"flow_front_face" %in% names(bud)) bud$flow_front_face <- bud$flow_right_face * 0
   darcy$right <- bud$flow_right_face
   darcy$front <- -bud$flow_front_face
   darcy$lower <- -bud$flow_lower_face/delc/delr
   darcy$left <- darcy$back <- darcy$upper <- darcy$right * 0
-  darcy$left[,c(2:dis$ncol),,] <- darcy$right[,c(1:(dis$ncol-1)),,]
-  darcy$back[c(2:dis$nrow),,,] <- darcy$front[c(1:(dis$nrow-1)),,,]
-  darcy$upper[,,c(2:dis$nlay),] <- darcy$lower[,,c(1:(dis$nlay-1)),]
+  if(dis$ncol > 1) darcy$left[,c(2:dis$ncol),,] <- darcy$right[,c(1:(dis$ncol-1)),,] else darcy$left <- darcy$right * 0
+  if(dis$nrow > 1) darcy$back[c(2:dis$nrow),,,] <- darcy$front[c(1:(dis$nrow-1)),,,] else darcy$back <- darcy$front * 0
+  if(dis$nlay > 1) darcy$upper[,,c(2:dis$nlay),] <- darcy$lower[,,c(1:(dis$nlay-1)),] else darcy$upper <- darcy$lower * 0
   darcy$right <- darcy$right/delc/thck
   darcy$left <- darcy$left/delc/thck
   darcy$front <- darcy$front/delr/thck

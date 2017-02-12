@@ -20,12 +20,14 @@ cell_coordinates.dis <- function(dis,
   cell_coordinates$y[,,] <- rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)
   cell_coordinates$x[,,] <- rep(c(cumsum(dis$delr)-dis$delr/2),each=dis$nrow)
   if(include_faces) {
+    dis$delr <- array(rep(dis$delr,each=dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    dis$delc <- array(rep(dis$delc,dis$ncol),dim=c(dis$nrow,dis$ncol,dis$nlay))
     cell_coordinates$lower <- dis$botm
     cell_coordinates$upper <- 2 * cell_coordinates$z - dis$botm
     cell_coordinates$left <- cell_coordinates$x - dis$delr/2
     cell_coordinates$right <- cell_coordinates$x + dis$delr/2 
-    cell_coordinates$front <- cell_coordinates$y - rev(dis$delc)/2
-    cell_coordinates$back <- cell_coordinates$y + rev(dis$delc)/2
+    cell_coordinates$front <- cell_coordinates$y - dis$delc/2
+    cell_coordinates$back <- cell_coordinates$y + dis$delc/2
   }
   return(cell_coordinates)
 }
