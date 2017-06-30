@@ -1,0 +1,4 @@
+# WEL: Well package file created on 2017-05-30 by ModelMuse version 3.9.0.0.
+     1     9 AUXILIARY IFACE # DataSet 2: MXACTW IWELCB Option
+     1     0 # Data Set 5: ITMP NP Stress period 1
+     1     5     6  3.000000000000E-001      0 # Data Set 6: Layer Row Column Bhead Q IFACE Intersected by Well with formula: 0.3

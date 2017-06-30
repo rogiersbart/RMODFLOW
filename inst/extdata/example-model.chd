@@ -1,0 +1,21 @@
+# CHD: Time-Variant Specified-Head package file created on 2017-05-30 by ModelMuse version 3.9.0.0.
+# These comments will be printed at the beginning of the CHD input file.
+PARAMETER     2    10 # PARAMETER NPCHD MXL
+    12 AUXILIARY IFACE # MXACTC Option
+CHD_Par1 CHD  3.000000000000E+001      5 # Data Set 3: PARNAM PARTYP Parval NLST
+     1     1    10  5.000000000000E-002   5.000000000000E-002      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     2    10  1.500000000000E-001   1.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     3    10  2.500000000000E-001   2.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     4    10  3.500000000000E-001   3.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     5    10  4.500000000000E-001   4.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+CHD_Par2 CHD  3.000000000000E+001      5 # Data Set 3: PARNAM PARTYP Parval NLST
+     1     1    10  9.500000000000E-001   9.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     2    10  8.500000000000E-001   8.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     3    10  7.500000000000E-001   7.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     4    10  6.500000000000E-001   6.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     1     5    10  5.500000000000E-001   5.500000000000E-001      0 # Data Set 4b: Layer Row Column Shdfact Ehdfact IFACE
+     2     2 # Data Set 5: ITMP NP Stress period 1
+     1     1     1  3.000000000000E+001   3.000000000000E+001      0 # Data Set 6: Layer Row Column Shead Ehead IFACE
+     1    10    10  2.900000000000E+001   2.900000000000E+001      0 # Data Set 6: Layer Row Column Shead Ehead IFACE
+CHD_Par1 # Data Set 7: PARNAM
+CHD_Par2 # Data Set 7: PARNAM
