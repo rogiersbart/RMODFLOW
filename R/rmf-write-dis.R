@@ -42,6 +42,7 @@ rmf_write_dis <- function(dis,
 }
 
 #' @describeIn rmf_write_dis Deprecated function name
+#' @export
 write_dis <- function(...) {
   .Deprecated(new = "rmf_write_dis", old = "write_dis")
   rmf_write_dis(...)

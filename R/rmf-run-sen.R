@@ -44,6 +44,7 @@ rmf_run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
 }
 
 #' @describeIn rmf_run_sen Deprecated function name
+#' @export
 run_sen <- function(...) {
   .Deprecated(new = "rmf_run_sen", old = "run_sen")
   rmf_run_sen(...)

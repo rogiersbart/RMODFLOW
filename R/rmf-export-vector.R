@@ -7,6 +7,7 @@ rmf_export_vector <- function(...) {
 }
 
 #' @describeIn rmf_export_vector Deprecated function name
+#' @export
 export_vector <- function(...) {
   .Deprecated(new = "rmf_export_vector", old = "export_vector")
   rmf_export_vector(...)

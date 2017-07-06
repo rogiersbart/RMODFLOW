@@ -24,6 +24,7 @@ rmf_convert_huf_to_dis <- function(huf,
 }
 
 #' @describeIn rmf_convert_huf_to_dis Deprecated function name
+#' @export
 convert_huf_to_dis <- function(...) {
   .Deprecated(new = "rmf_convert_huf_to_dis", old = "convert_huf_to_dis")
   rmf_convert_huf_to_dis(...)

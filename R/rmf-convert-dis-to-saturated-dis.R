@@ -21,6 +21,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
 }
 
 #' @describeIn rmf_convert_dis_to_saturated_dis Deprecated function name
+#' @export
 convert_dis_to_saturated_dis <- function(...) {
   .Deprecated(new = "rmf_convert_dis_to_saturated_dis", old = "convert_dis_to_saturated_dis")
   rmf_convert_dis_to_saturated_dis(...)

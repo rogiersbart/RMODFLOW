@@ -14,7 +14,8 @@ rmf_write_nam <- function(nam,
 }
 
 #' @describeIn rmf_write_nam Deprecated function name
-read_dis <- function(...) {
+#' @export
+write_nam <- function(...) {
   .Deprecated(new = "rmf_write_nam", old = "write_nam")
   rmf_write_nam(...)
 }

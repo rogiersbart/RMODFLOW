@@ -25,6 +25,7 @@ rmf_convert_ibound_to_neighbours <- function(ibound) {
 }
 
 #' @describeIn rmf_convert_ibound_to_neighbours Deprecated function name
+#' @export
 convert_ibound_to_neighbours <- function(...) {
   .Deprecated(new = "rmf_convert_ibound_to_neighbours", old = "convert_ibound_to_neighbours")
   rmf_convert_ibound_to_neighbours(...)

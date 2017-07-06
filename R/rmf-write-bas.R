@@ -45,6 +45,7 @@ rmf_write_bas <- function(bas,
 }
 
 #' @describeIn rmf_write_bas Deprecated function name
+#' @export
 write_bas <- function(...) {
   .Deprecated(new = "rmf_write_bas", old = "write_bas")
   rmf_write_bas(...)

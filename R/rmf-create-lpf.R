@@ -131,6 +131,7 @@ rmf_create_lpf <- function(dis = create_dis(),
 }
 
 #' @describeIn rmf_create_lpf Deprecated function name
+#' @export
 create_lpf <- function(...) {
   .Deprecated(new = "rmf_create_lpf", old = "create_lpf")
   rmf_create_lpf(...)

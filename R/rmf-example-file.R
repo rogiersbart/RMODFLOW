@@ -10,6 +10,11 @@ rmf_example_file <- function(filename = NULL) {
   if(is.null(filename)) {
     dir(system.file("extdata", package = "RMODFLOW"))
   } else {
-    return(system.file(paste0("extdata/", filename), package = "RMODFLOW")  )
+    filename <- system.file(paste0("extdata/", filename), package = "RMODFLOW")
+    if(filename == "") {
+      stop("Example file not found. Please check the list of example files with rmf_example_file().")
+    } else {
+      return(filename)
+    }
   }
 }

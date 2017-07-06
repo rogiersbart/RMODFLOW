@@ -75,6 +75,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_dis Deprecated function name
+#' @export
 read_dis <- function(...) {
   .Deprecated(new = "rmf_read_dis", old = "read_dis")
   rmf_read_dis(...)

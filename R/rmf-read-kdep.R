@@ -69,6 +69,7 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
 }
 
 #' @describeIn rmf_read_kdep Deprecated function name
+#' @export
 read_kdep <- function(...) {
   .Deprecated(new = "rmf_read_kdep", old = "read_kdep")
   rmf_read_kdep(...)

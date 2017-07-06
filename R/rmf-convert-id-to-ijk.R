@@ -24,6 +24,7 @@ rmf_convert_id_to_ijk <- function(id,
 }
 
 #' @describeIn rmf_convert_id_to_ijk Deprecated function name
+#' @export
 convert_id_to_ijk <- function(...) {
   .Deprecated(new = "rmf_convert_id_to_ijk", old = "convert_id_to_ijk")
   rmf_convert_id_to_ijk(...)

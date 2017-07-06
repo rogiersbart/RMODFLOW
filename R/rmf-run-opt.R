@@ -83,6 +83,7 @@ rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
 }
 
 #' @describeIn rmf_run_opt Deprecated function name
+#' @export
 run_opt <- function(...) {
   .Deprecated(new = "rmf_run_opt", old = "run_opt")
   rmf_run_opt(...)

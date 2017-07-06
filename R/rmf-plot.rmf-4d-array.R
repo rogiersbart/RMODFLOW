@@ -28,6 +28,7 @@ rmf_plot.rmf_4d_array <- function(array,
 }
 
 #' @describeIn rmf_plot.rmf_4d_array Deprecated function name
+#' @export
 plot.rmf_4d_array <- function(...) {
   .Deprecated(new = "rmf_plot.rmf_4d_array", old = "plot.rmf_4d_array")
   rmf_plot.rmf_4d_array(...)

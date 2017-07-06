@@ -36,6 +36,7 @@ rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_pvl Deprecated function name
+#' @export
 read_pvl <- function(...) {
   .Deprecated(new = "rmf_read_pvl", old = "read_pvl")
   rmf_read_pvl(...)

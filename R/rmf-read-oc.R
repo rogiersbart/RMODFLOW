@@ -90,6 +90,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
 }
 
 #' @describeIn rmf_read_oc Deprecated function name
+#' @export
 read_oc <- function(...) {
   .Deprecated(new = "rmf_read_oc", old = "read_oc")
   rmf_read_oc(...)

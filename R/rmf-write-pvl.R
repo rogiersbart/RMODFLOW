@@ -22,6 +22,7 @@ rmf_write_pvl <- function(pvl,
 }
 
 #' @describeIn rmf_write_pvl Deprecated function name
+#' @export
 write_pvl <- function(...) {
   .Deprecated(new = "rmf_write_pvl", old = "write_pvl")
   rmf_write_pvl(...)

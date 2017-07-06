@@ -14,6 +14,7 @@ rmf_write_prj <- function(prj,
 }
 
 #' @describeIn rmf_write_prj Deprecated function name
+#' @export
 write_prj <- function(...) {
   .Deprecated(new = "rmf_write_prj", old = "write_prj")
   rmf_write_prj(...)

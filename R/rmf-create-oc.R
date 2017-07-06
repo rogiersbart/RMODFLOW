@@ -90,6 +90,7 @@ rmf_create_oc <- function(dis = create_dis(),
 }
 
 #' @describeIn rmf_create_oc Deprecated function name
+#' @export
 create_oc <- function(...) {
   .Deprecated(new = "rmf_create_oc", old = "create_oc")
   rmf_create_oc(...)

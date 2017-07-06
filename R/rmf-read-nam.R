@@ -15,6 +15,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_nam Deprecated function name
+#' @export
 read_nam <- function(...) {
   .Deprecated(new = "rmf_read_nam", old = "read_nam")
   rmf_read_nam(...)

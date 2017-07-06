@@ -129,12 +129,14 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_hob Deprecated function name
+#' @export
 read_hob <- function(...) {
   .Deprecated(new = "rmf_read_hob", old = "read_hob")
   rmf_read_hob(...)
 }
 
 #' @describeIn rmf_read_hob Compatible with default ModelMuse file extensions
+#' @export
 rmf_read_ob_hob <- function(...) {
   rmf_read_hpr(...)
 }

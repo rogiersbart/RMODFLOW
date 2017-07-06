@@ -56,6 +56,7 @@ rmf_convert_bud_to_darcy <- function(bud,
 }
 
 #' @describeIn rmf_convert_bud_to_darcy Deprecated function name
+#' @export
 convert_bud_to_darcy <- function(...) {
   .Deprecated(new = "rmf_convert_bud_to_darcy", old = "convert_bud_to_darcy")
   rmf_convert_bud_to_darcy(...)

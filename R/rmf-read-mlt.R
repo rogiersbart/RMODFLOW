@@ -39,6 +39,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_mlt Deprecated function name
+#' @export
 read_mlt <- function(...) {
   .Deprecated(new = "rmf_read_mlt", old = "read_mlt")
   rmf_read_mlt(...)

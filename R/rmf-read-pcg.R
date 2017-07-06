@@ -45,6 +45,7 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_pcg Deprecated function name
+#' @export
 read_pcg <- function(...) {
   .Deprecated(new = "rmf_read_pcg", old = "read_pcg")
   rmf_read_pcg(...)

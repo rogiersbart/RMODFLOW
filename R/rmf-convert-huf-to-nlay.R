@@ -19,6 +19,7 @@ rmf_convert_huf_to_nlay <- function(huf, dis, bas) {
 }
 
 #' @describeIn rmf_convert_huf_to_nlay Deprecated function name
+#' @export
 convert_huf_to_nlay <- function(...) {
   .Deprecated(new = "rmf_convert_huf_to_nlay", old = "convert_huf_to_nlay")
   rmf_convert_huf_to_nlay(...)

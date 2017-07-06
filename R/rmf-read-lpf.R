@@ -183,6 +183,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_lpf Deprecated function name
+#' @export
 read_lpf <- function(...) {
   .Deprecated(new = "rmf_read_lpf", old = "read_lpf")
   rmf_read_lpf(...)

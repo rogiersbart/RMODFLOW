@@ -2,14 +2,19 @@
 % Please edit documentation in R/rmf-read-hed.R
 \name{rmf_read_hed}
 \alias{rmf_read_hed}
-\alias{rmf_read_hed}
+\alias{read_hed}
 \alias{rmf_read_fhd}
 \alias{rmf_read_bhd}
 \title{Read a MODFLOW head file}
 \usage{
-rmf_read_hed(...)
+rmf_read_hed(file = {     cat("Please select hed file ...\\n")    
+  file.choose() }, dis = {     cat("Please select dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, bas = {    
+  cat("Please select bas file ...\\n")     rmf_read_bas(file.choose(), dis =
+  dis) }, huf = NULL, convert_hnoflo_to_NA = TRUE, binary = TRUE,
+  precision = "single")
 
-rmf_read_hed(...)
+read_hed(...)
 
 rmf_read_fhd(...)
 
@@ -34,7 +39,7 @@ object of class hed
 }
 \section{Functions}{
 \itemize{
-\item \code{rmf_read_hed}: Deprecated function name
+\item \code{read_hed}: Deprecated function name
 
 \item \code{rmf_read_fhd}: Compatible with default ModelMuse file extension
 

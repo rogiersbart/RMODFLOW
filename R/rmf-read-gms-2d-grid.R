@@ -30,6 +30,7 @@ rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...
 }
 
 #' @describeIn rmf_read_gms_2d_grid Deprecated function name
+#' @export
 rmf_read_gms_2d_grid <- function(...) {
   .Deprecated(new = "rmf_read_gms_2d_grid", old = "read_gms_2d_grid")
   rmf_read_gms_2d_grid(...)

@@ -54,6 +54,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_bas Deprecated function name
+#' @export
 read_bas <- function(...) {
   .Deprecated(new = "rmf_read_bas", old = "read_bas")
   rmf_read_bas(...)

@@ -40,6 +40,7 @@ rmf_write_oc <- function(oc,
 }
 
 #' @describeIn rmf_write_oc Deprecated function name
+#' @export
 write_oc <- function(...) {
   .Deprecated(new = "rmf_write_oc", old = "write_oc")
   rmf_write_oc(...)

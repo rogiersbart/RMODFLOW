@@ -7,6 +7,7 @@ rmf_cell_dimensions <- function(...) {
 }
 
 #' @describeIn rmf_cell_dimensions Deprecated function name
+#' @export
 cell_dimensions <- function(...) {
   .Deprecated(new = "rmf_cell_dimensions", old = "cell_dimensions")
   rmf_cell_dimensions(...)

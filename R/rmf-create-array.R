@@ -18,6 +18,7 @@ rmf_create_array <- function(obj = NA, dim = NULL) {
 }
 
 #' @describeIn rmf_create_array Deprecated function name
+#' @export
 create_rmodflow_array <- function(...) {
   .Deprecated(new = "rmf_create_array", old = "create_rmodflow_array")
   rmf_create_array(...)

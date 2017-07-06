@@ -55,6 +55,7 @@ rmf_create_pcg <- function(mxiter = 20,
 }
 
 #' @describeIn rmf_create_pcg Deprecated function name
+#' @export
 create_pcg <- function(...) {
   .Deprecated(new = "rmf_create_pcg", old = "create_pcg")
   rmf_create_pcg(...)

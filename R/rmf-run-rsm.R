@@ -63,6 +63,7 @@ rmf_run_rsm <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
 }
 
 #' @describeIn rmf_run_rsm Deprecated function name
+#' @export
 run_rsm <- function(...) {
   .Deprecated(new = "rmf_run_rsm", old = "run_rsm")
   rmf_run_rsm(...)

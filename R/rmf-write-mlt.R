@@ -30,6 +30,7 @@ rmf_write_mlt <- function(mlt,
 }
 
 #' @describeIn rmf_write_mlt Deprecated function name
+#' @export
 write_mlt <- function(...) {
   .Deprecated(new = "rmf_write_mlt", old = "write_mlt")
   rmf_write_mlt(...)

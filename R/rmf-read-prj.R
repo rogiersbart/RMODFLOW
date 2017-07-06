@@ -18,6 +18,7 @@ rmf_read_prj <- function(file = {cat('Please select prj file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_prj Deprecated function name
+#' @export
 read_prj <- function(...) {
   .Deprecated(new = "rmf_read_prj", old = "read_prj")
   rmf_read_prj(...)

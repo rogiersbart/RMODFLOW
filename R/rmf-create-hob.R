@@ -99,6 +99,7 @@ rmf_create_hob <- function(locations,
 }
 
 #' @describeIn rmf_create_hob Deprecated function name
+#' @export
 create_hob <- function(...) {
   .Deprecated(new = "rmf_create_hob", old = "create_hob")
   rmf_create_hob(...)

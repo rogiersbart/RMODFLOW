@@ -14,6 +14,7 @@ rmf_convert_huf_to_mask <- function(huf, dis, bas) {
 }
 
 #' @describeIn rmf_convert_huf_to_mask Deprecated function name
+#' @export
 convert_huf_to_mask <- function(...) {
   .Deprecated(new = "rmf_convert_huf_to_mask", old = "convert_huf_to_mask")
   rmf_convert_huf_to_mask(...)

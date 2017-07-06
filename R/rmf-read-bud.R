@@ -205,6 +205,7 @@ rmf_read_bud <- function(file = {cat('Please select bud file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_bud Deprecated function name
+#' @export
 rmf_read_bud <- function(...) {
   .Deprecated(new = "rmf_read_bud", old = "read_bud")
   rmf_read_bud(...)

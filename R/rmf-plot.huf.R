@@ -53,6 +53,7 @@ rmf_plot.huf <- function(huf,
 }
 
 #' @describeIn rmf_plot.huf Deprecated function name
+#' @export
 plot.huf <- function(...) {
   .Deprecated(new = "rmf_plot.huf", old = "plot.huf")
   rmf_plot.huf(...)

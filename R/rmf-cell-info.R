@@ -7,6 +7,7 @@ rmf_cell_info <- function(...) {
 }
 
 #' @describeIn rmf_cell_info Deprecated function name
+#' @export
 cell_info <- function(...) {
   .Deprecated(new = "rmf_cell_info", old = "cell_info")
   rmf_cell_info(...)

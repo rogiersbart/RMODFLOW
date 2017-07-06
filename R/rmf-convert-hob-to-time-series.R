@@ -14,6 +14,7 @@ rmf_convert_hob_to_time_series <- function(hob,
 }
 
 #' @describeIn rmf_convert_hob_to_time_series Deprecated function name
+#' @export
 convert_hob_to_time_series <- function(...) {
   .Deprecated(new = "rmf_convert_hob_to_time_series", old = "convert_hob_to_time_series")
   rmf_convert_hob_to_time_series(...)

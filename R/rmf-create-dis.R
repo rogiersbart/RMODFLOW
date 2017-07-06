@@ -76,6 +76,7 @@ rmf_create_dis <- function(nlay = 3,
 }
 
 #' @describeIn rmf_create_dis Deprecated function name
+#' @export
 create_dis <- function(...) {
   .Deprecated(new = "rmf_create_dis", old = "create_dis")
   rmf_create_dis(...)

@@ -130,6 +130,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_huf Deprecated function name
+#' @export
 read_huf <- function(...) {
   .Deprecated(new = "rmf_read_huf", old = "read_huf")
   rmf_read_huf(...)

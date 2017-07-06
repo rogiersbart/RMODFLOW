@@ -162,17 +162,20 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_hed Deprecated function name
-rmf_read_hed <- function(...) {
+#' @export
+read_hed <- function(...) {
   .Deprecated(new = "rmf_read_hed", old = "read_hed")
   rmf_read_hed(...)
 }
 
 #' @describeIn rmf_read_hed Compatible with default ModelMuse file extension
+#' @export
 rmf_read_fhd <- function(...) {
   rmf_read_hed(..., binary = FALSE)
 }
 
 #' @describeIn rmf_read_hed Compatible with default ModelMuse file extension
+#' @export
 rmf_read_bhd <- function(...) {
   rmf_read_hed(..., binary = TRUE)
 }

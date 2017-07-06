@@ -36,6 +36,7 @@ rmf_create_nam <- function(...) {
 }
 
 #' @describeIn rmf_create_nam Deprecated function name
+#' @export
 create_nam <- function(...) {
   .Deprecated(new = "rmf_create_nam", old = "create_nam")
   rmf_create_nam(...)

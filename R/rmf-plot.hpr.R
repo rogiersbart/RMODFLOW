@@ -23,6 +23,7 @@ rmf_plot.hpr <- function(hpr,type='scatter') {
 }
 
 #' @describeIn rmf_plot.hpr Deprecated function name
+#' @export
 plot.hpr <- function(...) {
   .Deprecated(new = "rmf_plot.hpr", old = "plot.hpr")
   rmf_plot.hpr(...)

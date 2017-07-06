@@ -2,14 +2,14 @@
 % Please edit documentation in R/rmf-write-nam.R
 \name{rmf_write_nam}
 \alias{rmf_write_nam}
-\alias{read_dis}
+\alias{write_nam}
 \title{Write a MODFLOW name file}
 \usage{
 rmf_write_nam(nam, file = {    
   cat("Please select nam file to overwrite or provide new filename ...\\n")    
   file.choose() })
 
-read_dis(...)
+write_nam(...)
 }
 \arguments{
 \item{nam}{an \code{\link{RMODFLOW}} nam object}
@@ -24,6 +24,6 @@ read_dis(...)
 }
 \section{Functions}{
 \itemize{
-\item \code{read_dis}: Deprecated function name
+\item \code{write_nam}: Deprecated function name
 }}
 

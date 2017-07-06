@@ -110,6 +110,7 @@ rmf_write_lpf <- function(lpf,
 }
 
 #' @describeIn rmf_write_lpf Deprecated function name
+#' @export
 write_lpf <- function(...) {
   .Deprecated(new = "rmf_write_lpf", old = "write_lpf")
   rmf_write_lpf(...)

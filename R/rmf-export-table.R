@@ -7,6 +7,7 @@ rmf_export_table <- function(...) {
 }
 
 #' @describeIn rmf_export_table Deprecated function name
+#' @export
 export_table <- function(...) {
   .Deprecated(new = "rmf_export_table", old = "export_table")
   rmf_export_table(...)

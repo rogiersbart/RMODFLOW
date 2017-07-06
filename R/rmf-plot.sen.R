@@ -21,6 +21,7 @@ rmf_plot.sen <- function(sen,type='css')
 }
 
 #' @describeIn rmf_plot.sen Deprecated function name
+#' @export
 plot.sen <- function(...) {
   .Deprecated(new = "rmf_plot.sen", old = "plot.sen")
   rmf_plot.sen(...)

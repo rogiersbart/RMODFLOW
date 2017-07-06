@@ -55,6 +55,7 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
 }
 
 #' @describeIn rmf_create_bas Deprecated function name
+#' @export
 create_bas <- function(...) {
   .Deprecated(new = "rmf_create_bas", old = "create_bas")
   rmf_create_bas(...)

@@ -12,12 +12,14 @@ rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choos
 }
 
 #' @describeIn rmf_read_hpr Deprecated function name
+#' @export
 read_hpr <- function(...) {
   .Deprecated(new = "rmf_read_hpr", old = "read_hpr")
   rmf_read_hpr(...)
 }
 
 #' @describeIn rmf_read_hpr Compatible with default ModelMuse file extension
+#' @export
 rmf_read_hob_out <- function(...) {
   rmf_read_hpr(...)
 }

@@ -42,6 +42,7 @@ rmf_write_hob <- function(hob,
 }  
 
 #' @describeIn rmf_write_hob Deprecated function name
+#' @export
 write_hob <- function(...) {
   .Deprecated(new = "rmf_write_hob", old = "write_hob")
   rmf_write_hob(...)

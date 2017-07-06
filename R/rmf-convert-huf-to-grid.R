@@ -42,6 +42,7 @@ rmf_convert_huf_to_grid <- function(values,
 }
 
 #' @describeIn rmf_convert_huf_to_grid Deprecated function name
+#' @export
 convert_huf_to_grid <- function(...) {
   .Deprecated(new = "rmf_convert_huf_to_grid", old = "convert_huf_to_grid")
   rmf_convert_huf_to_grid(...)

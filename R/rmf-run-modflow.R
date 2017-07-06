@@ -7,6 +7,7 @@ rmf_run_modflow <- function(...) {
 }
 
 #' @describeIn rmf_run_modflow Deprecated function name
+#' @export
 run_modflow <- function(...) {
   .Deprecated(new = "rmf_run_modflow", old = "run_modflow")
   rmf_run_modflow(...)

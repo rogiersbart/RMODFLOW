@@ -7,6 +7,7 @@ rmf_performance <- function(...) {
 }
 
 #' @describeIn rmf_performance Deprecated function name
+#' @export
 performance <- function(...) {
   .Deprecated(new = "rmf_performance", old = "performance")
   rmf_performance(...)

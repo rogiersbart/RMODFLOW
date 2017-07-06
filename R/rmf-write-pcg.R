@@ -21,6 +21,7 @@ rmf_write_pcg <- function(pcg,
 }
 
 #' @describeIn rmf_write_pcg Deprecated function name
+#' @export
 write_pcg <- function(...) {
   .Deprecated(new = "rmf_write_pcg", old = "write_pcg")
   rmf_write_pcg(...)

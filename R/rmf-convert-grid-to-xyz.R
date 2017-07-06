@@ -43,6 +43,7 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
 }                                                                           
 
 #' @describeIn rmf_convert_grid_to_xyz Deprecated function name
+#' @export
 convert_grid_to_xyz <- function(...) {
   .Deprecated(new = "rmf_convert_grid_to_xyz", old = "convert_grid_to_xyz")
   rmf_convert_grid_to_xyz(...)

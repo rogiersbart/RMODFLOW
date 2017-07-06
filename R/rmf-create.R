@@ -22,6 +22,7 @@ rmf_create <- function(...) {
 }
 
 #' @describeIn rmf_create Deprecated function name
+#' @export
 create_modflow <- function(...) {
   .Deprecated(new = "rmf_create", old = "create_modflow")
   rmf_create(...)

@@ -59,6 +59,7 @@ rmf_write_huf <- function(huf,
 }
 
 #' @describeIn rmf_write_huf Deprecated function name
+#' @export
 write_huf <- function(...) {
   .Deprecated(new = "rmf_write_huf", old = "write_huf")
   rmf_write_huf(...)
