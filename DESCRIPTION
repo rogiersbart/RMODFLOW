@@ -1,6 +1,6 @@
 Package: RMODFLOW
 Type: Package
-Title: Pre- and post-processing of MODFLOW files
+Title: Pre- and post-processing of MODFLOW files in R
 Version: 0.4.0
 Date: 2016-06-27
 Authors@R: person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be")

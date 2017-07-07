@@ -1,0 +1,106 @@
+---
+title: "A brief overview"
+author: "Bart Rogiers"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A brief overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Example files
+
+RMODFLOW currently comes with several example MODFLOW models. The models can be listed with:
+
+```{r}
+library(RMODFLOW)
+rmf_example_models()
+```
+
+These are all derived from the ModelMuse examples [Example Model](https://water.usgs.gov/nrp/gwsoftware/ModelMuse/Help/example_model.htm),
+[Rocky Mountain Arsenal](https://water.usgs.gov/nrp/gwsoftware/ModelMuse/Help/rocky_mountain_arsenal.htm) and
+[Water Supply Problem](https://water.usgs.gov/nrp/gwsoftware/ModelMuse/Help/index.html?water_supply_problem.htm). For a list of all example files, use:
+
+```{r}
+rmf_example_files()
+```
+
+The corresponding full file paths can be accessed through `rmf_example_file()` as follows:
+
+```{r}
+rmf_example_file("example-model.dis")
+```
+
+For all files from a single model, use:
+
+```{r}
+rmf_example_model("example-model")
+```
+
+# I/O
+
+All functions for reading MODFLOW files into R have a prefix `rmf_read_`, after which in most cases the most common file extension follows. You can for instance read in the discretization file `example-model.dis` using:
+
+```{r}
+dis <- rmf_read_dis(rmf_example_file("example-model.dis"))
+class(dis)
+```
+
+For several MODFLOW file types, the functions need more than just the filename to be able to process the file. For reading in the basic package file, you for instance have to specify a dis object as an additional argument:
+
+```{r}
+bas <- rmf_read_bas(rmf_example_file("example-model.bas"), dis = dis)
+class(bas)
+```
+
+For the heads outputted by the model, you also need to specify a bas object:
+
+```{r}
+hed <- rmf_read_fhd(rmf_example_file("example-model.fhd"), dis = dis, bas = bas)
+class(hed)
+```
+
+To inspect the contents of these objects, which are often just lists, using `str()` is often useful:
+
+```{r}
+str(dis)
+str(bas)
+str(hed)
+```
+
+All the elements in these lists are named following the MODFLOW variable names, as described in the [online guide to MODFLOW](https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/), but we use lowercase throughout the package (except for the package title).
+
+Similar to the reading functions, all writing functions start with a prefix `rmf_write_`, so you can try these as well. At this point, it might be useful to copy some of the example files to your working directory, and play around with them. You can use the following approach to do so:
+
+```{r, eval = FALSE}
+rmf_copy_to_wd(rmf_example_model("example-model"))
+```
+
+# Visualization
+
+Many ways of visualizing 2D, 3D and 4D arrays are available. Check out the help pages `?rmf_plot.rmf_2d_array`, `?rmf_plot.rmf_3d_array` and `?rmf_plot.rmf_4d_array` to find out more. Here's a basic visualization of a 2D array:
+
+```{r}
+rmf_plot(dis$top, dis = dis)
+```
+
+And here you have a basic map view and two vertical cross-sections for a 4D array:
+
+```{r}
+rmf_plot(hed, dis = dis, k = 1)
+rmf_plot(hed, dis = dis, i = 5)
+rmf_plot(hed, dis = dis, j = 5)
+```
+
+# The pipe operator
+
+The [magrittr](https://cran.r-project.org/web/packages/magrittr/index.html) pipe is also imported in the package, so at the moment you can do things like:
+
+```{r}
+rmf_example_file("example-model.dis") %>% 
+  rmf_read_dis() %>% 
+  rmf_plot(.$top, dis = .)
+```
+
+The goal is however to develop a model manipulation language in future which would allow straightforward use of the pipe, as well as several [tidyverse](http://tidyverse.org/) tools, so stay tuned!

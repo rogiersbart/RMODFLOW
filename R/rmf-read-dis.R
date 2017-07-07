@@ -6,7 +6,7 @@
 #' @return object of class dis
 #' @importFrom readr read_lines
 #' @export
-#' @seealso \code{\link{write_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
+#' @seealso \code{\link{rmf_write_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}) {
   
   dis_lines <- read_lines(file)

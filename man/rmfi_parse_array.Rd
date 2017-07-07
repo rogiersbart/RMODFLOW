@@ -4,7 +4,8 @@
 \alias{rmfi_parse_array}
 \title{Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
 \usage{
-rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL)
+rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
+  skip_header = FALSE)
 }
 \arguments{
 \item{object}{MODFLOW input file text object, starting with the free-format control record}

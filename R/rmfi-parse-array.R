@@ -1,7 +1,8 @@
 #' Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param object MODFLOW input file text object, starting with the free-format control record
 #' @return A list containing the array and the remaining text of the MODFLOW input file
-rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
+rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
+                             skip_header = FALSE) {
   # Initialize array object
   array <- array(dim=c(nrow,ncol,nlay))
   
@@ -28,9 +29,9 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL) {
           remaining_lines <- remaining_lines[-1]
         }
       }
-      else if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('INTERNAL', '100', '103'))
+      else if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('INTERNAL', '100', '103') | skip_header)
       {
-        remaining_lines <- remaining_lines[-1] 
+        if(!skip_header) remaining_lines <- remaining_lines[-1] 
         nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t')[[1]])))
         nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
         array[,,k] <- matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)

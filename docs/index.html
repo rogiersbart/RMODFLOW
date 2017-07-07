@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pre- and post-processing of MODFLOW files • RMODFLOW</title>
+<title>Pre- and post-processing of MODFLOW files in R • RMODFLOW</title>
 <!-- jquery --><script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/united/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><!-- Font Awesome icons --><link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 <!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="jquery.sticky-kit.min.js"></script><script src="pkgdown.js"></script><!-- mathjax --><script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--[if lt IE 9]>
+<script src="jquery.sticky-kit.min.js"></script><script src="pkgdown.js"></script><!-- mathjax --><script src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
@@ -29,10 +29,16 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="reference/index.html">Reference</a>
+  <a href="/index.html">
+    <span class="fa fa-home fa-lg"></span>
+     
+  </a>
 </li>
 <li>
-  <a href="articles/index.html">Articles</a>
+  <a href="articles/RMODFLOW.html">Get Started</a>
+</li>
+<li>
+  <a href="reference/index.html">Reference</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
@@ -53,42 +59,82 @@
       
       </header><div class="row">
   <div class="contents col-md-9">
-    <div id="rmodflow" class="section level1">
+    
+<div id="rmodflow-pre--and-post-processing-of-modflow-files-in-r" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#rmodflow" class="anchor"> </a>RMODFLOW</h1></div>
-<p>The RMODFLOW package provides a set of tools for groundwater flow modelling with MODFLOW.</p>
-<p>To install:</p>
+<a href="#rmodflow-pre--and-post-processing-of-modflow-files-in-r" class="anchor"></a>RMODFLOW<br><small><font color="#333333">Pre- and post-processing of MODFLOW files in R</font></small>
+</h1></div>
+
+<p>The <a href="https://rogiersbart.github.io/RMODFLOW/">RMODFLOW</a> package provides a set of tools for groundwater flow modelling with <a href="https://water.usgs.gov/ogw/modflow/">MODFLOW</a>. A related package is the <a href="https://rogiersbart.github.io/RMT3DMS/">RMT3DMS</a> package for solute transport modelling.</p>
+</div>
+<div id="to-install" class="section level1">
+<h1 class="hasAnchor">
+<a href="#to-install" class="anchor"></a>To install</h1>
 <ol>
-<li>first install the devtools package: <code>install.packages("devtools")</code>
+<li>install the devtools package: <code>install.packages("devtools")</code>
 </li>
 <li>load the devtools package: <code>library(devtools)</code>
 </li>
-<li>there is no major release of the RMODFLOW package yet
-<ul>
-<li>to install the latest minor version: <code>install_github("rogiersbart/RMODFLOW")</code>
-</li>
-<li>to install the latest development version: <code>install_github("rogiersbart/RMODFLOW@develop")</code>
-</li>
-</ul>
+<li>install the latest development version: <code>install_github("rogiersbart/RMODFLOW")</code>
 </li>
 </ol>
-<p>Changelog:</p>
+</div>
+<div id="for-users" class="section level1">
+<h1 class="hasAnchor">
+<a href="#for-users" class="anchor"></a>For users</h1>
+<p>The package is still in development, although different people have already made good use of it. This means that breaking changes might still happen more than you would like. Once we are close to a first major release (<em>i.e.</em> a first version on CRAN hopefully), this will of course not be the case anymore. A good place to start is the vignette “<a href="https://rogiersbart.github.io/RMODFLOW/articles/RMODFLOW.html">A brief overview</a>”.</p>
+</div>
+<div id="for-contributors" class="section level1">
+<h1 class="hasAnchor">
+<a href="#for-contributors" class="anchor"></a>For contributors</h1>
+<p>Using R and MODFLOW, and wanting to contribute? Please do so! The most straightforward contributions at the moment are in the form of file reading, writing and object creation functions for the many still-not-supported MODFLOW packages. I intend to create a vignette for contributors, listing what packages we are currently supporting <em>etc.</em>, but it is not there yet. It is probably not too hard to find out yourself however. Just make sure you do things the way we do, and you follow the <a href="https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/">online guide to MODFLOW</a> meticulously (note we use lowercase versions of all parameters here). A good starting point is probably to have a close look at <code><a href="reference/rmf_read_dis.html">rmf_read_dis()</a></code> and the <a href="https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm">corresponding page</a> in the online guide. Note also that we are first focussing on MODFLOW-2005 packages. Later on the other derived versions of MODFLOW-2005 might be supported as well. MODFLOW-2000 and MODFLOW 6 are out of scope.</p>
+</div>
+<div id="version-history" class="section level1">
+<h1 class="hasAnchor">
+<a href="#version-history" class="anchor"></a>Version history</h1>
 <ul>
-<li>0.4.0 - Version used by: Cas Neyens. Analysis of pumping tests in a sandy aquifer in Northern Belgium. MSc thesis, Faculty of Science, KU Leuven. - (University promoter: Huysmans M; Supervisors: Gedeon M, Laloy E, Rogiers B)</li>
-<li>0.3.0 - Version presented by: Rogiers B. 2015. Groundwater flow and solute transport modelling from within R: The RMODFLOW and RMT3DMS packages. MODFLOW AND MORE 2015: MODELING A COMPLEX WORLD, Golden, Colorado, 31 May - 03 June, 2015. <a href="http://dx.doi.org/10.6084/m9.figshare.1460750" class="uri">http://dx.doi.org/10.6084/m9.figshare.1460750</a>
-</li>
-<li>0.2.0 - Version presented by: Rogiers B. 2015. Groundwater flow and solute transport modelling from within R: Development of the RMODFLOW and RMT3DMS packages. Geophysical Research Abstracts 17: EGU2015-11879, EGU General Assembly 2015, Vienna, 12-17 April, 2015. <a href="http://dx.doi.org/10.6084/m9.figshare.1394517" class="uri">http://dx.doi.org/10.6084/m9.figshare.1394517</a>
-</li>
+<li>0.4.0 - Version used by Neyens (2016).</li>
+<li>0.3.0 - Version presented by Rogiers (2015a).</li>
+<li>0.2.0 - Version presented by Rogiers (2015b).</li>
 <li>0.1.0 - Different modifications to the code for use in reproducible reporting.</li>
 </ul>
-<p>Find out more at <a href="http://rogiersbart.blogspot.com/search/label/Science" class="uri">http://rogiersbart.blogspot.com/search/label/Science</a>, or track development at <a href="http://github.com/rogiersbart/RMODFLOW" class="uri">http://github.com/rogiersbart/RMODFLOW</a>.</p>
 </div>
+<div id="whats-next" class="section level1">
+<h1 class="hasAnchor">
+<a href="#whats-next" class="anchor"></a>What’s next?</h1>
+<p>There are many ideas for further development. Here are a few to give you a taste of where this is going:</p>
+<ul>
+<li>S3 methods for several <a href="http://www.htmlwidgets.org/">htmlwidgets</a> enabling interactive visualization.</li>
+<li>Extend animation and 3D visualization support.</li>
+<li>More compatibility with the <a href="http://tidyverse.org/">tidyverse</a>, possibly resulting in something like an RMODFLOW model manipulation language, which would allow to make use of <em>e.g.</em> <a href="http://dplyr.tidyverse.org/">dplyr</a> verbs.</li>
+<li>Functions for downloading different MODFLOW versions.</li>
+<li>Support more MODFLOW packages</li>
+<li>Add access to external, larger model examples.</li>
+</ul>
+</div>
+<div id="references" class="section level1">
+<h1 class="hasAnchor">
+<a href="#references" class="anchor"></a>References</h1>
+<ul>
+<li>Rogiers B. 2017. Reproducible research in computational subsurface hydrology - First steps in R with RMODFLOW and RMT3DMS. useR!2017. 04-07 July 2017. Brussels, Belgium. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mZVJHSGhYek52bm8/view?usp=sharing">presentation</a>
+</li>
+<li>Cas Neyens. 2016. Analysis of pumping tests in a sandy aquifer in Northern Belgium. MSc thesis, Faculty of Science, KU Leuven, 163 pp. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mY2lzLU1xbDBWeHc/view?usp=sharing">thesis</a>
+</li>
+<li>Rogiers B. 2015a. Groundwater flow and solute transport modelling from within R: The RMODFLOW and RMT3DMS packages. MODFLOW AND MORE 2015: MODELING A COMPLEX WORLD, Golden, Colorado, 31 May - 03 June, 2015. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mUEJuRUhCM3JtQlE/view?usp=sharing">poster</a>
+</li>
+<li>Rogiers B. 2015b. Groundwater flow and solute transport modelling from within R: Development of the RMODFLOW and RMT3DMS packages. Geophysical Research Abstracts 17: EGU2015-11879, EGU General Assembly 2015, Vienna, 12-17 April, 2015. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mczZkcl9MbGlib28/view?usp=sharing">pico</a>
+</li>
+</ul>
+</div>
+
   </div>
 
   <div class="col-md-3" id="sidebar">
     <h2>Links</h2>
 <ul class="list-unstyled">
 <li>Browse source code at <br><a href="https://github.com/rogiersbart/RMODFLOW">https://​github.com/​rogiersbart/​RMODFLOW</a>
+</li>
+<li>Report a bug at <br><a href="https://github.com/rogiersbart/RMODFLOW/issues">https://​github.com/​rogiersbart/​RMODFLOW/​issues</a>
 </li>
 </ul>
 <h2>License</h2>
@@ -97,6 +143,12 @@
 <ul class="list-unstyled">
 <li>
 <a href="https://rogiersbart.github.io/">Bart Rogiers</a> <br><small class="roles"> Author, maintainer </small> </li>
+</ul>
+<h2>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://travis-ci.org/rogiersbart/RMODFLOW"><img src="https://travis-ci.org/rogiersbart/RMODFLOW.svg?branch=master" alt="Travis-CI Build Status"></a></li>
+<li><a href="https://cran.r-project.org/package=RMODFLOW"><img src="http://www.r-pkg.org/badges/version/RMODFLOW" alt="CRAN_Status_Badge"></a></li>
+<li><a href="https://codecov.io/github/rogiersbart/RMODFLOW?branch=master"><img src="https://img.shields.io/codecov/c/github/rogiersbart/RMODFLOW/master.svg" alt="Coverage Status"></a></li>
 </ul>
 </div>
 </div>

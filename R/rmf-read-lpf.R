@@ -9,7 +9,7 @@
 #' @seealso \code{\link{write_lpf}}, \code{\link{create_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choose()}) {
   
-  lpf_lines <- read_lines(file)
+  lpf_lines <- readr::read_lines(file)
   lpf <- list()
   
   # data set 0
@@ -41,16 +41,20 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     lpf_lines <- lpf_lines[-1]
   
   # data set 4
-    lpf$chani <- as.numeric(rmfi_remove_empty_strings(strsplit(lpf_lines[1],' ')[[1]]))
-    lpf_lines <- lpf_lines[-1]
+    data_set_4 <- rmfi_parse_variables(lpf_lines)
+    lpf$chani <- data_set_4$variables
+    lpf_lines <- data_set_4$remaining_lines
+    rm(data_set_4)
   
   # data set 5
     lpf$layvka <- as.numeric(rmfi_remove_empty_strings(strsplit(lpf_lines[1],' ')[[1]]))
     lpf_lines <- lpf_lines[-1]
     
   # data set 6
-    lpf$laywet <- as.numeric(rmfi_remove_empty_strings(strsplit(lpf_lines[1],' ')[[1]]))
-    lpf_lines <- lpf_lines[-1]
+    data_set_6 <- rmfi_parse_variables(lpf_lines)
+    lpf$laywet <- data_set_6$variables
+    lpf_lines <- data_set_6$remaining_lines
+    rm(data_set_6)
   
   # data set 7
     if(!as.logical(prod(lpf$laywet==0))) {
@@ -107,7 +111,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
         }
         
       # data set 11
-        if(lpf$Chani[k] <= 0) {
+        if(lpf$chani[k] <= 0) {
           if('HANI' %in% lpf$partyp) {
             lpf_lines <- lpf_lines[-1]  
             lpf$hani[,,k] <- NA

@@ -7,7 +7,7 @@
 rmf_example_file(filename = NULL)
 }
 \arguments{
-\item{filename}{filename of the example file. If NULL (default), returns vector of all example file filenames.}
+\item{filename}{filename of the example file}
 }
 \value{
 path to example file

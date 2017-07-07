@@ -91,7 +91,7 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
     }
     close(con)
   } else {
-    hed.lines <- read_lines(file)
+    hed.lines <- readr::read_lines(file)
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
     attr(hed, 'kstp') <- attr(hed, 'kper') <- attr(hed, 'pertim') <- attr(hed, 'totim') <- attr(hed, 'desc') <- attr(hed, 'ncol') <- attr(hed, 'nrow') <- attr(hed, 'ilay') <- NULL
     
@@ -131,7 +131,8 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
       nrow <- as.numeric(variables[7])
       ilay <- as.numeric(variables[8])
       stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
-      data_set <- rmfi_parse_array(hed.lines,nrow,ncol,1)
+      hed.lines <- hed.lines[-1]
+      data_set <- rmfi_parse_array(hed.lines,nrow,ncol,1, skip_header = TRUE)
       hed[,,ilay,stp_nr] <- data_set$array
       hed.lines <- data_set$remaining_lines
       attr(hed, 'kstp')[stp_nr] <- kstp
