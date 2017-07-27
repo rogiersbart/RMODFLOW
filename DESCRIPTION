@@ -24,10 +24,13 @@ Imports:
     rgdal,
     animation,
     tools,
-    lubridate
+    lubridate,
+    xml2,
+    rvest
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
+ByteCompile: true
