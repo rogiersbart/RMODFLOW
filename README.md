@@ -1,5 +1,5 @@
 RMODFLOW<br><small><font color="#333333">Pre- and post-processing of MODFLOW files in R</font></small>
-====================================================================
+======================================================================================================
 
 [![Travis-CI Build Status](https://travis-ci.org/rogiersbart/RMODFLOW.svg?branch=master)](https://travis-ci.org/rogiersbart/RMODFLOW)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/RMODFLOW)](https://cran.r-project.org/package=RMODFLOW)
@@ -20,13 +20,6 @@ The package is still in development, although different people have already made
 # For contributors
 
 Using R and MODFLOW, and wanting to contribute? Please do so! The most straightforward contributions at the moment are in the form of file reading, writing and object creation functions for the many still-not-supported MODFLOW packages. I intend to create a vignette for contributors, listing what packages we are currently supporting *etc.*, but it is not there yet. It is probably not too hard to find out yourself however. Just make sure you do things the way we do, and you follow the [online guide to MODFLOW](https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/) meticulously (note we use lowercase versions of all parameters here). A good starting point is probably to have a close look at `rmf_read_dis()` and the [corresponding page](https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm) in the online guide. Note also that we are first focussing on MODFLOW-2005 packages. Later on the other derived versions of MODFLOW-2005 might be supported as well. MODFLOW-2000 and MODFLOW 6 are out of scope.
-
-# Version history
-
-* 0.4.0 - Version used by Neyens (2016).
-* 0.3.0 - Version presented by Rogiers (2015a).
-* 0.2.0 - Version presented by Rogiers (2015b).
-* 0.1.0 - Different modifications to the code for use in reproducible reporting. 
 
 # What's next?
 
