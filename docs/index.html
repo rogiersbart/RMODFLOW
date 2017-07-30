@@ -40,6 +40,9 @@
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
+<li>
+  <a href="news/index.html">News</a>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -73,9 +76,7 @@
 <ol>
 <li>install the devtools package: <code>install.packages("devtools")</code>
 </li>
-<li>load the devtools package: <code>library(devtools)</code>
-</li>
-<li>install the latest development version: <code>install_github("rogiersbart/RMODFLOW")</code>
+<li>install the latest development version: <code><a href="http://www.rdocumentation.org/packages/devtools/topics/install_github">devtools::install_github("rogiersbart/RMODFLOW")</a></code>
 </li>
 </ol>
 </div>
@@ -88,16 +89,6 @@
 <h1 class="hasAnchor">
 <a href="#for-contributors" class="anchor"></a>For contributors</h1>
 <p>Using R and MODFLOW, and wanting to contribute? Please do so! The most straightforward contributions at the moment are in the form of file reading, writing and object creation functions for the many still-not-supported MODFLOW packages. I intend to create a vignette for contributors, listing what packages we are currently supporting <em>etc.</em>, but it is not there yet. It is probably not too hard to find out yourself however. Just make sure you do things the way we do, and you follow the <a href="https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/">online guide to MODFLOW</a> meticulously (note we use lowercase versions of all parameters here). A good starting point is probably to have a close look at <code><a href="reference/rmf_read_dis.html">rmf_read_dis()</a></code> and the <a href="https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm">corresponding page</a> in the online guide. Note also that we are first focussing on MODFLOW-2005 packages. Later on the other derived versions of MODFLOW-2005 might be supported as well. MODFLOW-2000 and MODFLOW 6 are out of scope.</p>
-</div>
-<div id="version-history" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-history" class="anchor"></a>Version history</h1>
-<ul>
-<li>0.4.0 - Version used by Neyens (2016).</li>
-<li>0.3.0 - Version presented by Rogiers (2015a).</li>
-<li>0.2.0 - Version presented by Rogiers (2015b).</li>
-<li>0.1.0 - Different modifications to the code for use in reproducible reporting.</li>
-</ul>
 </div>
 <div id="whats-next" class="section level1">
 <h1 class="hasAnchor">
@@ -116,14 +107,10 @@
 <h1 class="hasAnchor">
 <a href="#references" class="anchor"></a>References</h1>
 <ul>
-<li>Rogiers B. 2017. Reproducible research in computational subsurface hydrology - First steps in R with RMODFLOW and RMT3DMS. useR!2017. 04-07 July 2017. Brussels, Belgium. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mZVJHSGhYek52bm8/view?usp=sharing">presentation</a>
-</li>
-<li>Cas Neyens. 2016. Analysis of pumping tests in a sandy aquifer in Northern Belgium. MSc thesis, Faculty of Science, KU Leuven, 163 pp. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mY2lzLU1xbDBWeHc/view?usp=sharing">thesis</a>
-</li>
-<li>Rogiers B. 2015a. Groundwater flow and solute transport modelling from within R: The RMODFLOW and RMT3DMS packages. MODFLOW AND MORE 2015: MODELING A COMPLEX WORLD, Golden, Colorado, 31 May - 03 June, 2015. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mUEJuRUhCM3JtQlE/view?usp=sharing">poster</a>
-</li>
-<li>Rogiers B. 2015b. Groundwater flow and solute transport modelling from within R: Development of the RMODFLOW and RMT3DMS packages. Geophysical Research Abstracts 17: EGU2015-11879, EGU General Assembly 2015, Vienna, 12-17 April, 2015. <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mczZkcl9MbGlib28/view?usp=sharing">pico</a>
-</li>
+<li><a href="https://rogiersbart.github.io/science-output.html#18917351">Rogiers B. 2017. Reproducible research in computational subsurface hydrology - First steps in R with RMODFLOW and RMT3DMS. useR!2017. 04-07 July 2017. Brussels, Belgium. Lightning talk.</a></li>
+<li><a href="https://rogiersbart.github.io/science-output.html#13416953">Cas Neyens. 2016. Analysis of pumping tests in a sandy aquifer in Northern Belgium. MSc thesis, Faculty of Science, KU Leuven, 163 pp.</a></li>
+<li><a href="https://rogiersbart.github.io/science-output.html#26516586">Rogiers B. 2015. Groundwater flow and solute transport modelling from within R: The RMODFLOW and RMT3DMS packages. MODFLOW AND MORE 2015: MODELING A COMPLEX WORLD, Golden, Colorado, 31 May - 03 June, 2015.</a></li>
+<li><a href="https://rogiersbart.github.io/science-output.html#25516537">Rogiers B. 2015. Groundwater flow and solute transport modelling from within R: Development of the RMODFLOW and RMT3DMS packages. Geophysical Research Abstracts 17: EGU2015-11879, EGU General Assembly 2015, Vienna, 12-17 April, 2015.</a></li>
 </ul>
 </div>
 

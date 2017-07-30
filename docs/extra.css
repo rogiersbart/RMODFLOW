@@ -1,0 +1,94 @@
+.btn.btn-default.btn-xs.dropdown-toggle {
+  background-color: #f8f8f8;
+  color: #cccccc;
+  border-color: #cccccc;
+}
+.btn.btn-default.btn-xs.code-folding-btn.pull-right {
+  background-color: #f8f8f8;
+  color: #cccccc;
+  border-color: #cccccc;
+}
+div.section {
+  text-align:justify;
+}
+div.section a:link {
+  color: #FFFFFF;
+  background-color: #dd4814;
+  border-radius:4px;
+  padding-left:2pt;
+  padding-right:2pt;
+  text-decoration:none;
+}
+div.section a:hover {
+  color: #FFFFFF;
+  background-color: #dd4814;
+  border-radius:4px;
+  padding-left:2pt;
+  padding-right:2pt;
+  text-decoration:none;
+}
+div.section a:visited {
+  color: #FFFFFF;
+  background-color: #dd4814;
+  border-radius:4px;
+  padding-left:2pt;
+  padding-right:2pt;
+  text-decoration:none;
+}
+div.section a:active {
+  color: #FFFFFF;
+  background-color: #dd4814;
+  border-radius:4px;
+  padding-left:2pt;
+  padding-right:2pt;
+  text-decoration:none;
+}
+div.section a[href*="github.com"] {
+  background-color: #24292e;
+}
+div.section a[href*="github.com"]::before {
+  font-family: FontAwesome;
+  content: "\f09b\ ";
+}
+div.section a[href*="twitter.com"] {
+  background-color: #1b95e0;
+}
+div.section a[href*="twitter.com"]::before {
+  font-family: FontAwesome;
+  content: "\f099\ ";
+}
+div.section a[href*="500px.com"] {
+  background-color: #34bf49;
+}
+div.section a[href*="500px.com"]::before {
+  font-family: FontAwesome;
+  content: "\f26e\ ";
+}
+div.section a[href*="facebook.com"] {
+  background-color: #3b5998;
+}
+div.section a[href*="facebook.com"]::before {
+  font-family: FontAwesome;
+  content: "\f230\ ";
+}
+div.section a[href*="bitbucket.org"] {
+  background-color: #205081;
+}
+div.section a[href*="bitbucket.org"]::before {
+  font-family: FontAwesome;
+  content: "\f171\ ";
+}
+div.section a[href*="linkedin.com"] {
+  background-color: #283e4a;
+}
+div.section a[href*="linkedin.com"]::before {
+  font-family: FontAwesome;
+  content: "\f0e1\ ";
+}
+div.section a[href*="mailto"] {
+  background-color: #34bf49;
+}
+div.section a[href*="mailto"]::before {
+  font-family: FontAwesome;
+  content: "\f0e0\ ";
+}
