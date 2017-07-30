@@ -4,16 +4,21 @@
 \alias{rmf_install}
 \title{Install external software}
 \usage{
-rmf_install(software = "MODFLOW-2005")
+rmf_install(name = "MODFLOW-2005")
 }
 \arguments{
-\item{software}{character}
+\item{name}{Character.}
 }
 \description{
 Install external software
 }
 \details{
-Currently supported software: MODFLOW-2005.
+Currently supported software: All MODFLOW variants documented at
+\url{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}, except for
+MODFLOW-2000.I.e. MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR and
+MODFLOW-CFP. The zip files with windows binaries hosted at the USGS websites
+are downloaded and extracted in \file{C:/WRDAPP/} each time. The main folder
+names are modified in order to have more consistency.
 }
 \examples{
 rmf_install("MODFLOW-2005")
