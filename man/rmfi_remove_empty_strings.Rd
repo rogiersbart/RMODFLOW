@@ -15,3 +15,4 @@ Vector of strings without the empty items.
 \description{
 Remove empty elements from a vector of strings.
 }
+\keyword{internal}

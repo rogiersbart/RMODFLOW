@@ -17,3 +17,4 @@ Calculate a weighted geometric mean
 \seealso{
 \code{\link{rmfi_weighted_harmean}}, \code{\link{weighted.mean}}, \code{\link{rmfi_geomean}}, \code{\link{rmfi_harmean}} and \code{\link{mean}}
 }
+\keyword{internal}

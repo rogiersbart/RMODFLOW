@@ -9,3 +9,4 @@ rmfi_performance_measures(observations, predictions, print = F)
 \description{
 Model performance measures
 }
+\keyword{internal}

@@ -1,6 +1,7 @@
 #' Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param object MODFLOW input file text object, starting with the free-format control record
 #' @return A list containing the array and the remaining text of the MODFLOW input file
+#' @keywords internal
 rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
                              skip_header = FALSE) {
   # Initialize array object

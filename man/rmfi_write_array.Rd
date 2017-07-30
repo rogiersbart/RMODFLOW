@@ -11,3 +11,4 @@ rmfi_write_array(array, file, cnstnt = 1, iprn = -1, append = TRUE)
 Write modflow array
 Internal function used in the write_* functions for writing array datasets
 }
+\keyword{internal}

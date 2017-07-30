@@ -16,3 +16,4 @@ A list containing the array and the remaining text of the MODFLOW input file
 \description{
 Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 }
+\keyword{internal}

@@ -11,3 +11,4 @@ rmfi_parse_comments(remaining_lines)
 Read comments
 Internal function used in the read_* functions to read comments
 }
+\keyword{internal}

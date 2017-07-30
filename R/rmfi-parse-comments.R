@@ -1,5 +1,6 @@
 #' Read comments
 #' Internal function used in the read_* functions to read comments
+#' @keywords internal
 rmfi_parse_comments <- function(remaining_lines) {
   i <- 0
   comments <- NULL

@@ -7,6 +7,7 @@
 #' @param names_to names to use for the converted coordinates
 #' @return data frame with converted coordinates
 #' @importFrom sp spTransform SpatialPoints
+#' @keywords internal
 rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
   nrs <- which(!is.na(dat$x+dat$y))
   dat_names <- names(dat)

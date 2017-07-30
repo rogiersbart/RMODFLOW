@@ -17,3 +17,4 @@ Calculate a harmonic mean
 \seealso{
 \code{\link{rmfi_geomean}} and \code{\link{mean}}
 }
+\keyword{internal}

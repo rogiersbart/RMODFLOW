@@ -1,5 +1,6 @@
 #' Write modflow array
 #' Internal function used in the write_* functions for writing array datasets
+#' @keywords internal
 rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE) {
   
   if(is.null(dim(array))) {

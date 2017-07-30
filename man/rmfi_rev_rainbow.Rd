@@ -9,3 +9,4 @@ rmfi_rev_rainbow(...)
 \description{
 Reversed rainbow color palette
 }
+\keyword{internal}

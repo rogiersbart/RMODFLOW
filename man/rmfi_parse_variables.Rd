@@ -11,3 +11,4 @@ rmfi_parse_variables(remaining_lines)
 Read modflow variables
 If all are numbers, returns numeric, otherwise returns character vector
 }
+\keyword{internal}

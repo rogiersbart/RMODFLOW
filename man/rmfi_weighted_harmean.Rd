@@ -17,3 +17,4 @@ Calculate a weighted harmonic mean
 \seealso{
 \code{\link{rmfi_weighted_geomean}}, \code{\link{weighted.mean}}, \code{\link{rmfi_harmean}} \code{\link{rmfi_geomean}} and \code{\link{mean}}
 }
+\keyword{internal}

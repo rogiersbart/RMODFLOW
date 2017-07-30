@@ -17,3 +17,4 @@ Calculate a geometric mean
 \seealso{
 \code{\link{rmfi_harmean}} and \code{\link{mean}}
 }
+\keyword{internal}

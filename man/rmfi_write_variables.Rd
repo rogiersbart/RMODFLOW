@@ -11,3 +11,4 @@ rmfi_write_variables(..., file, append = TRUE)
 Write modflow variables
 Internal function used in the write_* functions for writing single line datasets
 }
+\keyword{internal}

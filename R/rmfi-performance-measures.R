@@ -1,4 +1,5 @@
 #' Model performance measures
+#' @keywords internal
 rmfi_performance_measures <- function(observations, predictions,print=F) {
   mse <- hydroGOF::mse(observations, predictions)
   mae <- hydroGOF::mae(observations, predictions)
