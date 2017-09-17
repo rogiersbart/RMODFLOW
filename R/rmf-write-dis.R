@@ -23,11 +23,11 @@ rmf_write_dis <- function(dis,
     rmfi_write_variables(dis$laycbd,file=file)
 #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
-  # data set 3
-    rmfi_write_variables(dis$delr, file=file)
+   # data set 3
+    rmfi_write_array(dis$delr,file=file,iprn=iprn)  
   
   # data set 4
-    rmfi_write_variables(dis$delc, file=file)
+    rmfi_write_array(dis$delc,file=file,iprn=iprn)
   
   # data set 5
     rmfi_write_array(dis$top,file=file,iprn=iprn)
