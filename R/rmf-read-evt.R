@@ -117,16 +117,16 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
   # stress periods
   if(evt$nevtop==2){
     evt$inievt = vector(mode='numeric', length=dis$nper)
-    evt$ievt = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+    evt$ievt = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   }
-  evt$surf = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
-  if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt))) evt$evtr = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  evt$surf = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt))) evt$evtr = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   if(!is.null(evt$npevt) && evt$npevt > 0){
     evt$pname = list()
     if(!is.null(evt$instances) && T %in% evt$instances) evt$iname = list()
     evt$ievtpf = list()
   }
-  evt$exdp = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  evt$exdp = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   
   
   for(i in 1:dis$nper){

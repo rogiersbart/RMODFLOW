@@ -116,7 +116,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
   
   # stress periods
  
-  if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch))) rch$rech = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch))) rch$rech = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   if(!is.null(rch$nprch) && rch$nprch > 0){
     rch$pname = list()
     if(!is.null(rch$instances) && T %in% rch$instances) rch$iname = list()
@@ -124,7 +124,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
   }
    if(rch$nrchop==2){
     rch$inirch = vector(mode='numeric', length=dis$nper)
-    rch$irch = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+    rch$irch = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   }
   
   for(i in 1:dis$nper){

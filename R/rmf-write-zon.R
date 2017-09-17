@@ -17,15 +17,15 @@ rmf_write_zon = function(zon, file = {cat('Please choose zon file to overwrite o
   cat(paste('#', comment(zon)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  write_modflow_variables(zon$nzn, file=file)
+  rmfi_write_variables(zon$nzn, file=file)
   
   for (i in 1:zon$nzn){
     
     # data set 2
-    write_modflow_variables(zon$zonnam[i], file=file)
+    rmfi_write_variables(zon$zonnam[i], file=file)
     
     # data set 3
-    write_modflow_array(zon$izon[,,i], file=file)
+    rmfi_write_array(zon$izon[,,i], file=file)
     
   }
 }

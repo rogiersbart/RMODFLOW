@@ -18,18 +18,18 @@ rmf_write_mlt = function(mlt, file={cat('Please choose mlt file to overwrite or 
   cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  write_modflow_variables(mlt$nml, file=file)
+  rmfi_write_variables(mlt$nml, file=file)
   
   for (i in 1:mlt$nml){
     
     # data set 2
-    write_modflow_variables(mlt$mltnam[i], ifelse((!is.null(mlt$functn) && mlt$functn[i]), 'FUNCTION', ''), file=file)
+    rmfi_write_variables(mlt$mltnam[i], ifelse((!is.null(mlt$functn) && mlt$functn[i]), 'FUNCTION', ''), file=file)
     
     # data set 3
-    if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn[i])) write_modflow_array(mlt$rmlt[,,i], file=file)
+    if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn[i])) rmfi_write_array(mlt$rmlt[,,i], file=file)
 
     # data set 4
-    if(!is.null(mlt$functn) && mlt$functn[i]) write_modflow_variables(mlt$operators[[i]], mlt$iprn[i], file=file) 
+    if(!is.null(mlt$functn) && mlt$functn[i]) rmfi_write_variables(mlt$operators[[i]], mlt$iprn[i], file=file) 
 
   }
 }

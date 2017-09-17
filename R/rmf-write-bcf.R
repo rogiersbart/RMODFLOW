@@ -18,23 +18,23 @@ rmf_write_bcf = function(bcf, dis = rmf_read_dis(), file = {cat('Please select b
   cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  write_modflow_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file)
+  rmfi_write_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file)
   
   # data set 2
   for(i in 1:dis$nlay){
-    write_modflow_variables(bcf$int_trans[i], bcf$laycon[i], file=file)
+    rmfi_write_variables(bcf$int_trans[i], bcf$laycon[i], file=file)
   }
   
   # data set 3
-  write_modflow_variables(bcf$trpy, file=file)
+  rmfi_write_variables(bcf$trpy, file=file)
   
   # data set 4-9
   for(i in 1:dis$nlay){
-    if('TR' %in% dis$sstr) write_modflow_array(bcf$sf1[,,i], file=file)
-    if(bcf$laycon[i] %in% c(0,2)) write_modflow_array(bcf$tran[,,i], file=file)
-    if(bcf$laycon[i] %in% c(1,3)) write_modflow_array(bcf$hy[,,i], file=file)
-    if(i != dis$nlay) write_modflow_array(bcf$vcont[,,i], file=file)
-    if(('TR' %in% dis$sstr) && bcf$laycon[i] %in% c(2,3)) write_modflow_array(bcf$sf2[,,i], file=file)
-    if((bcf$iwdflg != 0) && (bcf$laycon[i] %in% c(1,3))) write_modflow_array(bcf$wetdry[,,i], file=file)
+    if('TR' %in% dis$sstr) rmfi_write_array(bcf$sf1[,,i], file=file)
+    if(bcf$laycon[i] %in% c(0,2)) rmfi_write_array(bcf$tran[,,i], file=file)
+    if(bcf$laycon[i] %in% c(1,3)) rmfi_write_array(bcf$hy[,,i], file=file)
+    if(i != dis$nlay) rmfi_write_array(bcf$vcont[,,i], file=file)
+    if(('TR' %in% dis$sstr) && bcf$laycon[i] %in% c(2,3)) rmfi_write_array(bcf$sf2[,,i], file=file)
+    if((bcf$iwdflg != 0) && (bcf$laycon[i] %in% c(1,3))) rmfi_write_array(bcf$wetdry[,,i], file=file)
   }
 }

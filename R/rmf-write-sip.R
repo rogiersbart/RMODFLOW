@@ -17,9 +17,9 @@ rmf_write_sip = function(sip, file={cat('Please choose sip file to overwrite or 
   cat(paste('#', comment(sip)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  write_modflow_variables(sip$mxiter, sip$nparm, file=file)
+  rmfi_write_variables(sip$mxiter, sip$nparm, file=file)
   
   # data set 2
-  write_modflow_variables(sip$accl, sip$hclose, sip$ipcalc, sip$wseed, sip$iprsip, file=file)
+  rmfi_write_variables(sip$accl, sip$hclose, sip$ipcalc, sip$wseed, sip$iprsip, file=file)
   
 }
