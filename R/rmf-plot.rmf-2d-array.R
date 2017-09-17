@@ -109,7 +109,7 @@ rmf_plot.rmf_2d_array <- function(array,
       } else {
         return(ggplot(datapoly, aes(x=x, y=y)) +
                  geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
-                 scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(value)),levels)) +
+                 scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels)) +
                  coord_equal() + ggtitle(title))
       }
     } else if(type=='grid') {  

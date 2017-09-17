@@ -59,7 +59,7 @@ rmf_plot.rmf_3d_array <- function(array,
     array <- array[,,k]
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
-    rmf_plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, grid = grid, ...)
+    rmf_plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, grid = grid, levels = levels, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
@@ -124,7 +124,7 @@ rmf_plot.rmf_3d_array <- function(array,
         } else {
           return(ggplot(datapoly, aes(x=x, y=y)) +
                    geom_polygon(aes(fill=factor(value), group=id), colour = ifelse(grid==TRUE,'black',ifelse(grid==FALSE,NA,grid))) +
-                   scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(value)),levels)) +
+                   scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels)) +
                    xlab(xlabel) + ylab(ylabel) + ggtitle(title))
         }
     } else if(type=='grid') {

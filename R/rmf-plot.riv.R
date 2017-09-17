@@ -109,8 +109,8 @@ rmf_plot.riv = function(riv,
   }
   
   ##### transform data frame into rmf_array #####
-  id =  convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
-  rmf_array = create_rmodflow_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
+  id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
+  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(variable == 'identity'){
     	rmf_array[id] = 1
   	}  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
@@ -121,6 +121,6 @@ rmf_plot.riv = function(riv,
     }
   
   ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', ...) else rmf_plot(rmf_array, dis=dis, ...) # add levels for factor plots?
+  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...) # add levels for factor plots?
 
 }
