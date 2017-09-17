@@ -1,37 +1,35 @@
 #' Write a MODFLOW multiplier file
-#' 
-#' @param mlt an \code{\link{RMODFLOW}} mlt object
+#'
+#' \code{rmf_write_mlt} writes an MODFLOW multiplier file based on a \code{RMODFLOW} mlt object
+#'
+#' @param mlt an \code{RMODFLOW} mlt object
 #' @param file filename to write to; typically '*.mlt'
-#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' 
 #' @return \code{NULL}
 #' @export
-rmf_write_mlt <- function(mlt,
-                      file = {cat('Please select mlt file to overwrite or provide new filename ...\n'); file.choose()},
-                      iprn=-1) {
+#' @seealso \code{\link{rmf_read_mlt}}, \code{\link{rmf_create_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
+
+rmf_write_mlt = function(mlt, file={cat('Please choose mlt file to overwrite or provide new filename ...\n'); file.choose()}){
+  
   
   # data set 0
-    v <- packageDescription("RMODFLOW")$Version
-    cat(paste('# MODFLOW Multiplier File created by RMODFLOW, version',v,'\n'), file=file)
-    cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
-    
-  # data set 1
-    rmfi_write_variables(mlt$nml, file=file)
+  v <- packageDescription("RMODFLOW")$Version
+  cat(paste('# MODFLOW Multiplier File created by RMODFLOW, version',v,'\n'), file=file)
+  cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
   
-  # data set 2 + 3 
-  for(i in 1:mlt$nml)
-  {
-    rmfi_write_variables(mlt$mltnam[i], file=file) 
-    if(length(mlt$rmlt[[i]])==1) {
-      cat(paste('CONSTANT ', mlt$rmlt[[i]], '\n', sep=''), file=file, append=TRUE)
-    } else {
-      rmfi_write_array(mlt$rmlt[[i]], file = file, iprn = iprn)
-    }
-  }  
-}
+  # data set 1
+  write_modflow_variables(mlt$nml, file=file)
+  
+  for (i in 1:mlt$nml){
+    
+    # data set 2
+    write_modflow_variables(mlt$mltnam[i], ifelse((!is.null(mlt$functn) && mlt$functn[i]), 'FUNCTION', ''), file=file)
+    
+    # data set 3
+    if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn[i])) write_modflow_array(mlt$rmlt[,,i], file=file)
 
-#' @describeIn rmf_write_mlt Deprecated function name
-#' @export
-write_mlt <- function(...) {
-  .Deprecated(new = "rmf_write_mlt", old = "write_mlt")
-  rmf_write_mlt(...)
+    # data set 4
+    if(!is.null(mlt$functn) && mlt$functn[i]) write_modflow_variables(mlt$operators[[i]], mlt$iprn[i], file=file) 
+
+  }
 }
