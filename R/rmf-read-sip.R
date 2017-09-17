@@ -1,0 +1,44 @@
+#' Read a MODFLOW strongly implicit procedure file
+#' 
+#' \code{rmf_read_sip} reads in a MODFLOW strongly implicit procedure file and returns it as an \code{RMODFLOW} sip object
+#' 
+#' @param file filename; typically '*_sip'
+#' 
+#' @return \code{RMODFLOW} sip object
+#' @importFrom  readr read_lines
+#' @export
+#' @seealso \code{\link{rmf_write_sip}}, \code{\link{rmf_create_sip}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm}
+
+rmf_read_sip = function(file = {cat('Please select strongly implicit procedure file ...\n'); file.choose()}){
+  
+  sip = list()
+  sip_lines = read_lines(file)
+  
+  # data set 0
+  data_set_0 = rmfi_parse_comments(sip_lines)
+  comment(sip) = data_set_0$comments
+  sip_lines = data_set_0$remaining_lines
+  rm(data_set_0)
+  
+  # data set 1
+  data_set_1 =rmfi_parse_variables(sip_lines)
+  sip$mxiter = data_set_1$variables[1]
+  sip$nparm = data_set_1$variables[2]
+  sip_lines = data_set_1$remaining_lines
+  rm(data_set_1)
+  
+  # data set 2
+  data_set_2 = rmfi_parse_variables(sip_lines)
+  sip$accl = data_set_2$variables[1]
+  sip$hclose = data_set_2$variables[2]
+  sip$ipcalc = data_set_2$variables[3]
+  sip$wseed = data_set_2$variables[4]
+  sip$iprsip = data_set_2$variables[5]
+  sip_lines = data_set_2$remaining_lines
+  rm(data_set_2)
+  
+  class(sip) = c('sip', 'rmf_package')
+  return(sip)
+  
+  
+}
