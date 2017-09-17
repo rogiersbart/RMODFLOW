@@ -35,18 +35,18 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     dis_lines <- data_set_2$remaining_lines
     rm(data_set_2)
     
-  # data set 3
-    data_set_3 <- rmfi_parse_array(dis_lines, 1, dis$ncol, 1, ndim = 1)
-    dis$delr <- data_set_3$array
-    dis_lines <- data_set_3$remaining_lines
-    rm(data_set_3)
-    
+   # data set 3
+  data_set_3 <- rmfi_parse_variables(dis_lines)
+  dis$delr <- data_set_3$variables
+  dis_lines <- data_set_3$remaining_lines
+  rm(data_set_3)
+  
   # data set 4
-    data_set_4 <- rmfi_parse_array(dis_lines, 1, dis$nrow, 1, ndim = 1)
-    dis$delc <- data_set_4$array
-    dis_lines <- data_set_4$remaining_lines
-    rm(data_set_4)
-    
+  data_set_4 <- rmfi_parse_variables(dis_lines)
+  dis$delc <- data_set_4$variables
+  dis_lines <- data_set_4$remaining_lines
+  rm(data_set_4)
+  
   # data set 5
     data_set_5 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,1, ndim = 2)
     dis_lines <- data_set_5$remaining_lines
