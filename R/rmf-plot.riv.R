@@ -89,7 +89,7 @@ rmf_plot.riv = function(riv,
       riv_df_parm$type = 'parameter'
 
     } # non-parameter data in use
-    if(any(riv$itmp > 0)){
+    if(riv$itmp[sp] != 0){
       sp = tail(subset(which(riv$itmp > 0), which(riv$itmp > 0) <= sp), 1)  # set stress period to last stress period with itmp > 0 before current stress period
       
       riv_df_sp = data.frame(layer = unlist(riv$layer_sp[[sp]]), row = unlist(riv$row_sp[[sp]]), column = unlist(riv$column_sp[[sp]]), stage = unlist(riv$stage_sp[[sp]]), conductance = unlist(riv$cond_sp[[sp]]), rbot = unlist(riv$rbot_sp[[sp]]) )
