@@ -12,8 +12,8 @@
 #' @param numinst vector of length \code{nprch} indicating the number of instances that are included in the time-varying parameter; defaults to NULL
 #' @param instnam list with \code{nprch} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL
 #' @param mltarr list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param zonarr list with \code{nprch} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param iz list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone numbers of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
+#' @param zonarr list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
+#' @param iz list with \code{nprch} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
 #' @param inrech numeric vector of length \code{dis$nper} specifying the \code{rech} read flag which depends on whether or not parameters are specified; defaults to 1
 #' @param inirch numeric vector of length \code{dis$nper} specifying the \code{irch} read flag which depends on whether or not parameters are specified; defaults to NULL
 #' @param rech numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the recharge fluxes; defaults to 1e-8 for all cells in the top layer
@@ -28,25 +28,25 @@
 
 
 rmf_create_rch = function(nprch = NULL,
-                      nrchop = 1,
-                      irchcb = 0,
-                      parnam = NULL, 
-                      parval = NULL, 
-                      nclu = NULL, 
-                      instances = NULL,
-                      numinst = NULL,
-                      instnam = NULL,
-                      mltarr = NULL, 
-                      zonarr = NULL,
-                      iz = NULL,
-                      inrech = 1,
-                      inirch = NULL,
-                      rech = array(1e-8, dim=c(10, 10, 1)), 
-                      pname = NULL, 
-                      iname = NULL,
-                      irchpf = NULL,
-                      irch = NULL
-                      ){
+                          nrchop = 1,
+                          irchcb = 0,
+                          parnam = NULL, 
+                          parval = NULL, 
+                          nclu = NULL, 
+                          instances = NULL,
+                          numinst = NULL,
+                          instnam = NULL,
+                          mltarr = NULL, 
+                          zonarr = NULL,
+                          iz = NULL,
+                          inrech = 1,
+                          inirch = NULL,
+                          rech = array(1e-8, dim=c(10, 10, 1)), 
+                          pname = NULL, 
+                          iname = NULL,
+                          irchpf = NULL,
+                          irch = NULL
+){
   
   rch = list()
   
@@ -55,7 +55,7 @@ rmf_create_rch = function(nprch = NULL,
   
   # data set 1
   if(!is.null(nprch)) rch$nprch = nprch
-
+  
   # data set 2
   rch$nrchop = nrchop
   rch$irchcb = irchcb
@@ -70,7 +70,7 @@ rmf_create_rch = function(nprch = NULL,
     rch$nclu = nclu
     if(!is.null(instances) && T %in% instances) rch$instances = instances
     if(!is.null(rch$instances)) rch$numinst = numinst      
-
+    
     
     # data set 4a
     if(!is.null(rch$instances) && T %in% rch$instances) rch$instnam = instnam

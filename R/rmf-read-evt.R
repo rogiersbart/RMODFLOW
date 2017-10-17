@@ -80,8 +80,9 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
             data_set_4b = rmfi_parse_variables(evt_lines)
             evt$mltarr[[i]][j,k] = as.character(data_set_4b$variables[1])
             evt$zonarr[[i]][j,k] = as.character(data_set_4b$variables[2])
-            if(length(data_set_4b$variables) > 2) evt$iz[[i]][j,k] = as.numeric(data_set_4b$variables[3])
-            
+            if(length(data_set_4b$variables) > 2) evt$iz[[i]][j,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
+          
+              
             k=k+1
             evt_lines = data_set_4b$remaining_lines
             rm(data_set_4b)
@@ -100,7 +101,7 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
           data_set_4b = rmfi_parse_variables(evt_lines)
           evt$mltarr[[i]][1,k] = as.character(data_set_4b$variables[1])
           evt$zonarr[[i]][1,k] = as.character(data_set_4b$variables[2])
-          if(length(data_set_4b$variables) > 2) evt$iz[[i]][1,k] = as.numeric(data_set_4b$variables[3])
+          if(length(data_set_4b$variables) > 2) evt$iz[[i]][1,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
           
           k=k+1
           evt_lines = data_set_4b$remaining_lines

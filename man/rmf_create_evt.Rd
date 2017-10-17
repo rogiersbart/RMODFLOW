@@ -32,9 +32,9 @@ rmf_create_evt(npevt = NULL, nevtop = 1, ievtcb = 0, parnam = NULL,
 
 \item{mltarr}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
 
-\item{zonarr}{list with \code{npevt} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
+\item{zonarr}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
 
-\item{iz}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone numbers of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
+\item{iz}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
 
 \item{insurf}{numeric vector of length \code{dis$nper} specifying the \code{surf} read flag; defaults to 1}
 

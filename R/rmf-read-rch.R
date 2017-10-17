@@ -80,7 +80,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
             data_set_4b = rmfi_parse_variables(rch_lines)
             rch$mltarr[[i]][j,k] = as.character(data_set_4b$variables[1])
             rch$zonarr[[i]][j,k] = as.character(data_set_4b$variables[2])
-            if(length(data_set_4b$variables) > 2) rch$iz[[i]][j,k] = as.numeric(data_set_4b$variables[3])
+            if(length(data_set_4b$variables) > 2) rch$iz[[i]][j,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
 
             k=k+1
             rch_lines = data_set_4b$remaining_lines
@@ -100,7 +100,8 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
           data_set_4b = rmfi_parse_variables(rch_lines)
           rch$mltarr[[i]][1,k] = as.character(data_set_4b$variables[1])
           rch$zonarr[[i]][1,k] = as.character(data_set_4b$variables[2])
-          if(length(data_set_4b$variables) > 2) rch$iz[[i]][1,k] = as.numeric(data_set_4b$variables[3])
+          if(length(data_set_4b$variables) > 2) rch$iz[[i]][1,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
+
           
           k=k+1
           rch_lines = data_set_4b$remaining_lines
@@ -115,14 +116,14 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
   }
   
   # stress periods
- 
+  
   if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch))) rch$rech = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   if(!is.null(rch$nprch) && rch$nprch > 0){
     rch$pname = list()
     if(!is.null(rch$instances) && T %in% rch$instances) rch$iname = list()
     rch$irchpf = list()
   }
-   if(rch$nrchop==2){
+  if(rch$nrchop==2){
     rch$inirch = vector(mode='numeric', length=dis$nper)
     rch$irch = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
   }
@@ -163,8 +164,8 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
     }
     if(is.logical(unlist(rch$iname)) && !any(unlist(rch$iname))) rch$iname = NULL
     if(is.logical(unlist(rch$irchpf)) && !any(unlist(rch$irchpf))) rch$irchpf = NULL
-
-
+    
+    
     if(rch$nrchop == 2 && (!is.null(rch$inirch) && rch$inirch[i] >= 0)){
       # data set 8
       data_set_8 = rmfi_parse_array(rch_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1)

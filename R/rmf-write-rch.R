@@ -20,11 +20,11 @@ rmf_write_rch = function(rch, dis=rmf_read_dis(), file = {cat('Please select rch
   
   # data set 1
   if(!is.null(rch$nprch) && rch$nprch > 0 ) rmfi_write_variables('PARAMETER', rch$nprch, file=file)
-    
+  
   # data set 2
   rmfi_write_variables(rch$nrchop, rch$irchcb, file=file)
   
-    # parameters
+  # parameters
   if(!is.null(rch$nprch) && rch$nprch > 0){
     for (i in 1:rch$nprch){
       # data set 3
@@ -49,10 +49,10 @@ rmf_write_rch = function(rch, dis=rmf_read_dis(), file = {cat('Please select rch
           
         }
       }
-
+      
     }
   }
- 
+  
   
   # stress periods
   for (i in 1:dis$nper){

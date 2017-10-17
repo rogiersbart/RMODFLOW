@@ -6,9 +6,9 @@
 \usage{
 rmf_create_bcf(ibcfcb = 0, hdry = -888, iwdflg = 0, wetfct = 1,
   iwetit = 1, ihdwet = 0, int_trans = rep(0, 3), laycon = rep(0, 3),
-  trpy = rep(1, 3), sf1 = NULL, tran = create_rmodflow_array(0.001, dim =
-  c(10, 10, 3)), hy = NULL, vcont = create_rmodflow_array(1e-05, dim = c(10,
-  10, 2)), sf2 = NULL, wetdry = NULL)
+  trpy = rep(1, 3), sf1 = NULL, tran = array(0.001, dim = c(10, 10, 3)),
+  hy = NULL, vcont = array(1e-05, dim = c(10, 10, 2)), sf2 = NULL,
+  wetdry = NULL)
 }
 \arguments{
 \item{ibcfcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}

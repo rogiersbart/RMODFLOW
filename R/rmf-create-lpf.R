@@ -26,7 +26,7 @@
 #' @param nclu vector with the number of clusters required for each parameter
 #' @param mltarr matrix of multiplier array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA
 #' @param zonarr matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA
-#' @param iz matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""
+#' @param iz character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""
 #' @param hk 3d array with hydraulic conductivity along rows; defaults to 1
 #' @param hani 3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1
 #' @param vka 3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk
