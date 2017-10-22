@@ -34,6 +34,8 @@ rmf_plot.riv = function(riv,
   } 
   if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
 
+  if(all_parm && (is.null(riv$npriv) || (!is.null(riv$npriv) && riv$npriv == 0))) stop('RMODFLOW riv object does not have parameters. Please specify parameters or set all_parm to FALSE')
+  
   
   ##### create data frame  #####
   
@@ -42,7 +44,7 @@ rmf_plot.riv = function(riv,
     if(is.null(instnum)){ # not time-varying
       riv_df = data.frame(layer = unlist(riv$layer_parm), row = unlist(riv$row_parm), column = unlist(riv$column_parm), stage = unlist(riv$stage_parm), condfact = unlist(riv$condfact_parm), rbot = unlist(riv$rbot_parm) )
      
-      # add river conductance values & parameter names & parameter values
+      # add conductance values & parameter names & parameter values
       riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][1,]))
       riv_df$parnam = rep(riv$parnam, riv$nlst) # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))   
       riv_df$parval = rep(riv$parval, riv$nlst) # as.numeric(unlist(lapply(seq_along(riv$parval), function(x) rep(riv$parval[x], riv$nlst[x]))))   
@@ -51,7 +53,7 @@ rmf_plot.riv = function(riv,
     } else { # time varying
       riv_df = data.frame(layer = unlist(lapply(seq_along(riv$layer_parm), function(x) riv$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(riv$row_parm), function(x) riv$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(riv$column_parm), function(x) riv$column_parm[[x]][instnum[x],])), stage = unlist(lapply(seq_along(riv$stage_parm), function(x) riv$stage_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$condfact_parm[[x]][instnum[x],])), rbot = unlist(lapply(seq_along(riv$rbot_parm), function(x) riv$rbot_parm[[x]][instnum[x],])) )
      
-      # add river conductance values & parameter names & instance names & parameter values
+      # add conductance values & parameter names & instance names & parameter values
       riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][instnum[x],]))
       riv_df$parnam = rep(riv$parnam, riv$nlst)  # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))
       riv_df$instnam = as.character(unlist(lapply(seq_along(riv$instnam)), function(x) rep(riv$instnam[[x]][instnum[x]], riv$nlst[x])))
@@ -90,10 +92,12 @@ rmf_plot.riv = function(riv,
 
     } # non-parameter data in use
     if(riv$itmp[sp] != 0){
-      sp = tail(subset(which(riv$itmp > 0), which(riv$itmp > 0) <= sp), 1)  # set stress period to last stress period with itmp > 0 before current stress period
+      sp = tail(subset(which(riv$itmp >= 0), which(riv$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp > 0 before current stress period
       
-      riv_df_sp = data.frame(layer = unlist(riv$layer_sp[[sp]]), row = unlist(riv$row_sp[[sp]]), column = unlist(riv$column_sp[[sp]]), stage = unlist(riv$stage_sp[[sp]]), conductance = unlist(riv$cond_sp[[sp]]), rbot = unlist(riv$rbot_sp[[sp]]) )
-      riv_df_sp$type = 'non-parameter'
+      if(riv$itmp[sp] > 0){
+        riv_df_sp = data.frame(layer = unlist(riv$layer_sp[[sp]]), row = unlist(riv$row_sp[[sp]]), column = unlist(riv$column_sp[[sp]]), stage = unlist(riv$stage_sp[[sp]]), conductance = unlist(riv$cond_sp[[sp]]), rbot = unlist(riv$rbot_sp[[sp]]) )
+        riv_df_sp$type = 'non-parameter'
+      }
     } 
     
     # bind riv_df_parm & riv_df_sp into riv_df (check if they exist first)
@@ -110,17 +114,36 @@ rmf_plot.riv = function(riv,
   
   ##### transform data frame into rmf_array #####
   id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
+  
+  # additive parameters (can be a lot less verbose with dplyr)
+  if(variable == 'conductance' && any(duplicated(id))){
+    
+    riv_df$id = id
+    id_dupl = id[duplicated(id)]
+    riv_df_dupl = riv_df[id %in% id_dupl,]
+    aggr = aggregate(riv_df_dupl[[variable]], by=list(riv_df_dupl$id), FUN=sum)
+    
+    for(i in 1:nrow(aggr)){
+      riv_df[id==aggr[i, 1], variable] = aggr[i, 2]
+    }
+    
+    riv_df = riv_df[!duplicated(id),]
+    id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
+    
+  }
+ 
+  
   rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(variable == 'identity'){
-    	rmf_array[id] = 1
-  	}  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
+      rmf_array[id] = 1
+    }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
        names = factor(rep(seq_along(unique(riv_df[,variable])), as.vector(table(factor(riv_df[,variable], levels=as.character(unique(riv_df[,variable])))))), labels = unique(riv_df[,variable]))
        rmf_array[id] = names
-  	} else {
-  		rmf_array[id] = unlist(riv_df[variable])
+    } else {
+      rmf_array[id] = unlist(riv_df[variable])
     }
   
   ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...) # add levels for factor plots?
+  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
 
 }
