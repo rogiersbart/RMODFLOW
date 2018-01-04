@@ -16,7 +16,7 @@
 #' @param perlen vector of stress period lengths 
 #' @param nstp vector of stress period time steps
 #' @param tsmult vector of successive time step length multipliers
-#' @param sstr character vector with steady state ('SS') or transient ('TS') stress period indicator
+#' @param sstr character vector with steady state ('SS') or transient ('TR') stress period indicator
 #' @return Object of class dis
 #' @export
 #' @seealso \code{\link{rmf_read_dis}}, \code{\link{rmf_write_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
@@ -34,7 +34,7 @@ rmf_create_dis <- function(nlay = 3,
                            perlen = rep(1, nper),
                            nstp = rep(1, nper),
                            tsmult = rep(1, nper),
-                           sstr = c('SS', rep('TS', nper - 1))) {
+                           sstr = c('SS', rep('TR', nper - 1))) {
   dis <- NULL
   
   # data set 0
