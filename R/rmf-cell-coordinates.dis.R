@@ -11,8 +11,10 @@ rmf_cell_coordinates.dis <- function(dis,
   cell_coordinates <- NULL
   cell_coordinates$z <- dis$botm*NA
   cell_coordinates$z[,,1] <- (dis$top+dis$botm[,,1])/2
-  for(k in 2:dis$nlay) {
-    cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
+  if(dis$nlay > 1) {
+    for(k in 2:dis$nlay) {
+      cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
+    }
   }
   class(cell_coordinates$z) <- 'rmf_3d_array'
   cell_coordinates$x <- cell_coordinates$z*0
