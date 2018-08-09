@@ -8,14 +8,14 @@
 rmf_convert_id_to_ijk <- function(id,
                               dis,
                               type = 'r') {
-  k <- id %/% (dis$nrow*dis$ncol)
+  k <- (id - 1) %/% (dis$nrow*dis$ncol)
   id <- id-k*(dis$nrow*dis$ncol)
   if(type == 'r') {
-    j <- id %/% dis$nrow
+    j <- (id - 1) %/% dis$nrow
     i <- id-j*dis$nrow
     return(data.frame(i=i,j=j+1,k=k+1))  
   } else if (type == 'modflow') {
-    i <- id %/% dis$ncol
+    i <- (id - 1) %/% dis$ncol
     j <- id-i*dis$ncol
     return(data.frame(i=i+1,j=j,k=k+1))
   } else {
