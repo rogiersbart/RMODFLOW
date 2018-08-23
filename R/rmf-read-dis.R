@@ -31,9 +31,13 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     
   # data set 2
     data_set_2 <- rmfi_parse_variables(dis_lines)
-    dis$laycbd <- data_set_2$variables
+    dis$laycbd <- as.numeric(data_set_2$variables[1:dis$nlay])
     dis_lines <- data_set_2$remaining_lines
     rm(data_set_2)
+    if(dis$laycbd[dis$nlay] > 0) {
+      warning("Setting laycbd for the bottom layer to zero.")
+      dis$laycbd[dis$nlay] <- 0
+    }
     
   # data set 3
     data_set_3 <- rmfi_parse_array(dis_lines, 1, dis$ncol, 1, ndim = 1)

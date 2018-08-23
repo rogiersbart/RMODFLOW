@@ -50,6 +50,10 @@ rmf_create_dis <- function(nlay = 3,
   
   # data set 2
     dis$laycbd <- laycbd
+    if(dis$laycbd[dis$nlay] > 0) {
+      warning("Setting laycbd for the bottom layer to zero.")
+      dis$laycbd[dis$nlay] <- 0
+    }
   
   # data set 3
     dis$delr <- delr
