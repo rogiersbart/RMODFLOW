@@ -36,8 +36,8 @@
 #' @param wetdry 3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01
 #' @return Object of class lpf
 #' @export
-#' @seealso \code{\link{read_lpf}}, \code{\link{write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
-rmf_create_lpf <- function(dis = create_dis(),
+#' @seealso \code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+rmf_create_lpf <- function(dis = rmf_create_dis(),
                          ilpfcb = 0,
                          hdry = -888,
                          nplpf = 0,
@@ -118,13 +118,13 @@ rmf_create_lpf <- function(dis = create_dis(),
     lpf$iz <- iz
 
   # data set 10-16
-    lpf$hk <- rmf_create_array(hk)
-    lpf$hani <- rmf_create_array(hani)
-    lpf$vka <- rmf_create_array(vka)
-    lpf$ss <- rmf_create_array(ss)
-    lpf$sy <- rmf_create_array(sy)
-    lpf$vkcb <- rmf_create_array(vkcb)
-    lpf$wetdry <- rmf_create_array(wetdry)
+    if(!("HK" %in% lpf$partyp)) lpf$hk <- rmf_create_array(hk)
+    if(!("HANI" %in% lpf$partyp) && any(lpf$chani <= 0)) lpf$hani <- rmf_create_array(hani)
+    if(!("VK" %in% lpf$partyp | "VANI" %in% lpf$partyp)) lpf$vka <- rmf_create_array(vka)
+    if(!("SS" %in% lpf$partyp) && 'TR' %in% dis$sstr) lpf$ss <- rmf_create_array(ss)
+    if(!("SY" %in% lpf$partyp) && 'TR' %in% dis$sstr && any(lpf$laytyp != 0)) lpf$sy <- rmf_create_array(sy)
+    if(!("VKCB" %in% lpf$partyp) && any(dis$laycbd != 0)) lpf$vkcb <- rmf_create_array(vkcb)
+    if(any(lpf$laywet != 0) && any(lpf$laytyp != 0)) lpf$wetdry <- rmf_create_array(wetdry)
     
   class(lpf) <- c('lpf','rmf_package')
   return(lpf)
