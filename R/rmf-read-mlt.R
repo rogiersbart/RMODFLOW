@@ -4,14 +4,15 @@
 #' 
 #' @param file filename; typically '*.mlt'
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
-#' 
+#' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} mlt object
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_mlt}}, \code{\link{rmf_create_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
 
 rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choose()},
-                         dis = {cat('Please select dis file ...\n'); rmf_read_dis(file.choose())}) {
+                         dis = {cat('Please select dis file ...\n'); rmf_read_dis(file.choose())},
+                         ...) {
   mlt <- list()
   mlt_lines <- read_lines(file)
   
@@ -39,7 +40,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
    
    if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn)){
      # data set 3
-     data_set_3 = rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1)
+     data_set_3 = rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
      mlt$rmlt[,,i] = data_set_3$array
      mlt_lines = data_set_3$remaining_lines
      rm(data_set_3)

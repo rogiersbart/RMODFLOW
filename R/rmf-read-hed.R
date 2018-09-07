@@ -7,6 +7,8 @@
 #' @param bas basic file object
 #' @param huf huf object; optional; provide only if huf heads are being read
 #' @param convert_hnoflo_to_NA logical; should hnoflo values be converted to NA?
+#' @param binary logical; is the file binary?
+#' @param precision either \code{'single'} or \code{'double'}. Specified the precision of the binary file.
 #' @return object of class hed
 #' @importFrom readr read_lines
 #' @export
@@ -21,11 +23,16 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
     if(!is.null(huf) && huf$iohufheads > 0) {
       dis$nlay <- huf$nhuf
     }
+    if(bas$xsection) {
+      dis$nrow <- dis$nlay
+      dis$nlay <- 1
+    }
     real_number_bytes <- ifelse(precision == 'single', 4, 8)
     con <- file(file,open='rb')
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
     attr(hed, 'kstp') <- attr(hed, 'kper') <- attr(hed, 'pertim') <- attr(hed, 'totim') <- attr(hed, 'desc') <- attr(hed, 'ncol') <- attr(hed, 'nrow') <- attr(hed, 'ilay') <- NULL
     
+    try({   
     kstp <- readBin(con,what='integer',n=1)
     kper <- readBin(con,what='integer',n=1)
     pertim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
@@ -64,12 +71,12 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
         invisible(readBin(con, what='integer', n=2))
         invisible(readBin(con,what='numeric',n = 2, size = real_number_bytes))
         desc = readChar(con,nchars=16)
-
+        
       } else {
         
         ncol <- readBin(con, what = 'integer', n = 1)
         nrow <- readBin(con, what = 'integer', n = 1)
-        ilay <- readBin(con, what = 'integer', n = 1)
+        ilay <- abs(readBin(con, what = 'integer', n = 1))
         stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
         
         hed[,,ilay,stp_nr] <- aperm(array(readBin(con,what='numeric',n = ncol * nrow, size = real_number_bytes),dim=c(ncol, nrow)), c(2, 1))
@@ -88,7 +95,7 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
         totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
         desc <- readChar(con,nchars=16)
       }
-     
+      
       
     }
     no_data <- which(is.na(attr(hed, 'kstp')))
@@ -103,6 +110,8 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
       attr(hed, 'nrow') <- attr(hed, 'nrow')[-no_data]
       attr(hed, 'ilay') <- attr(hed, 'ilay')[-no_data]
     }
+    })
+    
     close(con)
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
@@ -111,7 +120,10 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
       dis$nlay = huf$nhuf
       hed.lines = hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
     } 
-    
+    if(bas$xsection) {
+      dis$nrow <- dis$nlay
+      dis$nlay <- 1
+    }
     hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, sum(dis$nstp)))
     attr(hed, 'kstp') <- attr(hed, 'kper') <- attr(hed, 'pertim') <- attr(hed, 'totim') <- attr(hed, 'desc') <- attr(hed, 'ncol') <- attr(hed, 'nrow') <- attr(hed, 'ilay') <- NULL
     
@@ -149,7 +161,7 @@ rmf_read_hed <- function(file = {cat('Please select hed file ...\n'); file.choos
       }
       ncol <- as.numeric(variables[length(variables)-3])
       nrow <- as.numeric(variables[length(variables)-2])
-      ilay <- as.numeric(variables[length(variables)-1])
+      ilay <- abs(as.numeric(variables[length(variables)-1]))
       stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
       hed.lines <- hed.lines[-1]
       data_set <- rmfi_parse_array(hed.lines,nrow,ncol,1, skip_header = TRUE)

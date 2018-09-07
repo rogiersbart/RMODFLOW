@@ -4,15 +4,15 @@
 #'
 #' @param file filename; typically '*.rch'
 #' @param dis an \code{RMODFLOW} dis object
-#' 
+#' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} rch object
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_rch}}, \code{\link{rmf_create_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
 rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose()},
-                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}
-){
+                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                        ... ){
   
   rch = list()
   rch_lines = read_lines(file)
@@ -138,7 +138,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
     
     # data set 6
     if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch)) && rch$inrech[i] >= 0) {
-      data_set_6 = rmfi_parse_array(rch_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1)
+      data_set_6 = rmfi_parse_array(rch_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
       rch$rech[,,i] = data_set_6$array
       rch_lines = data_set_6$remaining_lines
       rm(data_set_6)
@@ -168,7 +168,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
     
     if(rch$nrchop == 2 && (!is.null(rch$inirch) && rch$inirch[i] >= 0)){
       # data set 8
-      data_set_8 = rmfi_parse_array(rch_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1)
+      data_set_8 = rmfi_parse_array(rch_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
       rch$irch[,,i] = data_set_8$array
       rch_lines = data_set_8$remaining_lines
       rm(data_set_8)

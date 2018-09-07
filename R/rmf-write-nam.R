@@ -10,7 +10,7 @@ rmf_write_nam <- function(nam,
                       file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()}) {
   
   # data set 1
-    write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE, na='')
 }
 
 #' @describeIn rmf_write_nam Deprecated function name

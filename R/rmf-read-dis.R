@@ -3,11 +3,12 @@
 #' \code{rmf_read_dis} reads in a MODFLOW discretization file and returns it as an \code{\link{RMODFLOW}} dis object.
 #' 
 #' @param file filename; typically '*.dis'
+#' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class dis
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
-rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}) {
+rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}, ...) {
   
   dis_lines <- read_lines(file)
   dis <- list()
@@ -34,31 +35,31 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     dis$laycbd <- as.numeric(data_set_2$variables[1:dis$nlay])
     dis_lines <- data_set_2$remaining_lines
     rm(data_set_2)
-    if(dis$laycbd[dis$nlay] > 0) {
+    if(dis$laycbd[dis$nlay] != 0) {
       warning("Setting laycbd for the bottom layer to zero.")
       dis$laycbd[dis$nlay] <- 0
     }
     
   # data set 3
-    data_set_3 <- rmfi_parse_array(dis_lines, 1, dis$ncol, 1, ndim = 1)
-    dis$delr <- c(data_set_3$array)
+    data_set_3 <- rmfi_parse_array(dis_lines, 1, dis$ncol, 1, ndim = 1, file = file, ...)
+    dis$delr <- data_set_3$array
     dis_lines <- data_set_3$remaining_lines
     rm(data_set_3)
     
   # data set 4
-    data_set_4 <- rmfi_parse_array(dis_lines, 1, dis$nrow, 1, ndim = 1)
-    dis$delc <- c(data_set_4$array)
+    data_set_4 <- rmfi_parse_array(dis_lines, 1, dis$nrow, 1, ndim = 1, file = file, ...)
+    dis$delc <- data_set_4$array
     dis_lines <- data_set_4$remaining_lines
     rm(data_set_4)
   
   # data set 5
-    data_set_5 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,1, ndim = 2)
+    data_set_5 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
     dis_lines <- data_set_5$remaining_lines
     dis$top <- data_set_5$array
     rm(data_set_5)
   
   # data set 6
-    data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd))
+    data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd), file = file, ...)
     dis_lines <- data_set_6$remaining_lines
     dis$botm <- data_set_6$array
     rm(data_set_6)

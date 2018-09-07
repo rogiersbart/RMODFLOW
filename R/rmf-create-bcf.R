@@ -8,7 +8,7 @@
 #' @param wetfct factor included in the calculation of the initial head when a cell is converted from dry to wet; defaults to 1
 #' @param iwetit iteration interval for attempting to wet cells; defaults to 1
 #' @param ihdwet flag determining which equation is used to define initial heads at cells that are converted from dry to wet; defaults to 0
-#' @param int_trans numeric vector of length \code{dis$nlay} determining which method of calculating interblock transmissivity to use for each layer; defaults to 0 for 3 layers
+#' @param layavg numeric vector of length \code{dis$nlay} determining which method of calculating interblock transmissivity to use for each layer; defaults to 0 for 3 layers
 #' @param laycon numeric vector of length \code{dis$nlay} determining which layer type (LAYCON) to use for each layer; defaults to 0 for 3 layer
 #' @param trpy numeric vector of length \code{dis$nlay} determining the horizontal anisotropy of each layer; defaults to 1 for 3 layers
 #' @param sf1 numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nlay} specifying the primary storage coefficient for each cell. If not read for a specific layer, set all values in that layer to NA; defaults to NULL
@@ -28,7 +28,7 @@ rmf_create_bcf = function(ibcfcb = 0,
                           wetfct = 1,
                           iwetit = 1,
                           ihdwet = 0,
-                          int_trans = rep(0, 3),
+                          layavg = rep(0, 3),
                           laycon = rep(0, 3),
                           trpy = rep(1, 3),
                           sf1 = NULL,
@@ -53,7 +53,7 @@ rmf_create_bcf = function(ibcfcb = 0,
   bcf$ihdwet = ihdwet
   
   # data set 2
-  bcf$int_trans = int_trans
+  bcf$layavg = layavg
   bcf$laycon = laycon
   
   # data set 3

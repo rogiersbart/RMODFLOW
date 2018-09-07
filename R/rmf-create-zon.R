@@ -12,24 +12,24 @@
 
 rmf_create_zon = function(nzn = 1,
                       zonnam = 'ZONE',
-                      izon = array(1, dim=c(10, 10, 1))
+                      izon = array(1L, dim=c(10, 10, 1))
                       ){
   
-  zon = list()
+  zon <-  list()
   
   # data set 
   # to provide comments, use ?comment on resulting zon object
   
   # data set 1
-  zon$nzn = nzn
+  zon$nzn <-  nzn
   
   # data set 2
-  zon$zonnam = zonnam
+  zon$zonnam <-  zonnam
   
   # data set 3
-  zon$izon = izon
+  zon$izon <-  rmf_create_array(apply(izon, MARGIN = 1:length(dim(izon)), function(i) as.integer(i)))
   
-  class(zon) = c('zon', 'modflow_package')
+  class(zon) <-  c('zon', 'modflow_package')
   return(zon)
   
 }

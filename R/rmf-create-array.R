@@ -23,3 +23,40 @@ create_rmodflow_array <- function(...) {
   .Deprecated(new = "rmf_create_array", old = "create_rmodflow_array")
   rmf_create_array(...)
 }
+
+#' @export
+"[.rmf_4d_array" = function(x, i, j, k, l, ...) {
+  obj <-  NextMethod()
+  if (length(dim(obj)) == 2) {
+    class(obj) <- "rmf_2d_array"
+  }
+  else if (length(dim(obj)) == 3) {
+    class(obj) <- "rmf_3d_array"
+  } 
+  else if (length(dim(obj)) == 4) {
+    class(obj) <- "rmf_4d_array"
+  }
+  return(obj)
+}
+
+#' @export
+"[.rmf_3d_array" = function(x, i, j, k, ...) {
+  obj <-  NextMethod()
+  if (length(dim(obj)) == 2) {
+    class(obj) <- "rmf_2d_array"
+  }
+  else if (length(dim(obj)) == 3) {
+    class(obj) <- "rmf_3d_array"
+  }
+  return(obj)
+}
+
+#' @export
+"[.rmf_2d_array" = function(x, i, j, ...) {
+  obj <-  NextMethod()
+  if (length(dim(obj)) == 2) {
+    class(obj) <- "rmf_2d_array"
+  }
+  return(obj)
+}
+

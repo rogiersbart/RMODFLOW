@@ -3,12 +3,14 @@
 #' @param dis an \code{\link{RMODFLOW}} dis object
 #' @param file filename to write to; typically '*.dis'
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{read_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 rmf_write_dis <- function(dis,
                           file = {cat('Please select dis file to overwrite or provide new filename ...\n'); file.choose()},
-                          iprn=-1) {
+                          iprn=-1,
+                          ...) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
@@ -24,16 +26,16 @@ rmf_write_dis <- function(dis,
 #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
    # data set 3
-    rmfi_write_array(dis$delr,file=file,iprn=iprn)  
+    rmfi_write_array(dis$delr,file=file,iprn=iprn, ...)  
   
   # data set 4
-    rmfi_write_array(dis$delc,file=file,iprn=iprn)
+    rmfi_write_array(dis$delc,file=file,iprn=iprn, ...)
   
   # data set 5
-    rmfi_write_array(dis$top,file=file,iprn=iprn)
+    rmfi_write_array(dis$top,file=file,iprn=iprn, ...)
   
   # data set 6
-    rmfi_write_array(dis$botm,file=file,iprn=iprn)
+    rmfi_write_array(dis$botm,file=file,iprn=iprn, ...)
     
   # data set 7
     for(i in 1:dis$nper) {

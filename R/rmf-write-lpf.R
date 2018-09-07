@@ -3,12 +3,14 @@
 #' @param lpf an \code{\link{RMODFLOW}} lpf object
 #' @param file filename to write to; typically '*.lpf'
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
 rmf_write_lpf <- function(lpf,
                       file = {cat('Please select lpf file to overwrite or provide new filename ...\n'); file.choose()},
                       dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                      iprn=-1) {
+                      iprn=-1,
+                      ...) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
@@ -56,7 +58,7 @@ rmf_write_lpf <- function(lpf,
       if('HK' %in% lpf$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(lpf$hk[,,k], file = file, iprn = iprn)
+        rmfi_write_array(lpf$hk[,,k], file = file, iprn = iprn, ...)
       }
       
     # data set 11
@@ -64,7 +66,7 @@ rmf_write_lpf <- function(lpf,
         if('HANI' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          rmfi_write_array(lpf$hani[,,k], file = file, iprn = iprn)
+          rmfi_write_array(lpf$hani[,,k], file = file, iprn = iprn, ...)
         }
       }
       
@@ -72,7 +74,7 @@ rmf_write_lpf <- function(lpf,
       if('VK' %in% lpf$partyp | 'VANI' %in% lpf$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(lpf$vka[,,k], file = file, iprn = iprn)
+        rmfi_write_array(lpf$vka[,,k], file = file, iprn = iprn, ...)
       }
       
     # data set 13
@@ -80,7 +82,7 @@ rmf_write_lpf <- function(lpf,
         if('SS' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          rmfi_write_array(lpf$ss[,,k], file = file, iprn = iprn)
+          rmfi_write_array(lpf$ss[,,k], file = file, iprn = iprn, ...)
         }
       }
       
@@ -89,7 +91,7 @@ rmf_write_lpf <- function(lpf,
         if('SY' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          rmfi_write_array(lpf$sy[,,k], file = file, iprn = iprn)
+          rmfi_write_array(lpf$sy[,,k], file = file, iprn = iprn, ...)
         }
       }
       
@@ -98,13 +100,13 @@ rmf_write_lpf <- function(lpf,
         if('VKCB' %in% lpf$partyp) {
           cat(paste0(iprn,'\n'),file=file,append=TRUE)
         } else {
-          rmfi_write_array(lpf$vkcb[,,k], file = file, iprn = iprn)
+          rmfi_write_array(lpf$vkcb[,,k], file = file, iprn = iprn, ...)
         }
       }
       
     # data set 16
       if(lpf$laywet[k] != 0 & lpf$laytyp[k] != 0) {
-        rmfi_write_array(lpf$wetdry[,,k], file = file, iprn = iprn)
+        rmfi_write_array(lpf$wetdry[,,k], file = file, iprn = iprn, ...)
       }     
     }
 }

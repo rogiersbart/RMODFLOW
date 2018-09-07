@@ -15,6 +15,7 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
   output_ijk <- grepl('ijk',output)
   output_off <- grepl('off',output)
   if(!is.null(prj)) {
+    if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
     x <- x-prj$origin[1]
     y <- y-prj$origin[2]
     angle <- atan(y/x)*180/pi - prj$rotation
@@ -27,7 +28,7 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
   if(output_ijk | output_off) {
-    if(is.null(dis)) error('Please provide dis argument ...')    
+    if(is.null(dis)) stop('Please provide dis argument ...')    
     if(ncol(dat)==3) {
       dis$thck <- dis$tops <- dis$botm
       dis$thck[,,1] <- dis$top - dis$botm[,,1]
@@ -45,12 +46,31 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
         dat$loff[i] <- -(dat$z[i]-(dis$tops[dat$i[i],dat$j[i],dat$k[i]]+dis$botm[dat$i[i],dat$j[i],dat$k[i]])/2)/dis$thck[dat$i[i],dat$j[i],dat$k[i]]
       }
     }
-    if(output_xyz & output_ijk & output_off) return(dat)
-    if(output_xyz & output_ijk & !output_off) return(dat[,c('x','y','z','i','j','k')])
-    if(output_xyz & !output_ijk & output_off) return(dat[,c('x','y','z','roff','coff','loff')])
-    if(!output_xyz & output_ijk & output_off) return(dat[,c('i','j','k','roff','coff','loff')])
-    if(!output_xyz & !output_ijk & output_off) return(dat[,c('roff','coff','loff')])
-    if(!output_xyz & output_ijk & !output_off) return(dat[,c('i','j','k')])
+    
+    columns = vector(mode = "character")
+    if(output_xyz) {
+      if(!is.null(z)){
+        columns = append(columns, c('x','y','z'))
+      } else {
+        columns = append(columns, c('x','y'))
+      }
+    }
+    if(output_ijk) {
+      if(!is.null(z)) {
+        columns = append(columns, c('i','j','k'))
+      } else {
+        columns = append(columns, c('i','j'))
+      }
+    }
+    if(output_off) {
+      if(!is.null(z)) {
+        columns = append(columns, c('roff','coff','loff'))
+      } else {
+        columns = append(columns, c('roff','coff'))
+      }
+    }
+    
+    return(dat[,columns])
   } else {
     return(dat)
   }

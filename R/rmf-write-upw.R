@@ -3,6 +3,7 @@
 #' @param upw an \code{\link{RMODFLOW}} upw object
 #' @param file filename to write to; typically '*.upw'
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
 #' @return \code{NULL}
@@ -10,7 +11,8 @@
 rmf_write_upw <- function(upw,
                           file = {cat('Please select upw file to overwrite or provide new filename ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                          iprn=-1) {
+                          iprn=-1, 
+                          ...) {
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -53,7 +55,7 @@ rmf_write_upw <- function(upw,
     if('HK' %in% upw$partyp) {
       cat(paste0(iprn,'\n'),file=file,append=TRUE)
     } else {
-      rmfi_write_array(upw$hk[,,k], file = file, iprn = iprn)
+      rmfi_write_array(upw$hk[,,k], file = file, iprn = iprn, ...)
     }
     
     # data set 10
@@ -61,7 +63,7 @@ rmf_write_upw <- function(upw,
       if('HANI' %in% upw$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(upw$hani[,,k], file = file, iprn = iprn)
+        rmfi_write_array(upw$hani[,,k], file = file, iprn = iprn, ...)
       }
     }
     
@@ -69,7 +71,7 @@ rmf_write_upw <- function(upw,
     if('VK' %in% upw$partyp | 'VANI' %in% upw$partyp) {
       cat(paste0(iprn,'\n'),file=file,append=TRUE)
     } else {
-      rmfi_write_array(upw$vka[,,k], file = file, iprn = iprn)
+      rmfi_write_array(upw$vka[,,k], file = file, iprn = iprn, ...)
     }
     
     # data set 12
@@ -77,7 +79,7 @@ rmf_write_upw <- function(upw,
       if('SS' %in% upw$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(upw$ss[,,k], file = file, iprn = iprn)
+        rmfi_write_array(upw$ss[,,k], file = file, iprn = iprn, ...)
       }
     }
     
@@ -86,7 +88,7 @@ rmf_write_upw <- function(upw,
       if('SY' %in% upw$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(upw$sy[,,k], file = file, iprn = iprn)
+        rmfi_write_array(upw$sy[,,k], file = file, iprn = iprn, ...)
       }
     }
     
@@ -95,7 +97,7 @@ rmf_write_upw <- function(upw,
       if('VKCB' %in% upw$partyp) {
         cat(paste0(iprn,'\n'),file=file,append=TRUE)
       } else {
-        rmfi_write_array(upw$vkcb[,,k], file = file, iprn = iprn)
+        rmfi_write_array(upw$vkcb[,,k], file = file, iprn = iprn, ...)
       }
     }
   }

@@ -6,8 +6,8 @@
 #' @details a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @export
 rmf_convert_id_to_ijk <- function(id,
-                              dis,
-                              type = 'r') {
+                                  dis,
+                                  type = 'r') {
   k <- (id - 1) %/% (dis$nrow*dis$ncol)
   id <- id-k*(dis$nrow*dis$ncol)
   if(type == 'r') {

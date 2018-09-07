@@ -4,15 +4,15 @@
 #'
 #' @param file filename; typically '*.evt'
 #' @param dis an \code{RMODFLOW} dis object
-#' 
+#' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} evt object
 #' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
 rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n'); file.choose()},
-                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}
-){
+                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                        ...) {
   
   evt = list()
   evt_lines = read_lines(file)
@@ -142,7 +142,7 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
     
     # data set 6
     if(evt$insurf[i] >= 0){
-      data_set_6 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1)
+      data_set_6 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
       evt$surf[,,i] = data_set_6$array
       evt_lines = data_set_6$remaining_lines
       rm(data_set_6)
@@ -151,7 +151,7 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
     
     # data set 7
     if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt)) && evt$inevtr[i] >= 0) {
-      data_set_7 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1)
+      data_set_7 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
       evt$evtr[,,i] = data_set_7$array
       evt_lines = data_set_7$remaining_lines
       rm(data_set_7)
@@ -180,7 +180,7 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
     
     # data set 9
     if(evt$inexdp[i] >= 0){
-      data_set_9 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1)
+      data_set_9 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
       evt$exdp[,,i] = data_set_9$array
       evt_lines = data_set_9$remaining_lines
       rm(data_set_9)
@@ -188,7 +188,7 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
     
     if(evt$nevtop == 2 && (!is.null(evt$inievt) && evt$inievt[i] >= 0)){
       # data set 10
-      data_set_10 = rmfi_parse_array(evt_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1)
+      data_set_10 = rmfi_parse_array(evt_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
       evt$ievt[,,i] = data_set_10$array
       evt_lines = data_set_10$remaining_lines
       rm(data_set_10)
