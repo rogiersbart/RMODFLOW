@@ -12,6 +12,7 @@ rmf_convert_huf_to_grid <- function(values,
                                     dis,
                                     mask = dis$top / dis$top,
                                     type = 'arithmetic') {
+  if(any(dis$laycbd != 0)) warning('Using Quasi-3D confining beds as explicit layers')
   num_grid_array <- dis$botm*NA
   huf$botm <- huf$thck*NA
   huf$botm[,,1] <- huf$top[,,1]-huf$thck[,,1]

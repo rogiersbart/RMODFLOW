@@ -51,7 +51,7 @@ rmf_plot.rmf_3d_array <- function(array,
     stop('Please provide i, j or k.', call. = FALSE)
   }
   if(!is.null(hed)) {
-    satdis <- convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+    satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
     p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,title=title)
     if(gridlines) {
       return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
@@ -61,6 +61,8 @@ rmf_plot.rmf_3d_array <- function(array,
   }
   
   if(!is.null(k)) {
+    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Make sure k index is adjusted correctly if the array explicitly represents Quasi-3D confining beds.', 
+                                     call. = FALSE)
     zlim <- zlim
     mask <- mask
     array <- array[,,k]
@@ -74,12 +76,13 @@ rmf_plot.rmf_3d_array <- function(array,
     mask[which(mask==0)] <- NA
     dis$thck <- dis$botm
     dis$thck[,,1] <- dis$top-dis$botm[,,1]
-    for(a in 2:dis$nlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
+    nnlay <- dis$nlay+length(which(dis$laycbd != 0))
+    for(a in 2:nnlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
     dis$center <- dis$botm
-    for(a in 1:dis$nlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+    for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
     if(is.null(i) & !is.null(j)) {
-      ids <- factor(1:(dis$nrow*dis$nlay))
-      xWidth <- rep(rev(dis$delc),dis$nlay)
+      ids <- factor(1:(dis$nrow*nnlay))
+      xWidth <- rep(rev(dis$delc),nnlay)
       yWidth <- dis$thck[,j,]
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
@@ -97,7 +100,7 @@ rmf_plot.rmf_3d_array <- function(array,
         positions$y <- new_positions$z
       }
       if(!is.null(crs)) {
-        warning('Transforming vertical coordinates')
+        warning('Transforming vertical coordinates', call. = FALSE)
         positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       datapoly <- merge(values, positions, by=c("id"))
@@ -105,8 +108,8 @@ rmf_plot.rmf_3d_array <- function(array,
       xlabel <- 'y'
       ylabel <- 'z'
     } else if(!is.null(i) & is.null(j)) {
-      ids <- factor(1:(dis$ncol*dis$nlay))
-      xWidth <- rep(dis$delr,dis$nlay)
+      ids <- factor(1:(dis$ncol*nnlay))
+      xWidth <- rep(dis$delr,nnlay)
       yWidth <- dis$thck[i,,]
       positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
       positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
@@ -124,7 +127,7 @@ rmf_plot.rmf_3d_array <- function(array,
         positions$y <- new_positions$z
       }
       if(!is.null(crs)) {
-        warning('Transforming vertical coordinates')
+        warning('Transforming vertical coordinates', call. = FALSE)
         positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       datapoly <- merge(values, positions, by=c("id"))
