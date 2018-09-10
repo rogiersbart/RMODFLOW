@@ -48,7 +48,15 @@ rmf_plot.rmf_3d_array <- function(array,
                           ...) {
 
   if(is.null(i) & is.null(j) & is.null(k)) {
-    stop('Please provide i, j or k.', call. = FALSE)
+    if(dim(array)[3] == 1) {
+      k = 1
+    } else if(dim(array)[2] == 1) {
+      j = 1
+    } else if(dim(array)[1] == 1) {
+      i = 1
+    } else {
+      stop('Please provide i, j or k.', call. = FALSE)
+    }
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
@@ -77,7 +85,7 @@ rmf_plot.rmf_3d_array <- function(array,
     dis$thck <- dis$botm
     dis$thck[,,1] <- dis$top-dis$botm[,,1]
     nnlay <- dis$nlay+length(which(dis$laycbd != 0))
-    for(a in 2:nnlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
+    if(nnlay > 1) for(a in 2:nnlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
     dis$center <- dis$botm
     for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
     if(is.null(i) & !is.null(j)) {
