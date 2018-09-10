@@ -6,7 +6,7 @@
 #' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
-#' @seealso \code{\link{read_dis}}, \code{\link{create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
+#' @seealso \code{\link{rmf_read_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 rmf_write_dis <- function(dis,
                           file = {cat('Please select dis file to overwrite or provide new filename ...\n'); file.choose()},
                           iprn=-1,

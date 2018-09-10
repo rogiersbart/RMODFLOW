@@ -59,9 +59,10 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     rm(data_set_5)
   
   # data set 6
-    data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+sum(dis$laycbd), file = file, ...)
+    data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+length(which(dis$laycbd != 0)), file = file, ...)
     dis_lines <- data_set_6$remaining_lines
-    dis$botm <- data_set_6$array
+    dis$botm <- rmf_create_array(data_set_6$array, dim = rmfi_ifelse0(length(dim(data_set_6$array)) > 2,
+                                                                      dim(data_set_6$array), c(dim(data_set_6$array), 1)))
     rm(data_set_6)
   
   # data set 7

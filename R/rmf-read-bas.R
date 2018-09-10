@@ -36,7 +36,8 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
     
   # data set 2
     data_set_2 <- rmfi_parse_array(bas_lines,nrow=ifelse(bas$xsection,dis$nlay,dis$nrow),ncol=dis$ncol,nlay=ifelse(bas$xsection,1,dis$nlay), file = file, integer = TRUE, ...)
-    bas$ibound <- rmf_create_array(apply(data_set_2$array, MARGIN = 1:length(dim(data_set_2$array)), function(i) as.integer(i)))
+    bas$ibound <- rmf_create_array(apply(data_set_2$array, MARGIN = 1:length(dim(data_set_2$array)), function(i) as.integer(i)),
+                                   dim = rmfi_ifelse0(length(dim(data_set_2$array)) >2, dim(data_set_2$array), c(dim(data_set_2$array),1)))
     bas_lines <- data_set_2$remaining_lines
     rm(data_set_2)
   
@@ -48,7 +49,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
     
   # data set 4
     data_set_4 <- rmfi_parse_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay), file = file, ...)
-    bas$strt <- data_set_4$array
+    bas$strt <- rmf_create_array(data_set_4$array, dim = rmfi_ifelse0(length(dim(data_set_4$array)) > 2, dim(data_set_4$array), c(dim(data_set_4$array),1)))
     bas_lines <- data_set_4$remaining_lines
     rm(data_set_4)
   
