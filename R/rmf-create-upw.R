@@ -18,12 +18,12 @@
 #' @param mltarr matrix of multiplier array names, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA
 #' @param zonarr matrix of zone array names, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA
 #' @param iz character matrix of zone number combinations separated by spaces, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""
-#' @param hk 3d array with hydraulic conductivity along rows; defaults to 1
-#' @param hani 3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1
-#' @param vka 3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk
-#' @param ss 3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5
-#' @param sy 3d array with specific yield; only required when there are transient stress periods; defaults to 0.15
-#' @param vkcb 3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0
+#' @param hk 3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.
+#' @param hani 3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.
+#' @param vka 3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk. If not read for a specific layer, set all values in that layer to NA.
+#' @param ss 3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5. If not read for a specific layer, set all values in that layer to NA.
+#' @param sy 3d array with specific yield; only required when there are transient stress periods; defaults to 0.15. If not read for a specific layer, set all values in that layer to NA.
+#' @param vkcb 3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0. If not read for a specific layer, set all values in that layer to NA.
 #' @return Object of class upw
 #' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
@@ -88,12 +88,18 @@ rmf_create_upw <- function(dis = rmf_create_dis(),
   upw$iz <- iz
   
   # data set 9-14
-  if(!("HK" %in% upw$partyp)) upw$hk <- rmf_create_array(hk)
-  if(!("HANI" %in% upw$partyp) && any(upw$chani <= 0)) upw$hani <- rmf_create_array(hani)
-  if(!("VK" %in% upw$partyp | "VANI" %in% upw$partyp)) upw$vka <- rmf_create_array(vka)
-  if(!("SS" %in% upw$partyp) && 'TR' %in% dis$sstr) upw$ss <- rmf_create_array(ss)
-  if(!("SY" %in% upw$partyp) && 'TR' %in% dis$sstr && any(upw$laytyp != 0)) upw$sy <- rmf_create_array(sy)
-  if(!("VKCB" %in% upw$partyp) && any(dis$laycbd != 0)) upw$vkcb <- rmf_create_array(vkcb)
+  if(!("HK" %in% upw$partyp)) upw$hk <- rmf_create_array(hk,
+                                                         dim = rmfi_ifelse0(length(dim(hk)) > 2, dim(hk), c(dim(hk),1)))
+  if(!("HANI" %in% upw$partyp) && any(upw$chani <= 0)) upw$hani <- rmf_create_array(hani,
+                                                                                    dim = rmfi_ifelse0(length(dim(hani)) > 2, dim(hani), c(dim(hani),1)))
+  if(!("VK" %in% upw$partyp | "VANI" %in% upw$partyp)) upw$vka <- rmf_create_array(vka,
+                                                                                   dim = rmfi_ifelse0(length(dim(vka)) > 2, dim(vka), c(dim(vka),1)))
+  if(!("SS" %in% upw$partyp) && 'TR' %in% dis$sstr) upw$ss <- rmf_create_array(ss,
+                                                                               dim = rmfi_ifelse0(length(dim(ss)) > 2, dim(ss), c(dim(ss),1)))
+  if(!("SY" %in% upw$partyp) && 'TR' %in% dis$sstr && any(upw$laytyp != 0)) upw$sy <- rmf_create_array(sy,
+                                                                                                       dim = rmfi_ifelse0(length(dim(sy)) > 2, dim(sy), c(dim(sy),1)))
+  if(!("VKCB" %in% upw$partyp) && any(dis$laycbd != 0)) upw$vkcb <- rmf_create_array(vkcb,
+                                                                                     dim = rmfi_ifelse0(length(dim(vkcb)) > 2, dim(vkcb), c(dim(vkcb),1)))
 
   class(upw) <- c('upw','rmf_package')
   return(upw)

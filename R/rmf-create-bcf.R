@@ -22,19 +22,20 @@
 #' @export
 #' @seealso \code{\link{rmf_read_bcf}}, \code{\link{rmf_write_bcf}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
 
-rmf_create_bcf = function(ibcfcb = 0,
+rmf_create_bcf = function(dis = rmf_create_dis(),
+                          ibcfcb = 0,
                           hdry = -888,
                           iwdflg = 0,
                           wetfct = 1,
                           iwetit = 1,
                           ihdwet = 0,
-                          layavg = rep(0, 3),
-                          laycon = rep(0, 3),
-                          trpy = rep(1, 3),
+                          layavg = rep(0, dis$nlay),
+                          laycon = rep(0, dis$nlay),
+                          trpy = rep(1, dis$nlay),
                           sf1 = NULL,
-                          tran = array(0.001, dim=c(10, 10, 3)),
+                          tran = array(0.001, dim=c(dis$nrow, dis$ncol, dis$nlay)),
                           hy = NULL,
-                          vcont = array(1e-5, dim=c(10, 10, 2)),
+                          vcont = array(1e-5, dim=c(dis$nrow, dis$ncol, dis$nlay)),
                           sf2 = NULL,
                           wetdry = NULL
                           ){
@@ -60,22 +61,28 @@ rmf_create_bcf = function(ibcfcb = 0,
   bcf$trpy = trpy
   
   # data set 4
-  if(!is.null(sf1)) bcf$sf1 = sf1
+  if(!is.null(sf1)) bcf$sf1 = rmf_create_array(sf1, 
+                                               dim = rmfi_ifelse0(length(dim(sf1)) > 2, dim(sf1), c(dim(sf1),1)))
   
   # data set 5
-  if(!is.null(tran)) bcf$tran = tran
+  if(!is.null(tran)) bcf$tran = rmf_create_array(tran,
+                                                 dim = rmfi_ifelse0(length(dim(tran)) > 2, dim(tran), c(dim(tran),1)))
   
   # data set 6
-  if(!is.null(hy)) bcf$hy = hy
+  if(!is.null(hy)) bcf$hy = rmf_create_array(hy,
+                                             dim = rmfi_ifelse0(length(dim(hy)) > 2, dim(hy), c(dim(hy),1)))
   
   # data set 7
-  bcf$vcont = vcont
+  bcf$vcont = rmf_create_array(vcont,
+                               dim = rmfi_ifelse0(length(dim(vcont)) > 2, dim(vcont), c(dim(vcont),1)))
   
   # data set 8
-  if(!is.null(sf2)) bcf$sf2 = sf2
+  if(!is.null(sf2)) bcf$sf2 = rmf_create_array(sf2,
+                                               dim = rmfi_ifelse0(length(dim(sf2)) > 2, dim(sf2), c(dim(sf2),1)))
   
   # data set 9
-  if(!is.null(wetdry)) bcf$wetdry = wetdry
+  if(!is.null(wetdry)) bcf$wetdry = rmf_create_array(wetdry,
+                                                     dim = rmfi_ifelse0(length(dim(wetdry)) > 2, dim(wetdry), c(dim(wetdry),1)))
   
   class(bcf) = c('bcf', 'rmf_package')
   return(bcf)
