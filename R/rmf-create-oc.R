@@ -18,12 +18,12 @@
 #' @param ibound_label logical; should labels be included in the unformatted ibound file?
 #' @param iperoc vector of stress period numbers
 #' @param itsoc vector of time step numbers (within the corresponding stress period)
-#' @param print_head logical vector; should heads be printed for the time step corresponding to iperoc and itsoc?
-#' @param print_drawdown logical vector; should drawdowns be printed for the time step corresponding to iperoc and itsoc?
+#' @param print_head logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param print_drawdown logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
 #' @param print_budget logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?
-#' @param save_head logical vector; should heads be saved for the time step corresponding to iperoc and itsoc?
-#' @param save_drawdown logical vector; should drawdowns be saved for the time step corresponding to iperoc and itsoc?
-#' @param save_ibound logical vector; should ibound be saved for the time step corresponding to iperoc and itsoc?
+#' @param save_head logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param save_drawdown logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param save_ibound logical vector or logical matrix of dimensions NLAY x length(iperoc); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
 #' @param save_budget logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?
 #' @param incode vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #' @param ihddfl vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)

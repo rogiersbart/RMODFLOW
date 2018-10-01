@@ -57,38 +57,102 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   # data set 2 & 3
     oc$iperoc <- NULL
     oc$itsoc <- NULL
-    oc$print_head <- oc$print_budget <- oc$print_drawdown <- oc$save_head <- oc$save_ibound <- oc$save_drawdown <- oc$save_budget <- NULL
+    oc$print_drawdown <-  oc$print_head <- matrix(nrow = dis$nlay, ncol = 0)
+    oc$print_budget <- NULL
+    oc$save_ibound <- oc$save_drawdown <-  oc$save_head <- matrix(nrow = dis$nlay, ncol = 0)
+    oc$save_budget <- NULL
+    
     while(length(oc_lines) != 0) {
       data_set_2 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
       oc_lines <- oc_lines[-1]
       oc$iperoc <- append(oc$iperoc, as.numeric(data_set_2[2]))
       oc$itsoc <- append(oc$itsoc, as.numeric(data_set_2[4]))
+      
       while(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] != 'PERIOD' & length(oc_lines) != 0) {
         if(grepl('PRINT HEAD', oc_lines[1])) {
-          oc$print_head[length(oc$iperoc)] <- TRUE
-        } else if(grepl('PRINT DRAWDOWN', oc_lines[1])) {
-          oc$print_drawdown[length(oc$iperoc)] <- TRUE
-        } else if(grepl('PRINT BUDGET', oc_lines[1])) {
-          oc$print_budget[length(oc$iperoc)] <- TRUE
-        } else if(grepl('SAVE HEAD', oc_lines[1])) {
-          oc$save_head[length(oc$iperoc)] <- TRUE
-        } else if(grepl('SAVE DRAWDOWN', oc_lines[1])) {
-          oc$save_drawdown[length(oc$iperoc)] <- TRUE
-        } else if(grepl('SAVE IBOUND', oc_lines[1])) {
-          oc$save_ibound[length(oc$iperoc)] <- TRUE
-        } else if(grepl('SAVE BUDGET', oc_lines[1])) {
-          oc$save_budget[length(oc$iperoc)] <- TRUE
-        }
+          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+            layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
+            oc$print_head <- cbind(oc$print_head, 1:dis$nlay %in% layers)
+          } else {
+            oc$print_head <- cbind(oc$print_head, rep(T,dis$nlay))
+          }
+        } 
+        
+        if(grepl('PRINT DRAWDOWN', oc_lines[1])) {
+          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+            layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
+            oc$print_drawdown <- cbind(oc$print_drawdown, 1:dis$nlay %in% layers)
+          } else {
+            oc$print_drawdown <- cbind(oc$print_drawdown, rep(T,dis$nlay))
+          }
+        } 
+        
+        if(grepl('PRINT BUDGET', oc_lines[1])) {
+          oc$print_budget <- append(oc$print_budget, T)
+        } 
+        
+        if(grepl('SAVE HEAD', oc_lines[1])) {
+          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+            layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
+            oc$save_head <- cbind(oc$save_head, 1:dis$nlay %in% layers)
+          } else {
+            oc$save_head <- cbind(oc$save_head, rep(T,dis$nlay))
+          }
+        } 
+        
+        if(grepl('SAVE DRAWDOWN', oc_lines[1])) {
+          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+            layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
+            oc$save_drawdown <- cbind(oc$save_drawdown, 1:dis$nlay %in% layers)
+          } else {
+            oc$save_drawdown <- cbind(oc$save_drawdown, rep(T,dis$nlay))
+          }
+        } 
+        
+        if(grepl('SAVE IBOUND', oc_lines[1])) {
+          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+            layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
+            oc$save_ibound <- cbind(oc$save_ibound, 1:dis$nlay %in% layers)
+          } else {
+            oc$save_ibound <- cbind(oc$save_ibound, rep(T,dis$nlay))
+          }
+        } 
+        
+        if(grepl('SAVE BUDGET', oc_lines[1])) {
+          oc$save_budget <- append(oc$save_budget, T)
+        } 
+      
         oc_lines <- oc_lines[-1]
       }
-      if(length(oc$print_head) != length(oc$iperoc)) oc$print_head[length(oc$iperoc)] <- FALSE
-      if(length(oc$print_drawdown) != length(oc$iperoc)) oc$print_drawdown[length(oc$iperoc)] <- FALSE
+      if(ncol(oc$print_head) != length(oc$iperoc)) oc$print_head <- cbind(oc$print_head, rep(FALSE, dis$nlay))
+      if(ncol(oc$print_drawdown) != length(oc$iperoc)) oc$print_drawdown <- cbind(oc$print_drawdown, rep(FALSE, dis$nlay))
       if(length(oc$print_budget) != length(oc$iperoc)) oc$print_budget[length(oc$iperoc)] <- FALSE
-      if(length(oc$save_head) != length(oc$iperoc)) oc$save_head[length(oc$iperoc)] <- FALSE
-      if(length(oc$save_drawdown) != length(oc$iperoc)) oc$save_drawdown[length(oc$iperoc)] <- FALSE
-      if(length(oc$save_ibound) != length(oc$iperoc)) oc$save_ibound[length(oc$iperoc)] <- FALSE
+      if(ncol(oc$save_head) != length(oc$iperoc)) oc$save_head <- cbind(oc$save_head, rep(FALSE, dis$nlay))
+      if(ncol(oc$save_drawdown) != length(oc$iperoc)) oc$save_drawdown <- cbind(oc$save_drawdown, rep(FALSE, dis$nlay))
+      if(ncol(oc$save_ibound) != length(oc$iperoc)) oc$save_ibound <- cbind(oc$save_ibound, rep(FALSE, dis$nlay))
       if(length(oc$save_budget) != length(oc$iperoc)) oc$save_budget[length(oc$iperoc)] <- FALSE
+      
     }
+    
+    
+    
+    # collapse if values for all layers are always the same
+    if(all(apply(oc$print_head, 2, function(i) length(unique(i)) == 1) == TRUE)) {
+      oc$print_head <- oc$print_head[1,]
+    }
+    if(all(apply(oc$print_drawdown, 2, function(i) length(unique(i)) == 1) == TRUE)) {
+      oc$print_drawdown <- oc$print_drawdown[1,]
+    }
+    if(all(apply(oc$save_head, 2, function(i) length(unique(i)) == 1) == TRUE)) {
+      oc$save_head <- oc$save_head[1,]
+    }
+    if(all(apply(oc$save_drawdown, 2, function(i) length(unique(i)) == 1) == TRUE)) {
+      oc$save_drawdown <- oc$save_drawdown[1,]
+    }
+    if(all(apply(oc$save_ibound, 2, function(i) length(unique(i)) == 1) == TRUE)) {
+      oc$save_ibound <- oc$save_ibound[1,]
+    }
+    
   } else { # OC using numeric codes
 
   # data set 1

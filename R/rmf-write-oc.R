@@ -32,12 +32,58 @@ rmf_write_oc <- function(oc,
       # data set 2
       for(i in 1:length(oc$iperoc)) {
         rmfi_write_variables(paste('PERIOD',oc$iperoc[i],'STEP',oc$itsoc[i]),file = file)
-        if(oc$print_head[i]) rmfi_write_variables('PRINT HEAD', file = file)
-        if(oc$print_drawdown[i]) rmfi_write_variables('PRINT DRAWDOWN', file = file)
+        if(is.matrix(oc$print_head)) {
+          if(all(oc$print_head[,i])) {
+            rmfi_write_variables('PRINT HEAD', file = file)
+          } else if(any(oc$print_head[,i])) {
+            rmfi_write_variables('PRINT HEAD', which(oc$print_head[,i]),file = file)
+          }
+        } else {
+          if(oc$print_head[i]) rmfi_write_variables('PRINT HEAD', file = file)
+        }
+        
+        if(is.matrix(oc$print_drawdown)) {
+          if(all(oc$print_drawdown[,i])) {
+            rmfi_write_variables('PRINT DRAWDOWN', file = file)
+          } else if(any(oc$print_drawdown[,i])) {
+            rmfi_write_variables('PRINT DRAWDOWN', which(oc$print_drawdown[,i]),file = file)
+          }
+        } else {
+          if(oc$print_drawdown[i]) rmfi_write_variables('PRINT DRAWDOWN', file = file)
+        }
+        
         if(oc$print_budget[i]) rmfi_write_variables('PRINT BUDGET', file = file)
-        if(oc$save_head[i]) rmfi_write_variables('SAVE HEAD', file = file)
-        if(oc$save_drawdown[i]) rmfi_write_variables('SAVE DRAWDOWN', file = file)
-        if(oc$save_ibound[i]) rmfi_write_variables('SAVE IBOUND', file = file)
+        
+        if(is.matrix(oc$save_head)) {
+          if(all(oc$save_head[,i])) {
+            rmfi_write_variables('SAVE HEAD', file = file)
+          } else if(any(oc$save_head[,i])) {
+            rmfi_write_variables('SAVE HEAD', which(oc$save_head[,i]),file = file)
+          }
+        } else {
+          if(oc$save_head[i]) rmfi_write_variables('SAVE HEAD', file = file)
+        }
+        
+        if(is.matrix(oc$save_drawdown)) {
+          if(all(oc$save_drawdown[,i])) {
+            rmfi_write_variables('SAVE DRAWDOWN', file = file)
+          } else if(any(oc$save_drawdown[,i])) {
+            rmfi_write_variables('SAVE DRAWDOWN', which(oc$save_drawdown[,i]),file = file)
+          }
+        } else {
+          if(oc$save_drawdown[i]) rmfi_write_variables('SAVE DRAWDOWN', file = file)
+        }
+        
+        if(is.matrix(oc$save_ibound)) {
+          if(all(oc$save_ibound[,i])) {
+            rmfi_write_variables('SAVE IBOUND', file = file)
+          } else if(any(oc$save_ibound[,i])) {
+            rmfi_write_variables('SAVE IBOUND', which(oc$save_ibound[,i]),file = file)
+          }
+        } else {
+          if(oc$save_ibound[i]) rmfi_write_variables('SAVE IBOUND', file = file)
+        }
+        
         if(oc$save_budget[i]) rmfi_write_variables('SAVE BUDGET', file = file)
       }
       

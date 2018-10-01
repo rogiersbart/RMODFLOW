@@ -62,6 +62,10 @@ rmf_create_nam <- function(...) {
           nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste0('output_',i,'.bud')))  
         }
       }
+      
+      # set REPLACE option for binary files
+      nam$options[which(toupper(nam$ftype) == 'DATA(BINARY)')] <- 'REPLACE'
+      
   attr(nam, 'dir') = getwd()
   class(nam) <- c('nam','rmf_package','data.frame')
   return(nam)
