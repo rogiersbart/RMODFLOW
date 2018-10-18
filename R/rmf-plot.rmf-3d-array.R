@@ -31,7 +31,7 @@ rmf_plot.rmf_3d_array <- function(array,
                           k = NULL,
                           dis,
                           bas = NULL,
-                          mask = rmfi_ifelse0(is.null(bas),array*0+1,bas$ibound),
+                          mask = rmfi_ifelse0(is.null(bas),array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1)), bas$ibound)),
                           zlim = range(array[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)][as.logical(mask[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)])], finite=TRUE),
                           colour_palette = rmfi_rev_rainbow,
                           nlevels = 7,
@@ -48,15 +48,7 @@ rmf_plot.rmf_3d_array <- function(array,
                           ...) {
 
   if(is.null(i) & is.null(j) & is.null(k)) {
-    if(dim(array)[3] == 1) {
-      k = 1
-    } else if(dim(array)[2] == 1) {
-      j = 1
-    } else if(dim(array)[1] == 1) {
-      i = 1
-    } else {
       stop('Please provide i, j or k.', call. = FALSE)
-    }
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
@@ -108,8 +100,9 @@ rmf_plot.rmf_3d_array <- function(array,
         positions$y <- new_positions$z
       }
       if(!is.null(crs)) {
-        warning('Transforming vertical coordinates', call. = FALSE)
-        positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        #warning('Transforming vertical coordinates', call. = FALSE)
+        positions$x <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
       }
       datapoly <- merge(values, positions, by=c("id"))
       if(crop) datapoly <- na.omit(datapoly)
@@ -135,8 +128,9 @@ rmf_plot.rmf_3d_array <- function(array,
         positions$y <- new_positions$z
       }
       if(!is.null(crs)) {
-        warning('Transforming vertical coordinates', call. = FALSE)
-        positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        #warning('Transforming vertical coordinates', call. = FALSE)
+        positions$x <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
       }
       datapoly <- merge(values, positions, by=c("id"))
       if(crop) datapoly <- na.omit(datapoly)

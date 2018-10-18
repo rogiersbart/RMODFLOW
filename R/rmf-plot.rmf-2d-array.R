@@ -30,7 +30,7 @@
 rmf_plot.rmf_2d_array <- function(array,
                                        dis,
                                        bas = NULL,
-                                       mask = rmfi_ifelse0(is.null(bas), array*0+1, {warning('Using first ibound layer as mask.', call. = FALSE)}),
+                                       mask = rmfi_ifelse0(is.null(bas), array*0+1, {warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
                                        colour_palette = rmfi_rev_rainbow,
                                        zlim = range(array[as.logical(mask)], finite=TRUE),
                                        nlevels = 7,
@@ -91,6 +91,7 @@ rmf_plot.rmf_2d_array <- function(array,
         positions$y <- new_positions$y
       }
       if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
         positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       datapoly <- merge(values, positions, by=c("id"))
