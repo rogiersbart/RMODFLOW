@@ -1,17 +1,15 @@
-#' Read a MODFLOW head file
+#' Read a MODFLOW drawdown file
 #' 
-#' \code{rmf_read_hed} reads in a MODFLOW head file and returns it as an \code{RMODFLOW} hed object.
+#' \code{rmf_read_ddn} reads in a MODFLOW drawdown file and returns it as an \code{RMODFLOW} ddn object.
 #' 
-#' @param file filename; typically '*.hed'
+#' @param file filename; typically '*.ddn'
 #' @param dis dis object
-#' @param huf huf object; optional. Provide only if huf heads are being read. See details.
 #' @param oc oc object; optional. See details.
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
-#' @return object of class hed and rmf_4d_array. See details.
+#' @return object or list with objects of class ddn and rmf_4d_array. See details.
 #' @details 
-#' When huf heads are to be read, a \code{huf} object should also be supplied. The final array will have NHUF layers instead of NLAY.
 #' 
 #' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
 #' If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
@@ -21,14 +19,14 @@
 #'
 #' @importFrom readr read_lines abind abind
 #' @export
-rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choose()},
+rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                          huf = NULL,
                           oc = NULL,
                           bas = NULL,
                           binary = TRUE,
                           precision = 'single') {
   
+  var <- 'drawdown'
   headers <- c('HEAD',
                'DRAWDOWN',
                'SUBSIDENCE',
@@ -61,18 +59,18 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     
     try({   
       
-      if(!is.null(huf) && huf$iohufheads > 0) {
-        dis$nlay <- huf$nhuf
-      }
+      # if(!is.null(huf) && huf$iohufheads > 0) {
+      #   dis$nlay <- huf$nhuf
+      # }
       
       # check time steps if oc is specified
       if(!is.null(oc)) {
         # oc using words
-        if(!is.null(oc$save_head)) {
-          nsteps <- length(which(oc$save_head == TRUE))
+        if(!is.null(oc$save_drawdown) ) {
+          nsteps <- 1:length(which(oc$save_drawdown == TRUE))
           # oc using codes
         } else {
-          nsteps <- length(which(apply(oc$hdsv,2,function(i) any(i==TRUE))==TRUE))
+          nsteps <- 1:length(which(apply(oc$ddsv,2,function(i) any(i==TRUE))==TRUE))
         }
       } else {
         nsteps <- sum(dis$nstp)
@@ -92,16 +90,17 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
         
         name <- gsub(' ', '_', tolower(trimws(desc)))
         
-        # if IOHUFHEADS > 0, there will also be normal head per layer arrays. Do not return those.
-        if(!is.null(huf) && huf$iohufheads > 0 && desc != '     HEAD IN HGU'){
-          other_desc <- append(other_desc, desc)
-          invisible(readBin(con, what='integer', n=3))
-          invisible(readBin(con,what='numeric',n = dis$ncol * dis$nrow, size = real_number_bytes))
-          invisible(readBin(con, what='integer', n=2))
-          invisible(readBin(con,what='numeric',n = 2, size = real_number_bytes))
-          desc = readChar(con,nchars=16)
-          
-        } else if(is.null(huf) && name != 'head') {
+        # # if IOHUFHEADS > 0, there will also be normal head per layer arrays. Do not return those.
+        # if(!is.null(huf) && huf$iohufheads > 0 && desc != '     HEAD IN HGU'){
+        #    other_desc <- append(other_desc, desc)
+        #    invisible(readBin(con, what='integer', n=3))
+        #    invisible(readBin(con,what='numeric',n = dis$ncol * dis$nrow, size = real_number_bytes))
+        #    invisible(readBin(con, what='integer', n=2))
+        #    invisible(readBin(con,what='numeric',n = 2, size = real_number_bytes))
+        #    desc = readChar(con,nchars=16)
+        #   
+        # } else 
+        if(name != 'drawdown') {
           other_desc <- append(other_desc, name)
           invisible(readBin(con, what='integer', n=3))
           invisible(readBin(con,what='numeric',n = dis$ncol * dis$nrow, size = real_number_bytes))
@@ -123,7 +122,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           
           if(first) {
             hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
-              attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- rep(NA, nsteps)
+            attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- rep(NA, nsteps)
           }
           if(is.null(oc)) {
             stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
@@ -170,40 +169,34 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
     }
     
-    
     # put this in loop
     if(label) {
-      if(!is.null(huf) && huf$iohufheads > 0){
-        
-        if(any(grepl('HEAD IN HGU', hed.lines))) {
-          hed.lines = hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
-          dis$nlay = huf$nhuf
+      # if(!is.null(huf) && huf$iohufheads > 0){
+      #   if(!any(grepl('HEAD IN HGU', hed.lines))) other_desc <- headers[which(headers %in% hed.lines)]
+      #   dis$nlay = huf$nhuf
+      #   hed.lines = hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
+      # } else {
+        if(any(grepl('DRAWDOWN', hed.lines))) {
+          hed.lines = hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
         } else {
           other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
           hed.lines = NULL
         }
-      } else {
-        if(any(grepl('HEAD', hed.lines))) {
-          hed.lines = hed.lines[grep('HEAD', hed.lines)[1]:length(hed.lines)]
-        } else {
-          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
-          hed.lines = NULL
-        }
-      }
+   #   }
     }
     
     # check time steps if oc is specified
     if(!is.null(oc)) {
       # oc using words
-      if(!is.null(oc$save_head) ) {
-        if(is.matrix(oc$save_head)) {
-          nsteps <- length(which(apply(oc$save_head,2,function(i) any(i==TRUE))==TRUE))
+      if(!is.null(oc$save_drawdown) ) {
+        if(is.matrix(oc$save_drawdown)) {
+          nsteps <- length(which(apply(oc$save_drawdown,2,function(i) any(i==TRUE))==TRUE))
         } else {
-          nsteps <- length(which(oc$save_head == TRUE))
+          nsteps <- length(which(oc$save_drawdown == TRUE))
         }
         # oc using codes
       } else {
-        nsteps <- length(which(apply(oc$hdsv,2,function(i) any(i==TRUE))==TRUE))
+        nsteps <- length(which(apply(oc$ddsv,2,function(i) any(i==TRUE))==TRUE))
       }
     } else {
       nsteps <- sum(dis$nstp)
@@ -240,18 +233,18 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       } else {
         
         # oc words
-        if(!is.null(oc$save_head)) {
-          if(is.matrix(oc$save_head)) {
+        if(!is.null(oc$save_drawdown)) {
+          if(is.matrix(oc$save_drawdown)) {
             ind <- ifelse(first, 1, ind + 1)
-            read <- oc$save_head[ind]
-            ilay <- arrayInd(ind, dim(oc$save_head))[1]
-            kstp <- oc$itsoc[arrayInd(ind, dim(oc$save_head))[2]]
-            kper <- oc$iperoc[arrayInd(ind, dim(oc$save_head))[2]]
+            read <- oc$save_drawdown[ind]
+            ilay <- arrayInd(ind, dim(oc$save_drawdown))[1]
+            kstp <- oc$itsoc[arrayInd(ind, dim(oc$save_drawdown))[2]]
+            kper <- oc$iperoc[arrayInd(ind, dim(oc$save_drawdown))[2]]
             pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:(cumsum(dis$nstp)[kper]+kstp)])
             totim <- sum(rmf_time_steps(dis=dis)$tsl[1:(cumsum(dis$nstp)[kper]+kstp)])
           } else {
             ind <- ifelse(first, 1, ifelse(ilay == dis$nlay, ind, ind + 1))
-            read <- oc$save_head[ind]
+            read <- oc$save_drawdown[ind]
             if(read) {
               if(first) {
                 ilay <- 1
@@ -266,11 +259,11 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           }
           
           # oc codes
-        } else if(!is.null(oc$hdsv)) {
+        } else if(!is.null(oc$ddsv)) {
           ind <- ifelse(first, 1, ind + 1)
-          read <- oc$hdsv[ind]
-          ilay <- arrayInd(ind, dim(oc$hdsv))[1]
-          nstp <-  arrayInd(ind, dim(oc$hdsv))[2]
+          read <- oc$ddsv[ind]
+          ilay <- arrayInd(ind, dim(oc$ddsv))[1]
+          nstp <-  arrayInd(ind, dim(oc$ddsv))[2]
           kper <- findInterval(nstp, cumsum(dis$nstp), left.open = T) + 1
           kstp <- rmfi_ifelse0(kper == 1, nstp, nstp - cumsum(dis$nstp)[kper - 1])
           pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:nstp])
@@ -293,7 +286,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           stp_nr <- 1
         } else {
           stp_nr <- ifelse(ilay == 1, stp_nr+1, stp_nr)
-        }       
+        }        
       }
       hed[,,ilay,stp_nr] <- data_set$array
       
@@ -307,40 +300,22 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     }
   }
   
-  if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
   
   if(!is.null(other_desc)) {
-    warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
+    warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
     if(length(other_desc) != 0) warning(other_desc, call. = FALSE)
     warning('Returning NULL', call. = FALSE)
     return(NULL)
   } else {
-    class(hed) <- c('hed','rmf_4d_array')
+    if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+    class(hed) <- c('ddn','rmf_4d_array')
     return(hed)
   }
 }
 
-#' @describeIn rmf_read_hed 
+#' @describeIn rmf_read_ddn
 #' @export
-rmf_read_head <- function(...) {
-  rmf_read_hed(...)
+rmf_read_drawdown <- function(...) {
+  rmf_read_ddn(...)
 }
 
-#' @describeIn rmf_read_hed Deprecated function name
-#' @export
-read_hed <- function(...) {
-  .Deprecated(new = "rmf_read_hed", old = "read_hed")
-  rmf_read_hed(...)
-}
-
-#' @describeIn rmf_read_hed Compatible with default ModelMuse file extension
-#' @export
-rmf_read_fhd <- function(...) {
-  rmf_read_hed(..., binary = FALSE)
-}
-
-#' @describeIn rmf_read_hed Compatible with default ModelMuse file extension
-#' @export
-rmf_read_bhd <- function(...) {
-  rmf_read_hed(..., binary = TRUE)
-}

@@ -1,126 +1,240 @@
 #' Read a MODFLOW budget file
 #' 
-#' \code{read_bud} reads in a MODFLOW budget file
+#' \code{rmf_read_bud} reads in a MODFLOW budget file
 #' 
-#' @param file filename; typically 'Budget.out'
-#' @param binary logical; is source file binary?
-#' @return object of class bud
-#' @importFrom readr read_lines
+#' @param file filename; typically 'budget.out'
+#' @param dis dis object.
+#' @param huf huf object; optional. Provide only if huf heads are being read and \code{dis} is not NULL. See details.
+#' @param oc oc object; optional. See details.
+#' @param what character; denotes which flow terms to read. Defaults to reading all flow terms. See details.
+#' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
+#' @return object of class bud which is a list consisting of named rmf_arrays and/or rmf_lists. The names of the elements correspond to the flow terms.
+#'
+#' @details 
+#' Flow terms include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+#'  
+#' If a \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
+#' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY is read and binded at each time step for which output is written. 
+#' The resulting dimensions of the final array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
+#'
+#' If flows are interpolated to huf units, a \code{huf} object is to be supplied as well to dimension the array. This will only affect the constant-head and cell flow terms.
+#' The final array will have NHUF layers instead of NLAY.
+#'
+#' @importFrom readr read_lines abind abind
 #' @export
-rmf_read_bud <- function(file = {cat('Please select bud file ...\n'); file.choose()},
-                         binary = TRUE,
-                         double_precision = FALSE) {
-  if(double_precision) nbytes <- 8 else nbytes <- 4
+rmf_read_bud <- function(file = {cat('Please select budget file ...\n'); file.choose()},
+                         dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                         huf = NULL,
+                         oc = NULL,
+                         precision = 'single',
+                         what = 'all') {
+  
+  # headers <- c('   CONSTANT HEAD',
+  #              '         STORAGE',
+  #              'FLOW RIGHT FACE ',
+  #              'FLOW FRONT FACE ',
+  #              'FLOW LOWER FACE ',
+  #              '           WELLS',
+  #              '   RIVER LEAKAGE',
+  #              '        RECHARGE',
+  #              '          DRAINS',
+  #              ' HEAD DEP BOUNDS')
+  
+  nbytes <- ifelse(precision == 'single', 4, 8) 
+  binary = TRUE # MODFLOW budget file is always binary
   if(binary) {
     con <- file(file,open='rb')
     bud <- list()
-    kstp <- readBin(con,what='integer',n=1)
-    kper <- readBin(con,what='integer',n=1)
-    desc <- readChar(con,nchars=16)
-    while(length(desc!=0)) {
-      if(desc=='   CONSTANT HEAD') { name <- 'constant_head'
-      } else if(desc=='         STORAGE') { name <- 'storage'
-      } else if(desc=='FLOW RIGHT FACE ') { name <- 'flow_right_face'
-      } else if(desc=='FLOW FRONT FACE ') { name <- 'flow_front_face'
-      } else if(desc=='FLOW LOWER FACE ') { name <- 'flow_lower_face'
-      } else if(desc=='           WELLS') { name <- 'wells'
-      } else if(desc=='   RIVER LEAKAGE') { name <- 'river_leakage'
-      } else if(desc=='        RECHARGE') { name <- 'recharge'
-      } else if(desc=='          DRAINS') { name <- 'drains'
-      } else if(desc==' HEAD DEP BOUNDS') { name <- 'head_dep_bounds'
-      } else {name <- desc}
-      
-      if(kstp == 1) bud[[name]][[kper]] <- list() # modify for cases where not all time steps are saved!
-      bud[[name]][[kper]][[kstp]] <- list()
-      bud[[name]][[kper]][[kstp]]$kstp <- kstp
-      bud[[name]][[kper]][[kstp]]$kper <- kper
-      bud[[name]][[kper]][[kstp]]$desc <- desc
-      bud[[name]][[kper]][[kstp]]$ncol <- readBin(con,what='integer',n=1)
-      bud[[name]][[kper]][[kstp]]$nrow <- readBin(con,what='integer',n=1)
-      bud[[name]][[kper]][[kstp]]$nlay <- readBin(con,what='integer',n=1)
-      
-      if(bud[[name]][[kper]][[kstp]]$nlay > 0) {
-        bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*bud[[name]][[kper]][[kstp]]$nlay,size = nbytes),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,bud[[name]][[kper]][[kstp]]$nlay)),c(2,1,3))
-      } else {
-        bud[[name]][[kper]][[kstp]]$itype <- readBin(con,what='integer',n=1)
-        bud[[name]][[kper]][[kstp]]$delt <- readBin(con,what='numeric',n=1,size = nbytes)
-        bud[[name]][[kper]][[kstp]]$pertim <- readBin(con,what='numeric',n=1,size = nbytes)
-        bud[[name]][[kper]][[kstp]]$totim <- readBin(con,what='numeric',n=1,size = nbytes)
-        if(bud[[name]][[kper]][[kstp]]$itype==5) {
-          bud[[name]][[kper]][[kstp]]$nval <- readBin(con,what='integer',n=1)
-        } else {
-          bud[[name]][[kper]][[kstp]]$nval <- 1
-        }
-        if(bud[[name]][[kper]][[kstp]]$nval > 1) {
-          bud[[name]][[kper]][[kstp]]$ctmp <- rep(NA, (bud[[name]][[kper]][[kstp]]$nval-1))
-          for(nr in 1:(bud[[name]][[kper]][[kstp]]$nval-1)) {
-            bud[[name]][[kper]][[kstp]]$ctmp[nr] <- readChar(con,nchars=16)
-          }
-        }
-        
-        if(bud[[name]][[kper]][[kstp]]$itype %in% c(2,5)) {
-          bud[[name]][[kper]][[kstp]]$nlist <- readBin(con,what='integer',n=1)
-          if(bud[[name]][[kper]][[kstp]]$nlist > 0) {
-            bud[[name]][[kper]][[kstp]]$data <- as.data.frame(matrix(NA,nrow=bud[[name]][[kper]][[kstp]]$nlist,ncol=bud[[name]][[kper]][[kstp]]$nval+1))
-            names(bud[[name]][[kper]][[kstp]]$data)[1] <- 'icell'
-            names(bud[[name]][[kper]][[kstp]]$data)[2] <- 'value'
-            # add reading ctmps here!
-            for(nr in 1:bud[[name]][[kper]][[kstp]]$nlist) {
-              bud[[name]][[kper]][[kstp]]$data[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$nval,size = nbytes))
-            }
-          }
-        }
-        if(bud[[name]][[kper]][[kstp]]$itype %in% c(0,1)) {
-          bud[[name]][[kper]][[kstp]]$data <- aperm(array(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow*abs(bud[[name]][[kper]][[kstp]]$nlay),size = nbytes),dim=c(bud[[name]][[kper]][[kstp]]$ncol,bud[[name]][[kper]][[kstp]]$nrow,abs(bud[[name]][[kper]][[kstp]]$nlay))),c(2,1,3))
-          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmf_3d_array'
-        }
-        if(bud[[name]][[kper]][[kstp]]$itype ==3) {
-          bud[[name]][[kper]][[kstp]]$layer <- matrix(readBin(con,what='integer',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$layer) <- 'rmf_2d_array'
-          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size = nbytes),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmf_2d_array'
-        }
-        if(bud[[name]][[kper]][[kstp]]$itype ==4) {
-          bud[[name]][[kper]][[kstp]]$data <- matrix(readBin(con,what='numeric',n=bud[[name]][[kper]][[kstp]]$ncol*bud[[name]][[kper]][[kstp]]$nrow,size = nbytes),ncol=bud[[name]][[kper]][[kstp]]$ncol,nrow=bud[[name]][[kper]][[kstp]]$nrow,byrow=TRUE)
-          class(bud[[name]][[kper]][[kstp]]$data) <- 'rmf_2d_array'
-        }
-      }
-      
-      # set data as the main list item, and include all parameters as attributes
-      if("data" %in% names(bud[[name]][[kper]][[kstp]])) {
-        for(i in 1:(length(bud[[name]][[kper]][[kstp]])-1)) {
-          attr(bud[[name]][[kper]][[kstp]]$data,names(bud[[name]][[kper]][[kstp]])[i]) <- bud[[name]][[kper]][[kstp]][[i]]
-        }
-        bud[[name]][[kper]][[kstp]] <- bud[[name]][[kper]][[kstp]]$data
-      }
-      
+    
+    try({
       kstp <- readBin(con,what='integer',n=1)
       kper <- readBin(con,what='integer',n=1)
       desc <- readChar(con,nchars=16)
-    }
-    
-    # create rmf_4d_array for list items with itype 0 or 1
-    for (i in 1:length(bud)) {
-      # problems when nlist is 0 and hence no data is present -> check for itype in names
-      # also for storage the first timestep seems to be empty -> not changed into 4d array at the moment
-      if (! "itype" %in% names(bud[[i]][[1]][[1]]) & !is.null(bud[[i]][[1]][[1]])) {
-        if (attr(bud[[i]][[1]][[1]],'itype') %in% c(0,1)) {
-          bud_item <- bud[[i]]
-          bud[[i]] <- unlist(bud_item)
-          bud[[i]] <- rmf_create_array(bud[[i]], dim = c(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')), length(bud[[i]])/prod(attr(bud_item[[1]][[1]],'nrow'), attr(bud_item[[1]][[1]],'ncol'), abs(attr(bud_item[[1]][[1]],'nlay')))))
-          ats <- attributes(bud_item[[length(bud_item)]][[length(bud_item[[length(bud_item)]])]])
-          ats <- ats[-which(names(ats) == 'dim')]
-          for(at in 1:length(ats)) {
-            attr(bud[[i]], names(ats)[at]) <- ats[at][[1]]
-          } 
-          class(bud[[i]]) <- 'rmf_4d_array'
-        }
+      trial <- 1
+      fail = c(FALSE,FALSE)
+      # nsteps to dimension array
+      if(is.null(oc)) {
+        nsteps <- sum(dis$nstp)
+      } else {
+        nsteps <- ifelse(is.null(oc$save_budget), length(which(oc$icbcfl == T)), length(which(oc$save_budget == T)))
       }
-    }
+      # loop
+      while(length(desc!=0)) {
+        
+        name <- gsub(' ', '_', tolower(trimws(desc)))
+        if(trial == 1) {
+          if(!(name %in% c("storage","constant_head",'flow_right_face','flow_front_face'))) {
+            fail[1] = TRUE
+          }
+        } else if(trial == 2) {
+          if(!(name %in% c('constant_head','flow_right_face','flow_front_face','flow_lower_face'))) {
+            fail[2] = TRUE
+          }
+        }
+        if(any(fail)) {
+          if(precision == 'single') {
+            stop('Header descriptions do not match. Are you sure the file is single precision?')
+          } else {
+            stop('Header descriptions do not match. Are you sure the file is double precision?')
+          }
+        }
+        
+        read <- ifelse((what != 'all' && !(name %in% what)), FALSE, TRUE) 
+        ncol <- readBin(con,what='integer',n=1)
+        nrow <- readBin(con,what='integer',n=1)
+        nlay <- readBin(con,what='integer',n=1)
+        
+        if(!read) {
+          if(nlay > 0) {
+            invisible(readBin(con,what='numeric',n=nrow*ncol*nlay,size = nbytes))
+          } else {
+            itype <- readBin(con,what='integer',n=1)
+            invisible(readBin(con,what='numeric',n=3,size = nbytes))
+            
+            if(itype==5) {
+              nval <- readBin(con,what='integer',n=1)
+            } else {
+              nval <- 1
+            }
+            if(nval > 1) invisible(readChar(con,nchars=(nval-1)*16))
+              
+            if(itype %in% c(2,5)) { 
+              nlist <- readBin(con,what='integer',n=1)
+              if(nlist > 0) {
+                for(nr in 1:nlist) {
+                  invisible(readBin(con,what='integer',n=1))
+                  invisible(readBin(con,what='numeric',n=nval,size = nbytes))
+                }
+              }
+            }
+            
+            if(itype %in% c(0,1)) invisible(readBin(con,what='numeric',n=ncol*nrow*abs(nlay),size = nbytes))
+
+            if(itype ==3) {
+              invisible(readBin(con,what='integer',n=ncol*nrow))
+              invisible(readBin(con,what='numeric',n=ncol*nrow,size = nbytes))  
+            }
+
+            if(itype ==4) invisible(readBin(con,what='numeric',n=ncol*nrow,size = nbytes))
+          }
+          
+          # read
+        } else {
+          
+          # create arrays
+          nnlay <- dis$nlay
+          if(!is.null(huf) && !is.null(huf$iohufflows) && huf$iohufflows > 0 && name %in% c('constant_head','flow_right_face','flow_front_face','flow_lower_face')) nnlay <- huf$nhuf
+          if(is.null(bud[[name]])) {
+            bud[[name]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, nnlay, nsteps))
+            attr(bud[[name]], 'kstp') <- attr(bud[[name]], 'kper') <- attr(bud[[name]], 'pertim') <- attr(bud[[name]], 'totim') <- attr(bud[[name]], 'delt') <- rep(NA, nsteps)
+          }
+          # set step number
+          if(is.null(oc)) {
+            stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
+          } else {
+            if(is.null(oc$save_budget)) {
+              stp_nr <- length(which(oc$icbcfl[1:ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)] == T))
+            } else {
+              stp_nr <- length(which(oc$save_budget[1:which(oc$iperoc == kper)[oc$itsoc[oc$iperoc == kper] == kstp]] == T))
+            }
+          }
+  
+          # not compact
+          if(nlay > 0) {
+             bud[[name]][,,,stp_nr] <- aperm(array(readBin(con,what='numeric',n=ids$nrow*dis$ncol*nnlay,size = nbytes),dim=c(dis$ncol,dis$nrow,nnlay)),c(2,1,3))
+            
+            # compact
+          } else {
+            itype <- readBin(con,what='integer',n=1)
+            delt <- readBin(con,what='numeric',n=1,size = nbytes)
+            pertim <- readBin(con,what='numeric',n=1,size = nbytes)
+            totim <- readBin(con,what='numeric',n=1,size = nbytes)
+            
+            if(itype==5) {
+              nval <- readBin(con,what='integer',n=1)
+            } else {
+              nval <- 1
+            }
+            if(nval > 1) {
+              if(is.null(attr(bud[[name]], 'ctmp'))) attr(bud[[name]], 'ctmp') <- as.list(rep(NA,nsteps))
+              ctmp <- rep(NA, (nval-1))
+              for(nr in 1:(nval-1)) {
+                ctmp[nr] <- readChar(con,nchars=16)
+              }
+            }
+            
+            # return a rmf_list
+            if(itype %in% c(2,5)) { 
+              nlist <- readBin(con,what='integer',n=1)
+              if(nlist > 0) {
+                df <- matrix(NA,nrow=nlist,ncol=nval+1)
+                for(nr in 1:nlist) {
+                  df[nr,] <- c(readBin(con,what='integer',n=1),readBin(con,what='numeric',n=nval,size = nbytes))
+                }
+                ijk <- rmf_convert_id_to_ijk(df[,1], dis = list(nrow=nrow,ncol=ncol,nlay=abs(nlay)),type='modflow')
+                if(is.null(bud[[name]]) || is.array(bud[[name]])) {
+                  nstp <- ifelse(is.null(dis), 1, stp_nr)
+                  bud[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,df[,-1], nstp, kper, kstp))
+                  names(bud[[name]]) <- c('k','i','j', 'flow', if(nval > 1){ctmp},'nstp', 'kper','kstp')
+                  rm(df)
+                } else {
+                  nstp <- ifelse(is.null(dis), bud[[name]][nrow(bud[[name]]),nstp]+1, stp_nr)
+                  df <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,df[,-1], nstp, kper, kstp))
+                  names(df) <- c('k','i','j', 'flow', if(nval > 1){ctmp},'nstp', 'kper', 'kstp')
+                  
+                  bud[[name]] <- rbind(bud[[name]], df)
+                }
+              } else {
+                bud[[name]] = NULL
+              }
+            }
+            
+            if(itype %in% c(0,1)) {
+               bud[[name]][,,,stp_nr] <- aperm(array(readBin(con,what='numeric',n=dis$ncol*dis$nrow*nnlay,size = nbytes),dim=c(dis$ncol,dis$nrow,nnlay)),c(2,1,3))
+            }
+            if(itype ==3) {
+              layer <- matrix(readBin(con,what='integer',n=ncol*nrow),ncol=ncol,nrow=nrow,byrow=TRUE)
+              data <- matrix(readBin(con,what='numeric',n=ncol*nrow,size = nbytes),ncol=ncol,nrow=nrow,byrow=TRUE)
+
+              bud[[name]][,,,stp_nr] <- 0
+              bud[[name]][,,c(layer),stp_nr] <- c(data)
+              
+              rm(layer, data)
+            }
+            if(itype ==4) {
+              bud[[name]][,,1,stp_nr] <- matrix(readBin(con,what='numeric',n=dis$ncol*dis$nrow,size = nbytes),ncol=dis$ncol,nrow=dis$nrow,byrow=TRUE)
+            }
+          }
+          
+          # set  attributes
+          if(!is.null(bud[[name]])) {
+            if(itype %in% c(2,5)) {
+              bud[[name]] <- rmf_create_list(bud[[name]])
+            } else {
+              bud[[name]] <- rmf_create_array(bud[[name]])
+            }
+
+            attr(bud[[name]], 'kstp')[stp_nr] <- kstp
+            attr(bud[[name]], 'kper')[stp_nr] <- kper
+            attr(bud[[name]], 'pertim')[stp_nr] <- pertim
+            attr(bud[[name]], 'totim')[stp_nr] <- totim
+            if(nlay < 0) attr(bud[[name]], 'delt')[stp_nr] <- delt
+            if(nval > 1) attr(bud[[name]], 'ctmp')[[stp_nr]] <- ctmp
+          }
+        }
+    
+        kstp <- readBin(con,what='integer',n=1)
+        kper <- readBin(con,what='integer',n=1)
+        desc <- readChar(con,nchars=16)
+        trial <- ifelse(trial == 1, 2, 0)
+      }
+    })
     
     close(con)
     class(bud) <- c('bud','rmf_package')
     return(bud)
+    
   } else {
     stop('Code not up to date')
     #     # update this to match the above structure!
@@ -203,6 +317,13 @@ rmf_read_bud <- function(file = {cat('Please select bud file ...\n'); file.choos
     #     return(bud)
   }
 }
+
+#' @describeIn rmf_read_bud 
+#' @export
+rmf_read_budget <- function(...) {
+  rmf_read_bud(...)
+}
+
 
 #' @describeIn rmf_read_bud Deprecated function name
 #' @export
