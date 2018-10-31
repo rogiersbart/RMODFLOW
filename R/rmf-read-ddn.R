@@ -26,7 +26,6 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
                           binary = TRUE,
                           precision = 'single') {
   
-  var <- 'drawdown'
   headers <- c('HEAD',
                'DRAWDOWN',
                'SUBSIDENCE',
@@ -82,13 +81,13 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       kper <- readBin(con,what='integer',n=1)
       pertim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
       totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
-      desc <- readChar(con,nchars=16)
+      desc <- trimws(readChar(con,nchars=16))
       if(! desc %in% headers) {
         stop('Array description not recognized. Is the file really binary? If so, you could try double precision. If not, set the binary argument to FALSE.')
       }
       while(length(desc != 0)) {
         
-        name <- gsub(' ', '_', tolower(trimws(desc)))
+        name <- gsub(' ', '_', tolower(desc))
         
         # # if IOHUFHEADS > 0, there will also be normal head per layer arrays. Do not return those.
         # if(!is.null(huf) && huf$iohufheads > 0 && desc != '     HEAD IN HGU'){
@@ -106,7 +105,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           invisible(readBin(con,what='numeric',n = dis$ncol * dis$nrow, size = real_number_bytes))
           invisible(readBin(con, what='integer', n=2))
           invisible(readBin(con,what='numeric',n = 2, size = real_number_bytes))
-          desc = readChar(con,nchars=16)
+          desc <-  trimws(readChar(con,nchars=16))
           
         } else {
           
@@ -146,7 +145,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           kper <- readBin(con,what='integer',n=1)
           pertim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
           totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
-          desc <- readChar(con,nchars=16)
+          desc <- trimws(readChar(con,nchars=16))
         }
       }
     })
@@ -169,7 +168,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
     }
     
-    # put this in loop
+    # skip non-drawdown arrays
     if(label) {
       # if(!is.null(huf) && huf$iohufheads > 0){
       #   if(!any(grepl('HEAD IN HGU', hed.lines))) other_desc <- headers[which(headers %in% hed.lines)]
@@ -177,10 +176,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       #   hed.lines = hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
       # } else {
         if(any(grepl('DRAWDOWN', hed.lines))) {
-          hed.lines = hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
+          hed.lines <-  hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
         } else {
           other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
-          hed.lines = NULL
+          hed.lines <-  NULL
         }
    #   }
     }
@@ -297,13 +296,22 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       
       first <- FALSE
       hed.lines <- data_set$remaining_lines
+      
+      # skip non-drawdown arrays
+      if(any(grepl('DRAWDOWN', hed.lines))) {
+        hed.lines <-  hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
+      } else {
+        other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
+        hed.lines <-  NULL
+      }
+      
     }
   }
   
   
-  if(!is.null(other_desc)) {
+  if(!is.null(other_desc) && length(other_desc) != 0) {
     warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-    if(length(other_desc) != 0) warning(other_desc, call. = FALSE)
+    warning(other_desc, call. = FALSE)
     warning('Returning NULL', call. = FALSE)
     return(NULL)
   } else {
