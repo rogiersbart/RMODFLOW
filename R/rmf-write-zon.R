@@ -9,7 +9,7 @@
 #' @export
 #' @seealso \code{\link{rmf_read_zon}}, \code{\link{rmf_create_zon}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?zone.htm}
 
-rmf_write_zon = function(zon, file = {cat('Please choose zon file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_zon <-  function(zon, file = {cat('Please choose zon file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -25,7 +25,7 @@ rmf_write_zon = function(zon, file = {cat('Please choose zon file to overwrite o
     rmfi_write_variables(zon$zonnam[i], file=file)
     
     # data set 3
-    rmfi_write_array(zon$izon[,,i], file=file, ...)
+    rmfi_write_array(zon$izon[[i]], file=file, ...)
     
   }
 }

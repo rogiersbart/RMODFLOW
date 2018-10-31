@@ -23,40 +23,40 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 = rmfi_parse_variables(mlt_lines)
-  mlt$nml = data_set_1$variables[1]
-  mlt_lines = data_set_1$remaining_lines
+  data_set_1 <- rmfi_parse_variables(mlt_lines)
+  mlt$nml <- data_set_1$variables[1]
+  mlt_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
   # data set 2 + 3 + 4
-  mlt$rmlt <- array(dim=c(dis$nrow, dis$ncol, mlt$nml))
+  mlt$rmlt <- list()
   for(i in 1:mlt$nml) {
    # data set 2
-   data_set_2 = rmfi_parse_variables(mlt_lines)
-   mlt$mltnam[i] = data_set_2$variables[1]
-   if(length(data_set_2$variables) > 1) mlt$functn[i]= T else mlt$functn[i] = F
-   mlt_lines = data_set_2$remaining_lines
+   data_set_2 <- rmfi_parse_variables(mlt_lines)
+   mlt$mltnam[i] <- data_set_2$variables[1]
+   mlt$functn[i] <- length(data_set_2$variables) > 1
+   mlt_lines <- data_set_2$remaining_lines
    rm(data_set_2)
    
    if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn)){
      # data set 3
-     data_set_3 = rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
-     mlt$rmlt[,,i] = data_set_3$array
-     mlt_lines = data_set_3$remaining_lines
+     data_set_3 <- rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+     mlt$rmlt[[i]] <- data_set_3$array
+     mlt_lines <- data_set_3$remaining_lines
      rm(data_set_3)
    }
    
    if(!is.null(mlt$functn) && mlt$functn[i]){
      # data set 4
-     data_set_4 = rmfi_parse_variables(mlt_lines)
-     mlt$operators[i] = paste(rmfi_parse_variables[1:(length(data_set_4$variables)-1)], sep=' ')
-     mlt$iprn[i] = data_set_4$variables[length(data_set_4$variables)]
-     mlt_lines = data_set_4$remaining_lines
+     data_set_4 <- rmfi_parse_variables(mlt_lines)
+     mlt$operators[i] <- paste(rmfi_parse_variables[1:(length(data_set_4$variables)-1)], sep=' ')
+     mlt$iprn[i] <- data_set_4$variables[length(data_set_4$variables)]
+     mlt_lines <- data_set_4$remaining_lines
      rm(data_set_4)
    }
   
   }
-  if(!any(mlt$functn)) mlt$functn = NULL
+  if(!any(mlt$functn)) mlt$functn <- NULL
   
   class(mlt) <- c('mlt','rmf_package')
   return(mlt)
