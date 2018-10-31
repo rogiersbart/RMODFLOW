@@ -61,28 +61,22 @@ rmf_create_bcf = function(dis = rmf_create_dis(),
   bcf$trpy = trpy
   
   # data set 4
-  if(!is.null(sf1)) bcf$sf1 = rmf_create_array(sf1, 
-                                               dim = rmfi_ifelse0(length(dim(sf1)) > 2, dim(sf1), c(dim(sf1),1)))
+  if(!is.null(sf1)) bcf$sf1 = rmf_create_array(sf1, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 5
-  if(!is.null(tran)) bcf$tran = rmf_create_array(tran,
-                                                 dim = rmfi_ifelse0(length(dim(tran)) > 2, dim(tran), c(dim(tran),1)))
+  if(!is.null(tran)) bcf$tran = rmf_create_array(tran, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 6
-  if(!is.null(hy)) bcf$hy = rmf_create_array(hy,
-                                             dim = rmfi_ifelse0(length(dim(hy)) > 2, dim(hy), c(dim(hy),1)))
+  if(!is.null(hy)) bcf$hy = rmf_create_array(hy, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 7
-  bcf$vcont = rmf_create_array(vcont,
-                               dim = rmfi_ifelse0(length(dim(vcont)) > 2, dim(vcont), c(dim(vcont),1)))
+  bcf$vcont = rmf_create_array(vcont, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 8
-  if(!is.null(sf2)) bcf$sf2 = rmf_create_array(sf2,
-                                               dim = rmfi_ifelse0(length(dim(sf2)) > 2, dim(sf2), c(dim(sf2),1)))
+  if(!is.null(sf2)) bcf$sf2 = rmf_create_array(sf2, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 9
-  if(!is.null(wetdry)) bcf$wetdry = rmf_create_array(wetdry,
-                                                     dim = rmfi_ifelse0(length(dim(wetdry)) > 2, dim(wetdry), c(dim(wetdry),1)))
+  if(!is.null(wetdry)) bcf$wetdry = rmf_create_array(wetdry, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   class(bcf) = c('bcf', 'rmf_package')
   return(bcf)

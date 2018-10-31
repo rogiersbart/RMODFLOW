@@ -61,10 +61,10 @@ rmf_create_dis <- function(nlay = 3,
     dis$delc <- delc
   
   # data set 5
-    dis$top <- rmf_create_array(top)
+    dis$top <- rmf_create_array(top, dim = c(dis$nrow, dis$ncol))
 
   # data set 6
-    dis$botm <- rmf_create_array(botm, dim = rmfi_ifelse0(length(dim(botm)) >2, dim(botm), c(dim(botm), 1)))
+    dis$botm <- rmf_create_array(botm, dim = c(dis$nrow, dis$ncol, dis$nlay + length(which(dis$laycbd != 0))))
 
   # data set 7
     dis$perlen <- perlen

@@ -44,13 +44,13 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
     
   # data set 2
     bas$ibound <- rmf_create_array(apply(ibound, MARGIN = 1:length(dim(ibound)), function(i) as.integer(i)),
-                                   dim = rmfi_ifelse0(length(dim(ibound)) > 2, dim(ibound), c(dim(ibound), 1)))
+                                   dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
   
   # data set 3
     bas$hnoflo <- hnoflo
   
   # data set 4
-    bas$strt <- rmf_create_array(strt, dim = rmfi_ifelse0(length(dim(strt)) > 2, dim(strt), c(dim(strt),1)))
+    bas$strt <- rmf_create_array(strt, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
   
   class(bas) <- c('bas','rmf_package')
   return(bas)
