@@ -29,7 +29,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
-  dis$top <- hed[,,1]
+  dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))
   return(dis)
 }
 

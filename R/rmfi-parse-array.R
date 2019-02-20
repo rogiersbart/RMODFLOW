@@ -284,7 +284,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   } else if(ndim == 1) {
     array <- c(array(array,dim=nrow*ncol*nlay))
   } else if(ndim == 2) {
-    array <- as.matrix(array[,,1])
+    array <- matrix(array[,,1], nrow = nrow, ncol = ncol)
     class(array) <- 'rmf_2d_array'     
   } else if(ndim == 3) {
     class(array) <- 'rmf_3d_array'
