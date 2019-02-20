@@ -8,6 +8,7 @@
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
 #'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
 #' @export
+
 rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)
   if(length(dim(obj))==2) {
