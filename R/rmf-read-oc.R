@@ -70,7 +70,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
       
       while(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] != 'PERIOD' & length(oc_lines) != 0) {
         if(grepl('PRINT HEAD', oc_lines[1])) {
-          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+          if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$print_head <- cbind(oc$print_head, 1:dis$nlay %in% layers)
           } else {
@@ -79,7 +79,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         } 
         
         if(grepl('PRINT DRAWDOWN', oc_lines[1])) {
-          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+          if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$print_drawdown <- cbind(oc$print_drawdown, 1:dis$nlay %in% layers)
           } else {
@@ -92,7 +92,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         } 
         
         if(grepl('SAVE HEAD', oc_lines[1])) {
-          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+          if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_head <- cbind(oc$save_head, 1:dis$nlay %in% layers)
           } else {
@@ -101,7 +101,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         } 
         
         if(grepl('SAVE DRAWDOWN', oc_lines[1])) {
-          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+          if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_drawdown <- cbind(oc$save_drawdown, 1:dis$nlay %in% layers)
           } else {
@@ -110,7 +110,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         } 
         
         if(grepl('SAVE IBOUND', oc_lines[1])) {
-          if(length(strsplit(oc_lines[1], ' ')[[1]]) > 2) {
+          if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_ibound <- cbind(oc$save_ibound, 1:dis$nlay %in% layers)
           } else {

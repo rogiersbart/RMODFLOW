@@ -17,7 +17,7 @@
 #' 
 #' The only use of the bas argument is to replace the hnoflo values in the final array with NA's. 
 #'
-#' @importFrom readr read_lines abind abind
+#' @importFrom readr read_lines 
 #' @export
 rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
@@ -66,10 +66,35 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       if(!is.null(oc)) {
         # oc using words
         if(!is.null(oc$save_drawdown) ) {
-          nsteps <- 1:length(which(oc$save_drawdown == TRUE))
+          # problem: oc records might be in non-ascending order or have non-existing time steps but output is still writen for current timestep
+          # e.g. UZFtest2
+          m_oc<- cbind(oc$iperoc, oc$itsoc)[rmfi_ifelse0(is.matrix(oc$save_drawdown), apply(oc$save_drawdown, 2, any), oc$save_drawdown),]
+          nsteps <- apply(m_oc, 1, function(i) rmfi_ifelse0(i[1] == 1, ifelse(i[2] > dis$nstp[i[1]], NA, i[2]), cumsum(dis$nstp)[i[1]-1]+i[2]))
+          # check before going into nested for-loop
+          if(any(is.na(nsteps)) || !all(diff(nsteps) >= 0)) {
+            nsteps <- 0
+            i <- 0
+            for(k in 1:dis$nper) {
+              for(l in 1:dis$nstp[k]) {
+                if(m_oc[i+1,1] < k || (m_oc[i+1,1]==k && m_oc[i+1,2] < l)) {
+                  i <- i + 1
+                  m_oc[i,1] <- k
+                  m_oc[i,2] <- l
+                  nsteps <- nsteps + 1
+                  
+                } else if(m_oc[i+1,1]==k && m_oc[i+1,2]==l){
+                  nsteps <- nsteps + 1
+                  i <- i + 1
+                }
+              }
+            }
+          } else {
+            nsteps <- min(sum(dis$nstp), length(which(oc$save_drawdown == TRUE)))
+          }
+
           # oc using codes
         } else {
-          nsteps <- 1:length(which(apply(oc$ddsv,2,function(i) any(i==TRUE))==TRUE))
+          nsteps <- length(which(apply(oc$ddsv,2,function(i) any(i==TRUE))==TRUE))
         }
       } else {
         nsteps <- sum(dis$nstp)
