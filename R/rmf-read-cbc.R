@@ -190,7 +190,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
               }
             }
             
-            # return a data.frame
+            # return a data.frame --> might change to list of rmf_lists for more consistency with e.g. plotting
             if(itype %in% c(2,5)) { 
               nlist <- readBin(con,what='integer',n=1)
               if(nlist > 0) {
@@ -235,7 +235,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
           
           # set  attributes
           if(!is.null(cbc[[name]])) {
-            if(itype %in% c(2,5)) {
+            if(nlay > 0 || itype %in% c(2,5)) {
               # cbc[[name]] <- rmf_create_list(cbc[[name]], kper =  attr(cbc[[name]], 'kper'))
             } else {
               cbc[[name]] <- rmf_create_array(cbc[[name]], kper = attr(cbc[[name]], 'kper'))
@@ -249,9 +249,10 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
               attr(cbc[[name]], 'delt')[stp_nr] <- delt
               if(nval > 1) attr(cbc[[name]], 'ctmp')[[stp_nr]] <- ctmp
             } else {
-              attr(cbc[[name]], 'pertim') <- NULL
-              attr(cbc[[name]], 'totim') <- NULL
-              attr(cbc[[name]], 'delt') <- NULL
+              stp <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1]+kstp)
+              attr(cbc[[name]], 'pertim')[stp_nr] <- rmf_time_steps(perlen = dis$perlen[kper], tsmult = dis$tsmult[kper], nstp = dis$nstp[kper])[[2]][kstp]
+              attr(cbc[[name]], 'totim')[stp_nr] <- rmf_time_steps(dis=dis)[[2]][stp]
+              attr(cbc[[name]], 'delt')[stp_nr] <- rmf_time_steps(dis=dis)[[1]][stp]
             }
           }
         }
