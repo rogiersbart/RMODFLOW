@@ -6,8 +6,8 @@
 \title{Write a MODFLOW output control option file}
 \usage{
 rmf_write_oc(oc, file = {    
-  cat("Please select oc file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select oc file to overwrite or provide new filename ...\\n") 
+     file.choose() })
 
 write_oc(...)
 }

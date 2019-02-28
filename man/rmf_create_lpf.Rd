@@ -5,20 +5,21 @@
 \alias{create_lpf}
 \title{Create an \code{RMODFLOW} lpf object}
 \usage{
-rmf_create_lpf(dis = create_dis(), ilpfcb = 0, hdry = -888, nplpf = 0,
-  storagecoefficient = FALSE, constantcv = FALSE, thickstrt = FALSE,
-  nocvcorrection = FALSE, novfc = FALSE, noparcheck = FALSE,
-  laytyp = ifelse(dis$nlay == 1, list(1), list(c(1, rep(0, dis$nlay -
-  1))))[[1]], layavg = laytyp * 0, chani = rep(1, dis$nlay),
-  layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay), wetfct = 0.1,
-  iwetit = 1, ihdwet = 0, parnam = NULL, partyp = NULL, parval = NULL,
-  nclu = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
-  hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  hani = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  vka = hk, ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)), sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)), vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)), wetdry = rmf_create_array(-0.01, dim = c(dis$nrow, dis$ncol,
+rmf_create_lpf(dis = create_dis(), ilpfcb = 0, hdry = -888,
+  nplpf = 0, storagecoefficient = FALSE, constantcv = FALSE,
+  thickstrt = FALSE, nocvcorrection = FALSE, novfc = FALSE,
+  noparcheck = FALSE, laytyp = ifelse(dis$nlay == 1, list(1), list(c(1,
+  rep(0, dis$nlay - 1))))[[1]], layavg = laytyp * 0, chani = rep(1,
+  dis$nlay), layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay),
+  wetfct = 0.1, iwetit = 1, ihdwet = 0, parnam = NULL,
+  partyp = NULL, parval = NULL, nclu = NULL, mltarr = NULL,
+  zonarr = NULL, iz = NULL, hk = rmf_create_array(1e-04, dim =
+  c(dis$nrow, dis$ncol, dis$nlay)), hani = rmf_create_array(1, dim =
+  c(dis$nrow, dis$ncol, dis$nlay)), vka = hk,
+  ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  wetdry = rmf_create_array(-0.01, dim = c(dis$nrow, dis$ncol,
   dis$nlay)))
 
 create_lpf(...)

@@ -5,8 +5,8 @@
 \alias{read_oc}
 \title{Read a MODFLOW output control option file}
 \usage{
-rmf_read_oc(file = {     cat("Please select oc file ...\\n")     file.choose()
-  })
+rmf_read_oc(file = {     cat("Please select oc file ...\\n")    
+  file.choose() })
 
 read_oc(...)
 }

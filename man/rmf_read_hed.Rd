@@ -10,8 +10,8 @@
 rmf_read_hed(file = {     cat("Please select hed file ...\\n")    
   file.choose() }, dis = {     cat("Please select dis file ...\\n")    
   rmf_read_dis(file.choose()) }, bas = {    
-  cat("Please select bas file ...\\n")     rmf_read_bas(file.choose(), dis =
-  dis) }, huf = NULL, convert_hnoflo_to_NA = TRUE, binary = TRUE,
+  cat("Please select bas file ...\\n")     rmf_read_bas(file.choose(), dis
+  = dis) }, huf = NULL, convert_hnoflo_to_NA = TRUE, binary = TRUE,
   precision = "single")
 
 read_hed(...)

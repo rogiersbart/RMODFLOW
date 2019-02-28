@@ -44,7 +44,7 @@ rmf_plot.rmf_3d_array <- function(array,
     stop('Please provide i, j or k.', call. = FALSE)
   }
   if(!is.null(hed)) {
-    satdis <- convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+    satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
     p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,title=title)
     if(grid) {
       return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
@@ -54,11 +54,12 @@ rmf_plot.rmf_3d_array <- function(array,
   }
   
   if(!is.null(k)) {
-    zlim <- zlim
-    mask <- mask
+    zlim <- zlim # evaluate before making changes to array
+    mask <- mask # evaluate before making changes to array
     array <- array[,,k]
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
+    class(mask) <- 'rmf_2d_array'
     rmf_plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, grid = grid, ...)
   } else {
     xy <- NULL

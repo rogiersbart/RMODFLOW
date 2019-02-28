@@ -6,8 +6,8 @@
 \title{Write a MODFLOW basic file}
 \usage{
 rmf_write_bas(bas, file = {    
-  cat("Please select bas file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  cat("Please select bas file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1)
 
 write_bas(...)
 }

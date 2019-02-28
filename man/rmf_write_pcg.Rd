@@ -6,8 +6,8 @@
 \title{Write a MODFLOW preconditioned conjugate-gradient package file}
 \usage{
 rmf_write_pcg(pcg, file = {    
-  cat("Please select pcg file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select pcg file to overwrite or provide new filename ...\\n")
+      file.choose() })
 
 write_pcg(...)
 }

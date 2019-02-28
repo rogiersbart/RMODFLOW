@@ -6,13 +6,13 @@
 \usage{
 \method{rmf_plot}{rmf_2d_array}(array, dis, bas = NULL,
   mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {    
-  warning("Using first ibound layer as mask.", call. = FALSE)     bas$ibound[, ,
-  1] }), colour_palette = rmfi_rev_rainbow,
+  warning("Using first ibound layer as mask.", call. = FALSE)    
+  bas$ibound[, , 1] }), colour_palette = rmfi_rev_rainbow,
   zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
   type = "fill", levels = NULL, grid = FALSE, add = FALSE,
   height_exaggeration = 100, binwidth = round(diff(zlim)/20),
-  label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
-  height = NULL, title = NULL)
+  label = TRUE, prj = NULL, crs = NULL, alpha = 1,
+  plot3d = FALSE, height = NULL, title = NULL)
 }
 \arguments{
 \item{array}{an object of class rmf_2d_array}

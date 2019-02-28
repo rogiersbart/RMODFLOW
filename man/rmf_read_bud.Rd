@@ -2,12 +2,13 @@
 % Please edit documentation in R/rmf-read-bud.R
 \name{rmf_read_bud}
 \alias{rmf_read_bud}
-\alias{rmf_read_bud}
+\alias{read_bud}
 \title{Read a MODFLOW budget file}
 \usage{
-rmf_read_bud(...)
+rmf_read_bud(file = {     cat("Please select bud file ...\\n")    
+  file.choose() }, binary = TRUE, double_precision = FALSE)
 
-rmf_read_bud(...)
+read_bud(...)
 }
 \arguments{
 \item{file}{filename; typically 'Budget.out'}
@@ -18,10 +19,10 @@ rmf_read_bud(...)
 object of class bud
 }
 \description{
-\code{read_bud} reads in a MODFLOW budget file
+\code{rmf_read_bud} reads in a MODFLOW budget file
 }
 \section{Functions}{
 \itemize{
-\item \code{rmf_read_bud}: Deprecated function name
+\item \code{read_bud}: Deprecated function name
 }}
 

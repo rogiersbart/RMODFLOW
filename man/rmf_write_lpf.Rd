@@ -6,8 +6,8 @@
 \title{Write a MODFLOW layer-property flow file}
 \usage{
 rmf_write_lpf(lpf, file = {    
-  cat("Please select lpf file to overwrite or provide new filename ...\\n")    
-  file.choose() }, dis = rmf_read_dis(), iprn = -1)
+  cat("Please select lpf file to overwrite or provide new filename ...\\n")
+      file.choose() }, dis = rmf_read_dis(), iprn = -1)
 
 write_lpf(...)
 }

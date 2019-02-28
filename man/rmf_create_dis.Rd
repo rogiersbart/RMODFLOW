@@ -5,13 +5,13 @@
 \alias{create_dis}
 \title{Create an \code{RMODFLOW} dis object}
 \usage{
-rmf_create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1, itmuni = 1,
-  lenuni = 2, laycbd = rep(0, nlay), delr = rep(100, ncol),
-  delc = rep(100, nrow), top = matrix(0, nrow = nrow, ncol = ncol),
-  botm = array(rep(seq(0, -10 * nlay, length = nlay + 1)[2:(nlay + 1)], each =
-  nrow * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1, nper),
-  nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS", rep("TS",
-  nper - 1)))
+rmf_create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1,
+  itmuni = 1, lenuni = 2, laycbd = rep(0, nlay), delr = rep(100,
+  ncol), delc = rep(100, nrow), top = matrix(0, nrow = nrow, ncol =
+  ncol), botm = array(rep(seq(0, -10 * nlay, length = nlay + 1)[2:(nlay +
+  1)], each = nrow * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1,
+  nper), nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS",
+  rep("TS", nper - 1)))
 
 create_dis(...)
 }

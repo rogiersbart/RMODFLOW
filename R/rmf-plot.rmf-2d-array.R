@@ -47,7 +47,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                        height=NULL,
                                        title = NULL) {
   if(plot3d) {
-    xyz <- cell_coordinates(dis)
+    xyz <- rmf_cell_coordinates(dis)
     x <- xyz$x[,,1]
     y <- xyz$y[,,1]
     if(!is.null(prj)) {

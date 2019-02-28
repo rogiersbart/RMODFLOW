@@ -10,8 +10,8 @@ rmf_export_vector(...)
 
 \method{rmf_export_vector}{rmf_2d_array}(array, dis, bas = NULL,
   mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, bas$ibound[, , 1]),
-  prj = NULL, crs = NULL, file = "rmf_vector", type = "ESRI Shapefile",
-  include_ijk = FALSE)
+  prj = NULL, crs = NULL, file = "rmf_vector",
+  type = "ESRI Shapefile", include_ijk = FALSE)
 }
 \description{
 Generic function to export GIS vector layers from RMODFLOW arrays

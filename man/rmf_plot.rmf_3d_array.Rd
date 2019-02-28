@@ -4,16 +4,17 @@
 \alias{rmf_plot.rmf_3d_array}
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
-\method{rmf_plot}{rmf_3d_array}(array, i = NULL, j = NULL, k = NULL, dis,
-  bas = NULL, mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, bas$ibound),
-  zlim = range(array[rmfi_ifelse0(is.null(i), c(1:dim(array)[1]), i),
-  rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
-  c(1:dim(array)[3]), k)][as.logical(mask[rmfi_ifelse0(is.null(i),
+\method{rmf_plot}{rmf_3d_array}(array, i = NULL, j = NULL, k = NULL,
+  dis, bas = NULL, mask = rmfi_ifelse0(is.null(bas), array * 0 + 1,
+  bas$ibound), zlim = range(array[rmfi_ifelse0(is.null(i),
   c(1:dim(array)[1]), i), rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j),
-  rmfi_ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
+  rmfi_ifelse0(is.null(k), c(1:dim(array)[3]),
+  k)][as.logical(mask[rmfi_ifelse0(is.null(i), c(1:dim(array)[1]), i),
+  rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
+  c(1:dim(array)[3]), k)])], finite = TRUE),
   colour_palette = rmfi_rev_rainbow, nlevels = 7, type = "fill",
-  levels = NULL, grid = FALSE, add = FALSE, title = NULL, hed = NULL,
-  l = NULL, ...)
+  levels = NULL, grid = FALSE, add = FALSE, title = NULL,
+  hed = NULL, l = NULL, ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}

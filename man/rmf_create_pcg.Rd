@@ -6,8 +6,9 @@
 \title{Create an \code{RMODFLOW} pcg object}
 \usage{
 rmf_create_pcg(mxiter = 20, iter1 = 30, npcond = 1, ihcofadd = 0,
-  hclose = 0.001, rclose = 0.001, relax = 1, nbpol = 1, iprpcg = 1,
-  mutpcg = 0, damppcg = 1, damppcgt = ifelse(damppcg < 0, 1, NA))
+  hclose = 0.001, rclose = 0.001, relax = 1, nbpol = 1,
+  iprpcg = 1, mutpcg = 0, damppcg = 1, damppcgt = ifelse(damppcg <
+  0, 1, NA))
 
 create_pcg(...)
 }

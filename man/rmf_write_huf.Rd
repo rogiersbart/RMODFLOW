@@ -6,8 +6,8 @@
 \title{Write a MODFLOW hydrogeologic unit flow file}
 \usage{
 rmf_write_huf(huf, file = {    
-  cat("Please select huf file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  cat("Please select huf file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1)
 
 write_huf(...)
 }

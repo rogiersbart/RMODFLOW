@@ -6,8 +6,8 @@
 \title{Write a MODFLOW multiplier file}
 \usage{
 rmf_write_mlt(mlt, file = {    
-  cat("Please select mlt file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  cat("Please select mlt file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1)
 
 write_mlt(...)
 }

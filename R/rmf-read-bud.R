@@ -1,6 +1,6 @@
 #' Read a MODFLOW budget file
 #' 
-#' \code{read_bud} reads in a MODFLOW budget file
+#' \code{rmf_read_bud} reads in a MODFLOW budget file
 #' 
 #' @param file filename; typically 'Budget.out'
 #' @param binary logical; is source file binary?
@@ -206,7 +206,7 @@ rmf_read_bud <- function(file = {cat('Please select bud file ...\n'); file.choos
 
 #' @describeIn rmf_read_bud Deprecated function name
 #' @export
-rmf_read_bud <- function(...) {
+read_bud <- function(...) {
   .Deprecated(new = "rmf_read_bud", old = "read_bud")
   rmf_read_bud(...)
 }

@@ -1,6 +1,6 @@
 # RMODFLOW 0.5.0 [WIP]
 
-* Added automatic installation of MODFLOW variants.
+* Added automatic installation of MODFLOW variants ([#2](https://github.com/rogiersbart/RMODFLOW/issues/2)).
 * Added automatic finding of paths to MODFLOW executables.
 * Added function prefixes `rmf_`, and `rmfi_` for internal functions.
 * Added a [pkgdown site](https://rogiersbart.github.io/RMODFLOW/).
