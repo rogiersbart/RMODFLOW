@@ -6,8 +6,8 @@
 \title{Write a MODFLOW hydrogeologic unit flow file}
 \usage{
 rmf_write_huf(huf, file = {    
-  cat("Please select huf file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  cat("Please select huf file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1, ...)
 
 write_huf(...)
 }
@@ -17,6 +17,8 @@ write_huf(...)
 \item{file}{filename to write to; typically '*.huf'}
 
 \item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+
+\item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}

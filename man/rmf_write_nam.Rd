@@ -6,8 +6,8 @@
 \title{Write a MODFLOW name file}
 \usage{
 rmf_write_nam(nam, file = {    
-  cat("Please select nam file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select nam file to overwrite or provide new filename ...\\n")
+      file.choose() })
 
 write_nam(...)
 }

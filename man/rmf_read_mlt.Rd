@@ -7,7 +7,7 @@
 \usage{
 rmf_read_mlt(file = {     cat("Please select mlt file ...\\n")    
   file.choose() }, dis = {     cat("Please select dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  rmf_read_dis(file.choose()) }, ...)
 
 read_mlt(...)
 }
@@ -15,6 +15,8 @@ read_mlt(...)
 \item{file}{filename; typically '*.mlt'}
 
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }
 \value{
 \code{RMODFLOW} mlt object

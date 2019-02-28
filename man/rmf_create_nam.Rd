@@ -24,5 +24,5 @@ Object of class nam
 }}
 
 \seealso{
-\code{\link{read_nam}}, \code{\link{write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
+\code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
 }

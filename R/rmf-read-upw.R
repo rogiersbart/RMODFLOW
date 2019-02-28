@@ -8,7 +8,6 @@
 #' @return object of class upw
 #' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_upw}}, \code{\link{rmf_create_upw}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choose()},
@@ -34,23 +33,23 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
   rm(data_set_1)
   
   # data set 2
-  upw$laytyp <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay])
+  upw$laytyp <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay]
   upw_lines <- upw_lines[-1]
   
   # data set 3
-  upw$layavg <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay])
+  upw$layavg <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay]
   upw_lines <- upw_lines[-1]
   
   # data set 4
-  upw$chani <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay])
+  upw$chani <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay]
   upw_lines <- upw_lines[-1]
   
   # data set 5
-  upw$layvka <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay])
+  upw$layvka <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay]
   upw_lines <- upw_lines[-1]
   
   # data set 6
-  upw$laywet <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay])
+  upw$laywet <- as.numeric(rmfi_parse_variables(upw_lines)$variables)[1:dis$nlay]
   upw_lines <- upw_lines[-1]
   
   # data set 7-8

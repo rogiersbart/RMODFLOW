@@ -6,8 +6,8 @@
 \title{Write a MODFLOW head observations file}
 \usage{
 rmf_write_hob(hob, file = {    
-  cat("Please select hob file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select hob file to overwrite or provide new filename ...\\n")
+      file.choose() })
 
 write_hob(...)
 }

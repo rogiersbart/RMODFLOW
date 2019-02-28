@@ -9,8 +9,8 @@
 \usage{
 rmf_cell_dimensions(...)
 
-\method{rmf_cell_dimensions}{dis}(dis, hed = NULL, include_volume = FALSE,
-  include_faces = FALSE)
+\method{rmf_cell_dimensions}{dis}(dis, hed = NULL,
+  include_volume = FALSE, include_faces = FALSE)
 
 \method{rmf_cell_dimensions}{huf}(huf, dis = NULL, hed = NULL,
   include_volume = FALSE, include_faces = FALSE)

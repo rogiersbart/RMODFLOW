@@ -5,10 +5,10 @@
 \alias{create_hob}
 \title{Create an \code{RMODFLOW} hob object}
 \usage{
-rmf_create_hob(locations, time_series, dis, hydraulic_conductivity = array(1,
-  dim = c(dis$nrow, dis$ncol, dis$nlay)), iuhobsv = 0, hobdry = -888,
-  noprint = FALSE, tomulth = 1, itt = 1, unique_obsnam = FALSE,
-  prj = NULL)
+rmf_create_hob(locations, time_series, dis,
+  hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)), iuhobsv = 0, hobdry = -888, noprint = FALSE,
+  tomulth = 1, itt = 1, unique_obsnam = FALSE, prj = NULL)
 
 create_hob(...)
 }

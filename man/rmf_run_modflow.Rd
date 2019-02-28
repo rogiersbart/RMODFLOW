@@ -9,8 +9,8 @@
 \usage{
 rmf_run_modflow(...)
 
-\method{rmf_run_modflow}{character}(file, version = 2005, executable = NULL,
-  par = NULL)
+\method{rmf_run_modflow}{character}(file, version = 2005,
+  executable = NULL, par = NULL)
 
 \method{rmf_run_modflow}{modflow}(modflow, version = 2005,
   executable = NULL, par = NULL)
@@ -33,8 +33,6 @@ rmf_run_modflow(...)
 \item{par}{vector of parameter value file parameter values to run the model with}
 }
 \description{
-Generic function to run a modflow model
-
 \code{run_modflow} runs a MODFLOW model.
 
 \code{run_modflow} runs a MODFLOW model.

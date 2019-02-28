@@ -5,8 +5,8 @@
 \title{Write a MODFLOW direct solver package}
 \usage{
 rmf_write_de4(de4, file = {    
-  cat("Please choose de4 file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please choose de4 file to overwrite or provide new filename ...\\n")
+      file.choose() })
 }
 \arguments{
 \item{de4}{an \code{RMODFLOW} de4 object}

@@ -17,7 +17,7 @@ read_nam(...)
 object of class nam
 }
 \description{
-\code{read_nam} reads in a MODFLOW name file and returns it as an \code{\link{RMODFLOW}} nam object.
+\code{rmf_read_nam} reads in a MODFLOW name file and returns it as an \code{\link{RMODFLOW}} nam object.
 }
 \section{Functions}{
 \itemize{

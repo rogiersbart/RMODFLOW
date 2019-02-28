@@ -4,15 +4,15 @@
 \alias{rmf_create_zon}
 \title{Create an \code{RMODFLOW} zon object}
 \usage{
-rmf_create_zon(nzn = 1, zonnam = "ZONE", izon = array(1, dim = c(10, 10,
-  1)))
+rmf_create_zon(nzn = 1, zonnam = "ZONE",
+  izon = list(rmf_create_array(1L, dim = c(10, 10))))
 }
 \arguments{
 \item{nzn}{number of zone arrays to be defined; defaults to 1}
 
 \item{zonnam}{character vector of length \code{nzn} specifying the names of zone arrays; defaults to 'ZONE'}
 
-\item{izon}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x nzn} specifying the zone arrays; defaults to 1 for all cells}
+\item{izon}{list with \code{nzn} elements where each element is a \code{rmf_2d_array} specifying a zone array; defaults to a \code{rmf_2d_array} with 1 for all cells}
 }
 \value{
 an \code{RMODFLOW} zon object

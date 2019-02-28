@@ -5,7 +5,8 @@
 \title{Read a MODFLOW horizontal flow barrier file}
 \usage{
 rmf_read_hfb(file = {    
-  cat("Please select horizontal flow barrier file ...\\n")     file.choose() })
+  cat("Please select horizontal flow barrier file ...\\n")    
+  file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.hfb'}

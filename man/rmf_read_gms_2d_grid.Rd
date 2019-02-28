@@ -2,7 +2,6 @@
 % Please edit documentation in R/rmf-read-gms-2d-grid.R
 \name{rmf_read_gms_2d_grid}
 \alias{rmf_read_gms_2d_grid}
-\alias{rmf_read_gms_2d_grid}
 \title{Read a GMS 2D grid file}
 \usage{
 rmf_read_gms_2d_grid(...)

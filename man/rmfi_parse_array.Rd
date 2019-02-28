@@ -2,18 +2,39 @@
 % Please edit documentation in R/rmfi-parse-array.R
 \name{rmfi_parse_array}
 \alias{rmfi_parse_array}
-\title{Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
+\title{Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
 \usage{
 rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
-  skip_header = FALSE)
+  skip_header = FALSE, nam = NULL, precision = "single",
+  file = NULL, integer = FALSE, ...)
 }
 \arguments{
-\item{object}{MODFLOW input file text object, starting with the free-format control record}
+\item{remaining_lines}{lines to read the array from}
+
+\item{nrow}{number of rows in the array}
+
+\item{ncol}{number of columns in the array}
+
+\item{nlay}{number of layers in the array that should be read}
+
+\item{ndim}{optional; dimensions of the array to read}
+
+\item{skip_header}{optional; should the control record be skipped}
+
+\item{nam}{a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAl arrays}
+
+\item{precision}{character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files}
+
+\item{file}{pathname to the MODFLOW input file which is currently being read. Required when reading fixed-format or OPEN/CLOSE arrays}
+
+\item{integer}{logical; does the binary array hold integer values. Might not work optimally.}
+
+\item{...}{ignored}
 }
 \value{
 A list containing the array and the remaining text of the MODFLOW input file
 }
 \description{
-Get an array specified by a free-format control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
+Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 }
 \keyword{internal}

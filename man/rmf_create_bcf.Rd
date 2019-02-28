@@ -4,11 +4,12 @@
 \alias{rmf_create_bcf}
 \title{Create an \code{RMODFLOW} bcf object}
 \usage{
-rmf_create_bcf(ibcfcb = 0, hdry = -888, iwdflg = 0, wetfct = 1,
-  iwetit = 1, ihdwet = 0, int_trans = rep(0, 3), laycon = rep(0, 3),
-  trpy = rep(1, 3), sf1 = NULL, tran = array(0.001, dim = c(10, 10, 3)),
-  hy = NULL, vcont = array(1e-05, dim = c(10, 10, 2)), sf2 = NULL,
-  wetdry = NULL)
+rmf_create_bcf(dis = rmf_create_dis(), ibcfcb = 0, hdry = -888,
+  iwdflg = 0, wetfct = 1, iwetit = 1, ihdwet = 0, layavg = rep(0,
+  dis$nlay), laycon = rep(0, dis$nlay), trpy = rep(1, dis$nlay),
+  sf1 = NULL, tran = array(0.001, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)), hy = NULL, vcont = array(1e-05, dim = c(dis$nrow,
+  dis$ncol, dis$nlay)), sf2 = NULL, wetdry = NULL)
 }
 \arguments{
 \item{ibcfcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
@@ -23,7 +24,7 @@ rmf_create_bcf(ibcfcb = 0, hdry = -888, iwdflg = 0, wetfct = 1,
 
 \item{ihdwet}{flag determining which equation is used to define initial heads at cells that are converted from dry to wet; defaults to 0}
 
-\item{int_trans}{numeric vector of length \code{dis$nlay} determining which method of calculating interblock transmissivity to use for each layer; defaults to 0 for 3 layers}
+\item{layavg}{numeric vector of length \code{dis$nlay} determining which method of calculating interblock transmissivity to use for each layer; defaults to 0 for 3 layers}
 
 \item{laycon}{numeric vector of length \code{dis$nlay} determining which layer type (LAYCON) to use for each layer; defaults to 0 for 3 layer}
 

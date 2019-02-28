@@ -8,7 +8,7 @@
 rmf_read_huf(file = {     cat("Please select huf file ...\\n")    
   file.choose() }, dis = {    
   cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  rmf_read_dis(file.choose()) }, ...)
 
 read_huf(...)
 }
@@ -16,6 +16,8 @@ read_huf(...)
 \item{file}{filename; typically '*.huf'}
 
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }
 \value{
 object of class huf

@@ -5,13 +5,15 @@
 \title{Write a MODFLOW multiplier file}
 \usage{
 rmf_write_mlt(mlt, file = {    
-  cat("Please choose mlt file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please choose mlt file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{mlt}{an \code{RMODFLOW} mlt object}
 
 \item{file}{filename to write to; typically '*.mlt'}
+
+\item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}

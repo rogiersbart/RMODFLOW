@@ -4,9 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{\%>\%}
-\alias{reexports}
 \alias{read_rds}
-\alias{reexports}
 \alias{write_rds}
 \title{Objects exported from other packages}
 \keyword{internal}

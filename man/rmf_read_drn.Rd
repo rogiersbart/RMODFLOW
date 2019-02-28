@@ -7,12 +7,14 @@
 rmf_read_drn(file = {     cat("Please select drain file ...\\n")    
   file.choose() }, dis = {    
   cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  rmf_read_dis(file.choose()) }, ...)
 }
 \arguments{
 \item{file}{filename; typically '*.drn'}
 
 \item{dis}{an \code{RMODFLOW} dis object}
+
+\item{...}{arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.}
 }
 \value{
 \code{RMODFLOW} drn object

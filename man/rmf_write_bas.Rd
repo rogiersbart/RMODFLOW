@@ -6,8 +6,8 @@
 \title{Write a MODFLOW basic file}
 \usage{
 rmf_write_bas(bas, file = {    
-  cat("Please select bas file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
+  cat("Please select bas file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1, ...)
 
 write_bas(...)
 }
@@ -17,12 +17,14 @@ write_bas(...)
 \item{file}{filename to write to; typically '*.bas'}
 
 \item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+
+\item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}
 }
 \description{
-\code{write_bas} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} bas object.
+\code{rmf_write_bas} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} bas object.
 }
 \section{Functions}{
 \itemize{

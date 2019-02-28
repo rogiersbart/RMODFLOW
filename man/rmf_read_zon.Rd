@@ -6,12 +6,14 @@
 \usage{
 rmf_read_zon(file = {     cat("Please select zon file ...\\n")    
   file.choose() }, dis = {     cat("Please select dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  rmf_read_dis(file.choose()) }, ...)
 }
 \arguments{
 \item{file}{filename; typically '*.zon'}
 
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }
 \value{
 \code{RMODFLOW} zon object

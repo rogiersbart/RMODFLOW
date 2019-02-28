@@ -5,8 +5,8 @@
 \title{Write a MODFLOW horizontal flow barrier file}
 \usage{
 rmf_write_hfb(hfb, file = {    
-  cat("Please select hfb file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select hfb file to overwrite or provide new filename ...\\n")
+      file.choose() })
 }
 \arguments{
 \item{hfb}{an \code{RMODFLOW} hfb object}

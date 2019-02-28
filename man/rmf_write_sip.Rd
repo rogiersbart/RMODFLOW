@@ -5,13 +5,15 @@
 \title{Write a MODFLOW strongly implicit procedure package}
 \usage{
 rmf_write_sip(sip, file = {    
-  cat("Please choose sip file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please choose sip file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{sip}{an \code{RMODFLOW} sip object}
 
 \item{file}{filename to write to; typically '*.sip'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

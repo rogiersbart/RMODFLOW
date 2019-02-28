@@ -4,8 +4,9 @@
 \alias{rmf_create_mlt}
 \title{Create an \code{RMODFLOW} mlt object}
 \usage{
-rmf_create_mlt(nml = 1, mltnam = "MULT", functn = NULL, rmlt = array(1,
-  dim = c(10, 10, 1)), operators = NULL, iprn = NULL)
+rmf_create_mlt(nml = 1, mltnam = "MULT", functn = NULL,
+  rmlt = list(rmf_create_array(1, dim = c(10, 10))), operators = NULL,
+  iprn = NULL)
 }
 \arguments{
 \item{nml}{number of multiplier arrays to be defined; defaults to 1}
@@ -14,7 +15,7 @@ rmf_create_mlt(nml = 1, mltnam = "MULT", functn = NULL, rmlt = array(1,
 
 \item{functn}{optional logical vector of length \code{nml} indicating if the multiplier array will be constructed from other multiplier arrays previously defined; defaults to NULL}
 
-\item{rmlt}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x nml} specifying the mutliplier arrays; defaults to 1 for all cells}
+\item{rmlt}{list with \code{nml} elements where each element is a \code{rmf_2d_array} specifying a mutliplier array; defaults to a \code{rmf_2d_array} with 1 for all cells}
 
 \item{operators}{list with \code{nml} elements where each element is a character vector with the correct function which will be printed for that multiplier array. If no function is to be specifyied for an array, set to NULL; defaults to NULL}
 

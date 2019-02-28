@@ -6,8 +6,8 @@
 \title{Write a MODFLOW parameter value file}
 \usage{
 rmf_write_pvl(pvl, file = {    
-  cat("Please select pvl file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select pvl file to overwrite or provide new filename ...\\n")
+      file.choose() })
 
 write_pvl(...)
 }
