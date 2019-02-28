@@ -14,7 +14,7 @@
 #' @param strt 3d array specifying starting heads
 #' @return Object of class bas
 #' @export
-#' @seealso \code{\link{read_bas}}, \code{\link{write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
+#' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
 rmf_create_bas <- function(dis = rmf_create_dis(),
                            xsection = FALSE,
                            chtoch = FALSE,
@@ -23,7 +23,7 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
                            showprogress = FALSE,
                            stoperror = FALSE,
                            stoper = 1,
-                           ibound = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                           ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                            hnoflo = -999,
                            strt = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
       
@@ -34,6 +34,7 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
   
   # data set 1
     bas$xsection <- xsection
+    if(bas$xsection) warning('XSECTION: assuming ibound and strt arrays are of dimensions NLAY x NCOL')
     bas$chtoch <- chtoch
     bas$free <- free
     bas$printtime <- printtime
@@ -42,13 +43,14 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
     bas$stoper <- stoper
     
   # data set 2
-    bas$ibound <- ibound
+    bas$ibound <- rmf_create_array(apply(ibound, MARGIN = 1:length(dim(ibound)), function(i) as.integer(i)),
+                                   dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
   
   # data set 3
     bas$hnoflo <- hnoflo
   
   # data set 4
-    bas$strt <- strt
+    bas$strt <- rmf_create_array(strt, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
   
   class(bas) <- c('bas','rmf_package')
   return(bas)

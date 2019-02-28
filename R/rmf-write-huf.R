@@ -3,11 +3,13 @@
 #' @param huf an \code{\link{RMODFLOW}} huf object
 #' @param file filename to write to; typically '*.huf'
 #' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
 rmf_write_huf <- function(huf,
                       file = {cat('Please select huf file to overwrite or provide new filename ...\n'); file.choose()},
-                      iprn=-1) {
+                      iprn=-1,
+                      ...) {
   
   # data set 0
     v <- packageDescription("RMODFLOW")$Version
@@ -30,14 +32,14 @@ rmf_write_huf <- function(huf,
 
   # data set 5
     if(dim(huf$wetdry)[3]>0) {
-      rmfi_write_array(huf$wetdry, file = file, iprn = iprn) 
+      rmfi_write_array(huf$wetdry, file = file, iprn = iprn, ...) 
     }
   
   # data set 6-8
     for(i in 1:huf$nhuf) {
       rmfi_write_variables(huf$hgunam[i], file=file)   
-      rmfi_write_array(huf$top[,,i], file = file, iprn = iprn)
-      rmfi_write_array(huf$thck[,,i], file = file, iprn = iprn)
+      rmfi_write_array(huf$top[,,i], file = file, iprn = iprn, ...)
+      rmfi_write_array(huf$thck[,,i], file = file, iprn = iprn, ...)
     }
   
   # data set 9

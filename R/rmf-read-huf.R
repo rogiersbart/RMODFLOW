@@ -4,11 +4,13 @@
 #' 
 #' @param file filename; typically '*.huf'
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
+#' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class huf
 #' @importFrom readr read_lines
 #' @export
 rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choose()},
-                         dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}) {
+                         dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                         ...) {
   
   huf_lines <- read_lines(file)
   huf <- list()
@@ -53,7 +55,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
     }
   
   # data set 5
-    data_set_5 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)))
+    data_set_5 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)), file = file, ...)
     huf$wetdry <- data_set_5$array
     huf_lines <- data_set_5$remaining_lines
     rm(data_set_5)
@@ -66,7 +68,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
       data_set <- rmfi_parse_variables(huf_lines)
       huf$hgunam[i] <- data_set$variables[1]
       huf_lines <- data_set$remaining_lines
-      data_set <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,2)
+      data_set <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,2, file = file, ...)
       huf_lines <- data_set$remaining_lines
       huf$top[,,i] <- data_set$array[,,1]
       huf$thck[,,i] <- data_set$array[,,2]  

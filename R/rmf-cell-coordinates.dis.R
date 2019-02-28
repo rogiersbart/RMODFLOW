@@ -11,10 +11,19 @@ rmf_cell_coordinates.dis <- function(dis,
   cell_coordinates <- NULL
   cell_coordinates$z <- dis$botm*NA
   cell_coordinates$z[,,1] <- (dis$top+dis$botm[,,1])/2
-  for(k in 2:dis$nlay) {
-    cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
+  
+  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
+  if(nnlay > 1) {
+    for(k in 2:nnlay) {
+      cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
+    }
   }
   class(cell_coordinates$z) <- 'rmf_3d_array'
+  # remove the confining beds
+  cbd <- rep(0, nnlay)
+  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  cell_coordinates$z <- cell_coordinates$z[,,!cbd]
+  
   cell_coordinates$x <- cell_coordinates$z*0
   cell_coordinates$y <- cell_coordinates$z*0
   cell_coordinates$y[,,] <- rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)
@@ -22,8 +31,8 @@ rmf_cell_coordinates.dis <- function(dis,
   if(include_faces) {
     dis$delr <- array(rep(dis$delr,each=dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
     dis$delc <- array(rep(dis$delc,dis$ncol),dim=c(dis$nrow,dis$ncol,dis$nlay))
-    cell_coordinates$lower <- dis$botm
-    cell_coordinates$upper <- 2 * cell_coordinates$z - dis$botm
+    cell_coordinates$lower <- dis$botm[,,!cbd]
+    cell_coordinates$upper <- 2 * cell_coordinates$z - dis$botm[,,!cbd]
     cell_coordinates$left <- cell_coordinates$x - dis$delr/2
     cell_coordinates$right <- cell_coordinates$x + dis$delr/2 
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2

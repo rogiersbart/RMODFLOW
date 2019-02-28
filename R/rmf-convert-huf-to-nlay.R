@@ -8,6 +8,11 @@
 rmf_convert_huf_to_nlay <- function(huf, dis, bas) {
   nlay <- huf$top * 0
   huf_coordinates <- rmf_cell_coordinates(huf, dis = dis, include_faces = TRUE)
+  if(any(dis$laycbd != 0)) {
+    warning('Using Quasi-3D confining beds as explicit layers')
+    dis$nlay <- dis$nlay + length(which(dis$laycbd != 0))
+    dis$laycbd <- rep(0, dis$nlay)
+  }
   dis_coordinates <- rmf_cell_coordinates(dis, include_faces = TRUE)
   ibound <- abs(bas$ibound)
   for(i in 1:huf$nhuf) {
