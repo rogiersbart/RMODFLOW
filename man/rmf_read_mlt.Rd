@@ -17,7 +17,7 @@ read_mlt(...)
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
 }
 \value{
-object of class mlt
+\code{RMODFLOW} mlt object
 }
 \description{
 \code{read_mlt} reads in a MODFLOW multiplier file and returns it as an \code{\link{RMODFLOW}} mlt object.
@@ -27,3 +27,6 @@ object of class mlt
 \item \code{read_mlt}: Deprecated function name
 }}
 
+\seealso{
+\code{\link{rmf_write_mlt}}, \code{\link{rmf_create_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
+}

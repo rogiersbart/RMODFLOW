@@ -10,7 +10,7 @@ rmf_create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1, itmuni = 1,
   delc = rep(100, nrow), top = matrix(0, nrow = nrow, ncol = ncol),
   botm = array(rep(seq(0, -10 * nlay, length = nlay + 1)[2:(nlay + 1)], each =
   nrow * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1, nper),
-  nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS", rep("TS",
+  nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS", rep("TR",
   nper - 1)))
 
 create_dis(...)
@@ -44,7 +44,7 @@ create_dis(...)
 
 \item{tsmult}{vector of successive time step length multipliers}
 
-\item{sstr}{character vector with steady state ('SS') or transient ('TS') stress period indicator}
+\item{sstr}{character vector with steady state ('SS') or transient ('TR') stress period indicator}
 }
 \value{
 Object of class dis

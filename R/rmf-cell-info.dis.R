@@ -19,8 +19,18 @@ rmf_cell_info.dis <- function(dis,
   cat('\t\t Top \t\t Bottom \t Thickness\n', sep='')
   cat('Layer 1:\t', dis$top[i, j], '\t', dis$botm[i,j,1],'\t', dis$top[i, j]-dis$botm[i,j,1],'\n', sep='')
   
-  for(k in 2:dis$nlay)
-  {
-    cat('Layer ',k,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
+  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
+  if(nnlay > 1) {
+    cbd <- rep(0, nnlay)
+    cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+    for(k in 2:nnlay)
+    {
+      if(cbd[k]) {
+        cat('Quasi-3D Confining Bed below layer ',k-1,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
+      } else {
+        cat('Layer ',k,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
+      }
+    }
   }
+
 }

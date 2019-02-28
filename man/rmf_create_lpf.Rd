@@ -72,7 +72,7 @@ create_lpf(...)
 
 \item{zonarr}{matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
 
-\item{iz}{matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
+\item{iz}{character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
 
 \item{hk}{3d array with hydraulic conductivity along rows; defaults to 1}
 

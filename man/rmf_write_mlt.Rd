@@ -2,30 +2,23 @@
 % Please edit documentation in R/rmf-write-mlt.R
 \name{rmf_write_mlt}
 \alias{rmf_write_mlt}
-\alias{write_mlt}
 \title{Write a MODFLOW multiplier file}
 \usage{
 rmf_write_mlt(mlt, file = {    
-  cat("Please select mlt file to overwrite or provide new filename ...\\n")    
-  file.choose() }, iprn = -1)
-
-write_mlt(...)
+  cat("Please choose mlt file to overwrite or provide new filename ...\\n")    
+  file.choose() })
 }
 \arguments{
-\item{mlt}{an \code{\link{RMODFLOW}} mlt object}
+\item{mlt}{an \code{RMODFLOW} mlt object}
 
 \item{file}{filename to write to; typically '*.mlt'}
-
-\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}
 }
 \description{
-Write a MODFLOW multiplier file
+\code{rmf_write_mlt} writes an MODFLOW multiplier file based on a \code{RMODFLOW} mlt object
 }
-\section{Functions}{
-\itemize{
-\item \code{write_mlt}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_read_mlt}}, \code{\link{rmf_create_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
+}

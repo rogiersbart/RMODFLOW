@@ -8,15 +8,15 @@
 #' @param nper number of stress periods; defaults to 1
 #' @param itmuni time unit; defaults to 1 (seconds)
 #' @param lenuni length unit; defaults to 2 (metres)
-#' @param laycbd vector of quasi-3D confining bed flags; defaults to 0 for all layers
+#' @param laycbd vector of Quasi-3D confining bed flags; defaults to 0 for all layers
 #' @param delr vector of cell widths along rows; defaults to 100 for all columns
 #' @param delc vector of cell widths along columns; defaults to 100 for all rows
 #' @param top matrix with the top elevation of layer 1; defaults to 0 for all nrow x ncol cells
-#' @param botm 3D array with the bottom elevations of all layers; defaults to nlay layers, equally spaced between 0 (top first layer) and -100 (bottom last layer)
+#' @param botm 3D array with the bottom elevations of all layers and Quasi-3D confining beds; defaults to nlay layers, equally spaced between 0 (top first layer) and -100 (bottom last layer)
 #' @param perlen vector of stress period lengths 
 #' @param nstp vector of stress period time steps
 #' @param tsmult vector of successive time step length multipliers
-#' @param sstr character vector with steady state ('SS') or transient ('TS') stress period indicator
+#' @param sstr character vector with steady state ('SS') or transient ('TR') stress period indicator
 #' @return Object of class dis
 #' @export
 #' @seealso \code{\link{rmf_read_dis}}, \code{\link{rmf_write_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
@@ -34,7 +34,7 @@ rmf_create_dis <- function(nlay = 3,
                            perlen = rep(1, nper),
                            nstp = rep(1, nper),
                            tsmult = rep(1, nper),
-                           sstr = c('SS', rep('TS', nper - 1))) {
+                           sstr = c('SS', rep('TR', nper - 1))) {
   dis <- NULL
   
   # data set 0
@@ -50,6 +50,10 @@ rmf_create_dis <- function(nlay = 3,
   
   # data set 2
     dis$laycbd <- laycbd
+    if(dis$laycbd[dis$nlay] != 0) {
+      warning("Setting laycbd for the bottom layer to zero.")
+      dis$laycbd[dis$nlay] <- 0
+    }
   
   # data set 3
     dis$delr <- delr
@@ -57,12 +61,10 @@ rmf_create_dis <- function(nlay = 3,
     dis$delc <- delc
   
   # data set 5
-    dis$top <- top
-    class(dis$top) <- 'rmf_2d_array'
-  
+    dis$top <- rmf_create_array(top, dim = c(dis$nrow, dis$ncol))
+
   # data set 6
-    dis$botm <- botm
-    class(dis$botm) <- 'rmf_3d_array'
+    dis$botm <- rmf_create_array(botm, dim = c(dis$nrow, dis$ncol, dis$nlay + length(which(dis$laycbd != 0))))
 
   # data set 7
     dis$perlen <- perlen

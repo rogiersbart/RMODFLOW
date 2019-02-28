@@ -7,6 +7,7 @@
 #' @export
 rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choose()}) {
   hpr <- read.table(file,header=T)
+  colnames(hpr) = c('simulated_equivalent', 'observed_value', 'observation_name')
   class(hpr) <- c('hpr','data.frame')
   return(hpr)
 }
