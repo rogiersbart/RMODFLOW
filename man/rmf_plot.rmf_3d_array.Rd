@@ -4,16 +4,18 @@
 \alias{rmf_plot.rmf_3d_array}
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
-\method{rmf_plot}{rmf_3d_array}(array, i = NULL, j = NULL, k = NULL, dis,
-  bas = NULL, mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, bas$ibound),
+\method{rmf_plot}{rmf_3d_array}(array, i = NULL, j = NULL, k = NULL,
+  dis, bas = NULL, mask = rmfi_ifelse0(is.null(bas), array * 0 + 1,
+  rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1)), bas$ibound)),
   zlim = range(array[rmfi_ifelse0(is.null(i), c(1:dim(array)[1]), i),
   rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
   c(1:dim(array)[3]), k)][as.logical(mask[rmfi_ifelse0(is.null(i),
   c(1:dim(array)[1]), i), rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j),
   rmfi_ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
   colour_palette = rmfi_rev_rainbow, nlevels = 7, type = "fill",
-  levels = NULL, grid = FALSE, add = FALSE, title = NULL, hed = NULL,
-  l = NULL, ...)
+  levels = NULL, gridlines = FALSE, add = FALSE, title = NULL,
+  crop = FALSE, hed = NULL, l = NULL, prj = NULL, crs = NULL,
+  ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}
@@ -40,13 +42,19 @@
 
 \item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
 
-\item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
+\item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
 \item{title}{plot title}
+
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask)}
 
 \item{hed}{hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used}
 
 \item{l}{time step number for subsetting the hed object}
+
+\item{prj}{projection file object}
+
+\item{crs}{coordinate reference system for the plot}
 
 \item{...}{parameters provided to plot.rmf_2d_array}
 }

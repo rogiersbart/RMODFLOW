@@ -5,13 +5,15 @@
 \title{Write a MODFLOW zone file}
 \usage{
 rmf_write_zon(zon, file = {    
-  cat("Please choose zon file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please choose zon file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{zon}{an \code{RMODFLOW} zon object}
 
 \item{file}{filename to write to; typically '*.zon'}
+
+\item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}

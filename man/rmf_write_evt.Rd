@@ -5,8 +5,8 @@
 \title{Write a MODFLOW evapotranspiration file}
 \usage{
 rmf_write_evt(evt, dis = rmf_read_dis(), file = {    
-  cat("Please select evt file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select evt file to overwrite or provide new filename ...\\n")
+      file.choose() })
 }
 \arguments{
 \item{evt}{an \code{RMODFLOW} evt object}

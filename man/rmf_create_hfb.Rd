@@ -9,7 +9,8 @@ rmf_create_hfb(nphfb = 0, mxfb = 0, nhfbnp = 1, option = NULL,
   irow1_parm = NULL, icol1_parm = NULL, irow2_parm = NULL,
   icol2_parm = NULL, factor_parm = NULL, layer_noparm = 2,
   irow1_noparm = 3, icol1_noparm = 7, irow2_noparm = 4,
-  icol2_noparm = 7, hydchr_noparm = -1.5, nacthfb = 0, pname = NULL)
+  icol2_noparm = 7, hydchr_noparm = -1.5, nacthfb = 0,
+  pname = NULL)
 }
 \arguments{
 \item{nphfb}{number of hfb parameters; defaults to 0}

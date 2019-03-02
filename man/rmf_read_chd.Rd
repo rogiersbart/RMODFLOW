@@ -5,14 +5,17 @@
 \title{Read a MODFLOW time-variant specified-head file}
 \usage{
 rmf_read_chd(file = {    
-  cat("Please select time-variant specified-head file ...\\n")     file.choose()
-  }, dis = {     cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  cat("Please select time-variant specified-head file ...\\n")    
+  file.choose() }, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, ...)
 }
 \arguments{
 \item{file}{filename; typically '*.chd'}
 
 \item{dis}{an \code{RMODFLOW} dis object}
+
+\item{...}{arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.}
 }
 \value{
 \code{RMODFLOW} chd object

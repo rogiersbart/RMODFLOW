@@ -4,72 +4,18 @@
 \alias{rmf_create_drn}
 \title{Create an \code{RMODFLOW} drn object.}
 \usage{
-rmf_create_drn(npdrn = 1, mxl = 10, mxactd = 10, idrncb = 0,
-  option = NULL, parnam = "DRAIN", parval = 1, nlst = 10,
-  instances = NULL, numinst = NULL, instnam = NULL,
-  layer_parm = list(array(rep(1, 10), dim = c(1, 10))),
-  row_parm = list(array(rep(10, 10), dim = c(1, 10))),
-  column_parm = list(array(1:10, dim = c(1, 10))),
-  elevation_parm = list(array(-1, dim = c(1, 10))),
-  condfact_parm = list(array(5e-06, dim = c(1, 10))), xyz_parm = NULL,
-  itmp = 0, np = 1, layer_sp = NULL, row_sp = NULL, column_sp = NULL,
-  elevation_sp = NULL, cond_sp = NULL, xyz_sp = NULL,
-  pname = list("DRAIN"), iname = NULL)
+rmf_create_drn(..., dis, idrncb = 0, noprint = FALSE, aux = NULL)
 }
 \arguments{
-\item{npdrn}{number of drn parameters; defaults to 1}
+\item{...}{\code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the drains.}
 
-\item{mxl}{maximum number of drain cells that will be defined using parameters; defaults to 10}
+\item{dis}{dis object}
 
-\item{mxactd}{maximum number of drain cells in use during any stress period defined with and without parameters; defaults to 10}
+\item{idrncb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)}
 
-\item{idrncb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
+\item{noprint}{logical, should the printing of DRN cells to the listing file be suppressed ? Defaults to \code{FALSE}}
 
-\item{option}{optional character vector specifying the auxiliary variables and/or \code{NOPRINT}. Do not include the keywords \code{AUXILIARY} or \code{AUX}; defaults to NULL}
-
-\item{parnam}{vector of length \code{npdrn} specifying the parameter names; defaults to 'DRAIN'}
-
-\item{parval}{vector of length \code{npdrn} specifying the parameter values; defaults to 1}
-
-\item{nlst}{vector of length \code{npdrn} specifying the number of drain cells that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to 10}
-
-\item{instances}{logical vector of length \code{npdrn} indicating which parameters are time-varying; defaults to NULL}
-
-\item{numinst}{vector of length \code{npdrn} indicating the number instances that are included in the time-varying parameter; defaults to NULL}
-
-\item{instnam}{list with \code{npdrn} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{layer_parm}{list with \code{npdrn} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the layer numbers of the model cells containing the drains specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to 1 for all drain cells for the parameter.}
-
-\item{row_parm}{list with \code{npdrn} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the row numbers of the model cells containing the drains specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to 10 for all drain cells for the parameter}
-
-\item{column_parm}{list with \code{npdrn} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the column numbers of the model cells containing the drains specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to 1:10 for the parameter}
-
-\item{elevation_parm}{list with \code{npdrn} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the elevation of the drain for parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to -1 for all drain cells for the parameter}
-
-\item{condfact_parm}{list with \code{npdrn} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the drain conductance factor for parameter \code{i}. The drain conductance is the product of condfact and the parameter value. If not time-varying, set numinst dimension to 1. Defaults to 5e-6 for all drain cells for the parameter}
-
-\item{xyz_parm}{optional list with \code{npdrn} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nlst} specifying the auxiliary variables for parameter \code{i}. If not time-varying, set numinst to 1. Defaults to NULL}
-
-\item{itmp}{vector of length \code{dis$nper} specifying non-parameter drain data being read for each stress period; defaults to 0}
-
-\item{np}{vector of length \code{dis$nper} specifying the number of drain parameters in use for each stress period; defaults to 1}
-
-\item{layer_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the layer numbers of the model cells containing the drains; defaults to NULL}
-
-\item{row_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the row numbers of the model cells containing the drains; defaults to NULL}
-
-\item{column_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the column numbers of the model cells containing the drains; defaults to NULL}
-
-\item{elevation_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the drain elevations of the model cells containing the drains; defaults to NULL}
-
-\item{cond_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the drain conductance of the model cells containing the drains; defaults to NULL}
-
-\item{xyz_sp}{optional list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{itmp} for stress period \code{i} specifying the auxiliary variables of the model cells containing the drains; defaults to NULL}
-
-\item{pname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{np} for stress period \code{i} specifying the names of the parameters being used; defaults to 'DRAIN'}
-
-\item{iname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{np} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL}
+\item{aux}{optional character vector specifying the names of the auxiliary variables. These variables should also be included in the \code{rmf_list} objects that are supplied; defaults to \code{NULL}}
 }
 \value{
 \code{RMODFLOW} drn object

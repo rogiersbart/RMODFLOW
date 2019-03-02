@@ -10,7 +10,7 @@ rmf_read_kdep(file = {     cat("Please select kdep file ...\\n")
   cat("Please select corresponding dis file ...\\n")    
   rmf_read_dis(file.choose()) }, huf = {    
   cat("Please select corresponding huf file ...\\n")    
-  rmf_read_huf(file.choose(), dis = dis) })
+  rmf_read_huf(file.choose(), dis = dis) }, ...)
 
 read_kdep(...)
 }
@@ -20,6 +20,8 @@ read_kdep(...)
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
 
 \item{huf}{hydrogeologic unit file object; defaults to that with the same filename but with extension '.huf'}
+
+\item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }
 \value{
 object of class kdep

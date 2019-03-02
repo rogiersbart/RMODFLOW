@@ -6,12 +6,14 @@
 \title{Read a MODFLOW discretization file}
 \usage{
 rmf_read_dis(file = {     cat("Please select dis file ...\\n")    
-  file.choose() })
+  file.choose() }, ...)
 
 read_dis(...)
 }
 \arguments{
 \item{file}{filename; typically '*.dis'}
+
+\item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }
 \value{
 object of class dis

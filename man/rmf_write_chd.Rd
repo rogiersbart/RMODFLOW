@@ -4,9 +4,9 @@
 \alias{rmf_write_chd}
 \title{Write a MODFLOW time-variant specified-head file}
 \usage{
-rmf_write_chd(chd, dis = read_dis(), file = {    
-  cat("Please choose chd file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+rmf_write_chd(chd, dis = rmf_read_dis(), file = {    
+  cat("Please choose chd file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{chd}{an \code{RMODFLOW} chd object}
@@ -14,6 +14,8 @@ rmf_write_chd(chd, dis = read_dis(), file = {
 \item{dis}{an \code{RMODFLOW} dis object}
 
 \item{file}{filename to write to; typically '*.chd'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

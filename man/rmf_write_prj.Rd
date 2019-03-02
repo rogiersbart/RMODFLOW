@@ -6,8 +6,8 @@
 \title{Write an RMODFLOW projection file}
 \usage{
 rmf_write_prj(prj, file = {    
-  cat("Please select prj file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select prj file to overwrite or provide new filename ...\\n")
+      file.choose() })
 
 write_prj(...)
 }

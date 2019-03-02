@@ -5,11 +5,12 @@
 \alias{create_bas}
 \title{Create an \code{RMODFLOW} bas object}
 \usage{
-rmf_create_bas(dis = rmf_create_dis(), xsection = FALSE, chtoch = FALSE,
-  free = TRUE, printtime = FALSE, showprogress = FALSE,
-  stoperror = FALSE, stoper = 1, ibound = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), hnoflo = -999,
-  strt = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay)))
+rmf_create_bas(dis = rmf_create_dis(), xsection = FALSE,
+  chtoch = FALSE, free = TRUE, printtime = FALSE,
+  showprogress = FALSE, stoperror = FALSE, stoper = 1,
+  ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  hnoflo = -999, strt = rmf_create_array(0, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)))
 
 create_bas(...)
 }
@@ -46,5 +47,5 @@ Object of class bas
 }}
 
 \seealso{
-\code{\link{read_bas}}, \code{\link{write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
+\code{\link{rmf_read_bas}}, \code{\link{rmf_write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
 }

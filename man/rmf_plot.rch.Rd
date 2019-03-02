@@ -4,8 +4,9 @@
 \alias{rmf_plot.rch}
 \title{Plot a 2D section of an RMODFLOW rch object}
 \usage{
-\method{rmf_plot}{rch}(rch, dis, mlt = NULL, zon = NULL, all_parm = F,
-  variable = "recharge", instnum = NULL, l = NULL, sp = NULL, ...)
+\method{rmf_plot}{rch}(rch, dis, mlt = NULL, zon = NULL,
+  all_parm = F, variable = "recharge", instnum = NULL, l = NULL,
+  sp = NULL, ...)
 }
 \arguments{
 \item{rch}{an \code{RMODFLOW} rch object}

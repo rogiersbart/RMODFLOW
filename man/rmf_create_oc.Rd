@@ -6,15 +6,19 @@
 \title{Create an \code{RMODFLOW} oc object}
 \usage{
 rmf_create_oc(dis = create_dis(), ihedfm = NA, chedfm = NA,
-  ihedun = 666, iddnfm = NA, cddnfm = NA, iddnun = NA, cboufm = NA,
-  ibouun = NA, compact_budget = TRUE, aux = FALSE, head_label = TRUE,
-  drawdown_label = TRUE, ibound_label = TRUE, iperoc = rep(1:dis$nper,
-  dis$nstp), itsoc = unlist(apply(data.frame(1, dis$nstp), 1, FUN =
-  function(x) x[1]:x[2])), print_head = rep(FALSE, length(iperoc)),
-  print_drawdown = rep(FALSE, length(iperoc)), print_budget = rep(FALSE,
-  length(iperoc)), save_head = rep(TRUE, length(iperoc)),
-  save_drawdown = rep(FALSE, length(iperoc)), save_ibound = rep(FALSE,
-  length(iperoc)), save_budget = rep(TRUE, length(iperoc)))
+  ihedun = 666, iddnfm = NA, cddnfm = NA, iddnun = NA,
+  cboufm = NA, ibouun = NA, compact_budget = TRUE, aux = FALSE,
+  head_label = TRUE, drawdown_label = TRUE, ibound_label = TRUE,
+  iperoc = rep(1:dis$nper, dis$nstp),
+  itsoc = unlist(apply(data.frame(1, dis$nstp), 1, FUN = function(x)
+  x[1]:x[2])), print_head = rep(FALSE, length(iperoc)),
+  print_drawdown = rep(FALSE, length(iperoc)),
+  print_budget = rep(FALSE, length(iperoc)), save_head = rep(TRUE,
+  length(iperoc)), save_drawdown = rep(FALSE, length(iperoc)),
+  save_ibound = rep(FALSE, length(iperoc)), save_budget = rep(TRUE,
+  length(iperoc)), incode = NULL, ihddfl = NULL, ibudfl = NULL,
+  icbcfl = NULL, hdpr = NULL, ddpr = NULL, hdsv = NULL,
+  ddsv = NULL)
 
 create_oc(...)
 }
@@ -51,19 +55,35 @@ create_oc(...)
 
 \item{itsoc}{vector of time step numbers (within the corresponding stress period)}
 
-\item{print_head}{logical vector; should heads be printed for the time step corresponding to iperoc and itsoc?}
+\item{print_head}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{print_drawdown}{logical vector; should drawdowns be printed for the time step corresponding to iperoc and itsoc?}
+\item{print_drawdown}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
 \item{print_budget}{logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?}
 
-\item{save_head}{logical vector; should heads be saved for the time step corresponding to iperoc and itsoc?}
+\item{save_head}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{save_drawdown}{logical vector; should drawdowns be saved for the time step corresponding to iperoc and itsoc?}
+\item{save_drawdown}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{save_ibound}{logical vector; should ibound be saved for the time step corresponding to iperoc and itsoc?}
+\item{save_ibound}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
 \item{save_budget}{logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?}
+
+\item{incode}{vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{ihddfl}{vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{ibudfl}{vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{icbcfl}{vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{hdpr}{matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{ddpr}{matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{hdsv}{matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
+
+\item{ddsv}{matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
 }
 \value{
 Object of class oc
@@ -77,5 +97,5 @@ Object of class oc
 }}
 
 \seealso{
-\code{\link{read_oc}}, \code{\link{write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
+\code{\link{rmf_read_oc}}, \code{\link{rmf_write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 }

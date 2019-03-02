@@ -7,12 +7,14 @@
 rmf_read_bcf(file = {     cat("Please select bcf file ...\\n")    
   file.choose() }, dis = {    
   cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) })
+  rmf_read_dis(file.choose()) }, ...)
 }
 \arguments{
 \item{file}{filename; typically '*_bcf'}
 
 \item{dis}{an \code{RMODFLOW} dis object}
+
+\item{...}{arguments passed to \code{rmfi_parse_array} and \code{rmfi_parse_variables}. Can be ignored when input is 'free' format and arrays are INTERNAL or CONSTANT.}
 }
 \value{
 an \code{RMODFLOW} bcf object

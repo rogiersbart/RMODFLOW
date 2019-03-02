@@ -4,64 +4,18 @@
 \alias{rmf_create_wel}
 \title{Create an \code{RMODFLOW} wel object.}
 \usage{
-rmf_create_wel(npwel = NULL, mxl = NULL, mxactw = 1, iwelcb = 0,
-  option = NULL, parnam = NULL, parval = NULL, nlst = NULL,
-  instances = NULL, numinst = NULL, instnam = NULL, layer_parm = NULL,
-  row_parm = NULL, column_parm = NULL, qfact_parm = NULL,
-  xyz_parm = NULL, itmp = 1, np = 0, layer_sp = list(c(3)),
-  row_sp = list(c(5)), column_sp = list(c(5)), q_sp = list(c(-0.002)),
-  xyz_sp = NULL, pname = NULL, iname = NULL)
+rmf_create_wel(..., dis, iwelcb = 0, noprint = FALSE, aux = NULL)
 }
 \arguments{
-\item{npwel}{number of wel parameters; defaults to NULL}
+\item{...}{\code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the wells.}
 
-\item{mxl}{maximum number of wells that will be defined using parameters; defaults to NULL}
+\item{dis}{dis object}
 
-\item{mxactw}{maximum number of wells in use during any stress period defined with and without parameters; defaults to 1}
+\item{iwelcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)}
 
-\item{iwelcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
+\item{noprint}{logical, should the printing of WEL cells to the listing file be suppressed ? Defaults to \code{FALSE}}
 
-\item{option}{optional character vector specifying the auxiliary variables and/or \code{NOPRINT}. Do not include the keywords \code{AUXILIARY} or \code{AUX}; defaults to NULL}
-
-\item{parnam}{vector of length \code{npwel} specifying the parameter names; defaults to NULL}
-
-\item{parval}{vector of length \code{npwel} specifying the parameter values; defaults to NULL}
-
-\item{nlst}{vector of length \code{npwel} specifying the number of wells that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL}
-
-\item{instances}{logical vector of length \code{npwel} indicating which parameters are time-varying; defaults to NULL}
-
-\item{numinst}{vector of length \code{npwel} indicating the number instances that are included in the time-varying parameter; defaults to NULL}
-
-\item{instnam}{list with \code{npwel} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{layer_parm}{list with \code{npwel} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the layer numbers of the model cells containing the wells specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{row_parm}{list with \code{npwel} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the row numbers of the model cells containing the wells specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{column_parm}{list with \code{npwel} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the column numbers of the model cells containing the wells specified by parameter \code{i}. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{qfact_parm}{list with \code{npwel} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nlst} specifying the well recharge factor for parameter \code{i}. The recharge is the product of qfact and the parameter value. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{xyz_parm}{optional list with \code{npwel} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nlst} specifying the auxiliary variables for parameter \code{i}. If not time-varying, set numinst to 1. Defaults to NULL}
-
-\item{itmp}{vector of length \code{dis$nper} specifying non-parameter well data being read for each stress period; defaults to 1}
-
-\item{np}{vector of length \code{dis$nper} specifying the number of well parameters in use for each stress period; defaults to 0}
-
-\item{layer_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the layer numbers of the model cells containing the wells; defaults to 3}
-
-\item{row_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the row numbers of the model cells containing the wells; defaults to 5}
-
-\item{column_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the column numbers of the model cells containing the wells; defaults to 5}
-
-\item{q_sp}{list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{itmp} for stress period \code{i} specifying the volumetric recharge rates of the model cells containing the wells; defaults to -0.002}
-
-\item{xyz_sp}{optional list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{itmp} for stress period \code{i} specifying the auxiliary variables of the model cells containing the wells; defaults to NULL}
-
-\item{pname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{np} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL}
-
-\item{iname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{np} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL}
+\item{aux}{optional character vector specifying the names of the auxiliary variables. These variables should also be included in the \code{rmf_list} objects that are supplied; defaults to \code{NULL}}
 }
 \value{
 \code{RMODFLOW} wel object

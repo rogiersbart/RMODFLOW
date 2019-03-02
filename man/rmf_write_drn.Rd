@@ -4,9 +4,9 @@
 \alias{rmf_write_drn}
 \title{Write a MODFLOW drain file}
 \usage{
-rmf_write_drn(drn, dis = read_dis(), file = {    
-  cat("Please choose drn file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+rmf_write_drn(drn, dis = rmf_read_dis(), file = {    
+  cat("Please choose drn file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{drn}{an \code{RMODFLOW} drn object}
@@ -14,6 +14,8 @@ rmf_write_drn(drn, dis = read_dis(), file = {
 \item{dis}{an \code{RMODFLOW} dis object}
 
 \item{file}{filename to write to; typically '*.drn'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

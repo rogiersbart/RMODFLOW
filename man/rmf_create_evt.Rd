@@ -6,10 +6,11 @@
 \usage{
 rmf_create_evt(npevt = NULL, nevtop = 1, ievtcb = 0, parnam = NULL,
   parval = NULL, nclu = NULL, instances = NULL, numinst = NULL,
-  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL, insurf = 1,
-  inevtr = 1, inexdp = 1, inievt = NULL, pname = NULL, iname = NULL,
-  ievtpf = NULL, surf = array(0, dim = c(10, 10, 1)), evtr = array(4e-09,
-  dim = c(10, 10, 1)), exdp = array(2, dim = c(10, 10, 1)), ievt = NULL)
+  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
+  insurf = 1, inevtr = 1, inexdp = 1, inievt = NULL,
+  pname = NULL, iname = NULL, ievtpf = NULL, surf = array(0, dim =
+  c(10, 10, 1)), evtr = array(4e-09, dim = c(10, 10, 1)),
+  exdp = array(2, dim = c(10, 10, 1)), ievt = NULL)
 }
 \arguments{
 \item{npevt}{number of evt parameters; defaults to NULL}

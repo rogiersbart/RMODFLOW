@@ -16,8 +16,6 @@
 #' @return ggplot2 object
 #' @method rmf_plot bud
 #' @export
-
-
 rmf_plot.bud <-  function(bud, 
                         dis,
                         what = 'rates',

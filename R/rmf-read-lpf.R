@@ -41,19 +41,19 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     lpf_lines <- lpf_lines[-1]
   
   # data set 3
-    lpf$layavg <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay])
+    lpf$layavg <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay]
     lpf_lines <- lpf_lines[-1]
   
   # data set 4
-    lpf$chani <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay])
+    lpf$chani <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay]
     lpf_lines <- lpf_lines[-1]
   
   # data set 5
-    lpf$layvka <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay])
+    lpf$layvka <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay]
     lpf_lines <- lpf_lines[-1]
     
   # data set 6
-    lpf$laywet <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay])
+    lpf$laywet <- as.numeric(rmfi_parse_variables(lpf_lines)$variables)[1:dis$nlay]
     lpf_lines <- lpf_lines[-1]
   
   # data set 7

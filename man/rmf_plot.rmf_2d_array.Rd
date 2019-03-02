@@ -6,13 +6,14 @@
 \usage{
 \method{rmf_plot}{rmf_2d_array}(array, dis, bas = NULL,
   mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {    
-  warning("Using first ibound layer as mask.", call. = FALSE)     bas$ibound[, ,
-  1] }), colour_palette = rmfi_rev_rainbow,
+  warning("Using first ibound layer as mask.", call. = FALSE)    
+  rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1],
+  bas$ibound[, , 1]) }), colour_palette = rmfi_rev_rainbow,
   zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
-  type = "fill", levels = NULL, grid = FALSE, add = FALSE,
+  type = "fill", levels = NULL, gridlines = FALSE, add = FALSE,
   height_exaggeration = 100, binwidth = round(diff(zlim)/20),
-  label = TRUE, prj = NULL, crs = NULL, alpha = 1, plot3d = FALSE,
-  height = NULL, title = NULL)
+  label = TRUE, prj = NULL, crs = NULL, alpha = 1,
+  plot3d = FALSE, height = NULL, title = NULL, crop = FALSE)
 }
 \arguments{
 \item{array}{an object of class rmf_2d_array}
@@ -33,7 +34,7 @@
 
 \item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
 
-\item{grid}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
+\item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
 \item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
 
@@ -54,6 +55,8 @@
 \item{height}{2D array for specifying the 3D plot z coordinate}
 
 \item{title}{plot title}
+
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask)}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly

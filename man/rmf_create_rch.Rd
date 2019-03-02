@@ -6,9 +6,9 @@
 \usage{
 rmf_create_rch(nprch = NULL, nrchop = 1, irchcb = 0, parnam = NULL,
   parval = NULL, nclu = NULL, instances = NULL, numinst = NULL,
-  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL, inrech = 1,
-  inirch = NULL, rech = array(1e-08, dim = c(10, 10, 1)), pname = NULL,
-  iname = NULL, irchpf = NULL, irch = NULL)
+  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
+  inrech = 1, inirch = NULL, rech = array(1e-08, dim = c(10, 10, 1)),
+  pname = NULL, iname = NULL, irchpf = NULL, irch = NULL)
 }
 \arguments{
 \item{nprch}{number of rch parameters; defaults to NULL}

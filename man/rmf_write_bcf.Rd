@@ -5,8 +5,8 @@
 \title{Write a MODFLOW block-centered flow file}
 \usage{
 rmf_write_bcf(bcf, dis = rmf_read_dis(), file = {    
-  cat("Please select bcf file to overwrite or provide new filename ...\\n")    
-  file.choose() })
+  cat("Please select bcf file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{bcf}{an \code{RMODFLOW} bcf object}
@@ -14,6 +14,8 @@ rmf_write_bcf(bcf, dis = rmf_read_dis(), file = {
 \item{dis}{an \code{RMODFLOW} dis object}
 
 \item{file}{filename to write to; typically '*.bcf'}
+
+\item{...}{arguments passed to \code{rmfi_write_array} and \code{rmfi_write_variables}. Can be ignored when format is free and arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}

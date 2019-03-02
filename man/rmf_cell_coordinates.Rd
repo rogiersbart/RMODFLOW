@@ -11,7 +11,8 @@ rmf_cell_coordinates(...)
 
 \method{rmf_cell_coordinates}{dis}(dis, include_faces = FALSE)
 
-\method{rmf_cell_coordinates}{huf}(huf, dis = NULL, include_faces = FALSE)
+\method{rmf_cell_coordinates}{huf}(huf, dis = NULL,
+  include_faces = FALSE)
 }
 \arguments{
 \item{dis}{dis object}

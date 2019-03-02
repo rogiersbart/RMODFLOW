@@ -4,8 +4,9 @@
 \alias{rmf_plot.evt}
 \title{Plot a 2D section of an RMODFLOW evt object}
 \usage{
-\method{rmf_plot}{evt}(evt, dis, mlt = NULL, zon = NULL, all_parm = F,
-  variable = "evt", instnum = NULL, l = NULL, sp = NULL, ...)
+\method{rmf_plot}{evt}(evt, dis, mlt = NULL, zon = NULL,
+  all_parm = F, variable = "evt", instnum = NULL, l = NULL,
+  sp = NULL, ...)
 }
 \arguments{
 \item{evt}{an \code{RMODFLOW} evt object}
