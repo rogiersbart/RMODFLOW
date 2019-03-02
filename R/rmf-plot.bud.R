@@ -15,7 +15,6 @@
 #'          
 #' @return ggplot2 object
 #' @method rmf_plot bud
-#' @importFrom 
 #' @export
 
 
@@ -50,9 +49,6 @@ rmf_plot.bud <-  function(bud,
   }
   
   df <- lapply(bud, tidy_df)
-  
-  # TO DO:
-  # include_ss
   
   # plot
   
