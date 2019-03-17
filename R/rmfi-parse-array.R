@@ -5,7 +5,7 @@
 #' @param nlay number of layers in the array that should be read
 #' @param ndim optional; dimensions of the array to read
 #' @param skip_header optional; should the control record be skipped
-#' @param nam a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAl arrays
+#' @param nam a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAL arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
 #' @param file pathname to the MODFLOW input file which is currently being read. Required when reading fixed-format or OPEN/CLOSE arrays
 #' @param integer logical; does the binary array hold integer values. Might not work optimally.
@@ -183,7 +183,6 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
 
       } else {
         # FIXED format
-        if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays')
         locat <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1])
         cnst <- as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2])
         if(cnst == 0) cnst <-  1.0
@@ -193,6 +192,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         if(locat == 0) { 
           array[,,k] <- matrix(cnst, nrow=nrow, ncol=ncol)
         } else {
+          if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays')
           
           fname <-  nam$fname[which(nam$nunit == locat)]
           direct <-  attr(nam, 'dir')

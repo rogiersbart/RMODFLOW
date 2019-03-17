@@ -1,15 +1,17 @@
 #' Write modflow array
 #' Internal function used in the write_* functions for writing array datasets
-#' @param external named logical vector where the name corresponds to the dataset; used to write external arrays
-#' @param binary named logical vector where the name corresponds to the dataset; used to write external arrays
+#' @param external character vector with names corresponding to the dataset; used to write external arrays
+#' @param fname  character vector with names corresponding to the dataset; used to write open/close arrays
+#' @param binary character vector with names corresponding to the dataset; used to write external or open/close arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
 #' @param nam \code{\link{RMODFLOW}} nam object; used when writing external arrays
 #' @param ... ignored
-rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, external = NULL, binary = NULL, precision = 'single', nam = NULL, xsection = FALSE, ...) {
+rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, external = NULL, fname = NULL, binary = NULL, precision = 'single', nam = NULL, xsection = FALSE, ...) {
   
   arrname <-  sub(x=sub(".*[$]","",deparse(substitute(array))),pattern = '[[].*', replacement='')
-  if(is.null(external) || is.na(external[arrname]))  external <-  setNames(FALSE, arrname)
-  if(is.null(binary) || is.na(binary[arrname])) binary <- setNames(FALSE, arrname)
+  external <- rmfi_ifelse0(is.null(external), FALSE, arrname %in% external)
+  fname <- rmfi_ifelse0(is.null(fname), FALSE, arrname %in% fname)
+  binary <- rmfi_ifelse0(is.null(binary), FALSE, arrname %in% binary)
   
   if(is.null(names(cnstnt))) {
     if(length(cnstnt) > 1)  stop('Please supply a single value or a named vector for cnstnt')
@@ -23,7 +25,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     iprn <- ifelse(is.na(iprn[arrname]), -1, iprn[arrname])
   }
   
-  if(external[arrname]) { # external
+  if(external) { # external
     if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays')
     extfile <-  paste(dirname(file), paste(arrname, 'ext', sep='.'), sep='/')
     
@@ -41,18 +43,40 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     
     if(!is.null(dim(array)) && length(dim(array)) > 2) {
       for(i in 1:dim(array)[3]) {
-        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary[arrname],"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
       }
     } else {
-      cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary[arrname],"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+      cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
     }
 
     rmf_write_array(array = array, file = extfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
-    warning(paste('Remember to add the external file to the nam file.\nftype =', ifelse(binary[arrname],"DATA(BINARY)","DATA"),
+    warning(paste('Remember to add the external file to the nam file.\nftype =', ifelse(binary,"DATA(BINARY)","DATA"),
                   '\nnunit =', nunit, '\nfname =', extfile))
     #return(data.frame(ftype = ifelse(binary[arrname], 'DATA(BINARY)', 'DATA'), nunit=nunit, fname=extfile, options=NA))
     
-  } else { # not external
+  } else if(fname) { # open/close
+    
+    if(!is.null(dim(array)) && length(dim(array)) > 2) {
+      for(i in 1:dim(array)[3]) {
+        fname_i <- paste(paste(arrname, i, sep = '_'), 'in', sep = '.')
+        direct <-  dirname(file)
+        absfile <-  paste(direct, fname_i, sep = '/')
+
+        cat(paste('OPEN/CLOSE', fname_i, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+        rmf_write_array(array = array[,,i], file = absfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
+        
+      }
+    } else {
+      fname_i <- paste(arrname, 'in', sep = '.')
+      direct <-  dirname(file)
+      absfile <-  paste(direct, fname_i, sep = '/')
+      cat(paste('OPEN/CLOSE', fname_i, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+      rmf_write_array(array = array, file = absfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
+      
+    }
+    
+    
+  } else { # not external or open/close
     if(is.null(dim(array))) {
       if(prod(c(array)[1] == c(array))==1) {
         cat(paste('CONSTANT ',cnstnt * c(array)[1], '\n', sep=''), file=file, append=append)

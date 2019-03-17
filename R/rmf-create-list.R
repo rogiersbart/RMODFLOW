@@ -11,11 +11,12 @@
 #' @return an object of class \code{rmf_list} and \code{data.frame}
 #' @export
 
-rmf_create_list <-  function(df, kper, name = NULL) {
+rmf_create_list <-  function(df, kper = NULL) {
   
-  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j')
   df <- as.data.frame(df)
   colnames(df) <- tolower(colnames(df))
+  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j')
+  
   attr(df, 'kper') <- kper  
   class(df) = c('rmf_list', class(df))
   return(df)

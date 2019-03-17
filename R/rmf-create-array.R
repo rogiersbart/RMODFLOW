@@ -7,6 +7,7 @@
 #' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
 #'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
+#' @return a \code{rmf_list} object
 #' @export
 
 rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL) {
@@ -35,20 +36,16 @@ create_rmodflow_array <- function(...) {
 "[.rmf_4d_array" <-  function(x, i, j, k, l, ...) {
   if(missing(i) && missing(j) && missing(k) && missing(l)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1, missing(l) || length(l) > 1)
-  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], FALSE)
+  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
   
   obj <-  NextMethod(..., drop = drop)
   
   # l missing -> always 4d unless all other indices are given
-  if(!drop && any(miss)) {
+  if(!drop && sum(miss) > 1) {
     if(!miss[4]) {
       dim(obj) <- dim(obj)[miss]
-    } else {
-      if(!missing(i) && !missing(j) && !missing(k)) dim(obj) <- NULL
-    }
-  } else if(all(!miss)) {
-    dim(obj) <- NULL
-  }
+    } 
+  } 
   
   if (length(dim(obj)) == 2) {
     class(obj) <- replace(class(x), class(x) == 'rmf_4d_array', 'rmf_2d_array')
@@ -72,15 +69,13 @@ create_rmodflow_array <- function(...) {
 "[.rmf_3d_array" <-  function(x, i, j, k, ...) {
   if(missing(i) && missing(j) && missing(k)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1)
-  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], FALSE)
+  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
   
   obj <-  NextMethod(..., drop = drop)
 
-  if(!drop && any(miss)) {
+  if(!drop && sum(miss) > 1) {
     dim(obj) <- dim(obj)[miss]
-  } else if(all(!miss)) {
-    dim(obj) <- NULL
-  }
+  } 
   
   if (length(dim(obj)) == 2) {
     class(obj) <- replace(class(x), class(x) == 'rmf_3d_array', 'rmf_2d_array')
@@ -101,17 +96,14 @@ create_rmodflow_array <- function(...) {
 "[.rmf_2d_array" <-  function(x, i, j, ...) {
   if(missing(i) && missing(j)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1)
-  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], FALSE)
+  drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
 
   obj <-  NextMethod(..., drop = drop)
   
-  if(!drop && any(miss)) {
+  if(!drop && sum(miss) > 1) {
     dim(obj) <- dim(obj)[miss]
-  } else if(all(!miss)) {
-    dim(obj) <- NULL
-  }
+  } 
     
-
    if (length(dim(obj)) == 2) {
      class(obj) <- class(x)
    } else {
