@@ -42,7 +42,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
     rm(data_set_2)
   
   # data set 3
-    data_set_3 <- rmfi_parse_variables(bas_lines, format = ifelse(bas$free, 'free', 'fixed'))
+    data_set_3 <- rmfi_parse_variables(bas_lines, n = 1, format = ifelse(bas$free, 'free', 'fixed'))
     bas$hnoflo <- rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
     bas_lines <- data_set_3$remaining_lines
     rm(data_set_3)

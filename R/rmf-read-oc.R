@@ -156,7 +156,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   } else { # OC using numeric codes
 
   # data set 1
-  data_set_1 = rmfi_parse_variables(oc_lines, ...)
+  data_set_1 = rmfi_parse_variables(oc_lines, n = 4, ...)
   oc$ihedfm = rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   oc$iddnfm = rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   oc$ihedun = rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
@@ -168,7 +168,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   oc$incode = oc$ihddfl = oc$ibudfl = oc$icbcfl = NULL
   oc$hdpr = oc$ddpr = oc$hdsv = oc$ddsv = matrix(NA, nrow = sum(dis$nstp), ncol = dis$nlay)
   for (i in 1:sum(dis$nstp)) {
-    data_set_2 = rmfi_parse_variables(oc_lines, ...)
+    data_set_2 = rmfi_parse_variables(oc_lines, n = 4, ...)
     oc$incode[i] = rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
     oc$ihddfl[i] = rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
     oc$ibudfl[i] = rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))
@@ -190,7 +190,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
       }
 
     } else if(oc$incode[i] == 0) {
-      data_set_3 = rmfi_parse_variables(oc_lines, ...)
+      data_set_3 = rmfi_parse_variables(oc_lines, n = 4, ...)
       oc$hdpr[i,] = rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
       oc$ddpr[i,] = rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
       oc$hdsv[i,] = rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))
@@ -199,7 +199,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
       rm(data_set_3)
     } else if(oc$incode[i] > 0) {
       for(k in 1:dis$nlay) {
-        data_set_3 = rmfi_parse_variables(oc_lines, ...)
+        data_set_3 = rmfi_parse_variables(oc_lines, n = 4, ...)
         oc$hdpr[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
         oc$ddpr[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
         oc$hdsv[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))

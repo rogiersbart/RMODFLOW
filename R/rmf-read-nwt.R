@@ -20,7 +20,7 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- rmfi_parse_variables(nwt_lines, ...)
+  data_set_1 <- rmfi_parse_variables(nwt_lines, n = 16, ...)
   nwt$headtol <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   nwt$fluxtol <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   nwt$maxiterout <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
@@ -42,10 +42,11 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
     nwt_lines <- data_set_1$remaining_lines
     rm(data_set_1)
     
-    data_set_2 <- rmfi_parse_variables(nwt_lines, ...)
     
     # data set 2a
     if(nwt$linmeth == 1) {
+      data_set_2 <- rmfi_parse_variables(nwt_lines, n = 5, ...)
+      
       nwt$maxitinner <- rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
       nwt$ilumethod <- rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
       nwt$levfill <- rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))
@@ -54,6 +55,8 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
       
     # data set 2b
     } else if(nwt$linmeth == 2) {
+      data_set_2 <- rmfi_parse_variables(nwt_lines, n = 10, ...)
+      
       nwt$iacl <- rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
       nwt$norder <- rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
       nwt$level <- rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))

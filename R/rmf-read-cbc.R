@@ -6,12 +6,12 @@
 #' @param dis dis object.
 #' @param huf huf object; optional. Provide only if huf heads are being read and \code{dis} is not NULL. See details.
 #' @param oc oc object; optional. See details.
-#' @param what character; denotes which flow terms to read. Defaults to reading all flow terms. See details.
+#' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
-#' @return object of class cbc which is a list consisting of named rmf_arrays and/or data.frames. The names of the elements correspond to the flow terms.
+#' @return object of class \code{cbc} which is a list consisting of named rmf_arrays and/or data.frames. The names of the elements correspond to the fluxes.
 #'
 #' @details 
-#' Flow terms include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
 #'  
 #' If a \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
@@ -21,14 +21,13 @@
 #' If flows are interpolated to huf units, a \code{huf} object is to be supplied as well to dimension the array. This will only affect the constant-head and cell flow terms.
 #' The final array will have NHUF layers instead of NLAY.
 #'
-#' @importFrom readr read_lines
 #' @export
 rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...\n'); file.choose()},
                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                          huf = NULL,
                          oc = NULL,
                          precision = 'single',
-                         what = 'all') {
+                         fluxes = 'all') {
   
   # headers <- c('   CONSTANT HEAD',
   #              '         STORAGE',
@@ -42,7 +41,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
   #              ' HEAD DEP BOUNDS')
   
   nbytes <- ifelse(precision == 'single', 4, 8) 
-  binary = TRUE # MODFLOW cbc budget file is always binary
+  binary <-  TRUE # MODFLOW cbc budget file is always binary
   if(binary) {
     con <- file(file,open='rb')
     cbc <- list()
@@ -106,7 +105,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
             stop(paste('Header descriptions do not match. Are you sure the file is', precision,'precision?'))
         }
         
-        read <- ifelse((what != 'all' && !(name %in% what)), FALSE, TRUE) 
+        read <- ifelse((fluxes != 'all' && !(name %in% fluxes)), FALSE, TRUE) 
         ncol <- readBin(con,what='integer',n=1)
         nrow <- readBin(con,what='integer',n=1)
         nlay <- readBin(con,what='integer',n=1)
@@ -186,11 +185,11 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
               if(is.null(attr(cbc[[name]], 'ctmp'))) attr(cbc[[name]], 'ctmp') <- as.list(rep(NA,nsteps))
               ctmp <- rep(NA, (nval-1))
               for(nr in 1:(nval-1)) {
-                ctmp[nr] <- readChar(con,nchars=16)
+                ctmp[nr] <- trimws(readChar(con,nchars=16))
               }
             }
             
-            # return a data.frame --> might change to list of rmf_lists for more consistency with e.g. plotting
+            # return a data.frame --> might change to list of multiple rmf_list for more consistency with e.g. plotting
             if(itype %in% c(2,5)) { 
               nlist <- readBin(con,what='integer',n=1)
               if(nlist > 0) {
@@ -201,13 +200,13 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                 ijk <- rmf_convert_id_to_ijk(df[,1], dis = list(nrow=nrow,ncol=ncol,nlay=abs(nlay)),type='modflow')
                 if(is.null(cbc[[name]]) || is.array(cbc[[name]])) {
                   nstp <- ifelse(is.null(dis), 1, stp_nr)
-                  cbc[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,df[,-1], nstp, kper, kstp))
-                  names(cbc[[name]]) <- c('k','i','j', 'flow', if(nval > 1){ctmp},'nstp', 'kper','kstp')
+                  cbc[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,as.data.frame(df)[,-1], nstp, kper, kstp))
+                  names(cbc[[name]]) <- c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper','kstp')
                   rm(df)
                 } else {
                   nstp <- ifelse(is.null(dis), cbc[[name]][nrow(cbc[[name]]),nstp]+1, stp_nr)
-                  df <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,df[,-1], nstp, kper, kstp))
-                  names(df) <- c('k','i','j', 'flow', if(nval > 1){ctmp},'nstp', 'kper', 'kstp')
+                  df <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j, as.data.frame(df)[,-1], nstp, kper, kstp))
+                  names(df) <- c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper', 'kstp')
                   
                   cbc[[name]] <- rbind(cbc[[name]], df)
                 }
@@ -219,7 +218,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
             if(itype %in% c(0,1)) {
               cbc[[name]][,,,stp_nr] <- aperm(array(readBin(con,what='numeric',n=dis$ncol*dis$nrow*nnlay,size = nbytes),dim=c(dis$ncol,dis$nrow,nnlay)),c(2,1,3))
             }
-            if(itype ==3) {
+            if(itype == 3) {
               layer <- matrix(readBin(con,what='integer',n=ncol*nrow),ncol=ncol,nrow=nrow,byrow=TRUE)
               data <- matrix(readBin(con,what='numeric',n=ncol*nrow,size = nbytes),ncol=ncol,nrow=nrow,byrow=TRUE)
               
@@ -272,7 +271,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
     stop('Code not up to date')
     #     # update this to match the above structure!
     #     cbc <- list()
-    #     cbc.lines <- read_lines(file)
+    #     cbc.lines <- readr::read_lines(file)
     #     while(length(cbc.lines)!=0) {
     #       name <- substr(cbc.lines[1],25,40)
     #       cat('Processing',name,'...\n')    
