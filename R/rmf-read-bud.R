@@ -6,11 +6,10 @@
 #'
 #' @return an object of class bud which is a list with two data frames: one with cumulative fluxes and one with rates
 #' @export
-#' @importFrom readr read_lines
 
 rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.choose()}){
   
-  lst.lines <- read_lines(file)
+  lst.lines <- readr::read_lines(file)
   headers <- grep("VOLUMETRIC BUDGET FOR ENTIRE MODEL", lst.lines)
   enders <- grep("TIME SUMMARY AT END OF TIME STEP", lst.lines)
   
@@ -21,7 +20,7 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
     read_vars <- function(index, lines) rmfi_remove_empty_strings(strsplit(lines[index], ' ')[[1]])
     get_timing <- function(header_vector) {
       kstp <- as.numeric(strsplit(header_vector[11],',')[[1]])
-      kper <- as.numeric(header_vector[14])
+      kper <- as.numeric(header_vector[length(header_vector)])
       # nstp <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper - 1] + kstp)
       return(list(kstp, kper))
     }

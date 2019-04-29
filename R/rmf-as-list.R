@@ -44,7 +44,7 @@ rmf_as_list.rmf_3d_array <- function(obj,
     id <- which(as.logical(mask))
     values <- obj[id, drop = TRUE]
     
-    lst <- cbind(arrayInd(which(as.logical(mask)), .dim = dim(obj)), values)
+    lst <- cbind(arrayInd(id, .dim = dim(obj)), values)
     colnames(lst) <- c("i", "j", "k", name)
     
   }
@@ -52,9 +52,9 @@ rmf_as_list.rmf_3d_array <- function(obj,
   return(rmf_create_list(lst, kper = kper))
 }
 
-
 #'
-#'@export
+#' @rdname rmf_as_list
+#' @export
 rmf_as_list.rmf_2d_array <- function(obj, ...) {
   obj <- rmf_create_array(obj, dim = c(dim(obj), 1))
   rmf_as_list(obj, ...)

@@ -26,7 +26,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
     for(k in 1:nlay) 
     { 
       # CONSTANT
-      if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] == 'CONSTANT') {
+      if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'CONSTANT') {
         if(nlay==1) {
           array[1:length(array)] <- as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])[2])
           remaining_lines <- remaining_lines[-1]
@@ -36,7 +36,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         }
       }
       # INTERNAL or without header
-      else if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1] %in% c('INTERNAL') | skip_header)
+      else if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) %in% c('INTERNAL') | skip_header)
       {
         
         if(!skip_header) {
@@ -63,7 +63,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         remaining_lines <- remaining_lines[-c(1:nLines)]
       }
       # EXTERNAL
-      else if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='EXTERNAL')
+      else if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'EXTERNAL')
       {
         nunit <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2])
         cnst <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3])
@@ -136,7 +136,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         remaining_lines <- remaining_lines[-1] 
       } 
       # OPEN/CLOSE
-      else if(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]=='OPEN/CLOSE')
+      else if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'OPEN/CLOSE')
       {
         fname <-  as.character(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2])
         cnst <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3])
@@ -190,7 +190,8 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         
         # CONSTANT
         if(locat == 0) { 
-          array[,,k] <- matrix(cnst, nrow=nrow, ncol=ncol)
+          array[,,k] <- cnst
+          nLines <- 1
         } else {
           if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays')
           
@@ -218,7 +219,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
             } else { # read from external file
               external_lines <-  readr::read_lines(absfile)
               # remove lines of previous arrays
-              if(!is.null(attr(nam, as.character(nunit)))) external_lines <- external_lines[-c(1:attr(nam, as.character(nunit)))]
+              if(!is.null(attr(nam, as.character(locat)))) external_lines <- external_lines[-c(1:attr(nam, as.character(locat)))]
               
               if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
               nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
@@ -235,8 +236,8 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
             if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally')
             
             try({          
-              if(!is.null(attr(nam, as.character(nunit)))) {
-               for(jj in 1:attr(nam, as.character(nunit))) {
+              if(!is.null(attr(nam, as.character(locat)))) {
+               for(jj in 1:attr(nam, as.character(locat))) {
                 invisible(readBin(con, what = 'integer', n = 2))
                 invisible(readBin(con,what='numeric',n = 2, size = real_number_bytes))
                 invisible(readChar(con,nchars=16))
@@ -259,10 +260,10 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   
             close(con)
           }
-          if(is.null(attr(nam, as.character(nunit)))) {
-            attr(nam, as.character(nunit)) <- nLines
+          if(is.null(attr(nam, as.character(locat)))) {
+            attr(nam, as.character(locat)) <- nLines
           } else {
-            attr(nam, as.character(nunit)) <- attr(nam, as.character(nunit)) + nLines
+            attr(nam, as.character(locat)) <- attr(nam, as.character(locat)) + nLines
           }
         }
         remaining_lines <- remaining_lines[-c(1:nLines)]

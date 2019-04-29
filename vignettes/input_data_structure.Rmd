@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 library(RMODFLOW)
 ```
 
-Input for MODFLOW models is read from user/GUI-generated files. Typically, every package has a separate file and these are accessed and read on a line-by-line basis. The type, number and order of variables being read are strictly predefined for every file and are documented in the MODFLOW user-manual and online help. The MODFLOW source code is almost entirely written in FORTRAN and has evolved over more than three decades. As such, the capabilities of reading input have evolved as well, maintaining backward compatibility. Initially, only fixed-format input could be read, where every value has a predefined amount of characters. In later versions, the less strict free-format could be used. Because of these rigid rules, writing MODFLOW input files by hand can be a cumbersome task. This is one of the reasons to use a GUI or script-based library such as RMODFLOW.
+Input for MODFLOW models is read from user/GUI-generated files. Typically, every package has a separate file and these are accessed and read on a line-by-line basis. The type, number and order of variables being read are strictly predefined for every file and are documented in the MODFLOW user-manual and [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm). The MODFLOW source code is almost entirely written in FORTRAN and has evolved over more than three decades. As such, the capabilities of reading input have evolved as well, maintaining backward compatibility. Initially, only fixed-format input could be read, where every value has a predefined amount of characters. In later versions, the less strict free-format could be used. Because of these rigid rules, writing MODFLOW input files by hand can be a cumbersome task. This is one of the reasons to use a GUI or script-based library such as RMODFLOW.
 
 Input for MODFLOW packages can generally be thought of in three forms:
 
@@ -29,7 +29,7 @@ The first type consists of one or more values on a single line that are read by 
 
 ## 2. Array-directed input
 
-Array-directed input represents continuous variables over the MODFLOW grid such as the model elevation (`dis$top`) or hydraulic conductivity (e.g. `lpf$hk`). MODFLOW output often comes in the form of arrays as well, e.g. simulated heads or drawdowns. In RMODFLOW, MODFLOW arrays are handled by the `rmf_array` classes and corresponding S3 methods. There are 3 `rmf_array` classes: `rmf_2d_array`, `rmf_3d_array` and `rmf_4d_array`. Arrays that are returned from `rmf_read_*` functions are always of one of these classes. Arrays passed to `rmf_write_*` functions are also of these classes.
+Array-directed input represents continuous variables over the MODFLOW grid such as the model elevation (`dis$top`) or hydraulic conductivity (e.g. `lpf$hk`). MODFLOW output often comes in the form of arrays as well, e.g. simulated heads or drawdowns. In RMODFLOW, MODFLOW arrays are handled by the `rmf_array` classes and corresponding S3 methods. There are three `rmf_array` classes: `rmf_2d_array`, `rmf_3d_array` and `rmf_4d_array`. Arrays that are returned from `rmf_read_*` functions are always of one of these classes. Arrays passed to `rmf_write_*` functions are also of these classes.
 
 ### Creating
 To create a `rmf_array`, use the `rmf_create_array` function. When this function is called on an existing matrix or array, it simply sets the class depending on the dim argument (2D, 3D or 4D). Alternatively, you can supply a dim argument yourself:
@@ -46,7 +46,7 @@ A `rmf_array` is *at least 2D*, possibly 3D or 4D. When creating, it is implicit
 rmf_create_array("my_value", dim = c(2, 2, 1, 3))
 ```
 
-A 1D `rmf_array` does therefore not exist; it is simply an atomic vector. Calling `rmf_create_array` an an atomic vector returns an error:
+A 1D `rmf_array` does therefore not exist; it is simply an atomic vector. Calling `rmf_create_array` on an atomic vector returns an error:
 ```{r, error=TRUE, purl=FALSE}
 rmf_create_array(rep(10, 4))
 ```
@@ -127,12 +127,12 @@ In a MODFLOW input file, an array is preceded by a single-line, the array-contro
 **EXTERNAL** Nunit CNSTNT FMTIN IPRN  
 **OPEN/CLOSE** FNAME CNSTNT FMTIN IPRN  
 
-To add to the complexity, fixed-format and free-format **EXTERNAL** and **OPEN/CLOSE** headers can point to binary files which contain the array. After the array-control records, the array is being read. Each control-record is explained in the manual and  [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drt.htm). RMODFLOW can read fixed-format and all 4 types of free-format array-headers. There is no support for writing fixed-format arrays.
+To add to the complexity, fixed-format and free-format **EXTERNAL** and **OPEN/CLOSE** headers can point to binary files which contain the array. After the array-control records, the array is being read. Each control-record is explained in the manual and  [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm). RMODFLOW can read fixed-format and all 4 types of free-format array-headers. There is no support for writing fixed-format arrays.
 
-To read MODFLOW arrays, RMODFLOW uses the internal `rmfi_parse_array` function which is called in all `rmf_read_*` functions that need to read in arrays. If the array-control record is fixed-format, a `nam` object (as returned from `rmf_read_nam`) needs to be supplied by the call to the `rmf_read_*` function (unless LOCAT = 0). This is because the LOCAT variable represent a unit number on which to read the array. Without the corresponding NAME file, it is impossible to know from which file to read the array. The same is true when reading **EXTERNAL**  files. If the array is binary, the user must know if the array is single or double precision. By default, the `precision` argument is set to `'single'`.
+To read MODFLOW arrays, RMODFLOW uses the internal `rmfi_parse_array` function which is called in all `rmf_read_*` functions that need to read in arrays. If the array-control record is fixed-format, a `nam` object (as returned from `rmf_read_nam`) needs to be supplied in the call to the `rmf_read_*` function (unless LOCAT = 0). This is because the LOCAT variable represent a FORTRAN unit number which points to the file containing the array. Without the corresponding NAME file, it is impossible to know which file this unit number represents. The same is true when reading **EXTERNAL**  files. If the array is binary, the user must know if the array is single or double precision. By default, the `precision` argument is set to `'single'`.
 
-Writing arrays to input files is handled by the internal `rmfi_write_array` function. By default, arrays are written in free-format using either the **CONSTANT** or **INTERNAL** array-control header, depending on whether or not there is more than 1 unique value in the supplied array. There is support for writing **EXTERNAL** and **OPEN/CLOSE** arrays to external files, but this is discouraged. Keeping all data in a single file creates a more clear and cohesive structure. To write **EXTERNAL** arrays, you will need to supply the `external` argument to the `rmf_write_*` call which is a character vector with the names of the data sets to write. It will also need a `nam` object to check for a unique unit number (Nunit). You will have to add this unit number manually to a NAM file yourself. This is because the `rmfi_write_array` function is not intended to alter existing objects; only to write arrays. 
-To write an **OPEN/CLOSE** file, a `fname` argument needs to be given which is a character vector with the names of the data sets to write. Each OPEN/CLOSE file can contain only 1 2D array.
+Writing arrays to input files is handled by the internal `rmfi_write_array` function. By default, arrays are written in free-format using either the **CONSTANT** or **INTERNAL** array-control header, depending on whether or not there is more than one unique value in the supplied array. There is support for writing **EXTERNAL** and **OPEN/CLOSE** arrays to external files, but this is discouraged. Keeping all data in a single file creates a more clear and cohesive structure. To write **EXTERNAL** arrays, you will need to supply the `external` argument to the `rmf_write_*` call which is a character vector with the names of the data sets to write. It will also need a `nam` object to check for a unique unit number (Nunit). You will have to add this unit number manually to a NAM file yourself. This is because the `rmfi_write_array` function is not intended to alter existing RMODFLOW objects; only to write arrays. 
+To write an **OPEN/CLOSE** file, a `fname` argument needs to be given which is a character vector with the names of the data sets to write. Each OPEN/CLOSE file can contain only one 2D array.
 Both **EXTERNAL** and **OPEN/CLOSE** files can be written as binary by supplying a `binary` argument which is a character vector with the names of the data sets to write as binary.
 
 ```{r, eval=FALSE}
@@ -143,7 +143,7 @@ nam <- rmf_example_file("example-model.nam") %>% rmf_read_nam()
 # it will also generate a warning as a reminder to add Nunit to the NAME file 
 rmf_write_dis(dis = dis, file = "input.dis", external = c("botm", "top"), nam = nam)
 
-# this will create separate binary files for each layer in dis$botm using the OPEN/CLOSE header
+# this will create separate binary files for each layer in botm using the OPEN/CLOSE header
 rmf_write_dis(dis = dis, file = "input.dis", fname = c("botm"), binary = c("botm"))
 ```
 
@@ -154,7 +154,7 @@ Lastly, the `rmf_read_array` and `rmf_write_array` functions can be used to read
 
 ## 3. List-directed input
 
-Where array-directed input represents continuous data over the MODFLOW grid, list-directed input can be thought of as discrete (spatial) features. Examples include wells, rivers, drains etc. Some output comes in list-directed form as well, most notably certain cell-by-cell fluxes from discrete boundary conditions. A list-directed input basically looks like a R data.frame, containing rows and columns. Each row represent a discrete feature, the columns contain the variables. A MODFLOW list always contains the following columns: `i`, `j`, `k` representing the row, column and layer indices of the feature, respectively. Additional columns contain the variables, e.g. the well package has the `q` variable representing the volumetric flux of the well.
+Where array-directed input represents continuous data over the MODFLOW grid, list-directed input can be thought of as discrete (spatial) features. Examples include wells, rivers, drains etc. Some output comes in list-directed form as well, most notably certain cell-by-cell fluxes from discrete boundary conditions. List-directed input basically looks like a R data.frame, containing rows and columns. Each row represent a discrete feature, the columns contain the variables. A MODFLOW list always contains the following columns: `i`, `j`, `k` representing the row, column and layer indices of the feature, respectively. Additional columns contain the variables, e.g. the well package has the `q` variable representing the volumetric flux of the well.
 
 In RMODFLOW, MODFLOW lists are handled by the `rmf_list` class and corresponding S3 methods. A `rmf_list` is basically a data.frame. This might be confusing, since a list is a different class in R. We've chosen to follow the naming conventions in MODFLOW however.
 

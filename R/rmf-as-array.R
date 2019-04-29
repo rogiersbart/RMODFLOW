@@ -21,7 +21,8 @@ rmf_as_array <- function(...) {
 #' @param kper sets the kper attribute of the returned array; defaults to the kper attribute of obj
 #'
 #' @details the dimension of the returned array is guessed from the supplied dis object. If there is only one unique k value in obj, 
-#'  and \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE} and \code{dis$nlay > 1}, a 3D array is returned.
+#'  \code{sparse}, determines the dimensions of the returned array. If \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE}, a 3D array is returned.
+#'  When there is more than one unique k value in obj, a 3D array is always returned.
 #'
 #' @return either a \code{rmf_2d_array} or a \code{rmf_3d_array}
 #' @rdname rmf_as_array
@@ -37,11 +38,12 @@ rmf_as_array.rmf_list <- function(obj,
                                   sparse = TRUE,
                                   kper = attr(obj, 'kper')) {
   
-  id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
   
   if(length(unique(obj$k)) == 1 && sparse) {
+    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = 1, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol), kper = kper)
   } else {
+    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol, dis$nlay), kper = kper)
   }
   
