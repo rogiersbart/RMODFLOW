@@ -2,101 +2,128 @@
 #' 
 #' \code{rmf_create_hfb} creates an \code{RMODFLOW} hfb object
 #' 
-#' @param nphfb number of hfb parameters; defaults to 0
-#' @param mxfb maximum number of hfb barriers that will be defined using parmeters; defaults to 0
-#' @param nhfbnp number of hfb barriers not defined by parameters; defaults to 1
-#' @param option optional character vector specifying \code{NOPRINT}; defaults to NULL
-#' @param parnam vector of length \code{nphfb} specifying the parameter names; defaults to NULL
-#' @param parval vector of length \code{nphfb} specifying the parameter values; defaults to NULL
-#' @param nlst vector of length \code{nphfb} specifying the number of horizontal-flow barrier cells included in the parameter; defaults to NULL
-#' @param layer_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the layer numbers of the model cells containing the horizontal-flow barriers for parameter \code{i}; defaults to NULL
-#' @param irow1_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the row numbers of the model cells on one side of the cells containing the horizontal-flow barriers for parameter \code{i}; defaults to NULL
-#' @param icol1_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the column numbers of the model cells on one side of the cells containing the horizontal-flow barriers for parameter \code{i}; defaults to NULL
-#' @param irow2_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the row numbers of the model cells on the other side of the cells containing the horizontal-flow barriers for parameter \code{i}; defaults to NULL
-#' @param icol2_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the column numbers of the model cells on the other side of the cells containing the horizontal-flow barriers for parameter \code{i}; defaults to NULL
-#' @param factor_parm list with \code{nphfb} elements where each element \code{i} is a numeric vector of length \code{nlst} for parameter \code{i} specifying the factor used to calculate the hydraulic characteristic from the parameter value of the model cells containing the horizontal-flow barriers for parameter \code{i}. The hydraulic characteristic is the product of factor and the parameter value; defaults to NULL
-#' @param layer_noparm numeric vector of length \code{nhfbnp} specifying the layer numbers of the model cells containing the horizontal-flow barriers; defaults to 2 for all horizontal-flow barriers
-#' @param irow1_noparm numeric vector of length \code{nhfbnp} specifying the row numbers of the model cells on one side of the cells containing the horizontal-flow barriers; defaults to 3 for all horizontal-flow barriers 
-#' @param icol1_noparm numeric vector of length \code{nhfbnp} specifying the column numbers of the model cells on one side of the cells containing the horizontal-flow barriers; defaults to 7 for all horizontal-flow barriers
-#' @param irow2_noparm numeric vector of length \code{nhfbnp} specifying the row numbers of the model cells on the other side of the cells containing the horizontal-flow barriers; defaults to 4 for all horizontal-flow barriers
-#' @param icol2_noparm numeric vector of length \code{nhfbnp} specifying the column numbers of the model cells on the other side of the cells containing the horizontal-flow barriers; defaults to 7 for all horizontal-flow barriers
-#' @param hydchr_noparm numeric vector of length \code{nhfbnp} specifying the hydraulic characteristic of the model cells containing the horizontal-flow barriers. The hydraulic characteristic is the product of factor and the parameter value; defaults to -0.01
-#' @param nacthfb number of active hfb parameters; defaults to 0
-#' @param pname character vector of length \code{nacthfb} specifying the names of the active hfb parameters; defaults to NULL
-#'
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the horizontal-flow barriers. 
+#' @param dis dis object
+#' @param noprint logical, should the printing of HFB cells to the listing file be suppressed ? Defaults to \code{FALSE}
+#' 
+#' @details As an alternative to specifying \code{irow2} and \code{icol2}, a \code{direction} column can be present in the rmf_lists objects to specify the direction of the horizontal flow barrier with respect to \code{i & j}.
+#'          Allowed values for the \code{direction} column are \code{"right"}, \code{"back"}, \code{"left"} and \code{"front"}.
+#' 
 #' @return \code{RMODFLOW} hfb object
 #' @export
 #' @seealso \code{\link{rmf_read_hfb}}, \code{\link{rmf_write_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}
 
+rmf_create_hfb <-  function(..., 
+                            dis,
+                            noprint = FALSE
+) {
+  vars <- c('irow2', 'icol2', 'hydchr')
+  
+  # set kper and direction
+  # find dis
+  arg <- list(...)
 
-rmf_create_hfb = function(nphfb = 0,
-                          mxfb = 0,
-                          nhfbnp = 1,
-                          option = NULL,
-                          parnam = NULL,
-                          parval = NULL,
-                          nlst = NULL,
-                          layer_parm = NULL,
-                          irow1_parm = NULL,
-                          icol1_parm = NULL,
-                          irow2_parm= NULL,
-                          icol2_parm = NULL,
-                          factor_parm = NULL,
-                          layer_noparm = 2,
-                          irow1_noparm = 3,
-                          icol1_noparm = 7,
-                          irow2_noparm = 4,
-                          icol2_noparm = 7,
-                          hydchr_noparm = -1.5,
-                          nacthfb = 0,
-                          pname = NULL
-){
+  if(missing(dis)) {
+    dis_present <- vapply(arg, function(i) 'dis' %in% class(i), TRUE)
+    if(any(dis_present)) {
+      dis <- arg[dis_present][[1]]
+      arg <- arg[!dis_present]
+    } else {
+      stop('Please provide a dis argument')
+    }
+  }
   
-  hfb = list()
+  if(length(arg) == 1) {
+    if(inherits(arg[[1]], 'list')) {
+      arg <- arg[[1]]
+    } else if(inherits(arg[[1]], 'data.frame') && !(inherits(arg[[1]], 'rmf_list'))) { # make rmf_list
+      arg <- lapply(arg, function(i) rmf_create_list(i, kper = 1:dis$nper))
+    }
+  }
   
-  # data set 0
-  # to provide comments, use ?comment on resulting hfb object
-  
-  # data set 1
-  hfb$nphfb = nphfb
-  hfb$mxfb = mxfb
-  hfb$nhfbnp = nhfbnp
-  if(!is.null(option)) hfb$option = option
-  
-  
-  if(hfb$nphfb > 0){
-    # data set 2
-    hfb$parnam = parnam
-    hfb$partyp = rep('HFB', hfb$nphfb)
-    hfb$parval = parval
-    hfb$nlst = nlst
+  set_hfb <- function(rmf_list) {
+    if(is.null(attr(rmf_list, 'kper'))) {
+      warning('Missing kper argument for hfb input list. Assuming this list is not active', call. = FALSE)
+    } else if(!identical(as.numeric(attr(rmf_list, 'kper')), as.numeric(1:dis$nper))) {
+      stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.')
+    }
     
-    # data set 3
-    hfb$layer_parm = layer_parm
-    hfb$irow1_parm = irow1_parm
-    hfb$icol1_parm = icol1_parm
-    hfb$irow2_parm = irow2_parm
-    hfb$icol2_parm = icol2_parm
-    hfb$factor_parm = factor_parm
+    if(inherits(rmf_list, 'rmf_parm') && !is.null(attr(rmf_list, 'instnam'))) {
+      stop('Time-varying parameters are not supported for the hfb package.')
+    }
+    
+    if('direction' %in% colnames(rmf_list)) {
+      rl <- fb <-  rep(0, nrow(rmf_list))
+      rl <- rl + as.numeric(rmf_list$direction == "right")
+      rl <- rl - as.numeric(rmf_list$direction == "left")
+      fb <- fb + as.numeric(rmf_list$direction == "back")
+      fb <- fb - as.numeric(rmf_list$direction == "front")
+      rmf_list$irow2 <- rmf_list$i + fb
+      rmf_list$icol2 <- rmf_list$j + rl
+    }
+    return(rmf_list)
+  }
+  arg <- lapply(arg, set_hfb)
+  
+  # check for parameters and/or lists and name them
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
+  
+  np <- 0
+  mxl <- 0
+  parameter_values <- NULL
+
+  if(length(parameters) > 0) {
+    np <- length(unique(names(parameters)))
+    mxl <- sum(vapply(parameters[!duplicated(names(parameters))], nrow, 1))
+  } 
+  
+  nacthfb <- 0
+  acthfb <- NULL
+  # parameters
+  if(length(parameters) > 0) {
+    parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
+    acthfb <- vapply(parameters, function(i) if(!is.null(attr(i, 'kper'))) attr(i, 'parnam'), 'text')
+    nacthfb <- length(acthfb)
+    
+    # set parameter df
+    parameters <- lapply(parameters, function(i) {i$parameter <-  TRUE;
+                                                  i$name <-  attr(i, 'parnam');
+                                                  i$active <- !is.null(attr(i,"kper"));
+                                                  i <- i[c("i","j","k",vars,'parameter','name','active')];
+                                                  colnames(i)[4:(3+length(vars))] <-  vars;
+                                                  i})
+    parameters <- do.call(rbind, unname(parameters))
+
   }
   
-  # data set 4
-  if(nhfbnp > 0){
-    hfb$layer_noparm = layer_noparm
-    hfb$irow1_noparm = irow1_noparm
-    hfb$icol1_noparm = icol1_noparm
-    hfb$irow2_noparm = irow2_noparm
-    hfb$icol2_noparm = icol2_noparm
-    hfb$hydchr_noparm = hydchr_noparm
+  # lists
+  if(length(lists) > 0) {
+    # set lists df
+    lists <- lapply(lists, function(i) {i <- i[c("i","j","k",vars)];
+                                        colnames(i)[4:(3+length(vars))] <-  vars;
+                                        i$parameter <-  FALSE;
+                                        i$active <- is.null(attr(i,"kper"));
+                                        i})
+    lists <- lapply(seq_along(lists), function(i) {lists[[i]]$name <- names(lists)[[i]]; lists[[i]]})
+    lists <- do.call(rbind, unname(lists))
   }
   
-  # data set 5
-  hfb$nacthfb = nacthfb
-  
-  # data set 6
-  if(hfb$nacthfb > 0) hfb$pname = pname
-  
-  class(hfb) = c('hfb', 'rmf_package')
-  return(hfb)
+  # combine
+  data <- structure(rbind(parameters, lists), kper = NULL)
+
+  # create hfb object
+  obj <- list()
+  obj$dimensions <- list(np = np, mxl = mxl, nnp = nrow(data) - mxl, nacthfb = nacthfb, acthfb = acthfb)
+  obj$ihfbcb <- NULL
+  obj$option <- c('noprint' = noprint)
+  obj$aux <- NULL
+  obj$data <- data
+  if(np > 0) obj$parameter_values <- parameter_values
+
+  class(obj) <- c('hfb', 'rmf_package')
+  return(obj)
   
 }
