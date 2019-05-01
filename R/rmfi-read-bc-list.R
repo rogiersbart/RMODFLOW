@@ -89,7 +89,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
           
           # data set 4b
           data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, name = p_name, value = p_val, instnam = instnam)
+          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
           
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
@@ -101,7 +101,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         # non time-varying
         # data set 4b
         data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, name = p_name, value = p_val)
+        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
         
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -115,7 +115,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'name')) && attr(k, 'name') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
       if(!is.null(i_name)) {
         if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {

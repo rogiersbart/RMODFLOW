@@ -34,7 +34,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
   # check for parameters and/or lists and name them
   parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
-  if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'name'), 'text')
+  if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
   lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   if(any(vapply(c(parameters, lists), function(i) is.null(attr(i, 'kper')), TRUE))) {
@@ -49,9 +49,9 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   if(length(parameters) > 0) {
     for(i in 1:length(parameters)) {
       if(is.null(attr(parameters[[i]], 'instnam'))) {
-        kper[attr(parameters[[i]], 'name')] <-  c(1:dis$nper) %in% attr(parameters[[i]],'kper')
+        kper[attr(parameters[[i]], 'parnam')] <-  c(1:dis$nper) %in% attr(parameters[[i]],'kper')
       } else {
-        kper[c(1:dis$nper) %in% attr(parameters[[i]],'kper'), attr(parameters[[i]], 'name')] <-  attr(parameters[[i]],'instnam')
+        kper[c(1:dis$nper) %in% attr(parameters[[i]],'kper'), attr(parameters[[i]], 'parnam')] <-  attr(parameters[[i]],'instnam')
       }
     }
   }
@@ -89,7 +89,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     instances[] <- vapply(seq_along(instances), function(i) rmfi_ifelse0(instances[i] < 2 && is.null(attr(parameters[[names(instances[i])]], 'instnam')), 0, instances[i]), 1)
     if(all(instances == 0)) instances <- NULL
     
-    parameter_values <- vapply(parameters, function(i) attr(i, 'value'), 1.0)
+    parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
     if(!is.null(instances)) parameter_values <- parameter_values[!duplicated(names(parameter_values))]
       
     #check aux
@@ -98,12 +98,18 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
       if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list')
     }
     
+    set_parm <- function(i) {
+      instnam <- attr(i, 'instnam')
+      i$parameter <- TRUE
+      i$name <- attr(i, 'parnam')
+      i <- i[c("i","j","k",varnames,if(!is.null(aux)){aux},"parameter","name")]
+      colnames(i)[4:(3+length(varnames))] <-  varnames;
+      if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux
+      return(structure(i, instnam = instnam))
+    }
+    
     # set parameter df
-    parameters <- lapply(parameters, function(i) {colnames(i)[4:(3+length(varnames))] <-  varnames;
-                                                  if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux;
-                                                  i$parameter <-  TRUE;
-                                                  i$name <-  attr(i, "name");
-                                                  i})
+    parameters <- lapply(parameters, set_parm)
     
     # time-varying
     if(any(vapply(parameters, function(i) !is.null(attr(i, 'instnam')), T))) {
@@ -127,7 +133,8 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     itmp <- structure(vapply(lists, nrow, 1), names = names(lists))
     
     # set lists df
-    lists <- lapply(lists, function(i) {colnames(i)[4:(3+length(varnames))] <-  varnames;
+    lists <- lapply(lists, function(i) {i <- i[c("i","j","k",varnames,if(!is.null(aux)){aux})];
+                                        colnames(i)[4:(3+length(varnames))] <-  varnames;
                                         if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux;
                                         i$parameter <-  FALSE;
                                         i})
