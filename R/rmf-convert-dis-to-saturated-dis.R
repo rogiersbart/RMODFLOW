@@ -15,7 +15,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
       hed <- hed[,,,dim(hed)[4]]
     }
   }
-  # adjusting confining beds 
+  # adjusting confining beds  - REVIEW required
   nnlay <- dis$nlay + length(which(dis$laycbd != 0))
   cbd <- rep(0, nnlay)
   cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
@@ -26,7 +26,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
     botm[,,!cbd] <- dis$botm
-    botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
+    if (1 %in% cbd) botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
   dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))
