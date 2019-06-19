@@ -24,7 +24,7 @@ rmf_read_bcf = function(file = {cat('Please select bcf file ...\n'); file.choose
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- rmfi_parse_variables(bcf_lines, ...)
+  data_set_1 <- rmfi_parse_variables(bcf_lines, n = 6, ...)
   bcf$ibcfcb <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   bcf$hdry <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   bcf$iwdflg <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))

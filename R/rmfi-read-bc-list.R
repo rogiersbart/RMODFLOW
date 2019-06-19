@@ -34,13 +34,24 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   rm(data_set_1)
   
   # data set 2
-  data_set_2 <-  rmfi_parse_variables(lines, n=2, ...)
-  icb <-  as.numeric(data_set_2$variables[2])
+  if(identical(c('shead', 'ehead'), varnames)) { # exception for CHD
+    n <- 1 
+    data_set_2 <-  rmfi_parse_variables(lines, n=n, ...)
+    icb <- NULL
+  } else {
+    n <- 2
+    data_set_2 <-  rmfi_parse_variables(lines, n=n, ...)
+    icb <-  as.numeric(data_set_2$variables[2])
+  }
   option[] <- FALSE
-  if(length(data_set_2$variables) > 2) {
-    if(any(c(names(option), "AUX", "AUXILIARY") %in% data_set_2$variables[3:length(data_set_2$variables)])) {
+  aux <- NULL
+  if(length(data_set_2$variables) > n) {
+    if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
+      data_set_2$variables <- c(rep("0", n), rmfi_parse_variables(paste0(strsplit(lines[1], '')[[1]][-c(1:10*n)], collapse = ''))$variables)
+    }
+    if(any(c(names(option), "AUX", "AUXILIARY") %in% data_set_2$variables[n+1:length(data_set_2$variables)])) {
       option <- vapply(names(option), function(i) i %in% data_set_2$variables, TRUE)
-      aux <- as.character(data_set_2$variables[pmatch('AUX', data_set_2$variables)+1])
+      aux <- as.character(data_set_2$variables[grep('^AUX', data_set_2$variables)+1])
     }
   }
   lines <-  data_set_2$remaining_lines
@@ -78,7 +89,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
           
           # data set 4b
           data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, name = p_name, value = p_val, instnam = instnam)
+          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
           
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
@@ -90,7 +101,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         # non time-varying
         # data set 4b
         data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, name = p_name, value = p_val)
+        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
         
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -104,7 +115,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'name')) && attr(k, 'name') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
       if(!is.null(i_name)) {
         if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {

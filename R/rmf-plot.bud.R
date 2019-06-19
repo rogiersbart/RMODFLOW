@@ -48,9 +48,6 @@ rmf_plot.bud <-  function(bud,
   
   df <- lapply(bud, tidy_df)
   
-  # TO DO:
-  # include_ss
-  
   # plot
   
   if(what %in% c('difference', 'discrepancy', 'total')) {

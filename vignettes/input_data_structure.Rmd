@@ -1,0 +1,214 @@
+---
+title: "Structure of input data"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Structure of input data}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+library(RMODFLOW)
+```
+
+Input for MODFLOW models is read from user/GUI-generated files. Typically, every package has a separate file and these are accessed and read on a line-by-line basis. The type, number and order of variables being read are strictly predefined for every file and are documented in the MODFLOW user-manual and [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm). The MODFLOW source code is almost entirely written in FORTRAN and has evolved over more than three decades. As such, the capabilities of reading input have evolved as well, maintaining backward compatibility. Initially, only fixed-format input could be read, where every value has a predefined amount of characters. In later versions, the less strict free-format could be used. Because of these rigid rules, writing MODFLOW input files by hand can be a cumbersome task. This is one of the reasons to use a GUI or script-based library such as RMODFLOW.
+
+Input for MODFLOW packages can generally be thought of in three forms:
+
+1. Scalar values
+2. Array-directed input
+3. List-directed input
+
+
+## 1. Scalar values
+
+The first type consists of one or more values on a single line that are read by MODFLOW. These are mostly integers or doubles. For example, the `dis` file contains the number of rows, columns, layers and stress periods, all as integers. RMODFLOW treats these type of values as scalars. It uses the internal functions `rmfi_parse_variables` and `rmfi_write_variables` to read and write these values, respectively. By default, the free-format is used (`format = 'free'` argument) which simply reads every value on the line. If `format = 'fixed'`, 10-character fields are read for `n` values. Missing values are assigned zero. When writing or creating, it is advised to consistently use the free-format (default). If you are having trouble reading in a file and don't know if free-format is being used, try passing the `format = 'fixed'` argument to the call of the read function. There are no explicit `create` functions for scalars; they are simply assigned through arguments in the function calls to the `rmf_create_*` functions, e.g. `rmf_create_dis(nrow = 42, ncol = 42, nlay = 3)`.
+
+
+## 2. Array-directed input
+
+Array-directed input represents continuous variables over the MODFLOW grid such as the model elevation (`dis$top`) or hydraulic conductivity (e.g. `lpf$hk`). MODFLOW output often comes in the form of arrays as well, e.g. simulated heads or drawdowns. In RMODFLOW, MODFLOW arrays are handled by the `rmf_array` classes and corresponding S3 methods. There are three `rmf_array` classes: `rmf_2d_array`, `rmf_3d_array` and `rmf_4d_array`. Arrays that are returned from `rmf_read_*` functions are always of one of these classes. Arrays passed to `rmf_write_*` functions are also of these classes.
+
+### Creating
+To create a `rmf_array`, use the `rmf_create_array` function. When this function is called on an existing matrix or array, it simply sets the class depending on the dim argument (2D, 3D or 4D). Alternatively, you can supply a dim argument yourself:
+
+```{r}
+ar <- matrix(42, nrow = 4, ncol = 5)
+rmf_create_array(ar)
+
+rmf_create_array(42, dim = c(4, 5))
+```
+
+A `rmf_array` is *at least 2D*, possibly 3D or 4D. When creating, it is implicitely assumed that the first dimension of the `rmf_array` represents rows, the second dimension columns, the optional third dimension layers and the optional fourth dimension time-steps. So if you have a one-layered model, a `rmf_4d_array` would have a third dimension of length one:
+```{r}
+rmf_create_array("my_value", dim = c(2, 2, 1, 3))
+```
+
+A 1D `rmf_array` does therefore not exist; it is simply an atomic vector. Calling `rmf_create_array` on an atomic vector returns an error:
+```{r, error=TRUE, purl=FALSE}
+rmf_create_array(rep(10, 4))
+```
+
+In base MODFLOW-2005, 1D arrays are only used to assign the DELR and DELC variables (representing widths along rows and columns). It makes little sense to do this in R with verbose calls such as `matrix(100, nrow = 42, ncol = 1)` or `array(100, dim = c(42, 1))` instead of a simple `rep(100, 42)`. 
+
+### Subsetting
+A `rmf_array` behaves like a common array in R with two exceptions related to subsetting. 
+
+1. Unlike R arrays, `drop = FALSE` by default for `rmf_arrays`. Subsetting a `rmf_array` will therefore not drop dimensions with length 1 or collapse into the lowest possible dimension unless the result is 1D. This behaviour can be overwritten by setting `drop = TRUE`.
+2. Unlike R arrays, subsetting a `rmf_array` will not drop the class. As such, subsetting a `rmf_array` will always return a `rmf_array` as long as it has a `dim` argument, i.e. the subsetted result is 2D, 3D or 4D. 
+```{r}
+# R array drops dims of length 1
+ar <- array(1, dim = c(2,2,1,3))
+dim(ar[,,,2])
+
+# rmf_array keeps dims of length 1
+rmf_ar <- rmf_create_array(ar)
+dim(rmf_ar[,,,2])
+
+# collapses into atomic vector
+class(ar[1,1,,])
+
+# remains 4D array since 4th dimension is not subsetted
+class(rmf_ar[1,1,,])
+
+# collapses
+class(rmf_ar[1,1,,, drop = TRUE])
+
+# drops class
+ar <- structure(array(12, dim = c(4, 4, 2)), class = 'not_rmf')
+class(ar[,,1])
+
+# subsetting a rmf_array always returns a rmf_array...
+class(rmf_ar)
+class(rmf_ar[,,1,1:2])
+class(rmf_ar[,,,1])
+class(rmf_ar[,,1,1])
+
+# ... unless return is 1D
+class(rmf_ar[,1,1,1])
+
+```
+
+This creates a consistency when using `rmf_arrays`. In the example with a one-layered model, classic R arrays would drop the unused 3th dimension. This would result in a 3D array where the third dimension suddenly represents time-steps instead of layers. Furthermore, as long as a subsetted `rmf_array` remains in fact an array (has a dim argument), it should still be one of the `rmf_array` classes. For example, extracting a layer from a `rmf_3d_array` should return a `rmf_2d_array` instead of becoming a matrix:
+
+```{r}
+# extracting a single layer returns a rmf_array
+dis <- rmf_example_file("example-model.dis") %>% 
+  rmf_read_dis()
+
+dis$botm[,,5]
+
+```
+
+
+### Time
+Time in MODFLOW is represented in two ways: through time-steps and stress periods. Time-steps are inherit to the finite-difference equations used by MODFLOW whereas stress periods are used as a convenience for the user. A stress period encompases one or more time-steps during which all temporal input remains constant. Arrays for input files such as recharge arrays can therefore vary per stress period. Output arrays such as simulated heads however, vary on a time-step basis. This creates a design choice for the `rmf_array`: does the 4th dimension represent time-steps or stress-periods? As stated above, the 4th dimension for a `rmf_array` represent time-steps since the other dimensions (rows, columns and layers) are also inherited from the finite-difference approximation. If you want a `rmf_array` to represent constant input over one or more stress periods, you can supply a `kper` argument to `rmf_create_array`:
+
+```{r}
+rmf_create_array(1.5, dim = c(2, 2), kper = c(1,4))
+```
+
+This sets the `kper` attribute which is used by the create functions for boundary-conditions to know during which stress-periods this array should be active.
+
+### Reading & writing rmf_arrays
+
+In a MODFLOW input file, an array is preceded by a single-line, the array-control record. This line contains information on the type and format of values in the following array and where to read them. There are two types of array-control records:
+
+1. Fixed-format
+
+> LOCAT CNSTNT FMTIN IPRN
+
+2. Free-format. This type can take one of four possible forms:
+
+> **CONSTANT** CNSTNT  
+**INTERNAL** CNSTNT FMTIN IPRN  
+**EXTERNAL** Nunit CNSTNT FMTIN IPRN  
+**OPEN/CLOSE** FNAME CNSTNT FMTIN IPRN  
+
+To add to the complexity, fixed-format and free-format **EXTERNAL** and **OPEN/CLOSE** headers can point to binary files which contain the array. After the array-control records, the array is being read. Each control-record is explained in the manual and  [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm). RMODFLOW can read fixed-format and all 4 types of free-format array-headers. There is no support for writing fixed-format arrays.
+
+To read MODFLOW arrays, RMODFLOW uses the internal `rmfi_parse_array` function which is called in all `rmf_read_*` functions that need to read in arrays. If the array-control record is fixed-format, a `nam` object (as returned from `rmf_read_nam`) needs to be supplied in the call to the `rmf_read_*` function (unless LOCAT = 0). This is because the LOCAT variable represent a FORTRAN unit number which points to the file containing the array. Without the corresponding NAME file, it is impossible to know which file this unit number represents. The same is true when reading **EXTERNAL**  files. If the array is binary, the user must know if the array is single or double precision. By default, the `precision` argument is set to `'single'`.
+
+Writing arrays to input files is handled by the internal `rmfi_write_array` function. By default, arrays are written in free-format using either the **CONSTANT** or **INTERNAL** array-control header, depending on whether or not there is more than one unique value in the supplied array. There is support for writing **EXTERNAL** and **OPEN/CLOSE** arrays to external files, but this is discouraged. Keeping all data in a single file creates a more clear and cohesive structure. To write **EXTERNAL** arrays, you will need to supply the `external` argument to the `rmf_write_*` call which is a character vector with the names of the data sets to write. It will also need a `nam` object to check for a unique unit number (Nunit). You will have to add this unit number manually to a NAM file yourself. This is because the `rmfi_write_array` function is not intended to alter existing RMODFLOW objects; only to write arrays. 
+To write an **OPEN/CLOSE** file, a `fname` argument needs to be given which is a character vector with the names of the data sets to write. Each OPEN/CLOSE file can contain only one 2D array.
+Both **EXTERNAL** and **OPEN/CLOSE** files can be written as binary by supplying a `binary` argument which is a character vector with the names of the data sets to write as binary.
+
+```{r, eval=FALSE}
+dis <- rmf_example_file("example-model.dis") %>% rmf_read_dis()
+nam <- rmf_example_file("example-model.nam") %>% rmf_read_nam()
+
+# this will create separate files for the 3D botm array and for the 2D top array using the EXTERNAL header
+# it will also generate a warning as a reminder to add Nunit to the NAME file 
+rmf_write_dis(dis = dis, file = "input.dis", external = c("botm", "top"), nam = nam)
+
+# this will create separate binary files for each layer in botm using the OPEN/CLOSE header
+rmf_write_dis(dis = dis, file = "input.dis", fname = c("botm"), binary = c("botm"))
+```
+
+Lastly, the `rmf_read_array` and `rmf_write_array` functions can be used to read/write an `rmf_array` from/to separate files. These functions are not called when reading MODFLOW packages, but rather serve as utility functions when a user needs to read/write an array from/to MODFLOW supported files instead of writing an entire MODFLOW package. Because they are intended to be used outside the context of packages, they do not recognize array-control records. They can however read/write a MODFLOW output header such as:
+
+> KSTP KPER PERTIM TOTIM DESC NCOL NROW ILAY
+
+
+## 3. List-directed input
+
+Where array-directed input represents continuous data over the MODFLOW grid, list-directed input can be thought of as discrete (spatial) features. Examples include wells, rivers, drains etc. Some output comes in list-directed form as well, most notably certain cell-by-cell fluxes from discrete boundary conditions. List-directed input basically looks like a R data.frame, containing rows and columns. Each row represent a discrete feature, the columns contain the variables. A MODFLOW list always contains the following columns: `i`, `j`, `k` representing the row, column and layer indices of the feature, respectively. Additional columns contain the variables, e.g. the well package has the `q` variable representing the volumetric flux of the well.
+
+In RMODFLOW, MODFLOW lists are handled by the `rmf_list` class and corresponding S3 methods. A `rmf_list` is basically a data.frame. This might be confusing, since a list is a different class in R. We've chosen to follow the naming conventions in MODFLOW however.
+
+### Creating
+To create a `rmf_list`, use the `rmf_create_list` function on a data.frame-like object which contains at least i, j and k columns. The passed object will be coerced to a data.frame.
+
+```{r}
+wells <- tibble::tribble(~i, ~j, ~k, ~q,
+                1,   1,  1, -25,
+                2,   1,  1, -50) %>% rmf_create_list()
+str(wells)
+
+```
+
+A `rmf_list` is mostly used when handling boundary condition packages. Because their input may vary per stress period, a `kper` attribute can be set on `rmf_list` as well:
+
+```{r}
+wel <- matrix(c(1, 1, 2, -25), ncol = 4) 
+colnames(wel) <- c("i", "j", "k", "q")
+
+rmf_create_list(wel, kper = c(1,4)) %>% str()
+```
+
+Time-steps are not readily handled by a `rmf_list` at the moment.
+
+### Reading & writing rmf_lists
+
+The internal function `rmfi_parse_list` is used by `rmf_read_*` functions that need to read MODFLOW lists. RMODFLOW can handle reading external and open/close lists as well. There is also support for reading the rarely used SFAC value. Additionally, binary lists can also be read. There is no mention of binary lists in the MODFLOW-2005 manual, but the source code does contain functions for handling these types of lists.
+
+There is no separate `rmfi_write_list` function. Writing a list consist of sequentially calling `rmfi_write_variables` on each row. There is currently no support for writing external or open/close lists. Writing of the SFAC value and of binary lists is also not available. Because of the limited use of these capabilities, these functionalities might not be added at all in RMODFLOW.
+
+
+## Conversion
+RMODFLOW can convert between a `rmf_list` and a `rmf_array` with the `rmf_as_list` and `rmf_as_array` functions.
+
+```{r}
+dis <- rmf_create_dis(nrow = 3, ncol = 2, nlay = 1)
+ar <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+ar[] <- 1:prod(dim(ar))
+ar
+
+rmf_as_list(ar[,,,1])
+
+# a rmf_as_list.rmf_4d_array needs a l index for the 4th dimension
+lst <- rmf_as_list(ar, l = 2)
+lst 
+
+# rmf_as_array needs a dis object to guess the dimensions of the array
+rmf_as_array(lst, dis = dis)
+
+
+```
+
+
+
+
+

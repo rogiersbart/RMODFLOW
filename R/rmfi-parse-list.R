@@ -38,7 +38,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       for(nl in 1:nlst) {
         values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
         if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values
+        df[nl,] <- values[1:(3+length(varnames))]
         ext_lines <- ext_lines[-1]
       }
     }
@@ -65,7 +65,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       for(nl in 1:nlst) {
         values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
         if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values
+        df[nl,] <- values[1:(3+length(varnames))]
         ext_lines <- ext_lines[-1]
       }
     }
@@ -76,14 +76,14 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     for(nl in 1:nlst) {
       values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
       if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values
+      df[nl,] <- values[1:(3+length(varnames))]
       remaining_lines <- remaining_lines[-1]
     }
   } else {
     for(nl in 1:nlst) {
       values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
       if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values
+      df[nl,] <- values[1:(3+length(varnames))]
       remaining_lines <- remaining_lines[-1]
     }
   }

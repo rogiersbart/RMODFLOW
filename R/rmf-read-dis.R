@@ -31,7 +31,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     rm(data_set_1)
     
   # data set 2
-    data_set_2 <- rmfi_parse_variables(dis_lines)
+    data_set_2 <- rmfi_parse_variables(dis_lines, nlay = dis$nlay)
     dis$laycbd <- as.numeric(data_set_2$variables[1:dis$nlay])
     dis_lines <- data_set_2$remaining_lines
     rm(data_set_2)

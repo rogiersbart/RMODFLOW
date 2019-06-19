@@ -3,6 +3,7 @@
 #' \code{read_hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.
 #' 
 #' @param file filename; typically '*.hob'
+#' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class hob
 #' @importFrom readr read_lines
 #' @export
@@ -30,7 +31,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
     if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
   
   # data set 2
-    dat <- rmfi_parse_variables(hob_lines)
+    dat <- rmfi_parse_variables(hob_lines, n = 1, ...)
     hob$tomulth <- as.numeric(dat$variables[1])
     hob$evh <- as.numeric(dat$variables[2])
     hob_lines <- dat$remaining_lines

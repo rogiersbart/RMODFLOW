@@ -21,14 +21,14 @@ rmf_read_sip = function(file = {cat('Please select strongly implicit procedure f
   rm(data_set_0)
   
   # data set 1
-  data_set_1 =rmfi_parse_variables(sip_lines, ...)
+  data_set_1 =rmfi_parse_variables(sip_lines, n = 2, ...)
   sip$mxiter = rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   sip$nparm = rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   sip_lines = data_set_1$remaining_lines
   rm(data_set_1)
   
   # data set 2
-  data_set_2 = rmfi_parse_variables(sip_lines, ...)
+  data_set_2 = rmfi_parse_variables(sip_lines, n = 5, ...)
   sip$accl = rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
   sip$hclose = rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
   sip$ipcalc = rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))
