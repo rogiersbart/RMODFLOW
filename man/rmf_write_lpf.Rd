@@ -7,7 +7,13 @@
 \usage{
 rmf_write_lpf(lpf, file = {    
   cat("Please select lpf file to overwrite or provide new filename ...\\n")
+<<<<<<< HEAD
       file.choose() }, dis = rmf_read_dis(), iprn = -1)
+=======
+      file.choose() }, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, iprn = -1, ...)
+>>>>>>> develop
 
 write_lpf(...)
 }
@@ -17,6 +23,8 @@ write_lpf(...)
 \item{file}{filename to write to; typically '*.lpf'}
 
 \item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+
+\item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }
 \value{
 \code{NULL}

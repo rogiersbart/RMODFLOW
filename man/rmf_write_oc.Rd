@@ -7,7 +7,11 @@
 \usage{
 rmf_write_oc(oc, file = {    
   cat("Please select oc file to overwrite or provide new filename ...\\n") 
+<<<<<<< HEAD
      file.choose() })
+=======
+     file.choose() }, ...)
+>>>>>>> develop
 
 write_oc(...)
 }
@@ -15,6 +19,8 @@ write_oc(...)
 \item{oc}{an \code{\link{RMODFLOW}} oc object}
 
 \item{file}{filename to write to; typically '*.oc'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format OC file using numeric codes.}
 }
 \value{
 \code{NULL}
@@ -28,5 +34,5 @@ write_oc(...)
 }}
 
 \seealso{
-\code{\link{read_oc}}, \code{\link{create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
+\code{\link{rmf_read_oc}}, \code{\link{rmf_create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 }

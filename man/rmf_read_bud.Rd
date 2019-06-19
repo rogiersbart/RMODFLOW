@@ -2,6 +2,7 @@
 % Please edit documentation in R/rmf-read-bud.R
 \name{rmf_read_bud}
 \alias{rmf_read_bud}
+<<<<<<< HEAD
 \alias{read_bud}
 \title{Read a MODFLOW budget file}
 \usage{
@@ -9,16 +10,21 @@ rmf_read_bud(file = {     cat("Please select bud file ...\\n")
   file.choose() }, binary = TRUE, double_precision = FALSE)
 
 read_bud(...)
+=======
+\title{Reads the volumetric budget from a MODFLOW listing file}
+\usage{
+rmf_read_bud(file = {     cat("Please select listing file ...\\n")    
+  file.choose() })
+>>>>>>> develop
 }
 \arguments{
-\item{file}{filename; typically 'Budget.out'}
-
-\item{binary}{logical; is source file binary?}
+\item{file}{path to the listing file; typically '*.lst'}
 }
 \value{
-object of class bud
+an object of class bud which is a list with two data frames: one with cumulative fluxes and one with rates
 }
 \description{
+<<<<<<< HEAD
 \code{rmf_read_bud} reads in a MODFLOW budget file
 }
 \section{Functions}{
@@ -26,3 +32,7 @@ object of class bud
 \item \code{read_bud}: Deprecated function name
 }}
 
+=======
+\code{rmf_read_bud} reads a volumetric budget from a MODFLOW listing file and returns it as a list with data frame elements
+}
+>>>>>>> develop

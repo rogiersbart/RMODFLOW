@@ -6,7 +6,8 @@
 \title{Convert modflow coordinates to real world coordinates}
 \usage{
 rmf_convert_grid_to_xyz(x = NULL, y = NULL, z = NULL, i = NULL,
-  j = NULL, k = NULL, prj, dis = NULL)
+  j = NULL, k = NULL, roff = NULL, coff = NULL, loff = NULL,
+  prj = NULL, dis = NULL)
 
 convert_grid_to_xyz(...)
 }
@@ -23,18 +24,30 @@ convert_grid_to_xyz(...)
 
 \item{k}{modflow layer number}
 
+\item{roff}{modflow row offset}
+
+\item{coff}{modflow column offset}
+
+\item{loff}{modflow layer offset}
+
 \item{prj}{prj object}
 
 \item{dis}{dis object}
 }
 \value{
-data frame with real world x and y coordinates
+data frame with real world x and y (and optionally z) coordinates
 }
 \description{
 Convert modflow coordinates to real world coordinates
 }
 \details{
 Provide either xyz or ijk
+  If xyz is provided, it is reprojected using the optional prj object.
+  
+  Optional roff, coff and loff values can be supplied along the i, j and k indices.
+  
+  k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
+  set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
 }
 \section{Functions}{
 \itemize{

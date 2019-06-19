@@ -2,17 +2,28 @@
 % Please edit documentation in R/rmf-read-hed.R
 \name{rmf_read_hed}
 \alias{rmf_read_hed}
+\alias{rmf_read_head}
 \alias{read_hed}
 \alias{rmf_read_fhd}
 \alias{rmf_read_bhd}
 \title{Read a MODFLOW head file}
 \usage{
+<<<<<<< HEAD
 rmf_read_hed(file = {     cat("Please select hed file ...\\n")    
   file.choose() }, dis = {     cat("Please select dis file ...\\n")    
   rmf_read_dis(file.choose()) }, bas = {    
   cat("Please select bas file ...\\n")     rmf_read_bas(file.choose(), dis
   = dis) }, huf = NULL, convert_hnoflo_to_NA = TRUE, binary = TRUE,
   precision = "single")
+=======
+rmf_read_hed(file = {     cat("Please select head file ...\\n")    
+  file.choose() }, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, huf = NULL, oc = NULL, bas = NULL,
+  binary = TRUE, precision = "single")
+
+rmf_read_head(...)
+>>>>>>> develop
 
 read_hed(...)
 
@@ -23,22 +34,37 @@ rmf_read_bhd(...)
 \arguments{
 \item{file}{filename; typically '*.hed'}
 
-\item{dis}{discretization file object}
+\item{dis}{dis object}
 
-\item{bas}{basic file object}
+\item{huf}{huf object; optional. Provide only if huf heads are being read. See details.}
 
-\item{huf}{huf object; optional; provide only if huf heads are being read}
+\item{oc}{oc object; optional. See details.}
 
-\item{convert_hnoflo_to_NA}{logical; should hnoflo values be converted to NA?}
+\item{bas}{bas object; optional. If supplied, is used to set the hnoflo values to NA.}
+
+\item{binary}{logical; is the file binary?}
+
+\item{precision}{either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.}
 }
 \value{
-object of class hed
+object of class hed and rmf_4d_array. See details.
 }
 \description{
-\code{read_hed} reads in a MODFLOW head file and returns it as an \code{\link{RMODFLOW}} hed object.
+\code{rmf_read_hed} reads in a MODFLOW head file and returns it as an \code{RMODFLOW} hed object.
+}
+\details{
+When huf heads are to be read, a \code{huf} object should also be supplied. The final array will have NHUF layers instead of NLAY.
+
+If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
+If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
+If the array is in ASCII format and no headers are present, a \code{OC} object must be supplied. In that case, it is assumed that the file being read only contains head values and the keyword XSECTION in the bas file is not present.
+
+The only use of the bas argument is to replace the hnoflo values in the final array with NA's.
 }
 \section{Functions}{
 \itemize{
+\item \code{rmf_read_head}: 
+
 \item \code{read_hed}: Deprecated function name
 
 \item \code{rmf_read_fhd}: Compatible with default ModelMuse file extension

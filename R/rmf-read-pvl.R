@@ -30,7 +30,6 @@ rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choos
       pvl_lines <- pvl_lines[-1]
     }
 
-  comment(pvl) <- comments
   class(pvl) <- c('pvl','rmf_package')
   return(pvl)
 }

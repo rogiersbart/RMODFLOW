@@ -6,12 +6,22 @@
 \title{Read a MODFLOW output control option file}
 \usage{
 rmf_read_oc(file = {     cat("Please select oc file ...\\n")    
+<<<<<<< HEAD
   file.choose() })
+=======
+  file.choose() }, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, ...)
+>>>>>>> develop
 
 read_oc(...)
 }
 \arguments{
 \item{file}{filename; typically '*.oc'}
+
+\item{dis}{an \code{RMODFLOW} dis object. Used when reading OC specified using numeric codes.}
+
+\item{...}{arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.}
 }
 \value{
 object of class oc
@@ -25,5 +35,5 @@ object of class oc
 }}
 
 \seealso{
-\code{\link{write_oc}}, \code{\link{create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
+\code{\link{rmf_write_oc}}, \code{\link{rmf_create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 }

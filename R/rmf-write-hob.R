@@ -20,25 +20,29 @@ rmf_write_hob <- function(hob,
     rmfi_write_variables(hob$tomulth, file=file)
   
   # data set 3 - 6
-    i <- 1
-    while(i <= length(hob$layer)) {
-      rmfi_write_variables(hob$obsnam[i], hob$layer[i], hob$row[i], hob$column[i], hob$irefsp[i], hob$toffset[i][1],hob$roff[i], hob$coff[i], hob$hobs[i],file=file) 
+  i <- 1
+  while(i <= length(hob$layer)) {
+    for (k in 1:length(hob$obsnam[[i]])){
+     
+       rmfi_write_variables(hob$obsnam[[i]][k], hob$layer[i], hob$row[i], hob$column[i], hob$irefsp[[i]][k], hob$toffset[[i]][k],hob$roff[i], hob$coff[i], hob$hobs[[i]][k],file=file) 
+    
       if(hob$layer[i] < 0) {
         rmfi_write_variables(paste(hob$mlay[[i]],hob$pr[[i]],collapse=' '), file=file)
       }
-      if(hob$irefsp[i] < 0) {
+      if(hob$irefsp[[i]][k] < 0) {
         
         # data set 5
-          rmfi_write_variables(hob$itt[i], file=file)
+        rmfi_write_variables(hob$itt[i], file=file)
         
         # data set 6
-          for(j in 1:abs(hob$irefsp[i])) {
-            i <- i + 1
-            rmfi_write_variables(hob$obsnam[i], hob$irefsp[i], hob$toffset[i],hob$hobs[i], file=file)
-          }
+        for(j in 1:abs(hob$irefsp[[i]][k])) {
+          k <- k + 1
+          rmfi_write_variables(hob$obsnam[[i]][k], hob$irefsp[[i]][i], hob$toffset[[i]][k],hob$hobs[[i]][k], file=file)
+        }
       }
-      i <- i + 1
     }
+    i <- i + 1
+  }
 }  
 
 #' @describeIn rmf_write_hob Deprecated function name

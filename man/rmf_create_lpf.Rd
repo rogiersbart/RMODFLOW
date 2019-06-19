@@ -5,7 +5,11 @@
 \alias{create_lpf}
 \title{Create an \code{RMODFLOW} lpf object}
 \usage{
+<<<<<<< HEAD
 rmf_create_lpf(dis = create_dis(), ilpfcb = 0, hdry = -888,
+=======
+rmf_create_lpf(dis = rmf_create_dis(), ilpfcb = 0, hdry = -888,
+>>>>>>> develop
   nplpf = 0, storagecoefficient = FALSE, constantcv = FALSE,
   thickstrt = FALSE, nocvcorrection = FALSE, novfc = FALSE,
   noparcheck = FALSE, laytyp = ifelse(dis$nlay == 1, list(1), list(c(1,
@@ -73,21 +77,21 @@ create_lpf(...)
 
 \item{zonarr}{matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
 
-\item{iz}{matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
+\item{iz}{character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
 
-\item{hk}{3d array with hydraulic conductivity along rows; defaults to 1}
+\item{hk}{3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{hani}{3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1}
+\item{hani}{3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{vka}{3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk}
+\item{vka}{3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{ss}{3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5}
+\item{ss}{3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{sy}{3d array with specific yield; only required when there are transient stress periods; defaults to 0.15}
+\item{sy}{3d array with specific yield; only required when there are transient stress periods; defaults to 0.15. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{vkcb}{3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0}
+\item{vkcb}{3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{wetdry}{3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01}
+\item{wetdry}{3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01. If not read for a specific layer, set all values in that layer to NA.}
 }
 \value{
 Object of class lpf
@@ -101,5 +105,5 @@ Object of class lpf
 }}
 
 \seealso{
-\code{\link{read_lpf}}, \code{\link{write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+\code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 }

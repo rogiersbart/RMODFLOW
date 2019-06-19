@@ -6,7 +6,7 @@
 \title{Read a MODFLOW preconditioned conjugate-gradient package file}
 \usage{
 rmf_read_pcg(file = {     cat("Please select pcg file ...\\n")    
-  file.choose() })
+  file.choose() }, ...)
 
 read_pcg(...)
 }
@@ -18,6 +18,7 @@ object of class pcg
 }
 \description{
 \code{read_pcg} reads in a MODFLOW preconditioned conjugate-gradient package file and returns it as an \code{\link{RMODFLOW}} pcg object.
+#' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 }
 \section{Functions}{
 \itemize{

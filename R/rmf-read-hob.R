@@ -30,11 +30,11 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
     if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
   
   # data set 2
-    data_set_2 <- rmfi_parse_variables(hob_lines)
-    hob$tomulth <- as.numeric(data_set_1$variables[1])
-    hob$evh <- as.numeric(data_set_1$variables[2])
-    hob_lines <- data_set_1$remaining_lines
-    rm(data_set_2)
+    dat <- rmfi_parse_variables(hob_lines)
+    hob$tomulth <- as.numeric(dat$variables[1])
+    hob$evh <- as.numeric(dat$variables[2])
+    hob_lines <- dat$remaining_lines
+    rm(dat)
     
   # data set 3 - 6
     hob$obsnam <- hob$obsloc <- hob$layer <- hob$row <- hob$column <- hob$irefsp <- hob$toffset <- hob$roff <- hob$coff <- hob$hobs <- hob$statistic <- hob$statflag <- hob$plotsymbol <- hob$stath <- hob$statdd <- rep(NA, hob$nh)

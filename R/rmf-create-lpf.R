@@ -26,18 +26,18 @@
 #' @param nclu vector with the number of clusters required for each parameter
 #' @param mltarr matrix of multiplier array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA
 #' @param zonarr matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA
-#' @param iz matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""
-#' @param hk 3d array with hydraulic conductivity along rows; defaults to 1
-#' @param hani 3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1
-#' @param vka 3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk
-#' @param ss 3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5
-#' @param sy 3d array with specific yield; only required when there are transient stress periods; defaults to 0.15
-#' @param vkcb 3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0
-#' @param wetdry 3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01
+#' @param iz character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""
+#' @param hk 3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.
+#' @param hani 3d array with the ratio of hydraulic conductivity along columns to that along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.
+#' @param vka 3d array with vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to hk. If not read for a specific layer, set all values in that layer to NA.
+#' @param ss 3d array with specific storage; only required when there are transient stress periods; defaults to 1E-5. If not read for a specific layer, set all values in that layer to NA.
+#' @param sy 3d array with specific yield; only required when there are transient stress periods; defaults to 0.15. If not read for a specific layer, set all values in that layer to NA.
+#' @param vkcb 3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0. If not read for a specific layer, set all values in that layer to NA.
+#' @param wetdry 3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01. If not read for a specific layer, set all values in that layer to NA.
 #' @return Object of class lpf
 #' @export
-#' @seealso \code{\link{read_lpf}}, \code{\link{write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
-rmf_create_lpf <- function(dis = create_dis(),
+#' @seealso \code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+rmf_create_lpf <- function(dis = rmf_create_dis(),
                          ilpfcb = 0,
                          hdry = -888,
                          nplpf = 0,
@@ -118,13 +118,20 @@ rmf_create_lpf <- function(dis = create_dis(),
     lpf$iz <- iz
 
   # data set 10-16
-    lpf$hk <- rmf_create_array(hk)
-    lpf$hani <- rmf_create_array(hani)
-    lpf$vka <- rmf_create_array(vka)
-    lpf$ss <- rmf_create_array(ss)
-    lpf$sy <- rmf_create_array(sy)
-    lpf$vkcb <- rmf_create_array(vkcb)
-    lpf$wetdry <- rmf_create_array(wetdry)
+    if(!("HK" %in% lpf$partyp)) lpf$hk <- rmf_create_array(hk,
+                                                           dim = rmfi_ifelse0(length(dim(hk)) > 2, dim(hk), c(dim(hk),1)))
+    if(!("HANI" %in% lpf$partyp) && any(lpf$chani <= 0)) lpf$hani <- rmf_create_array(hani,
+                                                                                      dim = rmfi_ifelse0(length(dim(hani)) > 2, dim(hani), c(dim(hani),1)))
+    if(!("VK" %in% lpf$partyp | "VANI" %in% lpf$partyp)) lpf$vka <- rmf_create_array(vka,
+                                                                                     dim = rmfi_ifelse0(length(dim(vka)) > 2, dim(vka), c(dim(vka),1)))
+    if(!("SS" %in% lpf$partyp) && 'TR' %in% dis$sstr) lpf$ss <- rmf_create_array(ss,
+                                                                                 dim = rmfi_ifelse0(length(dim(ss)) > 2, dim(ss), c(dim(ss),1)))
+    if(!("SY" %in% lpf$partyp) && 'TR' %in% dis$sstr && any(lpf$laytyp != 0)) lpf$sy <- rmf_create_array(sy,
+                                                                                                         dim = rmfi_ifelse0(length(dim(sy)) > 2, dim(sy), c(dim(sy),1)))
+    if(!("VKCB" %in% lpf$partyp) && any(dis$laycbd != 0)) lpf$vkcb <- rmf_create_array(vkcb,
+                                                                                       dim = rmfi_ifelse0(length(dim(vkcb)) > 2, dim(vkcb), c(dim(vkcb),1)))
+    if(any(lpf$laywet != 0) && any(lpf$laytyp != 0)) lpf$wetdry <- rmf_create_array(wetdry,
+                                                                                    dim = rmfi_ifelse0(length(dim(wetdry)) > 2, dim(wetdry), c(dim(wetdry),1)))
     
   class(lpf) <- c('lpf','rmf_package')
   return(lpf)

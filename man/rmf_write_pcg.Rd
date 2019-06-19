@@ -7,7 +7,11 @@
 \usage{
 rmf_write_pcg(pcg, file = {    
   cat("Please select pcg file to overwrite or provide new filename ...\\n")
+<<<<<<< HEAD
       file.choose() })
+=======
+      file.choose() }, ...)
+>>>>>>> develop
 
 write_pcg(...)
 }
@@ -15,6 +19,8 @@ write_pcg(...)
 \item{pcg}{an \code{\link{RMODFLOW}} pcg object}
 
 \item{file}{filename to write to; typically '*.pcg'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

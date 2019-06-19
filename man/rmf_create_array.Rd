@@ -5,7 +5,7 @@
 \alias{create_rmodflow_array}
 \title{Add rmf array class to object based on object dimensions}
 \usage{
-rmf_create_array(obj = NA, dim = NULL)
+rmf_create_array(obj = NA, dim = NULL, kper = NULL)
 
 create_rmodflow_array(...)
 }
@@ -13,9 +13,18 @@ create_rmodflow_array(...)
 \item{obj}{object to add class to}
 
 \item{dim}{the dim attribute for the array to be created; by default, dim(obj) is used}
+
+\item{kper}{integer vector specifying the stress periods in which the array is active. Used for defining boundary conditions. Defaults to \code{NULL}}
+
+\item{...}{}
 }
 \description{
 Add rmf array class to object based on object dimensions
+}
+\details{
+subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
+         When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
+         Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
 }
 \section{Functions}{
 \itemize{

@@ -11,7 +11,11 @@ rmf_create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1,
   ncol), botm = array(rep(seq(0, -10 * nlay, length = nlay + 1)[2:(nlay +
   1)], each = nrow * ncol), dim = c(nrow, ncol, nlay)), perlen = rep(1,
   nper), nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS",
+<<<<<<< HEAD
   rep("TS", nper - 1)))
+=======
+  rep("TR", nper - 1)))
+>>>>>>> develop
 
 create_dis(...)
 }
@@ -28,7 +32,7 @@ create_dis(...)
 
 \item{lenuni}{length unit; defaults to 2 (metres)}
 
-\item{laycbd}{vector of quasi-3D confining bed flags; defaults to 0 for all layers}
+\item{laycbd}{vector of Quasi-3D confining bed flags; defaults to 0 for all layers}
 
 \item{delr}{vector of cell widths along rows; defaults to 100 for all columns}
 
@@ -36,7 +40,7 @@ create_dis(...)
 
 \item{top}{matrix with the top elevation of layer 1; defaults to 0 for all nrow x ncol cells}
 
-\item{botm}{3D array with the bottom elevations of all layers; defaults to nlay layers, equally spaced between 0 (top first layer) and -100 (bottom last layer)}
+\item{botm}{3D array with the bottom elevations of all layers and Quasi-3D confining beds; defaults to nlay layers, equally spaced between 0 (top first layer) and -100 (bottom last layer)}
 
 \item{perlen}{vector of stress period lengths}
 
@@ -44,7 +48,7 @@ create_dis(...)
 
 \item{tsmult}{vector of successive time step length multipliers}
 
-\item{sstr}{character vector with steady state ('SS') or transient ('TS') stress period indicator}
+\item{sstr}{character vector with steady state ('SS') or transient ('TR') stress period indicator}
 }
 \value{
 Object of class dis

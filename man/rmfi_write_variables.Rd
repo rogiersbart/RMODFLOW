@@ -5,7 +5,10 @@
 \title{Write modflow variables
 Internal function used in the write_* functions for writing single line datasets}
 \usage{
-rmfi_write_variables(..., file, append = TRUE)
+rmfi_write_variables(..., file, append = TRUE, format = "free")
+}
+\arguments{
+\item{format}{either \code{'fixed'} or \code{'free'}. Fixed format assumes 10 character spaces for each value}
 }
 \description{
 Write modflow variables
