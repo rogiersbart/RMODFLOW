@@ -137,7 +137,6 @@ rmf_create_hfb <-  function(...,
 #' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
 #'  
 #' @return \code{RMODFLOW} hfb object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_hfb}}, \code{\link{rmf_create_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}
 
@@ -146,7 +145,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   
   vars <- c('irow2', 'icol2', 'hydchr')
   option <- c('NOPRINT' = FALSE)
-  lines <-  read_lines(file)
+  lines <-  readr::read_lines(file)
   scalevar <- 6
   
   rmf_lists <- list()

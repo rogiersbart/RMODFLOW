@@ -135,12 +135,11 @@ rmf_create_nwt <- function(headtol = 0.001,
 #' @param file filename; typically '*.nwt'
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class nwt
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_nwt}}, \code{\link{rmf_create_nwt}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choose()}, ...) {
   
-  nwt_lines <- read_lines(file)
+  nwt_lines <- readr::read_lines(file)
   nwt <- list()
   
   # data set 0

@@ -71,7 +71,6 @@ create_bas <- function(...) {
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
 #' @param ... arguments passed to \code{rmfi_parse_array} and \code{rmfi_parse_variables}. Can be ignored when input is 'free' format and input arrays are INTERNAL or CONSTANT.
 #' @return object of class bas
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_bas}}, \code{\link{rmf_create_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas6.htm}
 rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choose()},
@@ -79,7 +78,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
                          ...) {
   
   bas <- list()
-  bas_lines <- read_lines(file)
+  bas_lines <- readr::read_lines(file)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(bas_lines)

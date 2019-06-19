@@ -6,13 +6,12 @@
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class huf
-#' @importFrom readr read_lines
 #' @export
 rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choose()},
                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                          ...) {
   
-  huf_lines <- read_lines(file)
+  huf_lines <- readr::read_lines(file)
   huf <- list()
 
   # data set 0
@@ -216,14 +215,13 @@ write_huf <- function(...) {
 #' @param huf hydrogeologic unit file object; defaults to that with the same filename but with extension '.huf'
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class kdep
-#' @importFrom readr read_lines
 #' @export
 rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                           huf = {cat('Please select corresponding huf file ...\n'); rmf_read_huf(file.choose(), dis = dis)},
                           ...) {
   
-  kdep_lines <- read_lines(file)
+  kdep_lines <- readr::read_lines(file)
   kdep <- list()
   
   # data set 0

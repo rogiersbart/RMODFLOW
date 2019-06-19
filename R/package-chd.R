@@ -45,7 +45,6 @@ rmf_create_chd <-  function(...,
 #' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
 
 #' @return \code{RMODFLOW} chd object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_chd}}, \code{\link{rmf_create_chd}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?chd.htm}
 rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head file ...\n'); file.choose()},
@@ -53,7 +52,7 @@ rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head
   
   vars <- c('shead', 'ehead')
   option <- c('NOPRINT' = FALSE)
-  lines <-  read_lines(file)
+  lines <-  readr::read_lines(file)
   
   input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = c(4,5), ...)
   

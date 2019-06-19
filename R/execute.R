@@ -112,8 +112,6 @@ run_modflow <- function(...) {
 #' @param control list of control arguments
 #' @param ... further arguments provided to \code{optim}, \code{hydroPSO} or \code{DEoptim}
 #' @return \code{optim} results with the full list of parameters
-#' @importFrom hydroPSO hydroPSO
-#' @importFrom DEoptim DEoptim
 #' @export
 rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
 {
@@ -163,10 +161,10 @@ rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
     opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower[which(include)], upper=upper[which(include)], control=control, ...)
   } else if(method %in% c('spso2011','spso2007','ipso','fips','wfips','canonical'))
   {
-    opt <- hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower[which(include)],upper=upper[which(include)],control=control, ...)
+    opt <- hydroPSO::hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower[which(include)],upper=upper[which(include)],control=control, ...)
   } else if(method=='DEoptim')
   {
-    opt <- DEoptim(optim_modflow,lower=lower[which(include)],upper=upper[which(include)], control=control, ...)
+    opt <- DEoptim::DEoptim(optim_modflow,lower=lower[which(include)],upper=upper[which(include)], control=control, ...)
   } else {
     stop(paste('Method',method,'is not supported. Please provide one of the optim, hydroPSO or DEoptim methods.'))
   }

@@ -90,7 +90,6 @@ rmf_create_bcf = function(dis = rmf_create_dis(),
 #' @param dis an \code{RMODFLOW} dis object
 #' @param ... arguments passed to \code{rmfi_parse_array} and \code{rmfi_parse_variables}. Can be ignored when input is 'free' format and arrays are INTERNAL or CONSTANT.
 #' @return an \code{RMODFLOW} bcf object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_bcf}}, \code{\link{rmf_create_bcf}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
 

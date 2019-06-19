@@ -67,12 +67,11 @@ create_pcg <- function(...) {
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @param file filename; typically '*.pcg'
 #' @return object of class pcg
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{write_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choose()}, ...) {
   
-  pcg_lines <- read_lines(file)
+  pcg_lines <- readr::read_lines(file)
   pcg <- list()
   
   # data set 0

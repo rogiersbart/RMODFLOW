@@ -51,14 +51,13 @@ rmf_create_sip = function(mxiter = 50,
 #' @param file filename; typically '*_sip'
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return \code{RMODFLOW} sip object
-#' @importFrom  readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_sip}}, \code{\link{rmf_create_sip}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm}
 
 rmf_read_sip = function(file = {cat('Please select strongly implicit procedure file ...\n'); file.choose()}, ...){
   
   sip = list()
-  sip_lines = read_lines(file)
+  sip_lines = readr::read_lines(file)
   
   # data set 0
   data_set_0 = rmfi_parse_comments(sip_lines)

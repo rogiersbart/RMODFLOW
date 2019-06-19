@@ -143,12 +143,11 @@ create_oc <- function(...) {
 #' @param dis an \code{RMODFLOW} dis object. Used when reading OC specified using numeric codes.
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class oc
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_oc}}, \code{\link{rmf_create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose()}, dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}, ...) {
   
-  oc_lines <- read_lines(file)
+  oc_lines <- readr::read_lines(file)
   oc <- list()
   
   # data set 0
@@ -849,7 +848,6 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
 #' 
 #' The only use of the bas argument is to replace the hnoflo values in the final array with NA's. 
 #'
-#' @importFrom readr read_lines 
 #' @export
 rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choose()},
                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
@@ -1238,7 +1236,6 @@ rmf_read_bhd <- function(...) {
 #' 
 #' The only use of the bas argument is to replace the hnoflo values in the final array with NA's. 
 #'
-#' @importFrom readr read_lines 
 #' @export
 rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choose()},
                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},

@@ -74,40 +74,41 @@ rmf_plot.bud <-  function(bud,
       if(type == "area") {
         type <- 'bar'
         df$nstp <- factor(df$nstp)
-        gm_line <- geom_col(aes(fill = volume))
+        gm_line <- ggplot2::geom_col(ggplot2::aes(fill = volume))
       } 
     }
     
     if(what == 'total') {
       if(net) {
         df <- aggregate(list(value = df$value), by = list(nstp = df$nstp, volume = df$volume),  sum)
-        p <- ggplot(df, aes(x=!!x, y=value, group=volume, colour = volume)) + gm_line +
-          geom_hline(yintercept = 0, colour = 'black') +
-          facet_wrap(~volume, ncol = 1, scales = 'free_y') + 
-          labs(title = 'Net total volume [L**3]', y = 'Volume [L**3]', x = x_label)
+        p <- ggplot2::ggplot(df, ggplot2::aes(x=!!x, y=value, group=volume, colour = volume)) + gm_line +
+          ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+          ggplot2::facet_wrap(~volume, ncol = 1, scales = 'free_y') + 
+          ggplot2::labs(title = 'Net total volume [L**3]', y = 'Volume [L**3]', x = x_label)
       } else {
         if(type == 'bar') {
-          p <- ggplot(df, aes(x=!!x, y=value, colour=io, fill=io)) + geom_col() + 
-            geom_hline(yintercept = 0, colour = 'black') +
-            facet_wrap(~volume, ncol = 1, scales = 'free_y') +
-            labs(title = 'Gross total volume [L**3]', y = 'Volume [L**3]', x = x_label)
+          p <- ggplot2::ggplot(df, ggplot2::aes(x=!!x, y=value, colour=io, fill=io)) +
+            ggplot2::geom_col() + 
+            ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+            ggplot2::facet_wrap(~volume, ncol = 1, scales = 'free_y') +
+            ggplot2::labs(title = 'Gross total volume [L**3]', y = 'Volume [L**3]', x = x_label)
           
         } else if(type == 'area') {
-          p <- ggplot() +
-            geom_area(data=subset(df, io=='in'), aes(x=!!x ,y=value, colour = volume, fill = volume), alpha=0.7) +
-            geom_area(data=subset(df, io=='out'), aes(x=!!x ,y=value, colour = volume, fill = volume), alpha=0.7) +
-            geom_hline(yintercept = 0, colour = 'black') +
-            facet_wrap(~volume, ncol = 1, scales = 'free_y')+ 
-            labs(title = 'Gross total volume [L**3]', y = 'Volume [L**3]', x = x_label)
+          p <- ggplot2::ggplot() +
+            ggplot2::geom_area(data=subset(df, io=='in'), ggplot2::aes(x=!!x ,y=value, colour = volume, fill = volume), alpha=0.7) +
+            ggplot2::geom_area(data=subset(df, io=='out'), ggplot2::aes(x=!!x ,y=value, colour = volume, fill = volume), alpha=0.7) +
+            ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+            ggplot2::facet_wrap(~volume, ncol = 1, scales = 'free_y')+ 
+            ggplot2::labs(title = 'Gross total volume [L**3]', y = 'Volume [L**3]', x = x_label)
           
         }
       }
     } else { # difference/discrepancy
       # plot
-      p <- ggplot(df, aes(x=!!x, y=value, group=io, colour = volume)) + gm_line + 
-        geom_hline(yintercept = 0, colour = 'black') +
-        facet_wrap(~volume, ncol = 1, scales = 'free_y') +
-        labs(title = rmfi_ifelse0(what == 'difference', "Volume in - volume out", "Discrepancy"), y = rmfi_ifelse0(what == 'difference', "Volume [L**3]", "% discrepancy"), x = x_label)
+      p <- ggplot2::ggplot(df, ggplot2::aes(x=!!x, y=value, group=io, colour = volume)) + gm_line + 
+        ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+        ggplot2::facet_wrap(~volume, ncol = 1, scales = 'free_y') +
+        ggplot2::labs(title = rmfi_ifelse0(what == 'difference', "Volume in - volume out", "Discrepancy"), y = rmfi_ifelse0(what == 'difference', "Volume [L**3]", "% discrepancy"), x = x_label)
     }
     
     # rates/cumulative
@@ -135,26 +136,29 @@ rmf_plot.bud <-  function(bud,
     if(net) {
       df <- aggregate(list(value = df$value), by = list(nstp = df$nstp, flux = df$flux),  sum)
       if(type == 'bar') {
-        p <- ggplot(df, aes(x=!!x, y=value, colour=flux, fill=flux)) + geom_col() +
-          geom_hline(yintercept = 0, colour = 'black') +
-          labs(title = rmfi_ifelse0(what == 'rates', "Net volumetric rates", "Net cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
+        p <- ggplot2::ggplot(df, ggplot2::aes(x=!!x, y=value, colour=flux, fill=flux)) +
+          ggplot2::geom_col() +
+          ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+          ggplot2::labs(title = rmfi_ifelse0(what == 'rates', "Net volumetric rates", "Net cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
       } else if(type == 'area') {
-        p <- ggplot(data=df, aes(x=!!x ,y=value, colour = flux, fill = flux)) + geom_area(alpha=0.7) +
-          geom_hline(yintercept = 0, colour = 'black') +
-          labs(title = rmfi_ifelse0(what == 'rates', "Net volumetric rates", "Net cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
+        p <- ggplot2::ggplot(data=df, ggplot2::aes(x=!!x ,y=value, colour = flux, fill = flux)) +
+          ggplot2::geom_area(alpha=0.7) +
+          ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+          ggplot2::labs(title = rmfi_ifelse0(what == 'rates', "Net volumetric rates", "Net cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
       }
     } else {
       if(type == 'bar') {
-        p <- ggplot(df, aes(x=!!x, y=value, colour=flux, fill=flux)) + geom_col() +
-          geom_hline(yintercept = 0, colour = 'black') +
-          labs(title = rmfi_ifelse0(what == 'rates', "Gross volumetric rates", "Gross cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
+        p <- ggplot2::ggplot(df, ggplot2::aes(x=!!x, y=value, colour=flux, fill=flux)) +
+          ggplot2::geom_col() +
+          ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+          ggplot2::labs(title = rmfi_ifelse0(what == 'rates', "Gross volumetric rates", "Gross cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
         
       } else if(type == 'area') {
-        p <-  ggplot() +
-          geom_area(data=subset(df, io=='in'), aes(x=!!x ,y=value, colour = flux, fill = flux), alpha=0.7) +
-          geom_area(data=subset(df, io=='out'), aes(x=!!x ,y=value, colour = flux, fill = flux), alpha=0.7) +
-          geom_hline(yintercept = 0, colour = 'black') +
-          labs(title = rmfi_ifelse0(what == 'rates', "Gross volumetric rates", "Gross cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
+        p <-  ggplot2::ggplot() +
+          ggplot2::geom_area(data=subset(df, io=='in'), ggplot2::aes(x=!!x ,y=value, colour = flux, fill = flux), alpha=0.7) +
+          ggplot2::geom_area(data=subset(df, io=='out'), ggplot2::aes(x=!!x ,y=value, colour = flux, fill = flux), alpha=0.7) +
+          ggplot2::geom_hline(yintercept = 0, colour = 'black') +
+          ggplot2::labs(title = rmfi_ifelse0(what == 'rates', "Gross volumetric rates", "Gross cumulative volumes"), y = rmfi_ifelse0(what == 'rates', "Volumetric rate [L**3/T]", "Volume [L**3]"), x = x_label)
       }
     }
   }
@@ -892,17 +896,19 @@ rmf_plot.ghb = function(ghb,
 rmf_plot.hpr <- function(hpr,type='scatter') {
   dat <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=-888),]
   if(type=='scatter') {
-    return(  ggplot(dat,aes(x=observed_value,y=simulated_equivalent))+
-               geom_point(aes(colour=abs(observed_value-simulated_equivalent)))+
-               geom_abline(aes(intercept=0,slope=1),linetype='dashed')+
-               scale_colour_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
-               xlab('Observed value')+ylab('Simulated equivalent')
+    return(  ggplot2::ggplot(dat,ggplot2::aes(x=observed_value,y=simulated_equivalent))+
+               ggplot2::geom_point(ggplot2::aes(colour=abs(observed_value-simulated_equivalent)))+
+               ggplot2::geom_abline(ggplot2::aes(intercept=0,slope=1),linetype='dashed')+
+               ggplot2::scale_colour_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
+               ggplot2::xlab('Observed value')+
+               ggplot2::ylab('Simulated equivalent')
     )
   } else if(type=='residual') {
-    return(  ggplot(dat,aes(x=observation_name,y=simulated_equivalent-observed_value))+
-               geom_bar(aes(fill=abs(observed_value-simulated_equivalent)),stat='identity')+
-               scale_fill_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
-               xlab('Observation name')+ylab('Simulated equivalent - observed value')
+    return(  ggplot2::ggplot(dat,ggplot2::aes(x=observation_name,y=simulated_equivalent-observed_value))+
+               ggplot2::geom_bar(ggplot2::aes(fill=abs(observed_value-simulated_equivalent)),stat='identity')+
+               ggplot2::scale_fill_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
+               ggplot2::xlab('Observation name')+
+               ggplot2::ylab('Simulated equivalent - observed value')
     )
   }
 }
@@ -1401,7 +1407,6 @@ rmf_plot.riv = function(riv,
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
-#' @import ggplot2 directlabels akima rgl quadprog
 rmf_plot.rmf_2d_array <- function(array,
                                   dis,
                                   bas = NULL,
@@ -1474,31 +1479,34 @@ rmf_plot.rmf_2d_array <- function(array,
     }
     if(type=='fill') {  
       if(add) {
-        return(list(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
-                 coord_equal() + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
+                 ggplot2::coord_equal() +
+                 ggplot2::ggtitle(title))
       }
     } else if(type=='factor') {  
       if(add) {
-        return(list(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
-                 coord_equal() + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
+                 ggplot2::coord_equal() +
+                 ggplot2::ggtitle(title))
       }
     } else if(type=='grid') {  
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA))
+        return(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,group=id),data=datapoly,alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA))
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(group=id),alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
-                 coord_equal() + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(group=id),alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
+                 ggplot2::coord_equal() +
+                 ggplot2::ggtitle(title))
       }
     } else if(type=='contour') {
       if(!is.null(prj)) {
@@ -1507,12 +1515,12 @@ rmf_plot.rmf_2d_array <- function(array,
         xy$y <- new_xy$y
       }
       if(!is.null(crs)) {
-        xy <- RMODFLOW:::rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        xy <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(xy)
-      xy <- interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
+      xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
       xy$x <- rep(xy$x,ceiling(sum(dis$delc)/min(dis$delc)))
       xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
       xy$z <- c(xy$z)
@@ -1529,13 +1537,21 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(stat_contour(aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),geom_dl(aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour")))
-        if(!label) return(stat_contour(aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth))
+        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour")))
+        if(!label) return(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth))
       } else {
         if(label) {
-          return(ggplot(xy, aes(x=x, y=y)) + stat_contour(aes(z=z, colour = ..level..),binwidth=binwidth) +geom_dl(aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") + coord_equal(xlim = xlim, ylim = ylim) +theme(legend.position="none") + ggtitle(title))
+          return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
+                   directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
+                   ggplot2::theme(legend.position="none") +
+                   ggplot2::ggtitle(title))
         } else {
-          return(ggplot(xy, aes(x=x, y=y)) + stat_contour(aes(z=z,colour = ..level..),binwidth=binwidth) + coord_equal(xlim = xlim, ylim = ylim) + ggtitle(title))
+          return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
+                   ggplot2::ggtitle(title))
         }
       }
     } else {
@@ -1693,31 +1709,37 @@ rmf_plot.rmf_3d_array <- function(array,
     }
     if(type=='fill') {
       if(add) {
-        return(list(geom_polygon(aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
-                 xlab(xlabel) + ylab(ylabel) + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
+                 ggplot2::xlab(xlabel) +
+                 ggplot2::ylab(ylabel) +
+                 ggplot2::ggtitle(title))
       }
     } else if(type=='factor') {
       if(add) {
-        return(list(geom_polygon(aes(x=x,y=y,fill=factor(value), group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(fill=factor(value), group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
-                 xlab(xlabel) + ylab(ylabel) + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
+                 ggplot2::xlab(xlabel) +
+                 ggplot2::ylab(ylabel) +
+                 ggplot2::ggtitle(title))
       }
     } else if(type=='grid') {
       if(add) {
-        return(geom_polygon(aes(x=x,y=y,group=id),data=datapoly,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA))
+        return(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,group=id),data=datapoly,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA))
       } else {
-        return(ggplot(datapoly, aes(x=x, y=y)) +
-                 geom_polygon(aes(group=id),colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
-                 xlab(xlabel) + ylab(ylabel) + ggtitle(title))
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
+                 ggplot2::geom_polygon(ggplot2::aes(group=id),colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
+                 ggplot2::xlab(xlabel) +
+                 ggplot2::ylab(ylabel) +
+                 ggplot2::ggtitle(title))
       }
     }
   }
@@ -1752,7 +1774,8 @@ rmf_plot.rmf_4d_array <- function(array,
   if(!is.null(l)) {
     rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
-    ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),aes(x=time,y=value))+geom_path()
+    ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
+      ggplot2::geom_path()
   } else {
     warning('Plotting final stress period results.', call. = FALSE)
     rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
@@ -1778,8 +1801,8 @@ rmf_plot.sen <- function(sen,type='css')
   {
     dat <- data.frame(parnam=sen$parnam,css=sen$css)
     dat$parnam <- factor(as.character(dat$parnam),levels=dat$parnam[order(dat$css,decreasing=TRUE)])
-    return(  ggplot(dat,aes(x=parnam,y=css))+
-               geom_bar(stat='identity')
+    return(  ggplot2::ggplot(dat,ggplot2::aes(x=parnam,y=css))+
+               ggplot2::geom_bar(stat='identity')
     )
   } else if(type=='dss')
   {

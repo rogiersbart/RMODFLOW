@@ -208,7 +208,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
     positions$y <- new_positions$y
   }
   if(!is.null(crs)) {
-    positions <- rmfi_convert_coordinates(positions,from=CRS(prj$projection),to=crs)
+    positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
   }
   return(tibble::as_tibble(na.omit(merge(values, positions, by=c("id")))))
 }
@@ -1671,8 +1671,6 @@ export_vector <- function(...) {
 #' Generic function to export vectors
 #' 
 #' @rdname rmf_export_vector
-#' @importFrom sp Polygon Polygons SpatialPolygons SpatialPolygonsDataFrame CRS
-#' @importFrom rgdal writeOGR
 #' @export
 rmf_export_vector.rmf_2d_array <- function(array,
                                            dis,
@@ -1706,13 +1704,13 @@ rmf_export_vector.rmf_2d_array <- function(array,
     positions$y <- new_positions$y
   }
   if(!is.null(crs)) {
-    positions <- rmfi_convert_coordinates(positions,from=CRS(prj$projection),to=crs)
+    positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
   }
   
   positions_matrix_x <- matrix(positions$x,nrow=length(ids),ncol=4,byrow=TRUE)
   positions_matrix_y <- matrix(positions$y,nrow=length(ids),ncol=4,byrow=TRUE)
   positions_matrix <- cbind(ids,positions_matrix_x, positions_matrix_y)
-  create_polygon_from_row <- function(dat) Polygons(list(Polygon(data.frame(x=dat[2:5],y=dat[6:9]))), ID = dat[1])
+  create_polygon_from_row <- function(dat) sp::Polygons(list(sp::Polygon(data.frame(x=dat[2:5],y=dat[6:9]))), ID = dat[1])
   polygons_list <- apply(positions_matrix, 1, create_polygon_from_row)
   
   
@@ -1725,7 +1723,7 @@ rmf_export_vector.rmf_2d_array <- function(array,
   # apply mask!!
   # add i, j to data.frame
   
-  SP <- SpatialPolygons(polygons_list, proj4string=CRS(prj$projection))
+  SP <- sp::SpatialPolygons(polygons_list, proj4string=sp::CRS(prj$projection))
   DF <- data.frame(value = c(t(array*mask^2)), row.names = ids)
   if(include_ijk) {
     ijk <- convert_modflow_id_to_ijk(1:(dis$nrow*dis$ncol), dis)
@@ -1734,8 +1732,8 @@ rmf_export_vector.rmf_2d_array <- function(array,
     DF$k <- ijk$k
   }
   ids_to_keep <- row.names(na.omit(DF))
-  SPDF <- SpatialPolygonsDataFrame(SP[which(1:(dis$nrow*dis$ncol) %in% ids_to_keep)], na.omit(DF))
-  writeOGR(SPDF, dsn = '.', layer = file, driver = type, overwrite_layer = TRUE)
+  SPDF <- sp::SpatialPolygonsDataFrame(SP[which(1:(dis$nrow*dis$ncol) %in% ids_to_keep)], na.omit(DF))
+  rgdal::writeOGR(SPDF, dsn = '.', layer = file, driver = type, overwrite_layer = TRUE)
 }
 
 #' Get model performance measures from a hpr object
@@ -1781,11 +1779,10 @@ performance <- function(...) {
 #' 
 #' @param file filename
 #' @return object of class gms2dgrid
-#' @importFrom readr read_lines
 #' @export
 rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...\n'); file.choose()}) {
   grid2d <- list()
-  grid2d.lines <- read_lines(file)
+  grid2d.lines <- readr::read_lines(file)
   #2dgrid.lines <- remove.comments.from.lines(mlt.lines)
   grid2d.lines <- grid2d.lines[-1]    
   grid2d$objtype <- as.character(strsplit(grid2d.lines[1],'\"')[[1]][2])
@@ -1838,7 +1835,6 @@ rmf_read_gms_2d_grid <- function(...) {
 #'  If a header is read, the values are set as attributes to the array.
 #' 
 #' @return a rmf_array with optional attributes if a header was read.
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_array}}
 
@@ -2061,7 +2057,6 @@ rmf_create_list <-  function(df, kper = NULL) {
 #' 
 #' @param file filename; typically '*.prj'
 #' @return object of class prj
-#' @importFrom readr read_lines
 #' @export
 rmf_read_prj <- function(file = {cat('Please select prj file ...\n'); file.choose()}) {
   prj.lines <- readr::read_lines(file)

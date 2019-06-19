@@ -47,7 +47,6 @@ rmf_create_wel <-  function(...,
 #' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
 
 #' @return \code{RMODFLOW} wel object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_wel}}, \code{\link{rmf_create_wel}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm}
 
@@ -56,7 +55,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
   
   vars <- c('q')
   option <- c('NOPRINT' = FALSE)
-  lines <-  read_lines(file)
+  lines <-  readr::read_lines(file)
   
   input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
   

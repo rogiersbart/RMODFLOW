@@ -55,7 +55,6 @@ rmf_create_mlt <- function(nml = 1,
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} mlt object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_mlt}}, \code{\link{rmf_create_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
 
@@ -63,7 +62,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
                          dis = {cat('Please select dis file ...\n'); rmf_read_dis(file.choose())},
                          ...) {
   mlt <- list()
-  mlt_lines <- read_lines(file)
+  mlt_lines <- readr::read_lines(file)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(mlt_lines)

@@ -47,7 +47,6 @@ rmf_create_riv <-  function(...,
 #' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
 
 #' @return \code{RMODFLOW} riv object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_riv}}, \code{\link{rmf_create_riv}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?riv.htm}
 
@@ -56,7 +55,7 @@ rmf_read_riv <-  function(file = {cat('Please select river file ...\n'); file.ch
   
   vars <- c('stage', 'cond', 'rbot')
   option <- c('NOPRINT' = FALSE)
-  lines <-  read_lines(file)
+  lines <-  readr::read_lines(file)
   
   input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 5, ...)
   

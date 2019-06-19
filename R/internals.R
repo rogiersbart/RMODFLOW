@@ -6,7 +6,6 @@
 #' @param names_from names from the data frame coordinate columns
 #' @param names_to names to use for the converted coordinates
 #' @return data frame with converted coordinates
-#' @importFrom sf st_transform st_sfc st_multipoint st_crs st_coordinates
 #' @keywords internal
 rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
   nrs <- which(!is.na(dat[[names_from[1]]]+dat[[names_from[2]]]))
@@ -233,7 +232,6 @@ rmfi_ifelse0 <- function(test, yes, no) {
 #' @param integer logical; does the binary array hold integer values. Might not work optimally.
 #' @param ... ignored
 #' @return A list containing the array and the remaining text of the MODFLOW input file
-#' @importFrom readr read_lines
 #' @keywords internal
 rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
                              skip_header = FALSE, nam = NULL, precision = "single", file = NULL, integer = FALSE, ...) {

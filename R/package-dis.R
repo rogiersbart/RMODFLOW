@@ -91,12 +91,11 @@ create_dis <- function(...) {
 #' @param file filename; typically '*.dis'
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class dis
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}, ...) {
   
-  dis_lines <- read_lines(file)
+  dis_lines <- readr::read_lines(file)
   dis <- list()
   
   # data set 0

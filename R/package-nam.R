@@ -84,12 +84,11 @@ create_nam <- function(...) {
 #' 
 #' @param file filename; typically '*.nam'
 #' @return object of class nam
-#' @importFrom readr read_lines
 #' @export
 rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choose()}) {
   
   nam <- list()
-  lines <- read_lines(file)
+  lines <- readr::read_lines(file)
   indices <- rep(T,length(lines))
   for(i in 1:length(lines)) {
     if(strsplit(rmfi_remove_empty_strings(strsplit(lines[i],' ')[[1]])[1], "")[[1]][1] == "#") {

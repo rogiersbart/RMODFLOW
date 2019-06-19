@@ -152,7 +152,6 @@ create_lpf <- function(...) {
 #' @param dis an \code{RMODFLOW} dis object
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class lpf
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_lpf}}, \code{\link{rmf_create_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choose()}, 

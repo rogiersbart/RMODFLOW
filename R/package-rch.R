@@ -113,7 +113,6 @@ rmf_create_rch = function(nprch = NULL,
 #' @param dis an \code{RMODFLOW} dis object
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} rch object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_rch}}, \code{\link{rmf_create_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
@@ -122,7 +121,7 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
                         ... ){
   
   rch = list()
-  rch_lines = read_lines(file)
+  rch_lines = readr::read_lines(file)
   
   # data set 0
   data_set_0 = rmfi_parse_comments(rch_lines)

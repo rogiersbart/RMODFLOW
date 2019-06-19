@@ -58,14 +58,13 @@ rmf_create_de4 = function(itmx = 100,
 #' @param file filename; typically '*_de4'
 #' 
 #' @return \code{RMODFLOW} de4 object
-#' @importFrom  readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_de4}}, \code{\link{rmf_create_de4}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?de4.htm}
 
 rmf_read_de4 = function(file = {cat('Please select direct solver file ...\n'); file.choose()}){
   
   de4 = list()
-  de4_lines = read_lines(file)
+  de4_lines = readr::read_lines(file)
   
   # data set 0
   data_set_0 = rmfi_parse_comments(de4_lines)

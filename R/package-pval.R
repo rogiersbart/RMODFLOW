@@ -39,12 +39,11 @@ rmf_create_pvl = function(np = NULL,
 #' @param file filename; typically '*.pvl'
 #' @param read_all logical, indicating if \code{np} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).
 #' @return object of class pvl
-#' @importFrom readr read_lines
 #' @export
 rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choose()},
                          read_all=F) {
   
-  pvl_lines <- read_lines(file)
+  pvl_lines <- readr::read_lines(file)
   pvl <- list()
   
   # data set 0

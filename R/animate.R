@@ -26,8 +26,6 @@ rmf_animate <- function(...) {
 #' @param overlay additional ggplot2 layers to add to all frames
 #' @param background background ggplot2 plot for all frames
 #' @rdname rmf_animate
-#' @importFrom animation saveLatex saveGIF saveHTML
-#' @importFrom tools file_ext file_path_sans_ext
 #' @export
 rmf_animate.rmf_4d_array <- function(array,
                                      i = NULL,
@@ -69,17 +67,17 @@ rmf_animate.rmf_4d_array <- function(array,
   current_wd <- getwd()
   setwd(dirname(file))
   if(type == 'gif') {
-    saveGIF(expr,img.name=paste0(basename(file_path_sans_ext(file)),'_frame'),movie.name=basename(file),
+    animation::saveGIF(expr,img.name=paste0(basename(tools::file_path_sans_ext(file)),'_frame'),movie.name=basename(file),
             ani.dev='png',ani.type='png',ani.width=width,ani.height=height, clean = clean, interval = interval)
   } else if(type == 'pdf') {
     ani.options(ani.dev='pdf',ani.type='pdf',ani.height=8, ani.width=8)
-    saveLatex(expr,img.name=paste0(basename(file_path_sans_ext(file)),'_frames'),latex.filename=paste0(basename(file_path_sans_ext(file)),'.tex'),
+    animation::saveLatex(expr,img.name=paste0(basename(tools::file_path_sans_ext(file)),'_frames'),latex.filename=paste0(basename(file_path_sans_ext(file)),'.tex'),
               ani.dev='pdf',ani.type='pdf',ani.height=height,ani.width=width)
     if(clean) {
-      file.remove('animate.sty','animfp.sty',paste0(basename(file_path_sans_ext(file)),'.tex'),paste0(basename(file_path_sans_ext(file)),'.log'),paste0(basename(file_path_sans_ext(file)),'.aux'),paste0(basename(file_path_sans_ext(file)),'_frames.pdf'))
+      file.remove('animate.sty','animfp.sty',paste0(basename(tools::file_path_sans_ext(file)),'.tex'),paste0(basename(file_path_sans_ext(file)),'.log'),paste0(basename(file_path_sans_ext(file)),'.aux'),paste0(basename(file_path_sans_ext(file)),'_frames.pdf'))
     }
   } else if(type == 'html') {
-    saveHTML(expr,img.name=paste0(basename(file_path_sans_ext(file)),'_frame'),htmlfile=basename(file),
+    animation::saveHTML(expr,img.name=paste0(basename(tools::file_path_sans_ext(file)),'_frame'),htmlfile=basename(file),
              ani.dev='png',ani.type='png',ani.width=width,ani.height=height, clean = clean, interval = interval, verbose = FALSE)
   } else {
     stop('Please provide valid animation type.')

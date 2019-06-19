@@ -42,7 +42,6 @@ rmf_create_zon <-  function(nzn = 1,
 #' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} zon object
-#' @importFrom readr read_lines
 #' @export
 #' @seealso \code{\link{rmf_write_zon}}, \code{\link{rmf_create_zon}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?zone.htm}
 
@@ -51,7 +50,7 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
                           ...){
   
   zon <-  list()
-  zon_lines <-  read_lines(file)
+  zon_lines <-  readr::read_lines(file)
   
   # data set 0
   data_set_0 <-  rmfi_parse_comments(zon_lines)
