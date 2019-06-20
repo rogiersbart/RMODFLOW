@@ -1,11 +1,11 @@
 
 #' Set list input for a MODFLOW boundary condition package
 #'
-#' @param arg list of (1) rmf_list and/or rmf_parm list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parm elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input. 
+#' @param arg list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a \code{data.frame} that will be coerced to a rmf_list; defines the boundary condition input. 
 #' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
 #' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk)
 #' @param aux optional character vector with the names of the auxiliary variables
-#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function.
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
 #' @seealso \code{\link{rmfi_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
@@ -23,22 +23,20 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     }
   }
   
-  if(length(arg) == 1) {
-    if(inherits(arg[[1]], 'list')) {
-      arg <-  arg[[1]]
-      
-    } else if(inherits(arg[[1]], 'data.frame') && !(inherits(arg[[1]], 'rmf_list'))) { # make rmf_list
-      arg <-  lapply(arg, function(i) rmf_create_list(i, kper = 1:dis$nper))
-    }
-  }
-  
+  # if arg is nested list, unnest
+  if(length(arg) == 1 && inherits(arg, 'list')) arg <- arg[[1]] 
+  # if data.frame, make rmf_list which is always active
+  arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
+                                              {rmf_create_list(i, kper = 1:dis$nper); warning("Coercing data.frame to rmf_list; list active for all stress-periods")}, 
+                                              i) )
+
   # check for parameters and/or lists and name them
-  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
-  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   if(any(vapply(c(parameters, lists), function(i) is.null(attr(i, 'kper')), TRUE))) {
-    stop('Please make sure all rmf_list and rmf_parm objects have a kper attribute', call. = FALSE)
+    stop('Please make sure all rmf_list and rmf_parameter objects have a kper attribute', call. = FALSE)
   }
   
   

@@ -5,8 +5,8 @@
 \title{Write a MODFLOW recharge file}
 \usage{
 rmf_write_rch(rch, dis = rmf_read_dis(), file = {    
-  cat("Please select rch file to overwrite or provide new filename ...\\n")
-      file.choose() })
+  cat("Please choose rch file to overwrite or provide new filename ...\\n")
+      file.choose() }, ...)
 }
 \arguments{
 \item{rch}{an \code{RMODFLOW} rch object}
@@ -14,6 +14,8 @@ rmf_write_rch(rch, dis = rmf_read_dis(), file = {
 \item{dis}{an \code{RMODFLOW} dis object}
 
 \item{file}{filename to write to; typically '*.rch'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

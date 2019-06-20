@@ -42,7 +42,7 @@ the header file consists of the following elements:
  The \code{DESC} element must be read but it not used by MODFLOW itself. Users may want to specify a different \code{DESC} value when using the array with postprocessing software.
  
  The \code{FMTIN} element is not written for binary files. For ASCII files, \code{RMODFLOW} sets it as \code{NCOL * F}. Note that the ASCII format
- is irrelevant when using \code{'FREE'} format reading and writing.
+ is irrelevant when using free-format reading and writing.
  
  \code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
   \code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to 

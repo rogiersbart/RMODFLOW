@@ -88,18 +88,12 @@ rmf_create_upw <- function(dis = rmf_create_dis(),
   upw$iz <- iz
   
   # data set 9-14
-  if(!("HK" %in% upw$partyp)) upw$hk <- rmf_create_array(hk,
-                                                         dim = rmfi_ifelse0(length(dim(hk)) > 2, dim(hk), c(dim(hk),1)))
-  if(!("HANI" %in% upw$partyp) && any(upw$chani <= 0)) upw$hani <- rmf_create_array(hani,
-                                                                                    dim = rmfi_ifelse0(length(dim(hani)) > 2, dim(hani), c(dim(hani),1)))
-  if(!("VK" %in% upw$partyp | "VANI" %in% upw$partyp)) upw$vka <- rmf_create_array(vka,
-                                                                                   dim = rmfi_ifelse0(length(dim(vka)) > 2, dim(vka), c(dim(vka),1)))
-  if(!("SS" %in% upw$partyp) && 'TR' %in% dis$sstr) upw$ss <- rmf_create_array(ss,
-                                                                               dim = rmfi_ifelse0(length(dim(ss)) > 2, dim(ss), c(dim(ss),1)))
-  if(!("SY" %in% upw$partyp) && 'TR' %in% dis$sstr && any(upw$laytyp != 0)) upw$sy <- rmf_create_array(sy,
-                                                                                                       dim = rmfi_ifelse0(length(dim(sy)) > 2, dim(sy), c(dim(sy),1)))
-  if(!("VKCB" %in% upw$partyp) && any(dis$laycbd != 0)) upw$vkcb <- rmf_create_array(vkcb,
-                                                                                     dim = rmfi_ifelse0(length(dim(vkcb)) > 2, dim(vkcb), c(dim(vkcb),1)))
+  if(!("HK" %in% upw$partyp)) upw$hk <- rmf_create_array(hk, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(!("HANI" %in% upw$partyp) && any(upw$chani <= 0)) upw$hani <- rmf_create_array(hani, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(!("VK" %in% upw$partyp | "VANI" %in% upw$partyp)) upw$vka <- rmf_create_array(vka, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(!("SS" %in% upw$partyp) && 'TR' %in% dis$sstr) upw$ss <- rmf_create_array(ss, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(!("SY" %in% upw$partyp) && 'TR' %in% dis$sstr && any(upw$laytyp != 0)) upw$sy <- rmf_create_array(sy, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(!("VKCB" %in% upw$partyp) && any(dis$laycbd != 0)) upw$vkcb <- rmf_create_array(vkcb, dim = c(dis$nrow, dis$ncol, dis$nlay))
 
   class(upw) <- c('upw','rmf_package')
   return(upw)

@@ -11,16 +11,14 @@ rmf_create_lpf(dis = rmf_create_dis(), ilpfcb = 0, hdry = -888,
   noparcheck = FALSE, laytyp = ifelse(dis$nlay == 1, list(1), list(c(1,
   rep(0, dis$nlay - 1))))[[1]], layavg = laytyp * 0, chani = rep(1,
   dis$nlay), layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay),
-  wetfct = 0.1, iwetit = 1, ihdwet = 0, parnam = NULL,
-  partyp = NULL, parval = NULL, nclu = NULL, mltarr = NULL,
-  zonarr = NULL, iz = NULL, hk = rmf_create_array(1e-04, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), hani = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), vka = hk,
-  ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  wetdry = rmf_create_array(-0.01, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)))
+  wetfct = 0.1, iwetit = 1, ihdwet = 0, parameters = NULL,
+  hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  hani = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  vka = hk, ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)), sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)), vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol,
+  dis$nlay)), wetdry = rmf_create_array(-0.01, dim = c(dis$nrow,
+  dis$ncol, dis$nlay)))
 
 create_lpf(...)
 }
@@ -61,19 +59,7 @@ create_lpf(...)
 
 \item{ihdwet}{is a flag that determines which equation is used to define the initial head at cells that become wet; defaults to 0}
 
-\item{parnam}{vector of parameter names; names should not be more than 10 characters, are not case sensitive, and should be unique}
-
-\item{partyp}{vector of parameter types; the lpf parameter types are HK, HANI, VK, VANI, SS, SY, or VKCB}
-
-\item{parval}{vector of parameter values}
-
-\item{nclu}{vector with the number of clusters required for each parameter}
-
-\item{mltarr}{matrix of multiplier array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{zonarr}{matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{iz}{character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
+\item{parameters}{list of \code{rmf_parm} as created by \code{\link{rmf_create_flow_parameter}}. See details; defaults to NULL}
 
 \item{hk}{3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.}
 
@@ -95,11 +81,15 @@ Object of class lpf
 \description{
 \code{rmf_create_lpf} creates an \code{RMODFLOW} lpf object.
 }
+\details{
+Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters are by using direct array input.
+         When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
+}
 \section{Functions}{
 \itemize{
 \item \code{create_lpf}: Deprecated function name
 }}
 
 \seealso{
-\code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+\code{\link{rmf_create_flow_parameter}}, \code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 }

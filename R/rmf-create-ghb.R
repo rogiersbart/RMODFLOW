@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_ghb} creates an \code{RMODFLOW} ghb object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the general-head boundary cells. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the general-head boundary cells. 
 #' @param dis dis object
 #' @param ighbcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)
 #' @param noprint logical, should the printing of GHB cells to the listing file be suppressed ? Defaults to \code{FALSE}

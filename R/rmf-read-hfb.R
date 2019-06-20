@@ -76,7 +76,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   }
   
   # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parm') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
+  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
   
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))

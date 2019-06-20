@@ -21,7 +21,7 @@ rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
 
 \item{skip_header}{optional; should the control record be skipped}
 
-\item{nam}{a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAl arrays}
+\item{nam}{a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAL arrays}
 
 \item{precision}{character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files}
 

@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_chd} creates an \code{RMODFLOW} chd object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the constant head cells 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the constant head cells 
 #' @param dis dis object
 #' @param noprint logical, should the printing of CHD cells to the listing file be suppressed ? Defaults to \code{FALSE}
 #' @param aux optional character vector specifying the names of the auxiliary variables. These variables should also be included in the \code{rmf_list} objects that are supplied; defaults to \code{NULL}

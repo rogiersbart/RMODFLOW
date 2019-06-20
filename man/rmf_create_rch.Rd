@@ -4,56 +4,27 @@
 \alias{rmf_create_rch}
 \title{Create an \code{RMODFLOW} rch object.}
 \usage{
-rmf_create_rch(nprch = NULL, nrchop = 1, irchcb = 0, parnam = NULL,
-  parval = NULL, nclu = NULL, instances = NULL, numinst = NULL,
-  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
-  inrech = 1, inirch = NULL, rech = array(1e-08, dim = c(10, 10, 1)),
-  pname = NULL, iname = NULL, irchpf = NULL, irch = NULL)
+rmf_create_rch(..., dis, nrchop = 3, irchcb = 0, irch = NULL)
 }
 \arguments{
-\item{nprch}{number of rch parameters; defaults to NULL}
+\item{...}{\code{rmf_2d_array's} (possibly of class \code{rmf_parm}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parm}) elements; defines the recharge values. See details.}
 
-\item{nrchop}{recharge option code; defaults to 1}
+\item{dis}{\code{RMODFLOW} dis object}
+
+\item{nrchop}{recharge option code; defaults to 3 (recharge is applied to the highest active cell in each vertical column)}
 
 \item{irchcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
 
-\item{parnam}{vector of length \code{nprch} specifying the parameter names; defaults to NULL}
-
-\item{parval}{vector of length \code{nprch} specifying the parameter values; defaults to NULL}
-
-\item{nclu}{vector of length \code{nprch} specifying the number of clusters that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL}
-
-\item{instances}{logical vector of length \code{nprch} indicating which parameters are time-varying; defaults to NULL}
-
-\item{numinst}{vector of length \code{nprch} indicating the number of instances that are included in the time-varying parameter; defaults to NULL}
-
-\item{instnam}{list with \code{nprch} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{mltarr}{list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{zonarr}{list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{iz}{list with \code{nprch} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{inrech}{numeric vector of length \code{dis$nper} specifying the \code{rech} read flag which depends on whether or not parameters are specified; defaults to 1}
-
-\item{inirch}{numeric vector of length \code{dis$nper} specifying the \code{irch} read flag which depends on whether or not parameters are specified; defaults to NULL}
-
-\item{rech}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the recharge fluxes; defaults to 1e-8 for all cells in the top layer}
-
-\item{pname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inrech} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL}
-
-\item{iname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inrech} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL}
-
-\item{irchpf}{optional list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{inrech} for stress period \code{i} specifying the format code for printing \code{rech} after it has been defined by parameters, defaults to NULL}
-
-\item{irch}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the layer numbers defining in which layer recharge is applied; defaults to NULL}
+\item{irch}{list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer recharge is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active. Only used when \code{nrchop = 2}. Defaults to NULL}
 }
 \value{
 \code{RMODFLOW} rch object
 }
 \description{
 \code{rmf_create_rch} creates an \code{RMODFLOW} rch object
+}
+\details{
+the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the irch arrays.
 }
 \seealso{
 \code{\link{rmf_read_rch}}, \code{\link{rmf_write_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
