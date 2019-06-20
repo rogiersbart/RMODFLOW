@@ -4,8 +4,6 @@ Title: Pre- and post-processing of MODFLOW files in R
 Version: 0.4.0.9000
 Date: 2016-06-27
 Authors@R: person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be")
-Author: Bart Rogiers <brogiers@sckcen.be>
-Maintainer: Bart Rogiers <brogiers@sckcen.be>
 Description: The RMODFLOW package provides a set of tools for groundwater flow
     modelling with MODFLOW.
 License: GPL (>= 2)
@@ -26,7 +24,11 @@ Imports:
     tools,
     lubridate,
     xml2,
-    rvest
+    rvest,
+    sf,
+    tibble,
+    dplyr,
+    tidyr
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 6.1.1
