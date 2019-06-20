@@ -26,7 +26,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
     botm[,,!cbd] <- dis$botm
-    if(any(cbd > 0)) botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
+    botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
   dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))

@@ -1,58 +1,122 @@
 #' Create an \code{RMODFLOW} evt object.
 #' 
 #' \code{rmf_create_evt} creates an \code{RMODFLOW} evt object
+#' ' 
+#' @param npevt number of evt parameters; defaults to NULL
+#' @param nevtop evapotranspiration option code; defaults to 1
+#' @param ievtcb flag and unit number for writing cell-by-cell flow terms; defaults to 0
+#' @param parnam vector of length \code{npevt} specifying the parameter names; defaults to NULL
+#' @param parval vector of length \code{npevt} specifying the parameter values; defaults to NULL
+#' @param nclu vector of length \code{npevt} specifying the number of clusters that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL
+#' @param instances logical vector of length \code{npevt} indicating which parameters are time-varying; defaults to NULL
+#' @param numinst vector of length \code{npevt} indicating the number of instances that are included in the time-varying parameter; defaults to NULL
+#' @param instnam list with \code{npevt} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL
+#' @param mltarr list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
+#' @param zonarr list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
+#' @param iz list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
+#' @param insurf numeric vector of length \code{dis$nper} specifying the \code{surf} read flag; defaults to 1
+#' @param inevtr numeric vector of length \code{dis$nper} specifying the \code{evtr} read flag which depends on whether or not parameters are specified; defaults to 1
+#' @param inexdp numeric vector of length \code{dis$nper} specifying the \code{exdp} read flag; defaults to 1
+#' @param inievt numeric vector of length \code{dis$nper} specifying the \code{ievt} read flag; defaults to NULL
+#' @param surf numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the elevation of the ET surface; defaults to the 0 for all cells
+#' @param evtr numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the maximum ET flux; defaults to 4e-9 for all cells
+#' @param pname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL
+#' @param iname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL
+#' @param ievtpf optional list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{inevt} for stress period \code{i} specifying the format code for printing \code{evtr} after it has been defined by parameters, defaults to NULL 
+#' @param exdp numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the ET extinction depths as distances from \code{surf}; defaults to 2 for all cells
+#' @param ievt numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the layer numbers defining in which layer ET is removed; defaults to NULL
 #' 
-#' @param ... \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.
-#' @param dis \code{RMODFLOW} dis object
-#' @param nevtop evapotranspiration (ET) option code; defaults to 3 (ET is applied to the highest active cell in each vertical column)
-#' @param ievtcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 
-#' @param surf list of \code{rmf_2d_array's} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.
-#' @param exdp list of \code{rmf_2d_array's} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.
-#' @param ievt list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL
-#' @param ievtpf numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{ET} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods
-#' @details the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays.
 #' @return \code{RMODFLOW} evt object
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_write_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
-rmf_create_evt <- function(...,
-                           dis,
-                           nevtop = 3,
-                           ievtcb = 0,
-                           surf,
-                           exdp,
-                           ievt = NULL,
-                           ievtpf = -1
-) {
+
+rmf_create_evt = function(npevt = NULL,
+                          nevtop = 1,
+                          ievtcb = 0,
+                          parnam = NULL, 
+                          parval = NULL, 
+                          nclu = NULL, 
+                          instances = NULL,
+                          numinst = NULL,
+                          instnam = NULL,
+                          mltarr = NULL, 
+                          zonarr = NULL,
+                          iz = NULL,
+                          insurf = 1,
+                          inevtr = 1,
+                          inexdp = 1,
+                          inievt = NULL,
+                          pname = NULL, 
+                          iname = NULL,
+                          ievtpf = NULL,
+                          surf = array(0, dim=c(10, 10, 1)), 
+                          evtr = array(4e-9, dim=c(10, 10, 1)), 
+                          exdp = array(2, dim=c(10, 10, 1)),
+                          ievt = NULL
+){
   
-  arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
+  evt = list()
   
-  # create evt object
-  obj <- list()
+  # data set 0
+  # to provide comments, use ?comment on resulting evt object
   
-  obj$dimensions <- arg$dimensions
-  obj$nrchop <- nevthop
-  obj$irchcb <- ievtcb
-  obj$et <- arg$data
-  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
-  obj$kper <- arg$kper
-  if(nevtop == 2) {
-    if(is.null(ievt)) stop('Please supply a ievt argument when nrchop = 2')
-    if(!inherits(ievt, 'list')) ievt <- list(ievt)
-    obj$ievt <- ievt
-    names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
-    obj$irch_kper <- data.frame(kper = 1:dis$nper)
-    for(i in 1:length(ievt)) {
-      obj$irch_kper[[paste('ievt', i, sep = '_')]] <- c(1:dis$nper) %in% attr(ievt[[i]],'kper')
-    }
-    # check if multiple ievt arrays are active
-    ievt_err <- vapply(1:dis$nper, function(i) sum(is.na(irch_kper[i,-1]) | irch_kper[i,-1] == TRUE) > 1, TRUE)
-    if(any(ievt_err)) stop(paste('There can be only 1 active ievt array per stress period. Stress period(s)', which(irch_err), 'have multiple active arrays.'))
+  # data set 1
+  if(!is.null(npevt)) evt$npevt = npevt
+  
+  # data set 2
+  evt$nevtop = nevtop
+  evt$ievtcb = ievtcb
+  
+  
+  if(!is.null(evt$npevt) && evt$npevt > 0){
+    
+    # data set 3
+    evt$parnam = parnam
+    evt$partyp = rep('EVT', evt$npevt)
+    evt$parval = parval
+    evt$nclu = nclu
+    if(!is.null(instances) && T %in% instances) evt$instances = instances
+    if(!is.null(evt$instances)) evt$numinst = numinst      
+    
+    
+    # data set 4a
+    if(!is.null(evt$instances) && T %in% evt$instances) evt$instnam = instnam
+    
+    # data set 4b
+    evt$mltarr = mltarr
+    evt$zonarr = zonarr
+    evt$iz = iz
+    
+  }
+  
+  
+  # data set 5
+  evt$insurf = insurf
+  evt$inevtr = inevtr
+  evt$inexdp = inexdp
+  if(evt$nevtop==2) evt$inievt = inievt
+  
+  # data set 6
+  if(any(evt$insurf >= 0)) evt$surf = surf
+  
+  # data set 7
+  if ((is.null(evt$npevt) || (!is.null(evt$npevt) && evt$npevt == 0)) && any(evt$inevtr >= 0)) evt$evtr = evtr
+  
+  # data set 8
+  if ((!is.null(evt$npevt) && evt$npevt > 0) && any(evt$inevtr > 0)){
+    evt$pname = pname
+    if (!is.null(evt$instances) && T %in% evt$instances) evt$iname = iname
+    if (!is.null(ievtpf) && (is.null(evt$instances) || (!is.null(evt$instances) && !(T %in% evt$instances))) ) evt$ievtpf = ievtpf
   } 
-  obj$ievtpf <- ievtpf
   
-  class(obj) <- c('evt', 'rmf_package')
-  return(obj)
+  # data set 9
+  if(any(evt$inexdp >= 0)) evt$exdp = exdp
+  
+  # data set 10
+  if(evt$nevtop == 2 && any(evt$inievt >= 0)) evt$ievt = ievt
+  
+  class(evt) = c('evt', 'rmf_package')
+  return(evt)
   
 }
-

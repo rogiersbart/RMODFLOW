@@ -18,9 +18,6 @@ create_rmodflow_array(...)
 
 \item{...}{}
 }
-\value{
-either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
-}
 \description{
 Add rmf array class to object based on object dimensions
 }

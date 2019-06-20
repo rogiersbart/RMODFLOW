@@ -8,7 +8,7 @@ rmf_read_cbc(file = {
   cat("Please select cell-by-cell budget file ...\\n")     file.choose() },
   dis = {     cat("Please select corresponding dis file ...\\n")    
   rmf_read_dis(file.choose()) }, huf = NULL, oc = NULL,
-  precision = "single", fluxes = "all")
+  precision = "single", what = "all")
 }
 \arguments{
 \item{file}{filename; typically '*.cbc'}
@@ -21,16 +21,16 @@ rmf_read_cbc(file = {
 
 \item{precision}{either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.}
 
-\item{fluxes}{character; denotes which fluxes to read. Defaults to reading all fluxes. See details.}
+\item{what}{character; denotes which flow terms to read. Defaults to reading all flow terms. See details.}
 }
 \value{
-object of class \code{cbc} which is a list consisting of named rmf_arrays and/or data.frames. The names of the elements correspond to the fluxes.
+object of class cbc which is a list consisting of named rmf_arrays and/or data.frames. The names of the elements correspond to the flow terms.
 }
 \description{
 \code{rmf_read_cbc} reads in a MODFLOW cell-by-cell budget file
 }
 \details{
-Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+Flow terms include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
  
 If a \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.

@@ -4,7 +4,7 @@
 \alias{rmf_create_list}
 \title{Add rmf list class to data.frame and check if k, i and j columns are present}
 \usage{
-rmf_create_list(df, kper = NULL)
+rmf_create_list(df, kper, name = NULL)
 }
 \arguments{
 \item{df}{data.frame that holds at least the k, i and j columns that specify cell indices as well as additional variables related to the boundary condition package.}

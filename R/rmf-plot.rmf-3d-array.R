@@ -68,7 +68,7 @@ rmf_plot.rmf_3d_array <- function(array,
     array <- array[,,k]
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
-    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, title = title, crop = crop, prj = prj, crs = crs, ...)
+    rmf_plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, gridlines = gridlines, levels = levels, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2

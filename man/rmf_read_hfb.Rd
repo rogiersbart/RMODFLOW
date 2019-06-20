@@ -6,16 +6,10 @@
 \usage{
 rmf_read_hfb(file = {    
   cat("Please select horizontal flow barrier file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+  file.choose() })
 }
 \arguments{
 \item{file}{filename; typically '*.hfb'}
-
-\item{dis}{an \code{RMODFLOW} dis object}
-
-\item{...}{arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.}
 }
 \value{
 \code{RMODFLOW} hfb object

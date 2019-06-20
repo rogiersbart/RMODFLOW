@@ -11,7 +11,6 @@ vignette: >
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 library(RMODFLOW)
-devtools::load_all()
 ```
 
 Input for MODFLOW models is read from user/GUI-generated files. Typically, every package has a separate file and these are accessed and read on a line-by-line basis. The type, number and order of variables being read are strictly predefined for every file and are documented in the MODFLOW user-manual and [online help](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm). The MODFLOW source code is almost entirely written in FORTRAN and has evolved over more than three decades. As such, the capabilities of reading input have evolved as well, maintaining backward compatibility. Initially, only fixed-format input could be read, where every value has a predefined amount of characters. In later versions, the less strict free-format could be used. Because of these rigid rules, writing MODFLOW input files by hand can be a cumbersome task. This is one of the reasons to use a GUI or script-based library such as RMODFLOW.

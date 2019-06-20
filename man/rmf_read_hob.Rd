@@ -15,8 +15,6 @@ rmf_read_ob_hob(...)
 }
 \arguments{
 \item{file}{filename; typically '*.hob'}
-
-\item{...}{arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.}
 }
 \value{
 object of class hob
