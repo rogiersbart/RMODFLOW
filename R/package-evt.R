@@ -1,123 +1,90 @@
 #' Create an \code{RMODFLOW} evt object.
 #' 
 #' \code{rmf_create_evt} creates an \code{RMODFLOW} evt object
-#' ' 
-#' @param npevt number of evt parameters; defaults to NULL
-#' @param nevtop evapotranspiration option code; defaults to 1
-#' @param ievtcb flag and unit number for writing cell-by-cell flow terms; defaults to 0
-#' @param parnam vector of length \code{npevt} specifying the parameter names; defaults to NULL
-#' @param parval vector of length \code{npevt} specifying the parameter values; defaults to NULL
-#' @param nclu vector of length \code{npevt} specifying the number of clusters that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL
-#' @param instances logical vector of length \code{npevt} indicating which parameters are time-varying; defaults to NULL
-#' @param numinst vector of length \code{npevt} indicating the number of instances that are included in the time-varying parameter; defaults to NULL
-#' @param instnam list with \code{npevt} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL
-#' @param mltarr list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param zonarr list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param iz list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param insurf numeric vector of length \code{dis$nper} specifying the \code{surf} read flag; defaults to 1
-#' @param inevtr numeric vector of length \code{dis$nper} specifying the \code{evtr} read flag which depends on whether or not parameters are specified; defaults to 1
-#' @param inexdp numeric vector of length \code{dis$nper} specifying the \code{exdp} read flag; defaults to 1
-#' @param inievt numeric vector of length \code{dis$nper} specifying the \code{ievt} read flag; defaults to NULL
-#' @param surf numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the elevation of the ET surface; defaults to the 0 for all cells
-#' @param evtr numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the maximum ET flux; defaults to 4e-9 for all cells
-#' @param pname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL
-#' @param iname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL
-#' @param ievtpf optional list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{inevt} for stress period \code{i} specifying the format code for printing \code{evtr} after it has been defined by parameters, defaults to NULL 
-#' @param exdp numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the ET extinction depths as distances from \code{surf}; defaults to 2 for all cells
-#' @param ievt numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the layer numbers defining in which layer ET is removed; defaults to NULL
 #' 
+#' @param ... \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.
+#' @param dis \code{RMODFLOW} dis object
+#' @param nevtop evapotranspiration (ET) option code; defaults to 3 (ET is applied to the highest active cell in each vertical column)
+#' @param ievtcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 
+#' @param surf a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.
+#' @param exdp a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.
+#' @param ievt a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL
+#' @param ievtpf numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{ET} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods
+#' @details the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 #' @return \code{RMODFLOW} evt object
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_write_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
-
-rmf_create_evt = function(npevt = NULL,
-                          nevtop = 1,
-                          ievtcb = 0,
-                          parnam = NULL, 
-                          parval = NULL, 
-                          nclu = NULL, 
-                          instances = NULL,
-                          numinst = NULL,
-                          instnam = NULL,
-                          mltarr = NULL, 
-                          zonarr = NULL,
-                          iz = NULL,
-                          insurf = 1,
-                          inevtr = 1,
-                          inexdp = 1,
-                          inievt = NULL,
-                          pname = NULL, 
-                          iname = NULL,
-                          ievtpf = NULL,
-                          surf = array(0, dim=c(10, 10, 1)), 
-                          evtr = array(4e-9, dim=c(10, 10, 1)), 
-                          exdp = array(2, dim=c(10, 10, 1)),
-                          ievt = NULL
-){
+rmf_create_evt <- function(...,
+                           dis,
+                           nevtop = 3,
+                           ievtcb = 0,
+                           surf,
+                           exdp,
+                           ievt = NULL,
+                           ievtpf = -1
+) {
   
-  evt = list()
+  arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
-  # data set 0
-  # to provide comments, use ?comment on resulting evt object
+  # create evt object
+  obj <- list()
   
-  # data set 1
-  if(!is.null(npevt)) evt$npevt = npevt
+  obj$dimensions <- arg$dimensions
+  obj$nevtop <- nevtop
+  obj$ievtcb <- ievtcb
+  obj$evt <- arg$data
+  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  obj$kper <- arg$kper
   
-  # data set 2
-  evt$nevtop = nevtop
-  evt$ievtcb = ievtcb
-  
-  
-  if(!is.null(evt$npevt) && evt$npevt > 0){
-    
-    # data set 3
-    evt$parnam = parnam
-    evt$partyp = rep('EVT', evt$npevt)
-    evt$parval = parval
-    evt$nclu = nclu
-    if(!is.null(instances) && T %in% instances) evt$instances = instances
-    if(!is.null(evt$instances)) evt$numinst = numinst      
-    
-    
-    # data set 4a
-    if(!is.null(evt$instances) && T %in% evt$instances) evt$instnam = instnam
-    
-    # data set 4b
-    evt$mltarr = mltarr
-    evt$zonarr = zonarr
-    evt$iz = iz
-    
+  # surf
+  if(!inherits(surf, 'list')) surf <- list(surf)
+  obj$surf <- surf
+  names(obj$surf) <- paste('surf', length(surf), sep = '_')
+  obj$kper$surf <- NA_character_
+  for(i in 1:length(surf)) {
+    obj$kper$surf[c(1:dis$nper) %in% attr(surf[[i]],'kper')] <- names(obj$surf)[i]
   }
   
+  # check if multiple surf arrays are active
+  surf_err <- unlist(lapply(surf, function(i) attr(i, 'kper')))
+  if(any(duplicated(surf_err))) stop(paste('There can be only 1 active surf array per stress period. Stress period(s)', sort(unique(surf_err[duplicated(surf_err)])), 'have multiple active arrays.'))
   
-  # data set 5
-  evt$insurf = insurf
-  evt$inevtr = inevtr
-  evt$inexdp = inexdp
-  if(evt$nevtop==2) evt$inievt = inievt
   
-  # data set 6
-  if(any(evt$insurf >= 0)) evt$surf = surf
+  # exdp
+  if(!inherits(exdp, 'list')) exdp <- list(exdp)
+  obj$exdp <- exdp
+  names(obj$exdp) <- paste('exdp', length(exdp), sep = '_')
+  obj$kper$exdp <- NA_character_
+  for(i in 1:length(exdp)) {
+    obj$kper$exdp[c(1:dis$nper) %in% attr(exdp[[i]],'kper')] <- names(obj$exdp)[i]
+  }
   
-  # data set 7
-  if ((is.null(evt$npevt) || (!is.null(evt$npevt) && evt$npevt == 0)) && any(evt$inevtr >= 0)) evt$evtr = evtr
+  # check if multiple exdp arrays are active
+  exdp_err <- unlist(lapply(exdp, function(i) attr(i, 'kper')))
+  if(any(duplicated(exdp_err))) stop(paste('There can be only 1 active exdp array per stress period. Stress period(s)', sort(unique(exdp_err[duplicated(exdp_err)])), 'have multiple active arrays.'))
   
-  # data set 8
-  if ((!is.null(evt$npevt) && evt$npevt > 0) && any(evt$inevtr > 0)){
-    evt$pname = pname
-    if (!is.null(evt$instances) && T %in% evt$instances) evt$iname = iname
-    if (!is.null(ievtpf) && (is.null(evt$instances) || (!is.null(evt$instances) && !(T %in% evt$instances))) ) evt$ievtpf = ievtpf
+  
+  # ievt
+  if(nevtop == 2) {
+    if(is.null(ievt)) stop('Please supply a ievt argument when nevtop = 2')
+    if(!inherits(ievt, 'list')) ievt <- list(ievt)
+    obj$ievt <- ievt
+    names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
+    obj$kper$ievt <- NA_character_
+    for(i in 1:length(ievt)) {
+      obj$kper$ievt[c(1:dis$nper) %in% attr(ievt[[i]],'kper')] <- names(obj$ievt)[i]
+    }
+    
+    # check if multiple ievt arrays are active
+    ievt_err <- unlist(lapply(ievt, function(i) attr(i, 'kper')))
+    if(any(duplicated(ievt_err))) stop(paste('There can be only 1 active ievt array per stress period. Stress period(s)', sort(unique(ievt_err[duplicated(ievt_err)])), 'have multiple active arrays.'))
+    
   } 
+  obj$ievtpf <- ievtpf
   
-  # data set 9
-  if(any(evt$inexdp >= 0)) evt$exdp = exdp
-  
-  # data set 10
-  if(evt$nevtop == 2 && any(evt$inievt >= 0)) evt$ievt = ievt
-  
-  class(evt) = c('evt', 'rmf_package')
-  return(evt)
+  class(obj) <- c('evt', 'rmf_package')
+  return(obj)
   
 }
 
@@ -127,200 +94,150 @@ rmf_create_evt = function(npevt = NULL,
 #'
 #' @param file filename; typically '*.evt'
 #' @param dis an \code{RMODFLOW} dis object
+#' @param mlt a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays
+#' @param zon a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} evt object
 #' @export
 #' @seealso \code{\link{rmf_write_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
-rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n'); file.choose()},
-                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                        ...) {
+rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choose()},
+                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                          mlt = NULL,
+                          zon = NULL,
+                          ... ){
   
-  evt = list()
-  evt_lines = readr::read_lines(file)
+  lines <- readr::read_lines(file)
+  rmf_arrays <- list()
   
   # data set 0
-  data_set_0 = rmfi_parse_comments(evt_lines)
-  comment(evt) = data_set_0$comments
-  evt_lines = data_set_0$remaining_lines
+  data_set_0 <-  rmfi_parse_comments(lines)
+  comments <-  data_set_0$comments
+  lines <-  data_set_0$remaining_lines
   rm(data_set_0)
   
   # data set 1
-  data_set_1 = rmfi_parse_variables(evt_lines)
+  data_set_1 <-  rmfi_parse_variables(lines)
+  
   if('PARAMETER' %in% data_set_1$variables) {
-    evt$npevt = as.numeric(data_set_1$variables[2])
-    evt_lines = data_set_1$remaining_lines
-  }  
+    np <-  as.numeric(data_set_1$variables[2])
+    lines <-  data_set_1$remaining_lines
+  }  else {
+    np <- 0
+  }
   rm(data_set_1)
   
   # data set 2
-  data_set_2 = rmfi_parse_variables(evt_lines)
-  evt$nevtop = as.numeric(data_set_2$variables[1])
-  evt$ievtcb = as.numeric(data_set_2$variables[2])
-  evt_lines = data_set_2$remaining_lines
+  data_set_2 <-  rmfi_parse_variables(lines, n=2, ...)
+  nevtop <- as.numeric(data_set_2$variables[1])
+  ievtcb <- as.numeric(data_set_2$variables[2])
+  lines <-  data_set_2$remaining_lines
   rm(data_set_2)
+  ievt <- rmfi_ifelse0(nevtop == 2, list(), NULL)
+  surf <- list()
+  exdp <- list()
   
-  # parameters
-  if(!is.null(evt$npevt) && evt$npevt > 0){
-    
-    evt$iz = evt$zonarr = evt$mltarr = list()
-    
-    i=1
-    while(i <= evt$npevt){
-      # data set 3
-      data_set_3 = rmfi_parse_variables(evt_lines)
-      evt$parnam[i] =  as.character(data_set_3$variables[1])
-      evt$partyp[i] = 'EVT'
-      evt$parval[i] = as.numeric(data_set_3$variables[3])
-      evt$nclu[i] = as.numeric(data_set_3$variables[4])
-      if(length(data_set_3$variables) > 4){
-        evt$instances[i]=T
-        evt$numinst[i] = as.numeric(data_set_3$variables[6])
-      } 
-      evt_lines = data_set_3$remaining_lines
-      rm(data_set_3)
-      
-      
-      
-      # time-varying parameters
-      if(!is.null(evt$instances) && evt$instances[i]){
-        evt$iz[[i]] = evt$zonarr[[i]] = evt$mltarr[[i]] = array(dim=c(evt$numinst[i],evt$nclu[i]))
-        evt$instnam[[i]] = vector(mode='character', length=evt$numinst[i])
-        
-        j=1
-        while(j <= evt$numinst[i]){
-          # data set 4a
-          data_set_4a = rmfi_parse_variables(evt_lines)
-          evt$instnam[[i]][j] =  as.character(data_set_4a$variables)
-          evt_lines = data_set_4a$remaining_lines
-          rm(data_set_4a)
-          
-          k=1
-          while(k <= evt$nclu[i]){
-            
-            # data set 4b
-            data_set_4b = rmfi_parse_variables(evt_lines)
-            evt$mltarr[[i]][j,k] = as.character(data_set_4b$variables[1])
-            evt$zonarr[[i]][j,k] = as.character(data_set_4b$variables[2])
-            if(length(data_set_4b$variables) > 2) evt$iz[[i]][j,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
-            
-            
-            k=k+1
-            evt_lines = data_set_4b$remaining_lines
-            rm(data_set_4b)
-          }
-          j = j+1
-        } 
-        
-      } else {
-        # non time-varying
-        evt$iz[[i]] = evt$zonarr[[i]] = evt$mltarr[[i]] = array(dim=c(1,evt$nclu[i]))
-        
-        k=1
-        while(k <= evt$nclu[i]){
-          # data set 4b
-          
-          data_set_4b = rmfi_parse_variables(evt_lines)
-          evt$mltarr[[i]][1,k] = as.character(data_set_4b$variables[1])
-          evt$zonarr[[i]][1,k] = as.character(data_set_4b$variables[2])
-          if(length(data_set_4b$variables) > 2) evt$iz[[i]][1,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
-          
-          k=k+1
-          evt_lines = data_set_4b$remaining_lines
-          rm(data_set_4b)
-        }
-        
-      }
-      
-      i = i+1
-    }
-    if(all(is.na(unlist(evt$iz)))) evt$iz = NULL
+  # parameters: data set 3 & 4
+  if(np > 0) {
+    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, type = 'bc', mlt = mlt, zon = zon)
+    rmf_arrays <- data_set_3$parameters
+    lines <- data_set_3$remaining_lines
+    rm(data_set_3)
   }
   
   # stress periods
-  if(evt$nevtop==2){
-    evt$inievt = vector(mode='numeric', length=dis$nper)
-    evt$ievt = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  # function for setting kper attribute for parameters
+  set_kper <- function(k, kper, p_name, i_name) {
+    if(!is.null(attr(k, 'name')) && attr(k, 'name') == p_name) {
+      if(!is.null(i_name)) {
+        if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+      } else {
+        attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+      }
+    }
+    return(k)
   }
-  evt$surf = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
-  if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt))) evt$evtr = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
-  if(!is.null(evt$npevt) && evt$npevt > 0){
-    evt$pname = list()
-    if(!is.null(evt$instances) && T %in% evt$instances) evt$iname = list()
-    evt$ievtpf = list()
-  }
-  evt$exdp = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
-  
   
   for(i in 1:dis$nper){
     # data set 5
-    data_set_5 = rmfi_parse_variables(evt_lines)
-    evt$insurf[i] = as.numeric(data_set_5$variables[1])
-    evt$inevtr[i] = as.numeric(data_set_5$variables[2])
-    evt$inexdp[i] = as.numeric(data_set_5$variables[3])
-    if(length(data_set_5$variables) > 3) evt$inievt[i] = as.numeric(data_set_5$variables[4])
-    evt_lines = data_set_5$remaining_lines
+    data_set_5 <-  rmfi_parse_variables(lines, n=4, ...)
+    insurf <- as.numeric(data_set_5$variables[1])
+    inevtr <- as.numeric(data_set_5$variables[2])
+    inexdp <- as.numeric(data_set_5$variables[3])
+    inievt <- as.numeric(data_set_5$variables[4])
+    lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
     # data set 6
-    if(evt$insurf[i] >= 0){
-      data_set_6 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
-      evt$surf[,,i] = data_set_6$array
-      evt_lines = data_set_6$remaining_lines
+    if(insurf >= 0) {
+      data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      surf[[length(surf) + 1]] <- structure(data_set_6$array, kper = i)
+      lines <- data_set_6$remaining_lines
       rm(data_set_6)
-      
+    } else if(insurf < 0 && i > 1) {
+      attr(surf[[length(surf)]], 'kper') <- c(attr(surf[[length(surf)]], 'kper'), i)
     }
-    
-    # data set 7
-    if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt)) && evt$inevtr[i] >= 0) {
-      data_set_7 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
-      evt$evtr[,,i] = data_set_7$array
-      evt_lines = data_set_7$remaining_lines
-      rm(data_set_7)
-    }
-    
-    if((!is.null(evt$npevt) && evt$npevt[i] > 0) && evt$inevtr[i] > 0){
-      evt$iname[[i]] = evt$pname[[i]] = vector(length=evt$inevtr[i])
-      evt$ievtpf[[i]] = vector(mode='numeric', length=evt$inevtr[i])
+
+    # data set 7-8
+    ievtpf <- NULL
+    if(np == 0) {
       
-      for(j in 1:evt$inevtr[i]){
+      if(inevtr >= 0) {
+        data_set_7 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        rmf_arrays[[length(rmf_arrays) + 1]] <- structure(data_set_7$array, kper = i)
+        lines <- data_set_7$remaining_lines
+        rm(data_set_7)
+      } else if(inevtr < 0 && i > 1) {
+        attr(rmf_arrays[[length(rmf_arrays)]], 'kper') <- c(attr(rmf_arrays[[length(rmf_arrays)]], 'kper'), i)
+      }
+      
+    } else {
+      for(j in 1:np){
         # data set 8
-        data_set_8 = rmfi_parse_variables(evt_lines)
-        evt$pname[[i]][j] = as.character(data_set_8$variables[1])
-        if((length(data_set_8$variables) > 1) && (!is.null(evt$instances) && evt$instances[which(evt$parnam == evt$pname[[i]][j])])){
-          evt$iname[[i]][j] = as.character(data_set_8$variables[2])
-        } 
-        if((length(data_set_8$variables) > 1) && (is.null(evt$instances) || (!is.null(evt$instances) && !evt$instances[which(evt$parnam == evt$pname[[i]][j])]))){
-          evt$ievtpf[[i]][j] = as.numeric(data_set_8$variables[2])
-        } 
-        evt_lines = data_set_8$remaining_lines
+        data_set_8 <-  rmfi_parse_variables(lines)
+        p_name <-  as.character(data_set_8$variables[1])
+        if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+          i_name <- data_set_8$variables[2]
+          if(length(data_set_8$variables) > 2) ievtpf[i] <- as.numeric(data_set_8$variables[3])
+        } else {
+          i_name <- NULL
+          if(length(data_set_8$variables) > 1) ievtpf[i] <- as.numeric(data_set_8$variables[2])
+        }
+        
+        rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+        
+        lines <- data_set_8$remaining_lines
         rm(data_set_8)
+        
       }
     }
-    if(is.logical(unlist(evt$iname)) && !any(unlist(evt$iname))) evt$iname = NULL
-    if(is.logical(unlist(evt$ievtpf)) && !any(unlist(evt$ievtpf))) evt$ievtpf = NULL
     
     # data set 9
-    if(evt$inexdp[i] >= 0){
-      data_set_9 = rmfi_parse_array(evt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
-      evt$exdp[,,i] = data_set_9$array
-      evt_lines = data_set_9$remaining_lines
+    if(inexdp >= 0) {
+      data_set_9 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      exdp[[length(exdp) + 1]] <- structure(data_set_9$array, kper = i)
+      lines <- data_set_9$remaining_lines
       rm(data_set_9)
+    } else if(inexdp < 0 && i > 1) {
+      attr(exdp[[length(exdp)]], 'kper') <- c(attr(exdp[[length(exdp)]], 'kper'), i)
     }
     
-    if(evt$nevtop == 2 && (!is.null(evt$inievt) && evt$inievt[i] >= 0)){
-      # data set 10
-      data_set_10 = rmfi_parse_array(evt_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
-      evt$ievt[,,i] = data_set_10$array
-      evt_lines = data_set_10$remaining_lines
-      rm(data_set_10)
-    } 
-    
+    # data set 10
+    if(nevtop == 2) {
+      if(inievt >= 0) {
+        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        ievt[[length(ievt) + 1]] <- structure(data_set_10$array, kper = i)
+        lines <- data_set_10$remaining_lines
+        rm(data_set_10)
+      } else if(inievt < 0 && i > 1) {
+        attr(ievt[[length(ievt)]], 'kper') <- c(attr(ievt[[length(ievt)]], 'kper'), i)
+      }
+    }
   }
   
-  class(evt) = c('evt', 'rmf_package')
+  evt <- rmf_create_evt(rmf_arrays, dis = dis, nevtop = nevtop, ievtcb = ievtcb, surf = surf, exdp = exdp, ievt = ievt, ievtpf = rmfi_ifelse0(is.null(ievtpf), -1, ievtpf))
+  comment(evt) <- comments
   return(evt)
-  
 }
 
 #' Write a MODFLOW evapotranspiration file
@@ -330,85 +247,105 @@ rmf_read_evt = function(file = {cat('Please select evapotranspiration file ...\n
 #' @param evt an \code{RMODFLOW} evt object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.evt'
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_array}
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
 
-rmf_write_evt = function(evt, dis=rmf_read_dis(), file = {cat('Please select evt file to overwrite or provide new filename ...\n'); file.choose()}) {
+rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose evt file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
-  cat(paste('# MODFLOW Evapotranspiration Package created by RMODFLOW, version',v,'\n'), file = file)
+  cat(paste(paste('# MODFLOW Evapotranspiration Package created by RMODFLOW, version'),v,'\n'), file = file)
   cat(paste('#', comment(evt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(!is.null(evt$npevt) && evt$npevt > 0 ) rmfi_write_variables('PARAMETER', evt$npevt, file=file)
+  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', evt$dimensions$np, file=file)
   
   # data set 2
-  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file)
+  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, ...)
   
   # parameters
-  if(!is.null(evt$npevt) && evt$npevt > 0){
-    for (i in 1:evt$npevt){
-      # data set 3
-      rmfi_write_variables(evt$parnam[i], evt$partyp[i], evt$parval[i], evt$nclu[i], ifelse(evt$instances[i], 'INSTANCES', ' '), ifelse(evt$instances[i], evt$numinst[i], ' '), file=file)
-      
-      # time-varying
-      if(!is.null(evt$instances) && evt$instances[i]){
-        for (j in 1:evt$numinst[i]){
-          # data set 4a
-          if(evt$instances[i]) rmfi_write_variables(evt$instnam[[i]][j], file=file)
-          
-          # data set 4b
-          for (k in 1:evt$nclu[i]){
-            rmfi_write_variables(evt$mltarr[[i]][j, k], evt$zonarr[[i]][j,k], ifelse(!is.null(evt$iz) && evt$zonarr[[i]][j,k]!='ALL', evt$iz[[i]][j,k], ''), file=file)
-            
-          }
-        }
-      } else { # non-time-varying
-        # data set 4b
-        for (k in 1:evt$nclu[i]){
-          rmfi_write_variables(evt$mltarr[[i]][1, k], evt$zonarr[[i]][1,k], ifelse(!is.null(evt$iz) && evt$zonarr[[i]][1,k]!='ALL', evt$iz[[i]][1,k], ''), file=file)
-          
-        }
-      }
-      
-    }
-  }
-  
+  partyp <- 'EVT'
+  if(evt$dimensions$np > 0) rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', type = 'bc', ...)
   
   # stress periods
   for (i in 1:dis$nper){
     
     # data set 5
-    rmfi_write_variables(evt$insurf[i], evt$inevtr[i], evt$inexdp[i], ifelse(evt$nevtop == 2, evt$inievt[i], ''), file=file)
+    # insurf
+    insurf_act <- evt$kper$surf[i]
+    if(!is.na(insurf_act)) {
+      if(i > 1 && identical(insurf_act, evt$kper$surf[i-1])) {
+        insurf <- -1
+      } else {
+        insurf <- length(insurf_act)
+      }
+    } 
+    
+    # inevtr
+    names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-1]]
+    if(i > 1 && identical(names_act, colnames(evt$kper)[which(evt$kper[i-1,which(!is.na(evt$kper[i-1,]))] != FALSE)[-1]])) {
+      inevtr <- -1
+    } else {
+      inevtr <- length(names_act)
+    }
+    
+    # inexdp
+    inexdp_act <- evt$kper$exdp[i]
+    if(!is.na(inexdp_act)) {
+      if(i > 1 && identical(inexdp_act, evt$kper$exdp[i-1])) {
+        inexdp <- -1
+      } else {
+        inexdp <- length(inexdp_act)
+      }
+    } 
+    
+    # inievt
+    inievt <- 0
+    if(nevtop == 2) {
+      inievt_act <- evt$kper$ievt[i]
+      if(!is.na(inievt_act)) {
+        if(i > 1 && identical(inievt_act, evt$kper$ievt[i-1])) {
+          inievt <- -1
+        } else {
+          inievt <- length(inievt_act)
+        }
+      } 
+    }
+
+    
+    if(evt$dimensions$np > 0) {
+      parm_names_active <- parm_names[parm_names %in% names_act]
+      np <- length(parm_names_active)
+    } else {
+      np <- 0
+    }
+    
+    rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, ...)
     
     # data set 6
-    if(evt$insurf[i] >= 0) rmfi_write_array(evt$surf[,,i], file=file)
+    if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, ...)
     
     # data set 7
-    if(((!is.null(evt$npevt) && evt$npevt==0) || is.null(evt$npevt)) && evt$inevtr[i] >= 0) rmfi_write_array(evt$evtr[,,i], file=file)
+    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$recharge[[names_act]], file = file, ...)
     
     # data set 8
-    if((!is.null(evt$npevt) && evt$npevt > 0) && evt$inevtr[i] > 0){
-      for (j in 1:evt$inevtr[i]){
-        
-        rmfi_write_variables(evt$pname[[i]][j], ifelse(!is.null(evt$instances) && evt$instances[which(evt$parnam==evt$pname[[i]][j])], evt$iname[[i]][j], ''), ifelse((is.null(evt$instances) || (!is.null(evt$instances) && !(evt$instances[which(evt$parnam==evt$pname[[i]][j])]))) && !is.null(evt$ievtpf), evt$ievtpf[[i]][j], ' '), file=file) 
-        
+    if(np > 0){
+      for(j in 1:np){
+        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], evt$kper[i,parm_names_active[j]], ''), ifelse(length(evt$ievtpf) == 1, evt$ievtpf, evt$ievtpf[j]), file=file)
       }
     }
     
     # data set 9
-    if(evt$inexdp[i] >= 0) rmfi_write_array(evt$exdp[,,i], file=file)
+    if(inexdp >= 0) rmfi_write_array(evt$exdp[[inexdp_act]], file = file, ...)
     
     # data set 10
-    if(evt$nevtop==2 && (!is.null(evt$inievt) && evt$inievt[i] >= 0)){
-      rmfi_write_array(evt$ievt[,,i], file=file)
+    if(evt$nevtop == 2 && inievt >= 0) {
+      rmfi_write_array(evt$ievt[[inievt_act]], file = file, ...)
     }
-    
   }
-  
   
 }
