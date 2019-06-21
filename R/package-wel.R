@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_wel} creates an \code{RMODFLOW} wel object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the wells. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the wells. 
 #' @param dis dis object
 #' @param iwelcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)
 #' @param noprint logical, should the printing of WEL cells to the listing file be suppressed ? Defaults to \code{FALSE}

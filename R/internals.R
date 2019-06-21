@@ -35,7 +35,7 @@ rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names
 
 #' Set list input for a MODFLOW boundary condition package
 #'
-#' @param arg list of (1) rmf_list and/or rmf_parm list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parm elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input. 
+#' @param arg list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input. 
 #' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
 #' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk)
 #' @param aux optional character vector with the names of the auxiliary variables
@@ -67,12 +67,12 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   }
   
   # check for parameters and/or lists and name them
-  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
-  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   if(any(vapply(c(parameters, lists), function(i) is.null(attr(i, 'kper')), TRUE))) {
-    stop('Please make sure all rmf_list and rmf_parm objects have a kper attribute', call. = FALSE)
+    stop('Please make sure all rmf_list and rmf_parameter objects have a kper attribute', call. = FALSE)
   }
   
   

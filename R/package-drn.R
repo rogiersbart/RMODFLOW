@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_drn} creates an \code{RMODFLOW} drn object
 #'
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the drains. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the drains. 
 #' @param dis dis object
 #' @param idrncb flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)
 #' @param noprint logical, should the printing of DRN cells to the listing file be suppressed ? Defaults to \code{FALSE}

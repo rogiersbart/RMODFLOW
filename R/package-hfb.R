@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_hfb} creates an \code{RMODFLOW} hfb object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the horizontal-flow barriers. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the horizontal-flow barriers. 
 #' @param dis dis object
 #' @param noprint logical, should the printing of HFB cells to the listing file be suppressed ? Defaults to \code{FALSE}
 #' 
@@ -48,7 +48,7 @@ rmf_create_hfb <-  function(...,
       stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.')
     }
     
-    if(inherits(rmf_list, 'rmf_parm') && !is.null(attr(rmf_list, 'instnam'))) {
+    if(inherits(rmf_list, 'rmf_parameter') && !is.null(attr(rmf_list, 'instnam'))) {
       stop('Time-varying parameters are not supported for the hfb package.')
     }
     
@@ -66,9 +66,9 @@ rmf_create_hfb <-  function(...,
   arg <- lapply(arg, set_hfb)
   
   # check for parameters and/or lists and name them
-  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
-  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   
   np <- 0
@@ -205,7 +205,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   }
   
   # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parm') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
+  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
   
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))

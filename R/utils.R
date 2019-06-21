@@ -1584,7 +1584,7 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
 #' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
 #' @details the variable in the data.frame which is multiplied differs between boundary condition packages. 
 #'          if the parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
-#' @return an object of class \code{rmf_parm} and \code{rmf_list} 
+#' @return an object of class \code{rmf_parameter} and \code{rmf_list} 
 #' @export
 #' @seealso \code{\link{rmf_create_list}}, \code{\link{rmf_create_array_parameter}}, \code{\link{rmf_create_flow_parameter}}
 #'
@@ -1597,7 +1597,7 @@ rmf_create_list_parameter <- function(rmf_list,
   attr(rmf_list, 'parnam') <- parnam
   attr(rmf_list, 'parval') <- parval
   attr(rmf_list, 'instnam') <- instnam
-  class(rmf_list) <- c('rmf_parm', class(rmf_list))
+  class(rmf_list) <- c('rmf_parameter', class(rmf_list))
   return(rmf_list)
 }
 
