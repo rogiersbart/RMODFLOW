@@ -1638,8 +1638,8 @@ rmf_plot.rmf_3d_array <- function(array,
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
-    rmf_plot(array, dis, mask=mask, zlim=zlim, type=type, add=add, title = title, gridlines = gridlines, levels = levels, ...)
-  } else {
+    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, title = title, crop = crop, prj = prj, crs = crs, ...)
+    } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
