@@ -32,14 +32,137 @@ rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names
   return(dat)
 }
 
+#' Set array input for a MODFLOW boundary condition package
+#'
+#' @param arg list of (1) \code{rmf_2d_array's} and/or rmf_parameter array objects or (2) a single nested \code{list} with \code{rmf_2d_array's} and/or rmf_parameter elements or (3) a \code{matrix}; defines the boundary condition input. 
+#' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_arrays} for the \code{rmf_create_*} function. When matrix elements are present, they are coerced to rmf_2d_arrays which are active for all stress-periods with a warning.
+#' @return list with the parameters, input arrays and the kper argument
+#' @keywords internal
+#' @seealso \code{\link{rmfi_bc_array}}
+
+rmfi_create_bc_array <- function(arg, dis) {
+  
+  # find dis
+  if(missing(dis)) {
+    dis_present <- vapply(arg, function(i) 'dis' %in% class(i), TRUE)
+    if(any(dis_present)) {
+      dis <- arg[dis_present][[1]]
+      arg <- arg[!dis_present]
+    } else {
+      stop('Please provide a dis argument', call. = FALSE)
+    }
+  }
+  
+  # if arg is nested list, unnest
+  if(length(arg) == 1 && inherits(arg, 'list')) arg <- arg[[1]] 
+  # if matrix or 2d-array, make rmf_2d_array which is always active
+  arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
+                                              {rmf_create_array(i, kper = 1:dis$nper); warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.")},
+                                              i) )
+  
+  
+  # check for parameters and/or arrays and name them
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
+  if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
+  
+  arrays <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
+  if(length(arrays) > 0) {
+    names(arrays) <- vapply(seq_along(arrays), function(i) rmfi_ifelse0(is.null(attr(arrays[[i]], 'parnam')), paste('array', i, sep = '_'), attr(arrays[[i]], 'parnam')), 'text')
+  }
+  
+  if(any(vapply(c(parameters, arrays), function(i) is.null(attr(i, 'kper')), TRUE))) {
+    stop('Please make sure all rmf_2d_array and rmf_parameter objects have a kper attribute', call. = FALSE)
+  }
+  
+  # stress period data frame
+  kper <- cbind(data.frame(kper = 1:dis$nper),
+                matrix(FALSE, dis$nper, length(unique(c(names(parameters), names(arrays)))), dimnames = list(NULL, unique(c(names(parameters), names(arrays))))))
+  
+  if(length(parameters) > 0) {
+    for(i in 1:length(parameters)) {
+      if(is.null(attr(parameters[[i]], 'instnam'))) {
+        kper[attr(parameters[[i]], 'parnam')] <-  c(1:dis$nper) %in% attr(parameters[[i]],'kper')
+      } else {
+        kper[c(1:dis$nper) %in% attr(parameters[[i]],'kper'), attr(parameters[[i]], 'parnam')] <-  attr(parameters[[i]],'instnam')
+      }
+    }
+  }
+  
+  if(length(arrays) > 0) {
+    for(i in 1:length(arrays)) {
+      kper[names(arrays)[i]] <- c(1:dis$nper) %in% attr(arrays[[i]],'kper')
+    }
+  }
+  
+  # dimensions
+  np <- 0
+  parameter_values <- NULL
+  instances <- NULL
+  
+  if(length(parameters) > 0) {
+    np <- length(unique(names(parameters)))
+  }
+  
+  # parameters
+  if(length(parameters) > 0) {
+    
+    instances <- c(table(names(parameters)))
+    instances[] <- vapply(seq_along(instances), function(i) rmfi_ifelse0(instances[i] < 2 && is.null(attr(parameters[[names(instances[i])]], 'instnam')), 0, instances[i]), 1)
+    if(all(instances == 0)) instances <- NULL
+    
+    parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
+    if(!is.null(instances)) {
+      parameter_values <- parameter_values[!duplicated(names(parameter_values))]
+      
+      # if parameter is time-varying, list all instances
+      inst <- parameters[instances]
+      p_names <- vapply(inst, function(i) attr(i, 'parnam'), 'text')
+      unq_names <- unique(p_names)
+      names(inst) <- vapply(inst, function(i) attr(i, 'instnam'), 'text')
+      
+      p_inst <- lapply(seq_along(unq_names), function(i) inst[which(p_names == unq_names[i])])
+      names(p_inst) <- unq_names
+      parameters <- c(parameters[!instances], p_inst)
+    }
+  }
+  
+  # check for wrong combinations of parameters and arrays in stress period
+  # if parameters are defined: only parameters can be used for a stress period and there must be at least 1 parameter active
+  #
+  if(length(parameters) > 0) {
+    if(length(arrays) > 0) {
+      warning('Parameter and non-parameter recharge arrays present. Only parameter arrays will be used.', call. = FALSE)
+      kper[,which(colnames(kper) %in% names(arrays))] <- FALSE
+    }
+    
+    parm_df <- subset(kper, select = names(parameters))
+    parm_err <- any(vapply(1:dis$nper, function(i) all(is.na(parm_df[i,]) | parm_df[i,] == FALSE), TRUE))
+    if(parm_err) stop('If parameter arrays are provided, please make sure at least 1 parameter array is active during each stress period.')
+  }
+  # multiple non-parameter arrays can not be active for the same stress period
+  if(length(arrays) > 0) {
+    select <- rmfi_ifelse0(length(parameters > 0), names(kper) != names(parameters), names(kper))
+    nparm_df <- subset(kper, select = select[-1])
+    nparm_err <- vapply(1:dis$nper, function(i) sum(is.na(nparm_df[i,]) | nparm_df[i,] == TRUE) > 1, TRUE)
+    if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'))
+  }
+  
+  
+  # combine
+  data <- c(parameters, arrays)
+  dimensions <- list(np = np, instances = instances)
+  return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  
+}
 
 #' Set list input for a MODFLOW boundary condition package
 #'
-#' @param arg list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input. 
+#' @param arg list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a \code{data.frame} that will be coerced to a rmf_list; defines the boundary condition input. 
 #' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
 #' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk)
 #' @param aux optional character vector with the names of the auxiliary variables
-#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function.
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
 #' @seealso \code{\link{rmfi_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
@@ -57,14 +180,12 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     }
   }
   
-  if(length(arg) == 1) {
-    if(inherits(arg[[1]], 'list')) {
-      arg <-  arg[[1]]
-      
-    } else if(inherits(arg[[1]], 'data.frame') && !(inherits(arg[[1]], 'rmf_list'))) { # make rmf_list
-      arg <-  lapply(arg, function(i) rmf_create_list(i, kper = 1:dis$nper))
-    }
-  }
+  # if arg is nested list, unnest
+  if(length(arg) == 1 && inherits(arg, 'list')) arg <- arg[[1]] 
+  # if data.frame, make rmf_list which is always active
+  arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
+                                              {rmf_create_list(i, kper = 1:dis$nper); warning("Coercing data.frame to rmf_list; list active for all stress-periods")}, 
+                                              i) )
   
   # check for parameters and/or lists and name them
   parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
@@ -513,6 +634,110 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   
   # Return output of reading function 
   return(list(array=array,remaining_lines=remaining_lines))
+}
+
+#' Read MODFLOW array parameters
+#'
+#' @param lines lines to read the parameter arrays from
+#' @param dis \code{RMODFLOW} dis object
+#' @param np numeric; number of parameters to read
+#' @param type character; type of array parameter. Allowed values are \code{'bc'} for boundary-condition arrays and \code{'flow'} for flow package arrays
+#' @param mlt a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays
+#' @param zon a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays
+#'
+#' @return A list containing the parameter arrays and the remaining text of the MODFLOW input file
+#' @keywords internal
+#' @seealso \code{\link{rmfi_write_array_parameters}}
+#' 
+rmfi_parse_array_parameters <- function(lines, dis, np, type, mlt = NULL, zon = NULL) {
+  
+  parm_list <- list()
+  
+  if(type == 'bc') {
+    i <- 1
+    while(i <= np){
+      
+      # data set 3
+      data_set_3 <- rmfi_parse_variables(lines)
+      parnam <-   as.character(data_set_3$variables[1])
+      parval <-  as.numeric(data_set_3$variables[3])
+      nclu <- as.numeric(data_set_3$variables[4])
+      p_tv <- NULL
+      if(length(data_set_3$variables) > 4){
+        p_tv <- TRUE
+        numinst = as.numeric(data_set_3$variables[6])
+        arr <- list()
+      } 
+      lines <- data_set_3$remaining_lines
+      rm(data_set_3)
+      
+      mltarr <- zonarr <- vector(mode = 'character', length = nclu)
+      iz <- as.list(rep(0, nclu))
+      
+      # time-varying parameters
+      if(!is.null(p_tv) && p_tv){
+        
+        # loop over instances
+        for(j in 1:numinst){
+          
+          # data set 4a
+          data_set_4a <- rmfi_parse_variables(lines)
+          instnam <- as.character(data_set_4a$variables)
+          lines <-  data_set_4a$remaining_lines
+          rm(data_set_4a)
+          
+          # loop over clusters
+          for(k in 1:nclu) {
+            # data set 4b
+            data_set_4b <- rmfi_parse_variables(lines)
+            mltarr[k] <- toupper(data_set_4b$variables[1])
+            zonarr[k] <- toupper(data_set_4b$variables[2])
+            
+            if(toupper(data_set_4b$variables[1]) != 'NONE') {
+              if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+              
+            }
+            if(toupper(data_set_4b$variables[2]) != 'ALL') {
+              if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+              iz[[k]] <- as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)])
+            }
+            lines <- data_set_4b$remaining_lines
+            rm(data_set_4b)
+          }
+        } 
+        
+      } else {
+        # non time-varying
+        # loop over clusters
+        for(k in 1:nclu) {
+          # data set 4b
+          data_set_4b <- rmfi_parse_variables(lines)
+          mltarr[k] <- toupper(data_set_4b$variables[1])
+          zonarr[k] <- toupper(data_set_4b$variables[2])
+          
+          if(toupper(data_set_4b$variables[1]) != 'NONE') {
+            if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+            
+          }
+          if(toupper(data_set_4b$variables[2]) != 'ALL') {
+            if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+            iz[[k]] <- as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)])
+          }
+          lines <- data_set_4b$remaining_lines
+          rm(data_set_4b)
+        }
+      }
+      
+      parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
+                                                               parval = parval, parnam = parnam, kper = 1:dis$nper)
+      names(parm_list)[length(parm_list)] <- parnam
+      i <- i+1
+    }
+  } else if(type == 'flow') {
+    
+  }
+  
+  return(list(parameters = parm_list, remaining_lines = lines))
 }
 
 #' Read comments
@@ -997,6 +1222,65 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
       }
     }
   }
+}
+
+#' Write MODFLOW array parameters
+#'
+#' @param obj \code{RMODFLOW} object to write
+#' @param arrays list of arrays to write
+#' @param file filename to write to
+#' @param partyp character denoting the parameter type. Only used when \code{type = 'bc'} otherwise it is derived from the arrays in \code{arrays}
+#' @param type character; type of array parameter. Allowed values are \code{'bc'} for boundary-condition arrays and \code{'flow'} for flow package arrays
+#' @param ... additional arguments passed to \code{rmfi_write_array} 
+#'
+#' @return NULL
+#' @keywords internal
+#' @seealso \code{\link{rmfi_parse_array_parameters}}
+#' 
+rmfi_write_array_parameters <- function(obj, arrays, file, partyp, type, ...) {
+  
+  if(type == 'bc') {
+    parm_names <- names(obj$parameter_values)
+    tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+    
+    for (i in 1:obj$dimensions$np){
+      
+      p_name <- parm_names[i]
+      arr <- arrays[[p_name]]
+      
+      tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
+      nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
+      
+      # headers
+      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nclu, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
+      
+      # time-varying
+      if(tv_parm[i]){
+        instances <- names(arr)
+        for (jj in 1:length(instances)){
+          
+          arr2 <- arr[[instances[jj]]]
+          
+          # instnam
+          rmfi_write_variables(instances[jj], file=file)
+          
+          # clusters
+          for (k in 1:nclu){
+            rmfi_write_variables(toupper(attr(arr2, 'mlt')[k]), toupper(attr(arr2, 'zon')[k]), ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
+          }
+          rm(arr2)
+        }
+      } else { # non-time-varying
+        for (k in 1:nclu){
+          rmfi_write_variables(toupper(attr(arr, 'mlt')[k]), toupper(attr(arr, 'zon')[k]), ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
+        }  
+        rm(arr)
+      }
+    }
+  } else if(type == 'flow') {
+    
+  }
+  
 }
 
 #'
