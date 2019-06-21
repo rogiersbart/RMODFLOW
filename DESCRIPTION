@@ -28,7 +28,10 @@ Imports:
     sf,
     tibble,
     dplyr,
-    tidyr
+    tidyr,
+    purrr,
+    stringr,
+    fs
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 6.1.1
