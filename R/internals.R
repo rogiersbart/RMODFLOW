@@ -39,7 +39,7 @@ rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names
 #' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_arrays} for the \code{rmf_create_*} function. When matrix elements are present, they are coerced to rmf_2d_arrays which are active for all stress-periods with a warning.
 #' @return list with the parameters, input arrays and the kper argument
 #' @keywords internal
-#' @seealso \code{\link{rmfi_bc_array}}
+#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}, \code{\link{rmfi_parse_array_parameters}}, \code{\link{rmfi_write_array_parameters}}
 
 rmfi_create_bc_array <- function(arg, dis) {
   
@@ -165,7 +165,7 @@ rmfi_create_bc_array <- function(arg, dis) {
 #' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
-#' @seealso \code{\link{rmfi_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
+#' @seealso \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
 
 rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
@@ -636,12 +636,11 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   return(list(array=array,remaining_lines=remaining_lines))
 }
 
-#' Read MODFLOW array parameters
+#' Read MODFLOW array parameters for boundary-condition packages
 #'
 #' @param lines lines to read the parameter arrays from
 #' @param dis \code{RMODFLOW} dis object
 #' @param np numeric; number of parameters to read
-#' @param type character; type of array parameter. Allowed values are \code{'bc'} for boundary-condition arrays and \code{'flow'} for flow package arrays
 #' @param mlt a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays
 #' @param zon a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays
 #'
@@ -649,65 +648,42 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
 #' @keywords internal
 #' @seealso \code{\link{rmfi_write_array_parameters}}
 #' 
-rmfi_parse_array_parameters <- function(lines, dis, np, type, mlt = NULL, zon = NULL) {
+rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) {
   
   parm_list <- list()
   
-  if(type == 'bc') {
-    i <- 1
-    while(i <= np){
+  i <- 1
+  while(i <= np){
+    
+    # data set 3
+    data_set_3 <- rmfi_parse_variables(lines)
+    parnam <-   as.character(data_set_3$variables[1])
+    parval <-  as.numeric(data_set_3$variables[3])
+    nclu <- as.numeric(data_set_3$variables[4])
+    p_tv <- NULL
+    if(length(data_set_3$variables) > 4){
+      p_tv <- TRUE
+      numinst = as.numeric(data_set_3$variables[6])
+      arr <- list()
+    } 
+    lines <- data_set_3$remaining_lines
+    rm(data_set_3)
+    
+    mltarr <- zonarr <- vector(mode = 'character', length = nclu)
+    iz <- as.list(rep(0, nclu))
+    
+    # time-varying parameters
+    if(!is.null(p_tv) && p_tv){
       
-      # data set 3
-      data_set_3 <- rmfi_parse_variables(lines)
-      parnam <-   as.character(data_set_3$variables[1])
-      parval <-  as.numeric(data_set_3$variables[3])
-      nclu <- as.numeric(data_set_3$variables[4])
-      p_tv <- NULL
-      if(length(data_set_3$variables) > 4){
-        p_tv <- TRUE
-        numinst = as.numeric(data_set_3$variables[6])
-        arr <- list()
-      } 
-      lines <- data_set_3$remaining_lines
-      rm(data_set_3)
-      
-      mltarr <- zonarr <- vector(mode = 'character', length = nclu)
-      iz <- as.list(rep(0, nclu))
-      
-      # time-varying parameters
-      if(!is.null(p_tv) && p_tv){
+      # loop over instances
+      for(j in 1:numinst){
         
-        # loop over instances
-        for(j in 1:numinst){
-          
-          # data set 4a
-          data_set_4a <- rmfi_parse_variables(lines)
-          instnam <- as.character(data_set_4a$variables)
-          lines <-  data_set_4a$remaining_lines
-          rm(data_set_4a)
-          
-          # loop over clusters
-          for(k in 1:nclu) {
-            # data set 4b
-            data_set_4b <- rmfi_parse_variables(lines)
-            mltarr[k] <- toupper(data_set_4b$variables[1])
-            zonarr[k] <- toupper(data_set_4b$variables[2])
-            
-            if(toupper(data_set_4b$variables[1]) != 'NONE') {
-              if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
-              
-            }
-            if(toupper(data_set_4b$variables[2]) != 'ALL') {
-              if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
-              iz[[k]] <- as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)])
-            }
-            lines <- data_set_4b$remaining_lines
-            rm(data_set_4b)
-          }
-        } 
+        # data set 4a
+        data_set_4a <- rmfi_parse_variables(lines)
+        instnam <- as.character(data_set_4a$variables)
+        lines <-  data_set_4a$remaining_lines
+        rm(data_set_4a)
         
-      } else {
-        # non time-varying
         # loop over clusters
         for(k in 1:nclu) {
           # data set 4b
@@ -721,21 +697,48 @@ rmfi_parse_array_parameters <- function(lines, dis, np, type, mlt = NULL, zon = 
           }
           if(toupper(data_set_4b$variables[2]) != 'ALL') {
             if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
-            iz[[k]] <- as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)])
+            
+            # zero or character entry terminates IZ
+            iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
+            iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+          
           }
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
         }
-      }
+      } 
       
-      parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
-                                                               parval = parval, parnam = parnam, kper = 1:dis$nper)
-      names(parm_list)[length(parm_list)] <- parnam
-      i <- i+1
+    } else {
+      # non time-varying
+      # loop over clusters
+      for(k in 1:nclu) {
+        # data set 4b
+        data_set_4b <- rmfi_parse_variables(lines)
+        mltarr[k] <- toupper(data_set_4b$variables[1])
+        zonarr[k] <- toupper(data_set_4b$variables[2])
+        
+        if(toupper(data_set_4b$variables[1]) != 'NONE') {
+          if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+          
+        }
+        if(toupper(data_set_4b$variables[2]) != 'ALL') {
+          if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+          
+          # zero or character entry terminates IZ
+          iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
+          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+        }
+        lines <- data_set_4b$remaining_lines
+        rm(data_set_4b)
+      }
     }
-  } else if(type == 'flow') {
     
+    parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
+                                                             parval = parval, parnam = parnam, kper = 1:dis$nper)
+    names(parm_list)[length(parm_list)] <- parnam
+    i <- i+1
   }
+
   
   return(list(parameters = parm_list, remaining_lines = lines))
 }
@@ -1224,12 +1227,11 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   }
 }
 
-#' Write MODFLOW array parameters
+#' Write MODFLOW array parameters for boundary-condition packages
 #'
 #' @param obj \code{RMODFLOW} object to write
 #' @param arrays list of arrays to write
 #' @param file filename to write to
-#' @param partyp character denoting the parameter type. Only used when \code{type = 'bc'} otherwise it is derived from the arrays in \code{arrays}
 #' @param type character; type of array parameter. Allowed values are \code{'bc'} for boundary-condition arrays and \code{'flow'} for flow package arrays
 #' @param ... additional arguments passed to \code{rmfi_write_array} 
 #'
@@ -1237,48 +1239,44 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
 #' @keywords internal
 #' @seealso \code{\link{rmfi_parse_array_parameters}}
 #' 
-rmfi_write_array_parameters <- function(obj, arrays, file, partyp, type, ...) {
+rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
   
-  if(type == 'bc') {
-    parm_names <- names(obj$parameter_values)
-    tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+  parm_names <- names(obj$parameter_values)
+  tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+  
+  for (i in 1:obj$dimensions$np){
     
-    for (i in 1:obj$dimensions$np){
-      
-      p_name <- parm_names[i]
-      arr <- arrays[[p_name]]
-      
-      tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
-      nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
-      
-      # headers
-      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nclu, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
-      
-      # time-varying
-      if(tv_parm[i]){
-        instances <- names(arr)
-        for (jj in 1:length(instances)){
-          
-          arr2 <- arr[[instances[jj]]]
-          
-          # instnam
-          rmfi_write_variables(instances[jj], file=file)
-          
-          # clusters
-          for (k in 1:nclu){
-            rmfi_write_variables(toupper(attr(arr2, 'mlt')[k]), toupper(attr(arr2, 'zon')[k]), ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
-          }
-          rm(arr2)
-        }
-      } else { # non-time-varying
+    p_name <- parm_names[i]
+    arr <- arrays[[p_name]]
+    
+    tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
+    nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
+    
+    # headers
+    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nclu, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
+    
+    # time-varying
+    if(tv_parm[i]){
+      instances <- names(arr)
+      for (jj in 1:length(instances)){
+        
+        arr2 <- arr[[instances[jj]]]
+        
+        # instnam
+        rmfi_write_variables(instances[jj], file=file)
+        
+        # clusters
         for (k in 1:nclu){
-          rmfi_write_variables(toupper(attr(arr, 'mlt')[k]), toupper(attr(arr, 'zon')[k]), ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
-        }  
-        rm(arr)
+          rmfi_write_variables(toupper(attr(arr2, 'mlt')[k]), toupper(attr(arr2, 'zon')[k]), ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
+        }
+        rm(arr2)
       }
+    } else { # non-time-varying
+      for (k in 1:nclu){
+        rmfi_write_variables(toupper(attr(arr, 'mlt')[k]), toupper(attr(arr, 'zon')[k]), ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
+      }  
+      rm(arr)
     }
-  } else if(type == 'flow') {
-    
   }
   
 }

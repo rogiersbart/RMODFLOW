@@ -324,17 +324,20 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 #' Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array}. Parameter values can be used to multiply the arrays as well.
 #' 
 #' @param dis dis object; used to set the dimensions of the array
+#' @param layer optional numeric vector with the layer indices to which \code{mltarr, zonarr and iz} apply. Should have the same length as \code{mltarr, zonarr and iz}. Only used for flow parameter arrays. See details.
 #' @param mltarr either a list of multiplier arrays or a single multiplier array. The keyword \code{"NONE"} indicates no multiplier array is present. 
 #' @param zonarr either a list of the zone arrays or a single zone array. The keyword \code{"ALL"} indicates no zone array is present.
 #' @param iz only read when zonarr is not \code{"ALL"}. A list where each element is a numeric vector with the zone numbers for the corresponding zone array.
-#' @param parval vector of parameter values corresponding to mltarr and/or zonarr which are multiplied with the final array. Typically used when the array represents a parameter.
+#' @param parval vector of parameter values corresponding to \code{mltarr, zonarr and iz} which are multiplied with the final array. Typically used when the array represents a parameter.
 #' @details if mltarr (zonarr) is a list, certain elements are allowed to be set to \code{"NONE"} (\code{"ALL"}) indicating the multiplier (zone) array is not active for this cluster.
 #'          if mltarr is \code{"NULL"} and zonarr is \code{"ALL"}, all the cells in the returned array will be equal to the parameter value.
-#'          Multiple multiplier arrays, zone arrays and/or parameter values can be used to calculate the final values. Cells that correspond to multiple multiplier arrays, zone arrays and/or parameter values will be summed.
-#' @return \code{rmf_2d_array} with the values calculated from the multiplier and/or zone arrays.
+#'          Multiple multiplier arrays, zone arrays and/or parameter values can be used to calculate the final values. Cells that correspond to multiple multiplier arrays, zone arrays and/or parameter values will be summed. Resulting arrays for the same layer will also be summed.
+#'          If more than 1 layer index is specified, a \code{rmf_3d_array} is returned
+#' @return \code{rmf_2d_array} or \code{rmf_3d_array} with the values calculated from the multiplier and/or zone arrays.
 #' @export
 
 rmf_calculate_array <-  function(dis,
+                                 layer = NULL,
                                  mltarr,
                                  zonarr, 
                                  iz = NULL,
@@ -366,7 +369,16 @@ rmf_calculate_array <-  function(dis,
   
   # create the array for every cluster then sum the clusters
   arr <- lapply(1:nclu, function(i) set_parm(dim = dim, mult = mltarr[[i]], zone = zonarr[[i]], iz = iz[[i]], p_value = parval[i]))
-  arr <- rmf_create_array(apply(abind::abind(arr, along = 3), c(1,2), sum, na.rm = TRUE))
+  if(is.null(layer) || length(layer) == 1) {
+    arr <- rmf_create_array(apply(abind::abind(arr, along = 3), c(1,2), sum, na.rm = TRUE))
+  } else {
+    # handle layers for flow arrays
+    if(any(duplicated(layer)) > 0) {
+      arr <- lapply(1:dis$nlay, function(i) apply(abind::abind(arr[layer == i], along = 3), c(1,2), sum, na.rm = TRUE))
+    } 
+    arr <- rmf_create_array(abind::abind(arr, along = 3))
+  }
+  
   attr(arr, 'dimnames') <- NULL
   return(arr)
 }
@@ -1420,17 +1432,18 @@ rmf_create_parameter <- function(...) {
 #'
 #' @param dis \code{RMODFLOW} dis object. Used to dimension the final array.
 #' @param kper integer vector with the stress period numbers during which the parameter is active. Specifying kper indicates that this parameter represent boundary condition information.
-#' @param layer integer vector denoting the layer indices represented by the parameter. Specifying layer indicates that this parameter represent flow package information.
+#' @param layer integer vector denoting the layer indices represented by the parameter. Specifying layer indicates that this parameter represent flow package information; the partyp argument should be set as well. Multiple instances of the same layer index are allowed.
 #' @param parnam character specifying the name of the parameter
 #' @param parval numeric specifying the value of the parameter which is used to multiply values in the array. Defaults to 1.0
-#' @param mltnam character vector specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present. 
-#' @param zonnam character vector specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present. 
-#' @param type character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. Not used when \code{layer} is \code{NULL}.
+#' @param mltnam character vector with the same length as \code{layer}; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present. 
+#' @param zonnam character vector with the same length as \code{layer}; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present. 
+#' @param iz list with the same length as \code{layer} where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.
+#' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. Not used when \code{layer} is \code{NULL}.
 #' @param mlt \code{RMODFLOW} mlt object which holds the multiplier arrays specified in \code{mltnam}
 #' @param zon \code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}
-#' @param iz only read when the corresponding \code{zonnam} is not \code{"ALL"}. A list where each element is a numeric vector with the zone numbers for the corresponding zone array.
 #' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
-#' @details if the parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
+#' @details A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
+#'          If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
 #'          Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
 #'          If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
 #' @return an \code{rmf_2d_array} object of class \code{rmf_parameter}
@@ -1443,15 +1456,15 @@ rmf_create_parameter.default <- function(dis,
                                          parnam,
                                          parval = 1.0, 
                                          mltnam = 'NONE', 
-                                         zonnam = 'ALL', 
-                                         type = NULL,
+                                         zonnam = 'ALL',
+                                         iz = NULL, 
+                                         partyp = NULL,
                                          mlt = NULL, 
                                          zon = NULL, 
-                                         iz = NULL, 
                                          instnam = NULL) {
   
   if(is.null(kper) && is.null(layer)) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
-  if(!is.null(layer) && is.null(type)) stop("Please specify the parameter type")
+  if(!is.null(layer) && is.null(partyp)) stop("Please specify the partyp argument")
   mltarr <- list(mltnam)
   zonarr <- list(zonnam)
   
@@ -1476,7 +1489,7 @@ rmf_create_parameter.default <- function(dis,
   attr(arr, 'parnam') <- parnam
   attr(arr, 'parval') <- parval
   attr(arr, 'layer') <- layer
-  attr(arr, 'type') <- type
+  attr(arr, 'partyp') <- partyp
   attr(arr, 'mlt') <- mltnam
   attr(arr, 'zon') <- zonnam
   attr(arr, 'iz') <- iz
@@ -1496,13 +1509,14 @@ rmf_create_parameter.default <- function(dis,
 #' @param parnam character specifying the name of the parameter
 #' @param parval numeric specifying the value of the parameter which is used to multiply values in the array. Defaults to 1.0
 #' @param kper integer vector with the stress period numbers during which the parameter is active. Specifying kper indicates that this parameter represent boundary condition information.
-#' @param layer integer vector denoting the layer indices represented by the parameter. Specifying layer indicates that this parameter represent flow package information.
-#' @param type character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. Not used when \code{layer} is \code{NULL}.
+#' @param layer integer vector denoting the layer indices represented by the parameter. Specifying layer indicates that this parameter represent flow package information and the partyp argument needs to be set as well.
+#' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. Not used when \code{layer} is \code{NULL}.
 #' @param mltnam character vector specifying the name of the resulting multiplier array. 
 #' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
 #' 
 #' @details This function will only set the multiplier array. The user must make sure that this multiplier array is written to a separate MLT file when running a MODFLOW simulation.
 #' This function is intended to be used when no multiplier and/or zone arrays are specified for a parameter.
+#' A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
 #' @return a \code{rmf_2d_array} object of class \code{rmf_parameter}
 #' @export
 #' 
@@ -1511,12 +1525,12 @@ rmf_create_parameter.rmf_2d_array <-  function(array,
                                                parval = 1.0,
                                                kper = attr(array, 'kper'),
                                                layer = NULL,
-                                               type = NULL,
+                                               partyp = NULL,
                                                mltnam = parnam,
                                                instnam = NULL) {
   
   if(is.null(kper) && is.null(layer)) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
-  if(!is.null(layer) && is.null(type)) stop("Please specify the parameter type")
+  if(!is.null(layer) && is.null(partyp)) stop("Please specify the parameter partyp")
   
   if(length(unique(c(array))) == 1) mltnam <-  'NONE'
   
@@ -1524,7 +1538,7 @@ rmf_create_parameter.rmf_2d_array <-  function(array,
   attr(array, 'parnam') <- parnam
   attr(array, 'parval') <- parval
   attr(array, 'layer') <- layer
-  attr(array, 'type') <- type
+  attr(array, 'partyp') <- partyp
   attr(array, 'mlt') <- mltnam
   attr(array, 'zon') <- 'ALL'
   attr(array, 'iz') <- NULL
@@ -1537,19 +1551,20 @@ rmf_create_parameter.rmf_2d_array <-  function(array,
 #'
 #' Concise function for creating a 3D-array parameter.
 #' 
-#' Create a list of MODFLOW parameters from a 3D-array.
+#' Create a list of MODFLOW flow parameters from a 3D-array.
 #' 
 #' @param array a \code{rmf_3d_array} object
 #' @param parnam character specifying the name of the parameter
 #' @param parval numeric specifying the value of the parameter which is used to multiply values in the array. Defaults to 1.0
-#' @param layer integer vector denoting the layer indices represented by the parameter. 
-#' @param type character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. 
+#' @param layer integer vector denoting the layer indices represented by the parameter. Defaults to \code{seq(1, dim(array)[3])}
+#' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. 
 #' @param mltnam character vector specifying the name of the resulting multiplier array. 
 #' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
 #' 
 #' @details This function will only set the multiplier arrays for all layers of the 3D array. The user must make sure that this multiplier array is written to a separate MLT file when running a MODFLOW simulation.
 #' This function is intended to be used when no multiplier and/or zone arrays are specified for a parameter.
-#' @return a list of \code{rmf_2d_array} objects of class \code{rmf_parameter}, one for each layer.
+#' Only flow parameters can be created with this function. A singly partyp is appointed to all layers.
+#' @return a \code{rmf_3d_array} objects of class \code{rmf_parameter}
 #' @export
 #' 
 
@@ -1557,7 +1572,7 @@ rmf_create_parameter.rmf_3d_array <-  function(array,
                                                parnam, 
                                                parval = 1.0,
                                                layer = 1:dim(array)[3],
-                                               type,
+                                               partyp,
                                                mltnam = parnam,
                                                instnam = NULL) {
   # subset if not all layers are needed
@@ -1569,7 +1584,7 @@ rmf_create_parameter.rmf_3d_array <-  function(array,
   attr(array, 'parnam') <- parnam
   attr(array, 'parval') <- parval
   attr(array, 'layer') <- layer
-  attr(array, 'type') <- type
+  attr(array, 'partyp') <- partyp
   attr(array, 'mlt') <- mltnam
   attr(array, 'zon') <- rep('ALL', length(layer))
   attr(array, 'iz') <- NULL

@@ -139,7 +139,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   
   # parameters: data set 3 & 4
   if(np > 0) {
-    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, type = 'bc', mlt = mlt, zon = zon)
+    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, mlt = mlt, zon = zon)
     rmf_arrays <- data_set_3$parameters
     lines <- data_set_3$remaining_lines
     rm(data_set_3)
@@ -269,7 +269,7 @@ rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose e
   
   # parameters
   partyp <- 'EVT'
-  if(evt$dimensions$np > 0) rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', type = 'bc', ...)
+  if(evt$dimensions$np > 0) rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', ...)
   
   # stress periods
   for (i in 1:dis$nper){

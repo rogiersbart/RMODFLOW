@@ -104,7 +104,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
   
   # parameters: data set 3 & 4
   if(np > 0) {
-    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, type = 'bc', mlt = mlt, zon = zon)
+    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, mlt = mlt, zon = zon)
     rmf_arrays <- data_set_3$parameters
     lines <- data_set_3$remaining_lines
     rm(data_set_3)
@@ -213,7 +213,7 @@ rmf_write_rch <-  function(rch, dis = rmf_read_dis(), file={cat('Please choose r
   
   # parameters
   partyp <- 'RCH'
-  if(rch$dimensions$np > 0) rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', type = 'bc', ...)
+  if(rch$dimensions$np > 0) rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', ...)
   
   # stress periods
   for (i in 1:dis$nper){
