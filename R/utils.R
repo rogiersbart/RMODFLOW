@@ -1301,6 +1301,7 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @param obj object to add class to
 #' @param dim the dim attribute for the array to be created; by default, dim(obj) is used
 #' @param kper integer vector specifying the stress periods in which the array is active. Used for defining boundary conditions. Defaults to \code{NULL}
+#' @param dimlabels character vector specifying the labels of the dimensions; defaults to \code{i, j, k, l} for the first, second, third and fourth dimension, respectively.
 #' @param ... 
 #' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
@@ -1308,7 +1309,7 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
-rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL) {
+rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL, dimlabels = c('i', 'j', 'k', 'l')[1:length(dim)]) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)
   if(length(dim(obj))==2) {
     class(obj) <- 'rmf_2d_array'
@@ -1320,6 +1321,8 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL) {
     stop('Please provide 2d matrix, or 2d, 3d or 4d array.')
   }
   attr(obj, 'kper') <- kper
+  attr(obj, 'dimlabels') <- dimlabels
+  
   return(obj)
 }
 
@@ -1360,6 +1363,8 @@ create_rmodflow_array <- function(...) {
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
+  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
+  
   return(obj)
 }
 
@@ -1387,6 +1392,8 @@ create_rmodflow_array <- function(...) {
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
+  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
+  
   return(obj)
 }
 
@@ -1412,6 +1419,7 @@ create_rmodflow_array <- function(...) {
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
+  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
   
   return(obj)
 }
