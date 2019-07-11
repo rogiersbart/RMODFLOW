@@ -1452,6 +1452,7 @@ rmf_plot.rmf_2d_array <- function(array,
     
     # if array is already a cross-section, e.g. rmf_plot(array[,1,], dis = dis)
     if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
+      if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
       if("j" %in% attr(array, 'dimlabels')) {
         sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
         if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
