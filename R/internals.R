@@ -55,7 +55,7 @@ rmfi_create_bc_array <- function(arg, dis) {
   }
   
   # if arg is nested list, unnest
-  if(length(arg) == 1 && inherits(arg, 'list')) arg <- arg[[1]] 
+  if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if matrix or 2d-array, make rmf_2d_array which is always active
   arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
                                               {rmf_create_array(i, kper = 1:dis$nper); warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.")},
@@ -181,7 +181,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   }
   
   # if arg is nested list, unnest
-  if(length(arg) == 1 && inherits(arg, 'list')) arg <- arg[[1]] 
+  if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if data.frame, make rmf_list which is always active
   arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
                                               {rmf_create_list(i, kper = 1:dis$nper); warning("Coercing data.frame to rmf_list; list active for all stress-periods")}, 
@@ -1119,6 +1119,7 @@ rmfi_weighted_harmean <- function(x, w, ...) {
 #' @param binary character vector with names corresponding to the dataset; used to write external or open/close arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
 #' @param nam \code{\link{RMODFLOW}} nam object; used when writing external arrays
+#' @param xsection logical; does the array represent a NLAY x NCOL cross-section. Passed to \code{rmf_write_array}
 #' @param ... ignored
 rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, external = NULL, fname = NULL, binary = NULL, precision = 'single', nam = NULL, xsection = FALSE, ...) {
   
