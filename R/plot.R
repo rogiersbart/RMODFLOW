@@ -66,8 +66,8 @@ rmf_plot.bud <-  function(bud,
     df$volume <- factor(df$volume)
     
     x_label <- 'nstp'
-    x <- sym('nstp')
-    gm_line <- geom_path()
+    x <- ggplot2::sym('nstp')
+    gm_line <- ggplot2::geom_path()
     
     # check if ss 
     if(dis$nper == 1 && dis$sstr == "SS") {
@@ -119,13 +119,13 @@ rmf_plot.bud <-  function(bud,
     if(length(fluxes) > 1 || fluxes != 'all') df <- subset(df, flux %in% fluxes)
     
     x_label <- 'nstp'
-    x <- sym('nstp')
+    x <- ggplot2::sym('nstp')
     
     # check if ss 
     if(dis$nper == 1 && dis$sstr == "SS") {
       if(type == "area") {
         type <- 'bar'
-        x <- sym('flux')
+        x <- ggplot2::sym('flux')
         x_label <- 'flux'
       } else {
         df$nstp <- factor(df$nstp)
@@ -1430,6 +1430,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   crop = FALSE) {
   
   
+  
   if(plot3d) {
     xyz <- rmf_cell_coordinates(dis)
     x <- xyz$x[,,1]
@@ -1448,6 +1449,37 @@ rmf_plot.rmf_2d_array <- function(array,
     if(type=='fill') rgl::surface3d(t(x),t(y),z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
     if(type=='grid') rgl::surface3d(t(x),t(y),z,front='lines',alpha=alpha,back='lines',smooth=FALSE) 
   } else {
+    
+    # if array is already a cross-section, e.g. rmf_plot(array[,1,], dis = dis)
+    if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
+      if("j" %in% attr(array, 'dimlabels')) {
+        sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
+        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          mask <- array*0 + 1
+        }
+        sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
+        
+        p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+                      type = type, levels = levels, gridlines = gridlines, add = add, title = title, crop = crop, prj = prj, crs = crs,
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+        return(p)
+        
+      } else if("i" %in% attr(array, 'dimlabels')) {
+        sub_array <- rmf_create_array(array, dim = c(dim(array)[1], 1, dim(array)[2]))
+        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          mask <- array*0 + 1
+        }
+        sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
+        
+        p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+                      type = type, levels = levels, gridlines = gridlines, add = add, title = title, crop = crop, prj = prj, crs = crs,
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+        return(p)
+      }
+    }
+    
     xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
