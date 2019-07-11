@@ -113,7 +113,7 @@ create_hob <- function(...) {
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class hob
 #' @export
-rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}) {
+rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}, ...) {
   
   hob_lines <- readr::read_lines(file)
   hob <- list()
