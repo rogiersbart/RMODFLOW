@@ -44,13 +44,15 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
     
   # data set 2
     bas$ibound <- rmf_create_array(apply(ibound, MARGIN = 1:length(dim(ibound)), function(i) as.integer(i)),
-                                   dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
+                                   dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
+                                   dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   
   # data set 3
     bas$hnoflo <- hnoflo
   
   # data set 4
-    bas$strt <- rmf_create_array(strt, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
+    bas$strt <- rmf_create_array(strt, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
+                                 dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   
   class(bas) <- c('bas','rmf_package')
   return(bas)
@@ -101,7 +103,8 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   # data set 2
   data_set_2 <- rmfi_parse_array(bas_lines,nrow=ifelse(bas$xsection,dis$nlay,dis$nrow),ncol=dis$ncol,nlay=ifelse(bas$xsection,1,dis$nlay), file = file, integer = TRUE, ...)
   bas$ibound <- rmf_create_array(apply(data_set_2$array, MARGIN = 1:length(dim(data_set_2$array)), function(i) as.integer(i)),
-                                 dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
+                                 dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
+                                 dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   bas_lines <- data_set_2$remaining_lines
   rm(data_set_2)
   
@@ -113,7 +116,8 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   
   # data set 4
   data_set_4 <- rmfi_parse_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay), file = file, ...)
-  bas$strt <- rmf_create_array(data_set_4$array, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)))
+  bas$strt <- rmf_create_array(data_set_4$array, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
+                               dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   bas_lines <- data_set_4$remaining_lines
   rm(data_set_4)
   

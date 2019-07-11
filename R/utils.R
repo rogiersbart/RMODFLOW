@@ -1309,8 +1309,9 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
-rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL, dimlabels = c('i', 'j', 'k', 'l')[1:length(dim)]) {
+rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL, dimlabels = attr(obj, 'dimlabels')) {
   if(!is.null(dim)) obj <- array(obj, dim = dim)
+  if(is.null(dimlabels)) dimlabels <- c('i', 'j', 'k', 'l')[1:length(dim(obj))]
   if(length(dim(obj))==2) {
     class(obj) <- 'rmf_2d_array'
   } else if(length(dim(obj))==3) {
@@ -1422,6 +1423,21 @@ create_rmodflow_array <- function(...) {
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
   
   return(obj)
+}
+
+#'
+#' Transpose a rmf_2d_array
+#'
+#' @param obj a \code{rmf_2d_array}
+#' @return the transposed obj
+#' @details switches the rows and columns and corresponding dimlabels of a \code{rmf_2d_array}
+#' @export
+t.rmf_2d_array <- function(obj) {
+
+  obj <- t.default(obj)
+  attr(obj, "dimlabels") <- rev(attr(obj, "dimlabels"))
+  return(obj)
+
 }
 
 #'
@@ -1702,7 +1718,7 @@ rmf_time_steps = function(dis = NULL,
 #' @param dis optional \code{RMODFLOW} dis object. Used when \code{KPER}, \code{PERTIM} and \code{TOTIM} in the header should be exact.
 #' @param desc character of maximum 16 characters. Used to set the \code{desc} element in the header. Default to \code{'HEAD'}
 #' @param precision character; either \code{'single'} or \code{'double'}. Denotes the precision of the binary file.
-#' @param xsection logical; does the array represent a cross-section. See 'Details'.
+#' @param xsection logical; does the array represent a NLAY x NCOL cross-section. See 'Details'.
 #' 
 #' @details the header file consists of the following elements:
 #'  \code{KSTP}, \code{KPER},\code{PERTIM},\code{DESC},\code{NCOL}, \code{NROW}, \code{ILAY} and \code{FMTIN}
