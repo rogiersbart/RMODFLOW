@@ -32,6 +32,38 @@ rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names
   return(dat)
 }
 
+#' Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
+#' 
+#' @param huf huf object
+#' @param dis dis object, corresponding to the huf object
+#' @param bas bas object, corresponding to the huf object; defaults to NULL
+#' @return nlay rmf_3d_array
+#' @keywords internal
+rmfi_convert_huf_to_nlay <- function(huf, dis, bas = NULL) {
+  nlay <- huf$top * 0
+  huf_coordinates <- rmf_cell_coordinates(huf, dis = dis, include_faces = TRUE)
+  if(any(dis$laycbd != 0)) {
+    warning('Using Quasi-3D confining beds as explicit layers')
+    dis$nlay <- dis$nlay + length(which(dis$laycbd != 0))
+    dis$laycbd <- rep(0, dis$nlay)
+  }
+  dis_coordinates <- rmf_cell_coordinates(dis, include_faces = TRUE)
+  ibound <- rmfi_ifelse0(is.null(bas), dis$botm*0 + 1, abs(bas$ibound))
+  for(i in 1:huf$nhuf) {
+    for(j in 1:dis$nlay) {
+      nlay[,,i] <- nlay[,,i] + (!(dis_coordinates$upper[,,j] < huf_coordinates$lower[,,i] | dis_coordinates$lower[,,j] > huf_coordinates$upper[,,i])) * ibound[,,j]
+    }
+  }
+  return(nlay)
+}
+
+#' @describeIn rmfi_convert_huf_to_nlay Deprecated function name
+#' @export
+convert_huf_to_nlay <- function(...) {
+  .Deprecated(new = "rmfi_convert_huf_to_nlay", old = "convert_huf_to_nlay")
+  rmfi_convert_huf_to_nlay(...)
+}
+
 #' Set array input for a MODFLOW boundary condition package
 #'
 #' @param arg list of (1) \code{rmf_2d_array's} and/or rmf_parameter array objects or (2) a single nested \code{list} with \code{rmf_2d_array's} and/or rmf_parameter elements or (3) a \code{matrix}; defines the boundary condition input. 
