@@ -19,10 +19,12 @@
 #' @param sy 3d array with specific yield; only required when there are transient stress periods; defaults to 0.15. If not read for a specific layer, set all values in that layer to NA.
 #' @param vkcb 3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0. If not read for a specific layer, set all values in that layer to NA.
 #' @return Object of class upw
+#' @details Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters or by using direct array input.
+#'          When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
 #' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
 #' @export
-#' @seealso \code{\link{rmf_read_upw}}, \code{\link{rmf_write_upw}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
+#' @seealso \code{\link{rmf_create_parameter}}, \code{\link{rmf_read_upw}}, \code{\link{rmf_write_upw}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 rmf_create_upw <- function(dis,
                            iupwcb = 0,
                            hdry = -888,

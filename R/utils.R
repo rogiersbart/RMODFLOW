@@ -1162,6 +1162,94 @@ convert_ijk_to_id <- function(...) {
   rmf_convert_ijk_to_id(...)
 }
 
+
+#' Convert a lpf to a upw object
+#'
+#' @param lpf \code{RMODFLOW} lpf object
+#' @param iphdry logical; indicating if head will be set to hdry when it's less than 1E-4 above the cell bottom; defaults to TRUE
+#' @return Object of class upw
+#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+#' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
+#' @export
+#' @seealso \code{\link{rmf_create_upw}}, \code{\link{rmf_convert_upw_to_lpf}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
+rmf_convert_lpf_to_upw <- function(lpf, iphdry = TRUE) {
+  
+  if(!is.null(lpf$storagecoefficient)) lpf$storagecoefficient <- NULL
+  if(!is.null(lpf$constantcv)) lpf$constantcv <- NULL
+  if(!is.null(lpf$thickstrt)) lpf$thickstrt <- NULL
+  if(!is.null(lpf$nocvcorrection)) lpf$nocvcorrection <- NULL
+  if(!is.null(lpf$novfc)) lpf$novfc <- NULL
+  if(!is.null(lpf$noparcheck)) lpf$noparcheck <- NULL
+  
+  lpf$iphdry <- iphdry
+  
+  if(any(lpf$laywet > 0)) {
+    lpf$wetfct <- lpf$iwetit <- lpf$ihdwet <- lpf$wetdry <- NULL
+    lpf$laywet <- rep(0, length(lpf$laywet))
+  }
+  
+  class(lpf) <- replace(class(lpf), which(class(lpf) == 'lpf'), 'upw')
+  return(lpf)
+}
+
+#' Convert a upw to a lpf object
+#'
+#' @param upw \code{RMODFLOW} upw object
+#' @param storagecoefficient logical; should STORAGECOEFFICIENT keyword be included?; defaults to FALSE
+#' @param constantcv logical; should CONSTANTCV keyword be included?; defaults to FALSE
+#' @param thickstrt logical; should THICKSTRT keyword be included?; defaults to FALSE
+#' @param nocvcorrection logical; should NOCVCORRECTION keyword be included?; defaults to FALSE
+#' @param novfc logical; should NOVFC keyword be included?; defaults to FALSE
+#' @param noparcheck logical; should NOPARCHECK keyword be included?; defaults to FALSE
+#' @param laywet vector of flags for each layer, indicating if wetting is active; defaults to 0 for each layer
+#' @param wetfct is a factor that is included in the calculation of the head that is initially established at a cell when it is converted from dry to wet; defaults to 0.1
+#' @param iwetit is the iteration interval for attempting to wet cells; defaults to 1
+#' @param ihdwet is a flag that determines which equation is used to define the initial head at cells that become wet; defaults to 0
+#' @param wetdry 3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to NULL. If not read for a specific layer, set all values in that layer to NA.
+#'
+#' @return object of class lpf
+#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+#' @export
+#' @seealso \code{\link{rmf_create_lpf}}, \code{\link{rmf_convert_lpf_to_upw}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+rmf_convert_upw_to_lpf <- function(upw, 
+                                   storagecoefficient = FALSE,
+                                   constantcv = FALSE,
+                                   thickstrt = FALSE,
+                                   nocvcorrection = FALSE,
+                                   novfc = FALSE,
+                                   noparcheck = FALSE,
+                                   laywet = upw$laywet,
+                                   wetfct = 0.1,
+                                   iwetit = 1,
+                                   ihdwet = 0,
+                                   wetdry = NULL) {
+  upw$iphdry <- NULL
+  
+  upw$storagecoefficient <- storagecoefficient
+  upw$constantcv <- constantcv
+  upw$thickstrt <- thickstrt
+  upw$nocvcorrection <- nocvcorrection
+  upw$novfc <- novfc
+  upw$noparcheck <- noparcheck
+  
+  upw$laywet <- laywet
+  
+  if(any(upw$laywet != 0)) {
+    upw$wetfct <- wetfct
+    upw$iwetit <- iwetit
+    upw$ihdwet <- ihdwet
+    
+    if(any(upw$laytyp != 0)) {
+      if(is.null(wetdry)) stop('Please specify a wetdry argument', call. = FALSE)
+      upw$wetdry <- rmf_create_array(wetdry, dim = dim(hk))
+    }
+  }
+  
+  class(upw) <- replace(class(upw), which(class(upw) == 'upw'), 'lpf')
+  return(upw)
+  
+}
+
 #' Convert real world coordinates to modflow coordinates
 #' 
 #' @param x real world x coordinate
