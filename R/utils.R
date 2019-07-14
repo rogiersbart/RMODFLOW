@@ -1107,18 +1107,20 @@ convert_hob_to_time_series <- function(...) {
 #' @export
 rmf_convert_huf_to_dis <- function(huf,
                                    dis) {
-  new_dis <- rmf_create_dis(nlay = huf$nhuf,
-                            nrow = dis$nrow,
-                            ncol = dis$ncol,
-                            delr = dis$delr,
-                            delc = dis$delc,
-                            top = huf$top[,,1],
-                            botm = huf$top - huf$thck)
+
+  new_dis <- dis
+  new_dis$nlay <- huf$nhuf
+  new_dis$top <- huf$top[,,1]
+  new_dis$botm <- huf$top - huf$thck
+  
   new_dis$top[which(new_dis$top > dis$top)] <- dis$top[which(new_dis$top > dis$top)]
-  for(k in 1:huf$nhuf) {
-    new_dis$botm[,,k][which(new_dis$botm[,,k] > dis$top)] <- dis$top[which(new_dis$botm[,,k] > dis$top)]
-    new_dis$botm[,,k][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])] <- dis$botm[,,dis$nlay][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])]
+  if(huf$nhuf > 1) {
+    for(k in 1:huf$nhuf) {
+      new_dis$botm[,,k][which(new_dis$botm[,,k] > dis$top)] <- dis$top[which(new_dis$botm[,,k] > dis$top)]
+      new_dis$botm[,,k][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])] <- dis$botm[,,dis$nlay][which(new_dis$botm[,,k] < dis$botm[,,dis$nlay])]
+    }
   }
+
   new_dis$botm <- rmf_create_array(new_dis$botm)
   new_dis$top <- rmf_create_array(new_dis$top)
   return(new_dis)
@@ -1133,46 +1135,140 @@ convert_huf_to_dis <- function(...) {
 
 #' Convert a parameter defined on the HUF grid to the numerical grid
 #' 
-#' @param values vector of parameter values, in the order of \code{hgunam}
 #' @param huf huf object
 #' @param dis dis object
-#' @param mask masking 3d array, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
-#' @param type type of averaging that should be performed; either arithmetic (default), harmonic or geometric
-#' @return 3d array
+#' @param parameters either a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.
+#' @param values vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.
+#' @param grid target grid; either \code{'dis'} (default) or \code{'huf'}. When \code{'huf'}, no averaging is performed
+#' @param mask masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
+#' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric
+#' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
+#' @param pvl optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied
+#' @return rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'} 
+#' @details Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.
+#'      The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
+#'      Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
 #' @export
-rmf_convert_huf_to_grid <- function(values,
-                                    huf,
+rmf_convert_huf_to_grid <- function(huf,
                                     dis,
-                                    mask = dis$top / dis$top,
-                                    type = 'arithmetic') {
-  if(any(dis$laycbd != 0)) warning('Using Quasi-3D confining beds as explicit layers')
-  num_grid_array <- dis$botm*NA
-  huf$botm <- huf$thck*NA
-  huf$botm[,,1] <- huf$top[,,1]-huf$thck[,,1]
-  for(k in 2:dim(huf$thck)[3]) {
-    huf$botm[,,k] <- huf$botm[,,k-1]-huf$thck[,,k]
+                                    parameters = huf$parameters,
+                                    values = NULL,
+                                    grid = 'dis',
+                                    mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                                    type = ifelse(partyp == 'VK', 'harmonic', 'arithmetic'),
+                                    partyp = 'HK',
+                                    pvl = NULL) {
+
+  # if parameters is supplied
+  if(is.null(values)) {
+    parm_type <- vapply(parameters, function(i) attr(i, 'partyp'), 'HK')
+    
+    # error check
+    if(partyp == "VK" && all(huf$hguvani > 0)) stop('No VK specified in huf object through parameters or HGUVANI values')
+    if(partyp == "VANI" && all(huf$hguvani == 0)) stop('No VANI specified in huf object through parameters or HGUVANI values')
+    if(partyp == "HANI" && all(huf$hguhani == 0) && !("HANI" %in% parm_type)) stop('No HANI specified in huf object through parameters or HGUHANI values')
+    if(partyp %in% c("HK", "SS", "SY", "SYTP") && !(partyp %in% parm_type)) stop(paste('No', partyp, 'parameters specified in huf object'))
+    
+    parameters <- parameters[parm_type == partyp]
+    hgunam <- unique(unlist(lapply(parameters, function(i) attr(i, 'hgunam'))))
+    hgunam <- which(huf$hgunam %in% hgunam)
+    
+    # replace parval if value is in pvl object
+    if(!is.null(pvl) && length(parameters) > 0) {
+      
+      replace_parval <- function(parameter) {
+        if(attr(parameter, 'parnam') %in% pvl$parnam) {
+          old_parval <- attr(parameter, 'parval')
+          new_parval <- pvl$parval[which(pvl$parnam == attr(parameter, 'parnam'))]
+          parameter <- (parameter/old_parval)*new_parval
+          attr(parameter, 'parval') <- new_parval
+          return(parameter)
+        } else {
+          return(parameter)
+        }
+      }
+      
+      parameters <- lapply(parameters, replace_parval)
+    }
+    
+    # get a single array for each hgu
+    get_array <- function(hgu) {
+      parm_index <- vapply(parameters, function(i) ifelse(hgu %in% attr(i, 'hgunam'), which(attr(i, 'hgunam') == hgu), 0), 1)
+      hgu_array <- lapply(seq_along(parm_index), function(i) if(parm_index[i] > 0) rmfi_ifelse0(length(dim(parameters[[i]])) > 2, parameters[[i]][,,parm_index[i]], parameters[[i]] ))
+      hgu_array <- abind::abind(hgu_array, along = 3)
+      if(!is.null(hgu_array)) hgu_array <- apply(hgu_array, c(1,2), FUN = sum, na.rm = TRUE)
+      return(hgu_array)
+    }
+    
+    # if partyp is SYTP return a single array which is hgu independent
+    if(partyp == 'SYTP') {
+      hgu_array <- unlist(lapply('SYTP', get_array))
+      return(rmf_create_array(hgu_array, dim = c(dis$nrow, dis$ncol, 1)))
+      
+    } else {
+      
+      hgu_array <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, huf$nhuf))
+      if(length(hgunam) > 0) hgu_array[,,hgunam] <- unlist(lapply(huf$hgunam, get_array))
+      
+      # if partyp is HANI, VANI and not everything is supplied by parameters: get information from HGUHANI/HGUVANI
+      hgu_todo <- c(1:huf$nhuf)[-hgunam]
+      if(length(hgu_todo) > 0) {
+        if(partyp == 'HANI') {
+          # hgu_todo <- which(huf$hguhani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
+          hgu_todo <- which(huf$hguhani > 0)
+          hgu_array[,,hgu_todo] <- rep(abs(huf$hguhani[hgu_todo]), each = dis$nrow, dis$ncol)
+        }
+        if(partyp == 'VANI') {
+          hgu_todo <- which(huf$hguvani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
+          hgu_array[,,hgu_todo] <- rep(huf$hguvani[hgu_todo], each = dis$nrow, dis$ncol)
+        }
+      }
+    }
   } 
-  dis$top <- array(c(dis$top,dis$botm[,,1:(dis$nlay-1)]),dim=c(dis$nrow,dis$ncol,dis$nlay))
-  i <- rep(1:dis$nrow,dis$ncol*dis$nlay)
-  j <- rep(rep(1:dis$ncol,each=dis$nrow),dis$nlay)
-  k <- rep(1:dis$nlay,each=dis$nrow*dis$ncol)
-  num_grid_array[which(mask==0)] <- 0
-  get_weighted_mean <- function(cell) {
-    iCell <- i[cell]
-    jCell <- j[cell]
-    kCell <- k[cell]
-    cell_top <- dis$top[iCell,jCell,kCell]
-    cell_botm <- dis$botm[iCell,jCell,kCell]
-    thck <- pmin(huf$top[iCell,jCell,],cell_top) - pmax(huf$botm[iCell,jCell,],cell_botm)
-    thck[which(thck < 0)] <- 0
-    if(type=='arithmetic') return(weighted.mean(values,thck))
-    if(type=='harmonic') return(rmfi_weighted_harmean(values,thck))
-    if(type=='geometric') return(rmfi_weighted_geomean(values,thck))
+  
+  if(grid == 'huf') {
+    return(rmf_create_array(hgu_array, dim = c(dis$nrow, dis$ncol, huf$nhuf)))
+    
+  } else if(grid == 'dis') {
+    
+    # averaging
+    if(any(dis$laycbd != 0)) warning('Using Quasi-3D confining beds as explicit layers')
+    num_grid_array <- dis$botm*NA
+    huf$botm <- huf$thck*NA
+    huf$botm[,,1] <- huf$top[,,1]-huf$thck[,,1]
+    if(huf$nhuf > 1) {
+      for(k in 2:dim(huf$thck)[3]) {
+        huf$botm[,,k] <- huf$botm[,,k-1]-huf$thck[,,k]
+      } 
+    }
+    dis$top <- array(c(dis$top,dis$botm[,,1:(dis$nlay-1)]),dim=c(dis$nrow,dis$ncol,dis$nlay))
+    
+    i <- rep(1:dis$nrow,dis$ncol*dis$nlay)
+    j <- rep(rep(1:dis$ncol,each=dis$nrow),dis$nlay)
+    k <- rep(1:dis$nlay,each=dis$nrow*dis$ncol)
+    num_grid_array[which(mask==0)] <- 0
+    
+    get_weighted_mean <- function(cell) {
+      iCell <- i[cell]
+      jCell <- j[cell]
+      kCell <- k[cell]
+      cell_top <- dis$top[iCell,jCell,kCell]
+      cell_botm <- dis$botm[iCell,jCell,kCell]
+      thck <- pmin(huf$top[iCell,jCell,],cell_top) - pmax(huf$botm[iCell,jCell,],cell_botm)
+      thck[which(thck < 0)] <- 0
+      
+      if(is.null(values)) values <- hgu_array[iCell,jCell,]
+      
+      if(type=='arithmetic') return(weighted.mean(values,thck))
+      if(type=='harmonic') return(rmfi_weighted_harmean(values,thck))
+      if(type=='geometric') return(rmfi_weighted_geomean(values,thck))
+    }
+    # TODO speed up
+    weighted_means <- vapply(which(mask!=0),get_weighted_mean, 1.0)
+    num_grid_array[which(mask!=0)] <- weighted_means
+    num_grid_array <- rmf_create_array(num_grid_array, dim=c(dis$nrow,dis$ncol,dis$nlay))
+    return(num_grid_array)
   }
-  weighted_means <- lapply(which(mask!=0),get_weighted_mean)
-  num_grid_array[which(mask!=0)] <- weighted_means
-  num_grid_array <- array(num_grid_array,dim=c(dis$nrow,dis$ncol,dis$nlay))
-  return(as.rmf_3d_array(num_grid_array))
 }
 
 #' @describeIn rmf_convert_huf_to_grid Deprecated function name
@@ -1182,15 +1278,87 @@ convert_huf_to_grid <- function(...) {
   rmf_convert_huf_to_grid(...)
 }
 
+
+#' Convert a huf to a lpf object
+#'
+#' @param huf \code{RMODFLOW} huf object
+#' @param dis \code{RMODFLOW} dis object
+#' @param mask masking 3d array for averaging \code{\link{rmf_convert_huf_to_grid}}, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
+#' @param vka character indicating what variable the VKA array in the resulting lpf object represents. Possible values are \code{'VK'} or \code{'VANI'}. If all HGUVANI values are the same, the default vka is set correspondingly. If HGUVANI varies between hgu's, the default vka is \code{'VANI'}.
+#' @param averaging named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the (\code{partyp's}) defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').
+#' @param pvl optional \code{RMODFLOW} pvl object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
+#' @param ... arguments passed to \code{\link{rmf_creat_lpf}}
+#' @return a \code{RMODFLOW} lpf object
+#' @details Huf parameters are converted to non-parameter data averaged over the \code{dis} grid using \code{\link{rmf_convert_huf_to_grid}}.
+#' The resulting lpf object will therefore not have any flow parameters.
+#' If HGUVANI varies per hgu, a correct conversion to a lpf vka array is not possible (i.e. because part of the layer might represent VANI from hgu A and another part VK from hgu B). Therefore, the user has to decide whether vka represents vk or vani in its entirety. 
+#' @export
+#' @seealso \code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_create_lpf}}
+#'
+rmf_convert_huf_to_lpf <- function(huf, 
+                                   dis, 
+                                   mask = NULL,
+                                   vka = ifelse(all(huf$hguvani == 0), 'VK', 'VANI'),
+                                   averaging = c(HK = 'arithmetic', HANI = 'arithmetic', VK = 'harmonic', VANI = 'arithmetic', SS = 'arithmetic', SY = 'arithmetic'),
+                                   pvl = NULL,
+                                   ...) {
+  
+    if(is.null(mask)) mask <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
+
+    hk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HK', type = averaging['HK'], pvl = pvl)
+    hani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HANI', type = averaging['HANI'], pvl = pvl)
+
+    vk <- vani <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
+    if(any(huf$hguvani == 0)) vk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VK', type = averaging['VK'], pvl = pvl)
+    if(any(huf$hguvani > 0)) vani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VANI', type = averaging['VANI'], pvl = pvl)
+    if(vka == 'VK') {
+      vani <- hk/vani
+    } else if(vka == 'VANI') {
+      vk <- hk/vk
+    }
+    vk[which(is.na(vk))] <- 0
+    vani[which(is.na(vani))] <- 0
+    vka_array <- vk + vani
+    
+    
+    ss <- sy <- NULL
+    if('TR' %in% dis$sstr) {
+      ss <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SS', type = averaging['SS'], pvl = pvl)
+      if(any(huf$lthuf != 0)) sy <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SY', type = averaging['SY'], pvl = pvl)
+    } 
+    
+    lpf <- rmf_create_lpf(dis = dis, 
+                          ilpfcb = huf$ihufcb, 
+                          hdry = huf$hdry, 
+                          laytyp = huf$lthuf,
+                          chani = rep(0, dis$nlay), 
+                          layvka = rmfi_ifelse0(vka == 'VK', rep(0, dis$nlay), rep(1, dis$nlay)),
+                          laywet = huf$laywt,
+                          wetfct = huf$wetfct,
+                          iwetit = huf$iwetit,
+                          ihdwet = huf$ihdwet,
+                          parameters = NULL,
+                          hk = hk,
+                          hani = hani,
+                          vka = vka_array,
+                          ss = ss,
+                          sy = sy,
+                          wetdry = huf$wetdry,
+                          ...)
+    
+    comment(lpf) <- c(comment(lpf), 'LPF object converted from HUF object')
+    return(lpf)
+}
+
 #' Convert a huf to a mask object
 #' 
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
-#' @param bas bas object, corresponding to the huf object
+#' @param bas bas object, corresponding to the huf object; defaults to NULL
 #' @return mask rmf_3d_array
 #' @export
-rmf_convert_huf_to_mask <- function(huf, dis, bas) {
-  mask <- rmf_convert_huf_to_nlay(huf = huf, dis = dis, bas = bas)
+rmf_convert_huf_to_mask <- function(huf, dis, bas = NULL) {
+  mask <- rmfi_convert_huf_to_nlay(huf = huf, dis = dis, bas = bas)
   mask[which(mask==0)] <- NA
   mask <- mask/mask
   mask[which(huf$thck==0)] <- NA
@@ -1202,38 +1370,6 @@ rmf_convert_huf_to_mask <- function(huf, dis, bas) {
 convert_huf_to_mask <- function(...) {
   .Deprecated(new = "rmf_convert_huf_to_mask", old = "convert_huf_to_mask")
   rmf_convert_huf_to_mask(...)
-}
-
-#' Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
-#' 
-#' @param huf huf object
-#' @param dis dis object, corresponding to the huf object
-#' @param bas bas object, corresponding to the huf object
-#' @return nlay rmf_3d_array
-#' @export
-rmf_convert_huf_to_nlay <- function(huf, dis, bas) {
-  nlay <- huf$top * 0
-  huf_coordinates <- rmf_cell_coordinates(huf, dis = dis, include_faces = TRUE)
-  if(any(dis$laycbd != 0)) {
-    warning('Using Quasi-3D confining beds as explicit layers')
-    dis$nlay <- dis$nlay + length(which(dis$laycbd != 0))
-    dis$laycbd <- rep(0, dis$nlay)
-  }
-  dis_coordinates <- rmf_cell_coordinates(dis, include_faces = TRUE)
-  ibound <- abs(bas$ibound)
-  for(i in 1:huf$nhuf) {
-    for(j in 1:dis$nlay) {
-      nlay[,,i] <- nlay[,,i] + (!(dis_coordinates$upper[,,j] < huf_coordinates$lower[,,i] | dis_coordinates$lower[,,j] > huf_coordinates$upper[,,i])) * ibound[,,j]
-    }
-  }
-  return(nlay)
-}
-
-#' @describeIn rmf_convert_huf_to_nlay Deprecated function name
-#' @export
-convert_huf_to_nlay <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_nlay", old = "convert_huf_to_nlay")
-  rmf_convert_huf_to_nlay(...)
 }
 
 #' Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
@@ -1744,14 +1880,16 @@ rmf_create_parameter <- function(...) {
 #' @param mltnam character vector with the same length as \code{layer}; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present. 
 #' @param zonnam character vector with the same length as \code{layer}; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present. 
 #' @param iz list with the same length as \code{layer} where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.
-#' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY and VKCB}. Not used when \code{layer} is \code{NULL}.
+#' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY}, \code{VKCB} for lpf and \code{SYTP} for huf. Not used when \code{layer} is \code{NULL}.
 #' @param mlt \code{RMODFLOW} mlt object which holds the multiplier arrays specified in \code{mltnam}
 #' @param zon \code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}
 #' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
+#' @param hgunam character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.
 #' @details A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
 #'          If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
 #'          Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
 #'          If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
+#'          If \code{hgunam} is specified, \code{layer} can not be specified.
 #' @return an \code{rmf_2d_array} object of class \code{rmf_parameter}
 #' @export
 #' @seealso \code{\link{rmf_create_array}}
@@ -1767,10 +1905,12 @@ rmf_create_parameter.default <- function(dis,
                                          partyp = NULL,
                                          mlt = NULL, 
                                          zon = NULL, 
-                                         instnam = NULL) {
+                                         instnam = NULL,
+                                         hgunam = NULL) {
   
-  if(is.null(kper) && is.null(layer)) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
+  if(is.null(kper) && (is.null(layer) && is.null(hgunam))) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
   if(!is.null(layer) && is.null(partyp)) stop("Please specify the partyp argument")
+  if(!is.null(layer) && !is.null(hgunam)) stop("Please specify either the layer or the hgunam argument")
   mltarr <- list(mltnam)
   zonarr <- list(zonnam)
   
@@ -1800,6 +1940,7 @@ rmf_create_parameter.default <- function(dis,
   attr(arr, 'zon') <- zonnam
   attr(arr, 'iz') <- iz
   attr(arr, 'instnam') <- instnam
+  attr(arr, 'hgunam') <- hgunam
   class(arr) <- c('rmf_parameter', class(arr))
   return(arr)
   
