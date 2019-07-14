@@ -1174,6 +1174,9 @@ convert_ijk_to_id <- function(...) {
 #' @seealso \code{\link{rmf_create_upw}}, \code{\link{rmf_convert_upw_to_lpf}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 rmf_convert_lpf_to_upw <- function(lpf, iphdry = TRUE) {
   
+  names(lpf) <- replace(names(lpf), which(names(lpf) == 'ilpfcb'), 'iupwcb')
+  names(lpf) <- replace(names(lpf), which(names(lpf) == 'nplpf'), 'npupw')
+
   if(!is.null(lpf$storagecoefficient)) lpf$storagecoefficient <- NULL
   if(!is.null(lpf$constantcv)) lpf$constantcv <- NULL
   if(!is.null(lpf$thickstrt)) lpf$thickstrt <- NULL
@@ -1223,6 +1226,10 @@ rmf_convert_upw_to_lpf <- function(upw,
                                    iwetit = 1,
                                    ihdwet = 0,
                                    wetdry = NULL) {
+  
+  names(upw) <- replace(names(upw), which(names(upw) == 'iupwcb'), 'ilpfcb')
+  names(upw) <- replace(names(upw), which(names(upw) == 'npupw'), 'nplpf')
+  
   upw$iphdry <- NULL
   
   upw$storagecoefficient <- storagecoefficient
