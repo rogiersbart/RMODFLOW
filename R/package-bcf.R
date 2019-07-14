@@ -2,6 +2,7 @@
 #' 
 #' \code{rmf_create_bcf} creates an \code{RMODFLOW} bcf object
 #'
+#' @param dis \code{RMODFLOW} dis object
 #' @param ibcfcb flag and unit number for writing cell-by-cell flow terms; defaults to 0
 #' @param hdry head assigned to cells that are converted to dry cells; defaults to -888
 #' @param iwdflg wetting capability flag; defaults to 0
@@ -22,7 +23,7 @@
 #' @export
 #' @seealso \code{\link{rmf_read_bcf}}, \code{\link{rmf_write_bcf}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
 
-rmf_create_bcf = function(dis = rmf_create_dis(),
+rmf_create_bcf <-  function(dis,
                           ibcfcb = 0,
                           hdry = -888,
                           iwdflg = 0,
@@ -32,53 +33,53 @@ rmf_create_bcf = function(dis = rmf_create_dis(),
                           layavg = rep(0, dis$nlay),
                           laycon = rep(0, dis$nlay),
                           trpy = rep(1, dis$nlay),
-                          sf1 = NULL,
-                          tran = array(0.001, dim=c(dis$nrow, dis$ncol, dis$nlay)),
-                          hy = NULL,
-                          vcont = array(1e-5, dim=c(dis$nrow, dis$ncol, dis$nlay)),
-                          sf2 = NULL,
+                          sf1 = 1e-5,
+                          tran = 0.001,
+                          hy = 0.0001,
+                          vcont = 1e-5,
+                          sf2 = 0.15,
                           wetdry = NULL
                           ){
   
-  bcf = list()
+  bcf <-  list()
   
   # data set 0
   # to provide comments, use ?comment on resulting bcf object
   
   # data set 1
-  bcf$ibcfcb = ibcfcb
-  bcf$hdry = hdry
-  bcf$iwdflg = iwdflg
-  bcf$wetfct = wetfct
-  bcf$iwetit = iwetit
-  bcf$ihdwet = ihdwet
+  bcf$ibcfcb <- ibcfcb
+  bcf$hdry <- hdry
+  bcf$iwdflg <- iwdflg
+  bcf$wetfct <- wetfct
+  bcf$iwetit <- iwetit
+  bcf$ihdwet <- ihdwet
   
   # data set 2
-  bcf$layavg = layavg
-  bcf$laycon = laycon
+  bcf$layavg <- layavg
+  bcf$laycon <- laycon
   
   # data set 3
-  bcf$trpy = trpy
+  bcf$trpy <- trpy
   
   # data set 4
-  if(!is.null(sf1)) bcf$sf1 = rmf_create_array(sf1, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if('TR' %in% dis$sstr) bcf$sf1 <- rmf_create_array(sf1, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 5
-  if(!is.null(tran)) bcf$tran = rmf_create_array(tran, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(any(c(0,2) %in% bcf$laycon)) bcf$tran <- rmf_create_array(tran, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 6
-  if(!is.null(hy)) bcf$hy = rmf_create_array(hy, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(any(c(1,3) %in% bcf$laycon)) bcf$hy <- rmf_create_array(hy, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 7
-  bcf$vcont = rmf_create_array(vcont, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(dis$nlay > 1) bcf$vcont <- rmf_create_array(vcont, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 8
-  if(!is.null(sf2)) bcf$sf2 = rmf_create_array(sf2, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if('TR' %in% dis$sstr && any(c(2,3) %in% bcf$laycon)) bcf$sf2 <- rmf_create_array(sf2, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
   # data set 9
-  if(!is.null(wetdry)) bcf$wetdry = rmf_create_array(wetdry, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(bcf$iwdflg != 0 && any(c(1,3) %in% bcf$laycon)) bcf$wetdry <- rmf_create_array(wetdry, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
-  class(bcf) = c('bcf', 'rmf_package')
+  class(bcf) <- c('bcf', 'rmf_package')
   return(bcf)
 }
 
@@ -93,7 +94,7 @@ rmf_create_bcf = function(dis = rmf_create_dis(),
 #' @export
 #' @seealso \code{\link{rmf_write_bcf}}, \code{\link{rmf_create_bcf}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
 
-rmf_read_bcf = function(file = {cat('Please select bcf file ...\n'); file.choose()},
+rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choose()},
                         dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                         ...){
   
@@ -230,12 +231,15 @@ rmf_read_bcf = function(file = {cat('Please select bcf file ...\n'); file.choose
 #' @export
 #' @seealso \code{\link{rmf_read_bcf}}, \code{\link{rmf_create_bcf}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
 
-rmf_write_bcf = function(bcf, dis = rmf_read_dis(), file = {cat('Please select bcf file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_bcf <- function(bcf, 
+                          dis =  {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                          file = {cat('Please select bcf file to overwrite or provide new filename ...\n'); file.choose()}, 
+                          ...){
   
   # data set 0
-  # v <- packageDescription("RMODFLOW")$Version
-  # cat(paste('# MODFLOW Block-Centered Flow Package created by RMODFLOW, version',v,'\n'), file = file)
-  # cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
+  v <- packageDescription("RMODFLOW")$Version
+  cat(paste('# MODFLOW Block-Centered Flow Package created by RMODFLOW, version',v,'\n'), file = file)
+  cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
   rmfi_write_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file, ...)
