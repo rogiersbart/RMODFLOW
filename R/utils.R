@@ -383,6 +383,56 @@ rmf_calculate_array <-  function(dis,
   return(arr)
 }
 
+#' Calculate layer thicknesses
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @param collapse_cbd logical; should the thickness of an underlying confining bed be added to the overlying layer ? Defaults to FALSE.
+#' @param only_layers logical; should only the thicknesses of model layers be returned ? Defaults to FALSE
+#' @details The bottom layer can not have a confining bed below.
+#'          When collapse_cbd is TRUE, thicknesses of confining beds are added to their respective overlying layers. The confining beds are then removed. 
+#'          When only_layers is TRUE, the thicknesses of all layers and confining beds are calculated and only the layers are returned. This is useful to calculate e.g. transmissivities.
+#'          By default, thicknesses of confining layers are therefore also included in the returned array.
+#' @return rmf_3d_array with the layer thicknesses. If collapse_cbd = TRUE or only_layers = TRUE or if there are no confining beds present, there are \code{dis$nlay} layers. 
+#'         Otherwise there are \code{dis$nlay + number of confining beds} layers
+#' @export
+#'
+rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FALSE) {
+  
+  # nnlay is the 3th dimension of dis$botm
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
+  thck <- rmf_create_array(dim = c(dis$nrow, dis$ncol, ifelse(collapse_cbd, dis$nlay, nnlay)))
+  thck[,,1] <- dis$top - dis$botm[,,1]
+  
+  # which nnlay are confining beds
+  cbd <- rmfi_confining_beds(dis = dis)
+  
+  if(dis$nlay > 1) {
+    if(collapse_cbd && any(dis$laycbd != 0)) {
+      botm <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay))
+      
+      # botm of confining bed
+      botm[,,dis$laycbd != 0] <- dis$botm[,,as.logical(cbd)]
+      
+      # botm of layer
+      no_botm <- sort(c(which(cbd == TRUE) - 1, which(cbd == TRUE)))
+      botm[,,dis$laycbd == 0] <- dis$botm[,,which(!(c(1:nnlay) %in% no_botm))]
+      thck[,,1] <- dis$top - botm[,,1]
+      
+    } else {
+      botm <- dis$botm
+    }
+    
+    for(k in 2:ifelse(collapse_cbd, dis$nlay, nnlay)) {
+      thck[,,k] <- botm[,,k-1] - botm[,,k]
+    }
+  }
+  
+  if(only_layers && !collapse_cbd) thck <- thck[,,!cbd]
+  
+  return(thck)
+  
+}
+
 #' Get cell x, y and z coordinates from a dis object
 #' 
 #' @param dis dis object
@@ -667,6 +717,143 @@ rmf_cell_info <- function(...) {
 cell_info <- function(...) {
   .Deprecated(new = "rmf_cell_info", old = "cell_info")
   rmf_cell_info(...)
+}
+
+#' Convert a bcf to a lpf object
+#'
+#' @param bcf \code{RMODFLOW} bcf object
+#' @param dis \code{RMODFLOW} dis object
+#' @param storagecoefficient logical; should STORAGECOEFFICIENT keyword be included?; defaults to FALSE
+#' @param constantcv logical; should CONSTANTCV keyword be included?; defaults to FALSE
+#' @param thickstrt logical; should THICKSTRT keyword be included?; defaults to FALSE
+#' @param nocvcorrection logical; should NOCVCORRECTION keyword be included?; defaults to FALSE
+#' @param novfc logical; should NOVFC keyword be included?; defaults to FALSE
+#' @param noparcheck logical; should NOPARCHECK keyword be included?; defaults to FALSE
+#' @param ss_value numeric; value of specific storage for layers with laycon == 1. Defaults to 1e-5. See details
+#' @param wetdry_value numeric; value of wetdry for layer with laycon == 2. Defaults to -0.01. See details.
+#' @param vk_bot 2d array with the vertical hydraulic conductivity values in the bottom layer. Defaults to NULL. See details.
+#' @details Since vcont is not set for the bottom layer, the vertical conductivity in the bottom layer is assumed to be the same as hk unless a vk_bot argument is supplied.
+#'          This affects the calculations of vk in the overlying layers as well.
+#'          
+#'          When confining beds are present, both vkcb and vk are unknowns. Vkcb is therefore set equal to vk and a warning is thrown.
+#'          
+#'          Layers with laycon = 1 in BCF should represent the upper layer of the model and have unconfined conditions. In this case, BCF needs only a specific yield value.
+#'          When converting to LPF however, a specific storage value is also needed and can not be determined from the bcf object. The \code{ss_value} argument specifies this 
+#'          specific storage value.
+#'          
+#'          Layers with laycon = 2 are converted to convertible layer types in LPF. In BCF, these layers do not have wetdry variables specified. In LPF, convertible layers can have 
+#'          wetdry variables specified. The \code{wetdry_value} argument sets the wetdry values for layers with laycon = 2.
+#' @return object of class lpf
+#' @export
+#' 
+#' @seealso \code{\link{rmf_create_lpf}}, \code{\link{rmf_create_bcf}}, \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bcf.htm}
+rmf_convert_bcf_to_lpf <- function(bcf,
+                                   dis,
+                                   storagecoefficient = FALSE,
+                                   constantcv = FALSE,
+                                   thickstrt = FALSE,
+                                   nocvcorrection = FALSE,
+                                   novfc = FALSE,
+                                   noparcheck = FALSE,
+                                   ss_value = 1e-5,
+                                   wetdry_value = -0.01,
+                                   vk_bot = NULL) {
+  
+  # data set 1
+  names(bcf) <- replace(names(bcf), which(names(bcf) == 'ibcfcb'), 'ilpfcb')
+  bcf$nplpf <- 0
+  
+  # options
+  bcf$storagecoefficient <- storagecoefficient
+  bcf$constantcv <- constantcv
+  bcf$thickstrt <- thickstrt
+  bcf$nocvcorrection <- nocvcorrection
+  bcf$novfc <- novfc
+  bcf$noparcheck <- noparcheck
+  
+  # laytyp
+  bcf$laytyp <- as.numeric(bcf$laycon != 0)
+  laycon <- bcf$laycon
+  bcf$laycon <- NULL
+  
+  # horizontal anisotropy
+  names(bcf) <- replace(names(bcf), which(names(bcf) == 'trpy'), 'chani')
+  
+  # vertical anisotropy
+  bcf$layvka <- rep(0, dis$nlay)
+  
+  # wetting
+  bcf$laywet <- rep(bcf$iwdflg, dis$nlay)
+  bcf$iwdflg <- NULL
+  if(all(bcf$laywet == 0)) bcf$wetfct <- bcf$iwetit <- bcf$ihdwet <- NULL
+  
+  # get thickness
+  thck <- rmf_calculate_thickness(dis = dis, only_layers = TRUE)
+  
+  # hk
+  bcf$hk <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
+  if(any(c(0,2) %in% laycon)) {
+    layer_id <- which(laycon %in% c(0,2))
+    bcf$hk[,,layer_id] <- bcf$tran[,,layer_id]/thck[,,layer_id]
+    bcf$tran <- NULL
+  } 
+  if(any(c(1,3) %in% laycon)) {
+    layer_id <- which(laycon %in% c(1,3))
+    bcf$hk[,,layer_id] <- bcf$hy[,,layer_id]
+    bcf$hy <- NULL
+  }
+  
+  # vk
+  bcf$vka <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay))
+  if(is.null(vk_bot)) vk_bot <- bcf$hk[,,dis$nlay]
+  bcf$vka[,,dis$nlay] <- vk_bot
+  
+  if(dis$nlay > 1) {
+    if(any(dis$laycbd != 0)) {
+      
+      # vkcb
+      warning('vkcb will be set equal to vk')
+      thck <- rmf_calculate_thickness(dis = dis, collapse_cbd = TRUE)
+      for(k in (dis$nlay - 1):1) {
+        bcf$vka[,,k] <- (0.5*thck[,,k])/((1/bcf$vcont[,,k]) - (0.5*thck[,,k+1]/bcf$vka[,,k+1]))
+      }
+      thck <- rmf_calculate_thickness(dis = dis, only_layers = TRUE)
+      bcf$vkcb <- bcf$vka
+      
+    } else {
+      for(k in (dis$nlay - 1):1) {
+        bcf$vka[,,k] <- (0.5*thck[,,k])/((1/bcf$vcont[,,k]) - (0.5*thck[,,k+1]/bcf$vka[,,k+1]))
+      }
+    }
+  } 
+  bcf$vcont <- NULL
+  
+  if('TR' %in% dis$sstr) {
+    # ss
+    bcf$ss <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay))
+    if(any(laycon == 0)) bcf$ss[,,which(laycon == 0)] <- bcf$sf1[,,which(laycon == 0)]/thck[,,which(laycon == 0)]
+    if(any(laycon == 1)) bcf$ss[,,which(laycon == 1)] <- ss_value
+    if(any(laycon %in% c(2,3))) bcf$ss[,,which(laycon %in% c(2,3))] <- bcf$sf1[,,which(laycon %in% c(2,3))]/thck[,,which(laycon %in% c(2,3))]
+    
+    
+    # sy
+    if(any(bcf$laytyp != 0)) {
+      bcf$sy <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay))
+      if(any(laycon == 1)) bcf$sy[,,which(laycon == 1)] <- bcf$sf1[,,which(laycon == 1)]
+      if(any(laycon %in% c(2,3))) bcf$sy[,,which(laycon %in% c(2,3))] <- bcf$sf2[,,which(laycon %in% c(2,3))]
+    }
+    
+    bcf$sf1 <- bcf$sf2 <- NULL
+  }
+  
+  # wetdry
+  if(any(bcf$laywet > 0) && any(laycon == 2) && !is.null(wetdry)) {
+    bcf$wetdry[,,which(laycon == 2)] <- wetdry_value
+  }
+  
+  class(bcf) <- replace(class(bcf), which(class(bcf) == 'bcf'), 'lpf')
+  comment(bcf) <- c(comment(bcf), 'LPF object converted from BCF object')
+  return(bcf)
 }
 
 #' Convert bud object fluxes to darcy velocities

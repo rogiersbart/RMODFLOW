@@ -1,3 +1,19 @@
+#' Create sequence of confining bed indicators
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @return vector of length \code{dis$nlay + confining beds} indicating indicating if the index represents a confining bed
+#' @details When confining beds are present, \code{dis$botm} has \code{dis$nlay + number of confining beds} layers. 
+#'          This functions returns a logical vector indicating which of those layers is a confining bed. This is useful 
+#'          when handling calculations with \code{dis$botm}, e.g. calculating thicknesses.
+#' @keywords internal
+#'
+rmfi_confining_beds <- function(dis) {
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
+  cbd <- rep(0, nnlay)
+  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  return(cbd)
+}
+
 #' Convert data frame coordinates to another coordinate reference system
 #' 
 #' @param dat data frame with x and y coordinates
