@@ -54,7 +54,7 @@ rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
-  input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = c(4,5), ...)
+  input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = c(4,5), ...)
   
   obj <- rmf_create_chd(input$rmf_lists, dis = dis, noprint = unname(input$option['NOPRINT']), aux = input$aux)
   comment(obj) <- input$comments

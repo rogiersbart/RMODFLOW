@@ -57,7 +57,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
-  input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
+  input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
   
   obj <- rmf_create_wel(input$rmf_lists, dis = dis, iwelcb = input$icb, noprint = unname(input$option['NOPRINT']), aux = input$aux)
   comment(obj) <- input$comments

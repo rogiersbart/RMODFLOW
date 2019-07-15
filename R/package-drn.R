@@ -57,7 +57,7 @@ rmf_read_drn <-  function(file = {cat('Please select drain file ...\n'); file.ch
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
-  input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 5, ...)
+  input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 5, ...)
   
   obj <- rmf_create_drn(input$rmf_lists, dis = dis, idrncb = input$icb, noprint = unname(input$option['NOPRINT']), aux = input$aux)
   comment(obj) <- input$comments

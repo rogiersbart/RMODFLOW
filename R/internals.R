@@ -87,7 +87,7 @@ convert_huf_to_nlay <- function(...) {
 #' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_arrays} for the \code{rmf_create_*} function. When matrix elements are present, they are coerced to rmf_2d_arrays which are active for all stress-periods with a warning.
 #' @return list with the parameters, input arrays and the kper argument
 #' @keywords internal
-#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}, \code{\link{rmfi_parse_array_parameters}}, \code{\link{rmfi_write_array_parameters}}
+#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}, \code{\link{rmfi_parse_array_parameters}}, \code{\link{rmfi_write_array_parameters}}
 
 rmfi_create_bc_array <- function(arg, dis) {
   
@@ -213,7 +213,7 @@ rmfi_create_bc_array <- function(arg, dis) {
 #' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
-#' @seealso \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
+#' @seealso \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 
 rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
@@ -1043,7 +1043,7 @@ rmfi_performance_measures <- function(observations, predictions,print=F) {
 #' @return list with (optional) comments, icb, option, aux and rmf_lists
 #' @keywords internal
 #' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}
-rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
+rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   rmf_lists <- list()
   
@@ -1419,7 +1419,7 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
 
 #' @return \code{NULL}
 #' @keywords internal
-#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_read_bc_list}}
+#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 #' 
 
 rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp, ...) {
