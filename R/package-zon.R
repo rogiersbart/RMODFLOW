@@ -28,6 +28,7 @@ rmf_create_zon <-  function(nzn = 1,
   
   # data set 3
   zon$izon <-  lapply(izon, function(i) apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)))
+  names(zon$izon) <- zon$zonnam
   
   class(zon) <-  c('zon', 'modflow_package')
   return(zon)
@@ -60,7 +61,7 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
   
   # data set 1
   data_set_1 <- rmfi_parse_variables(zon_lines)
-  zon$nzn <- data_set_1$variables[1]
+  zon$nzn <- as.numeric(data_set_1$variables[1])
   zon_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -81,6 +82,7 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
     rm(data_set_3)
   }
   zon$izon <- lapply(zon$izon, rmf_create_array)
+  names(zon$izon) <- zon$zonnam
   class(zon) = c('zon', 'rmf_package')
   return(zon)
   

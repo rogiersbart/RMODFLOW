@@ -34,11 +34,15 @@ rmf_create_mlt <- function(nml = 1,
   if(!is.null(functn) && (T %in% functn)) mlt$functn <-  functn
 
   # data set 3
-  if(is.null(mlt$functn) || (!is.null(mlt$functn) && (F %in% mlt$functn))) mlt$rmlt <-  rmlt
+  if(is.null(mlt$functn) || (!is.null(mlt$functn) && (F %in% mlt$functn))) {
+    mlt$rmlt <-  rmlt
+    names(mlt$rmlt) <- mlt$mltnam[rmfi_ifelse0(is.null(functn), 1:nml, functn)]
+  }
   
   # data set 4
   if(!is.null(mlt$functn) && (T %in% mlt$functn)) {
     mlt$operators <-  operators
+    names(mlt$operators) <- mlt$mltnam[functn]
     mlt$iprn <-  iprn
   }
   
@@ -90,6 +94,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
       # data set 3
       data_set_3 <- rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
       mlt$rmlt[[i]] <- data_set_3$array
+      names(mlt$rmlt)[i] <- mlt$mltnam[i]
       mlt_lines <- data_set_3$remaining_lines
       rm(data_set_3)
     }
@@ -98,6 +103,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
       # data set 4
       data_set_4 <- rmfi_parse_variables(mlt_lines)
       mlt$operators[i] <- paste(rmfi_parse_variables[1:(length(data_set_4$variables)-1)], sep=' ')
+      names(mlt$operators)[i] <- mlt$mltnam[i]
       mlt$iprn[i] <- data_set_4$variables[length(data_set_4$variables)]
       mlt_lines <- data_set_4$remaining_lines
       rm(data_set_4)
