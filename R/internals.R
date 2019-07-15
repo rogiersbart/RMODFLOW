@@ -782,7 +782,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
     parval <-  as.numeric(data_set_3$variables[3])
     nclu <- as.numeric(data_set_3$variables[4])
     p_tv <- NULL
-    if(length(data_set_3$variables) > 4){
+    if(length(data_set_3$variables) > 4 && toupper(data_set_3$variables[5]) == 'INSTANCES'){
       p_tv <- TRUE
       numinst = as.numeric(data_set_3$variables[6])
       arr <- list()
@@ -1065,7 +1065,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   rm(data_set_1)
   
   # data set 2
-  if(identical(c('shead', 'ehead'), varnames)) { # exception for CHD
+  if(identical(c('shead', 'ehead'), tolower(varnames))) { # exception for CHD
     n <- 1 
     data_set_2 <-  rmfi_parse_variables(lines, n=n, ...)
     icb <- NULL
@@ -1090,18 +1090,20 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # parameters
   if(np_def > 0){
-    
+    tv <- list()
     i <- 1
     while(i <= np_def){
       # data set 3
       data_set_3 <-  rmfi_parse_variables(lines)
-      p_name <-   as.character(data_set_3$variables[1])
+      p_name <-  as.character(data_set_3$variables[1])
       p_val <-  as.numeric(data_set_3$variables[3])
       p_nlst <- as.numeric(data_set_3$variables[4])
       p_tv <- NULL
-      if(length(data_set_3$variables) > 4){
+      tv[[p_name]] <- FALSE
+      if(length(data_set_3$variables) > 4 && toupper(data_set_3$variables[5]) == 'INSTANCES'){
         p_tv <- TRUE
-        p_numinst = as.numeric(data_set_3$variables[6])
+        p_numinst <-  as.numeric(data_set_3$variables[6])
+        tv[[p_name]] <- TRUE
       } 
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
@@ -1120,7 +1122,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
           
           # data set 4b
           data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
+          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
           
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
@@ -1132,7 +1134,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         # non time-varying
         # data set 4b
         data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
+        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
         
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -1167,7 +1169,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     if(itmp > 0){
       data_set_6 <- rmfi_parse_list(lines, nlst = itmp, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
       rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_6$list, kper = i)
-      # to do : see if list already exists; then just add kper to attribute
+      # TODO : see if list already exists; then just add kper to attribute
       lines <-  data_set_6$remaining_lines
       rm(data_set_6)
     } else if(i > 1 && itmp < 0) {
@@ -1179,7 +1181,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         # data set 7
         data_set_7 <-  rmfi_parse_variables(lines)
         p_name <-  as.character(data_set_7$variables[1])
-        i_name <- rmfi_ifelse0(length(data_set_7$variables) > 1, as.character(data_set_7$variables[2]), NULL)
+        i_name <- rmfi_ifelse0(tv[[p_name]], as.character(data_set_7$variables[2]), NULL)
         
         rmf_lists <- lapply(rmf_lists, set_kper, p_name = p_name, i_name = i_name, kper = i)
         
