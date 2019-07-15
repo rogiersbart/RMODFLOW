@@ -1921,11 +1921,13 @@ rmf_create_parameter.default <- function(dis,
   if(any(toupper(zonnam) != "ALL")) {
     if(is.null(zon)) stop('Please provide a zon object')
     if(is.null(iz)) stop('Please provide a iz argument')
+    if(!inherits(iz, 'list')) stop('The iz argument should be a list')
     zonarr[which(toupper(zonnam) != "ALL")] <- zon$izon[zonnam]
   }
   
   
   arr <- rmf_calculate_array(dis = dis,
+                             layer = rmfi_ifelse0(is.null(layer), 1:length(hgunam), layer),
                              mltarr = mltarr,
                              zonarr = zonarr,
                              iz = iz,

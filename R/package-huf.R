@@ -301,7 +301,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
         huf_lines <- data_set_10$remaining_lines
         rm(data_set_10)
         
-        ds11 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = NULL)
+        ds11 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
         for(j in 1:nclu) {
           data_set_11 <- rmfi_parse_variables(huf_lines)
           ds11$hgunam[j] <- data_set_11$variables[1]

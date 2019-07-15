@@ -261,7 +261,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
       lpf_lines <- data_set_8$remaining_lines
       rm(data_set_8)
 
-      ds9 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = NULL)
+      ds9 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
       for(j in 1:nclu) {
         data_set_9 <- rmfi_parse_variables(lpf_lines)
         ds9$layer[j] <- as.numeric(data_set_9$variables[1])
