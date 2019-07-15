@@ -355,6 +355,50 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
 }
 
+#' Returns character lengths per value from a FORTRAN format
+#'
+#' @param format character; FORTRAN format within parentheses as read from a MODFLOW array header
+#'
+#' @return integer vector with the number of characters per value as specified by the FORTRAN format
+#' @note based on \code{\link{read.fortran}}
+#' @keywords internal
+#'
+rmfi_fortran_format <- function(format) {
+  
+  # remove parentheses
+  format <- gsub("[()]", '', format)
+  
+  # split if multiple formats
+  format <- strsplit(format, split = ',')[[1]]
+  
+  # from read.fortran()
+  format <- toupper(format)
+  template <- "^([0-9]*)([FXAI])([0-9]*)\\.?([0-9]*)"
+  
+  # repetitions
+  reps <- as.numeric(sub(template, "\\1", format))
+  reps[is.na(reps)] <- 1L
+  
+  # types
+  types <- sub(template, "\\2", format)
+  
+  # lengths
+  lengths <- as.numeric(sub(template, "\\3", format))
+  lengths[is.na(lengths) & types == "X"] <- 1L
+  
+  # deal with spaces
+  charskip <- types == "X"
+  lengths[charskip] <- reps[charskip] * lengths[charskip]
+  reps[charskip] <- 1
+  
+  lengths <- rep(lengths, reps)
+  types <- rep(types, reps)
+  types <- match(types, c("F", "D", "X", "A", "I"))
+  lengths[types == 3] <- -lengths[types == 3L]
+  
+  return(lengths)
+}
+
 #' Calculate a geometric mean
 #' @param x An R object.
 #' @param ... further arguments passed to \code{\link{prod}}
@@ -407,13 +451,14 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   
   # Initialize array object
   array <- array(dim=c(nrow,ncol,nlay))
-  fortranfmt <-  FALSE
   
   # Read array according to format type if there is anything to be read
   if(prod(dim(array))!=0)
   {
     for(k in 1:nlay) 
     { 
+      fortranfmt <-  FALSE
+      
       # CONSTANT
       if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'CONSTANT') {
         if(nlay==1) {
@@ -435,21 +480,27 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           # format
           fmtin <- rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3]
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           remaining_lines <- remaining_lines[-1] 
         } else {
           cnst <-  1.0
         }
-        if(fortranfmt) remaining_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[1])
-        nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
-        nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-        if(fortranfmt && nLines > 1) remaining_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[2:nLines])
-        array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
-        remaining_lines <- remaining_lines[-c(1:nLines)]
+        
+        if(fortranfmt) {
+          remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+          nPerLine <- length(lengths)
+          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+          if(nLines > 1) remaining_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(remaining_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          
+        } else {
+          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
+          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+        }
+         remaining_lines <- remaining_lines[-c(1:nLines)]
       }
       # EXTERNAL
       else if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'EXTERNAL')
@@ -466,11 +517,8 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         absfile = paste(direct, fname, sep = '/')
         
         if(!binary) {
-          
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           
@@ -478,11 +526,18 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           external_lines <-  readr::read_lines(absfile)
           if(!is.null(attr(nam, as.character(nunit)))) external_lines <- external_lines[-c(1:attr(nam, as.character(nunit)))]
           
-          if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-          if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          if(fortranfmt) {
+            external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+            nPerLine <- length(lengths)
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+            
+          } else {
+            nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          }
           
         } else {
           con <- file(absfile,open='rb')
@@ -538,18 +593,23 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           external_lines <-  readr::read_lines(absfile)
           
-          if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-          if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          if(fortranfmt) {
+            external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+            nPerLine <- length(lengths)
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+            
+          } else {
+            nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          }
           
         } else {
           con <- file(asbfile,open='rb')
@@ -572,10 +632,11 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         
       } else {
         # FIXED format
-        locat <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1])
-        cnst <- as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2])
+        header <- rmfi_parse_variables(remaining_lines[1], n = 3, format = 'fixed')
+        locat <-  as.numeric(header$variables[1])
+        cnst <- as.numeric(header$variables[2])
         if(cnst == 0) cnst <-  1.0
-        fmtin <-  as.character(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3])
+        fmtin <-  trimws(as.character(header$variables[3]))
         
         # CONSTANT
         if(locat == 0) { 
@@ -591,30 +652,42 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           # ASCII
           if(locat > 0) {
             if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-              fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-              fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-              fmtin <- paste0(".{",fmtin,'}')
+              lengths <- rmfi_fortran_format(fmtin)
               fortranfmt <-  TRUE
             }
             if(locat == nam$nunit[which(basename(nam$fname) == basename(file))]) { # read from current file
               
               remaining_lines <- remaining_lines[-1] 
-              if(fortranfmt) remaining_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[1])
-              nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
-              nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-              if(fortranfmt && nLines > 1) remaining_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[2:nLines])
-              array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
-              
+              if(fortranfmt) {
+                remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+                nPerLine <- length(lengths)
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                if(nLines > 1) remaining_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(remaining_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+                
+              } else {
+                nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              }
+
             } else { # read from external file
               external_lines <-  readr::read_lines(absfile)
               # remove lines of previous arrays
               if(!is.null(attr(nam, as.character(locat)))) external_lines <- external_lines[-c(1:attr(nam, as.character(locat)))]
               
-              if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-              nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-              nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-              if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-              array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              if(fortranfmt) {
+                external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+                nPerLine <- length(lengths)
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+                
+              } else {
+                nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              }
             }
             
           } else if(locat < 0) { # read binary from external file
@@ -929,7 +1002,7 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
                                 function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
-    variables <- lapply(strsplit(variables, " |t"), rmfi_remove_empty_strings)
+    variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
     if(!any(is.na(suppressWarnings(as.numeric(variables))))) {
