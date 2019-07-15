@@ -1916,12 +1916,12 @@ rmf_create_parameter.default <- function(dis,
   
   if(any(toupper(mltnam) != "NONE")) {
     if(is.null(mlt)) stop('Please provide a mlt object')
-    mltarr[which(toupper(mltnam) != "NONE")] <- mlt$rmlt[which(mlt$mltnam %in% mltnam)]
+    mltarr[which(toupper(mltnam) != "NONE")] <- mlt$rmlt[mltnam]
   }
   if(any(toupper(zonnam) != "ALL")) {
     if(is.null(zon)) stop('Please provide a zon object')
     if(is.null(iz)) stop('Please provide a iz argument')
-    zonarr[which(toupper(zonnam) != "ALL")] <- zon$izon[which(zon$zonnam %in% zonnam)]
+    zonarr[which(toupper(zonnam) != "ALL")] <- zon$izon[zonnam]
   }
   
   
