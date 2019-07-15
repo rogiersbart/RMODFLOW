@@ -91,7 +91,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   lines <- readr::read_lines(file)
   indices <- rep(T,length(lines))
   for(i in 1:length(lines)) {
-    if(strsplit(rmfi_remove_empty_strings(strsplit(lines[i],' ')[[1]])[1], "")[[1]][1] == "#") {
+    if(length(rmfi_remove_empty_strings(strsplit(lines[i],' |\t')[[1]])) == 0 || strsplit(rmfi_remove_empty_strings(strsplit(lines[i],' |\t')[[1]])[1], "")[[1]][1] == "#") {
       comment(nam) = append(comment(nam), lines[i])
       indices[i] <-  FALSE
     } else {
@@ -99,7 +99,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
     }
   }
   nam_lines <- lines[indices]
-  nam_lines <- lapply(strsplit(nam_lines, ' '), rmfi_remove_empty_strings)
+  nam_lines <- lapply(strsplit(nam_lines, ' |\t'), rmfi_remove_empty_strings)
   nam_lines <- lapply(nam_lines, function(i) rmfi_ifelse0(length(unlist(i))< 4, c(unlist(i),NA), unlist(i)))
   
   nam <-  data.frame(do.call(rbind, nam_lines), stringsAsFactors = F)
