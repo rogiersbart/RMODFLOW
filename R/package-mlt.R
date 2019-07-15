@@ -2,10 +2,10 @@
 #' 
 #' \code{rmf_create_mlt} creates an \code{RMODFLOW} mlt object
 #' 
-#' @param nml number of multiplier arrays to be defined; defaults to 1
+#' @param nml number of multiplier arrays to be defined; defaults to the length of mltnam
 #' @param mltnam character vector of length \code{nml} specifying the names of the multiplier arrays; defaults to 'MULT'
 #' @param functn optional logical vector of length \code{nml} indicating if the multiplier array will be constructed from other multiplier arrays previously defined; defaults to NULL
-#' @param rmlt list with \code{nml} elements where each element is a \code{rmf_2d_array} specifying a mutliplier array; defaults to a \code{rmf_2d_array} with 1 for all cells
+#' @param rmlt either a single 2d array or a list with \code{nml} e2d arrays specifying the mutliplier arrays; defaults to a \code{rmf_2d_array} with 1 for all cells
 #' @param operators list with \code{nml} elements where each element is a character vector with the correct function which will be printed for that multiplier array. If no function is to be specifyied for an array, set to NULL; defaults to NULL
 #' @param iprn numeric vector of length \code{nml} indicating the printing format and whether the multiplier array constructed in data set 4 will be printed to the listing file; defaults to NULL
 #' 
@@ -13,10 +13,10 @@
 #' @export
 #' @seealso \code{\link{rmf_read_mlt}}, \code{\link{rmf_write_mlt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?mult.htm}
 
-rmf_create_mlt <- function(nml = 1,
+rmf_create_mlt <- function(nml = length(mltnam),
                           mltnam = 'MULT',
                           functn = NULL, 
-                          rmlt = list(rmf_create_array(1.0, dim=c(10, 10))),
+                          rmlt = rmf_create_array(1.0, dim=c(10, 10)),
                           operators = NULL,
                           iprn = NULL
                           ){
@@ -35,7 +35,8 @@ rmf_create_mlt <- function(nml = 1,
 
   # data set 3
   if(is.null(mlt$functn) || (!is.null(mlt$functn) && (F %in% mlt$functn))) {
-    mlt$rmlt <-  rmlt
+    if(!inherits(rmlt, 'list') && is.array(rmlt)) rmlt <- list(rmlt) 
+    mlt$rmlt <- rmlt
     names(mlt$rmlt) <- mlt$mltnam[rmfi_ifelse0(is.null(functn), 1:nml, functn)]
   }
   
