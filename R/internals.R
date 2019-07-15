@@ -821,7 +821,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
             
             # zero or character entry terminates IZ
             iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
-            iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+            iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1] - 1, which(iz_vector == 0)[1] - 1, na.rm = TRUE)]
           
           }
           lines <- data_set_4b$remaining_lines

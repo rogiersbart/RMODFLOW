@@ -223,7 +223,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
           ds9$iz[[j]] <- NULL
         } else {
           iz <- suppressWarnings(as.numeric(data_set_9$variables[4:length(data_set_9$variables)]))
-          ds9$iz[[j]] <- iz[1:min(length(iz), which(is.na(iz))[1], which(iz == 0)[1], na.rm = TRUE)]
+          ds9$iz[[j]] <- iz[1:min(length(iz), which(is.na(iz))[1] - 1, which(iz == 0)[1] - 1, na.rm = TRUE)]
         }
         upw_lines <- data_set_9$remaining_lines
         
