@@ -5,7 +5,7 @@
 #' @param nml number of multiplier arrays to be defined; defaults to the length of mltnam
 #' @param mltnam character vector of length \code{nml} specifying the names of the multiplier arrays; defaults to 'MULT'
 #' @param functn optional logical vector of length \code{nml} indicating if the multiplier array will be constructed from other multiplier arrays previously defined; defaults to NULL
-#' @param rmlt either a single 2d array or a list with \code{nml} e2d arrays specifying the mutliplier arrays; defaults to a \code{rmf_2d_array} with 1 for all cells
+#' @param rmlt either a single 2d array or a list with \code{nml} 2d arrays specifying the mutliplier arrays; defaults to a \code{rmf_2d_array} with 1 for all cells
 #' @param operators list with \code{nml} elements where each element is a character vector with the correct function which will be printed for that multiplier array. If no function is to be specifyied for an array, set to NULL; defaults to NULL
 #' @param iprn numeric vector of length \code{nml} indicating the printing format and whether the multiplier array constructed in data set 4 will be printed to the listing file; defaults to NULL
 #' 
