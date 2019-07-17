@@ -64,6 +64,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
           # problem: oc records might be in non-ascending order or have non-existing time steps but output is still writen for current timestep
           # e.g. UZFtest2
           m_oc<- cbind(oc$iperoc, oc$itsoc)[oc$save_budget,]
+          if(!is.matrix(m_oc)) m_oc <- matrix(m_oc, ncol = 2, byrow = TRUE)
           nsteps <- apply(m_oc, 1, function(i) rmfi_ifelse0(i[1] == 1, ifelse(i[2] > dis$nstp[i[1]], NA, i[2]), cumsum(dis$nstp)[i[1]-1]+i[2]))
           # check before going into nested for-loop
           if(any(is.na(nsteps)) || !all(diff(nsteps) >= 0)) {
@@ -424,6 +425,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           # problem: oc records might be in non-ascending order or have non-existing time steps but output is still writen for current timestep
           # e.g. UZFtest2
           m_oc<- cbind(oc$iperoc, oc$itsoc)[rmfi_ifelse0(is.matrix(oc$save_head), apply(oc$save_head, 2, any), oc$save_head),] 
+          if(!is.matrix(m_oc)) m_oc <- matrix(m_oc, ncol = 2, byrow = TRUE)
           nsteps <- apply(m_oc, 1, function(i) rmfi_ifelse0(i[1] == 1, ifelse(i[2] > dis$nstp[i[1]], NA, i[2]), cumsum(dis$nstp)[i[1]-1]+i[2]))
           # check before going into nested for-loop
           if(any(is.na(nsteps)) || !all(diff(nsteps) >= 0)) {
@@ -816,6 +818,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           # problem: oc records might be in non-ascending order or have non-existing time steps but output is still writen for current timestep
           # e.g. UZFtest2
           m_oc<- cbind(oc$iperoc, oc$itsoc)[rmfi_ifelse0(is.matrix(oc$save_drawdown), apply(oc$save_drawdown, 2, any), oc$save_drawdown),]
+          if(!is.matrix(m_oc)) m_oc <- matrix(m_oc, ncol = 2, byrow = TRUE)
           nsteps <- apply(m_oc, 1, function(i) rmfi_ifelse0(i[1] == 1, ifelse(i[2] > dis$nstp[i[1]], NA, i[2]), cumsum(dis$nstp)[i[1]-1]+i[2]))
           # check before going into nested for-loop
           if(any(is.na(nsteps)) || !all(diff(nsteps) >= 0)) {
