@@ -402,7 +402,7 @@ rmf_write_huf <- function(huf,
   # data set 10-11
   for(i in 1:huf$nphuf) {
     attrb <- attributes(huf$parameters[[i]])
-    rmfi_write_variables(attrb$parnam, attrb$parval,attrb$parval, length(attrb$mlt), file=file)
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
     for(j in 1:length(attrb$mlt)) {
       rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
     }
@@ -419,19 +419,71 @@ write_huf <- function(...) {
   rmf_write_huf(...)
 }
 
+
+#' Create an \code{RMODFLOW} kdep object
+#' 
+#' \code{rmf_create_kdep} creates an \code{RMODFLOW} kdep object.
+#' #'
+#' @param dis \code{RMODFLOW} dis object. Only used if \code{rs} is supplied.
+#' @param parameters either a single \code{rmf_parameter} or a list of \code{rmf_parameters} specifying the depth-dependency coefficients. See details.
+#' @param rs optional 2d array specifying the reference elevation surface
+#'
+#' @return a \code{RMODFLOW} kdep object
+#' @export
+#' @details All parameters should have a hgunam attribute and their partyp attribute set to 'KDEP'.
+#'          The KDEP package can only be used in conjunction with the HUF package.
+#' @seealso \code{\link{rmf_read_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
+rmf_create_kdep <- function(dis, 
+                            parameters,
+                            rs = NULL) {
+  
+  if(length(parameters) == 1 && inherits(parameters[[1]], 'list') && !(inherits(parameters[[1]], 'rmf_parameter'))) parameters <- parameters[[1]]
+  
+  kdep <- list()
+  
+  # data set 0
+  # to provide comments, use ?comment on the resulting kdep object
+  
+  # data set 1
+  kdep$npkdep <- length(parameters)
+  kdep$ifkdep <- ifelse(is.null(rs), 0, 1)
+  
+  # data set 2
+  if(!is.null(rs)) kdep$rs <- rmf_create_array(rs, dim = c(dis$nrow, dis$ncol))
+  
+  # data set 3 & 4
+  # error check
+  if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
+    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute')
+  }
+  
+  kdep$parameters <- list()
+  kdep$parameter_values <- NULL
+  for(i in 1:kdep$npkdep) {
+    attrb <- attributes(parameters[[i]])
+    parnam <- attrb$parnam
+    kdep$parameter_values[parnam] <- attrb$parval
+    kdep$parameters[[parnam]] <- parameters[[i]]
+  }
+
+  class(kdep) <- c('kdep', 'rmf_package')
+  return(kdep)
+  
+}
+
 #' Read a MODFLOW hydraulic conductivity depth-dependence capability file
 #' 
-#' \code{read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{\link{RMODFLOW}} kdep object.
+#' \code{rmf_read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{RMODFLOW} kdep object.
 #' 
-#' @param file Filename; typically *.kdep
-#' @param dis discretization file object; defaults to that with the same filename but with extension '.dis'
-#' @param huf hydrogeologic unit file object; defaults to that with the same filename but with extension '.huf'
+#' @param filename filename; typically *.kdep
+#' @param dis \code{RMODFLOW} dis object
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return object of class kdep
 #' @export
+#' @seealso \code{\link{rmf_create_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
+
 rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                          huf = {cat('Please select corresponding huf file ...\n'); rmf_read_huf(file.choose(), dis = dis)},
                           ...) {
   
   kdep_lines <- readr::read_lines(file)
@@ -459,30 +511,47 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
   }
   
   # data set 3-4
-  kdep$parnam <- vector(mode='character',length=kdep$npkdep)
-  kdep$partyp <- vector(mode='character',length=kdep$npkdep)
-  kdep$parval <- vector(mode='numeric',length=kdep$npkdep)
-  kdep$nclu <- vector(mode='numeric',length=kdep$npkdep)
-  kdep$mltarr <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
-  kdep$zonarr <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
-  kdep$iz <- matrix(nrow=huf$nhuf, ncol=kdep$npkdep)
   for(i in 1:kdep$npkdep) {
-    dat <- rmfi_parse_variables(kdep_lines)
-    line.split <- dat$variables
-    kdep_lines <- dat$remaining_lines
-    kdep$parnam[i] <- line.split[1]
-    kdep$partyp[i] <- line.split[2]
-    kdep$parval[i] <- as.numeric(line.split[3])
-    kdep$nclu[i] <- as.numeric(line.split[4])
-    for(j in 1:kdep$nclu[i]) {
-      dat <- rmfi_parse_variables(kdep_lines)
-      line.split <- dat$variables
-      kdep_lines <- dat$remaining_lines
-      k <- which(huf$hgunam == line.split[1])
-      kdep$mltarr[k,i] <- line.split[2]
-      kdep$zonarr[k,i] <- line.split[3]
-      kdep$iz[k,i] <- paste(line.split[-c(1:3)],collapse=' ')
-    } 
+    data_set_3 <- rmfi_parse_variables(kdep_lines)
+    parnam <- data_set_3$variables[1]
+    partyp <- data_set_3$variables[2]
+    parval <- as.numeric(data_set_3$variables[3])
+    nclu <- as.numeric(data_set_3$variables[4])
+    kdep_lines <- data_set_3$remaining_lines
+    rm(data_set_3)
+    
+    ds4 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
+    for(j in 1:nclu) {
+      data_set_4 <- rmfi_parse_variables(kdep_lines)
+      ds4$hgunam[j] <- data_set_4$variables[1]
+      ds4$mltarr[j] <- data_set_4$variables[2]
+      ds4$zonarr[j] <- data_set_4$variables[3]
+      # zero or character entry terminates IZ
+      if(ds4$zonarr[j] == 'ALL') {
+        ds4$iz[[j]] <- NULL
+      } else {
+        iz <- suppressWarnings(as.numeric(data_set_4$variables[4:length(data_set_4$variables)]))
+        ds4$iz[[j]] <- iz[1:min(length(iz), which(is.na(iz))[1] - 1, which(iz == 0)[1] - 1, na.rm = TRUE)]
+      }
+      kdep_lines <- data_set_4$remaining_lines
+      
+      if(toupper(data_set_4$variables[2]) != 'NONE') {
+        if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+      }
+      if(toupper(data_set_4$variables[3]) != 'ALL') {
+        if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+      }
+      rm(data_set_4)
+      
+    }
+    
+    kdep$parameter_values[parnam] <- parval
+    kdep$parameters[[parnam]] <- rmf_create_parameter(dis = dis, parnam = parnam, partyp = partyp, parval = parval, hgunam = ds4$hgunam, mltnam = ds4$mltarr, zonnam = ds4$zonarr, iz = ds4$iz, mlt = mlt, zon = zon)
+    
+    # if(is.null(kdep[[tolower(partyp)]])) kdep[[tolower(partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
+    # kdep[[tolower(partyp)]][,,unique(ds4$layer)] <- c(kdep$parameters[[parnam]])
+    # 
+    # if(!(toupper(partyp) %in% types)) types <- append(types, toupper(partyp))
   }
   
   comment(kdep) <- comments
@@ -495,4 +564,200 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
 read_kdep <- function(...) {
   .Deprecated(new = "rmf_read_kdep", old = "read_kdep")
   rmf_read_kdep(...)
+}
+
+#' Write a MODFLOW hydraulic conductivity depth-dependence capability file
+#' 
+#' @param kdep an \code{RMODFLOW} kdep object
+#' @param file filename to write to; typically '*.kdep'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
+#'
+#' @return \code{NULL}
+#' @export
+#'
+#' @seealso \code{\link{rmf_create_kdep}}, \code{\link{rmf_read_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
+rmf_write_kdep <- function(kdep,
+                           file = {cat('Please select kdep file to overwrite or provide new filename ...\n'); file.choose()},
+                           iprn = -1,
+                           ...) {
+  
+  # data set 0
+  v <- packageDescription("RMODFLOW")$Version
+  cat(paste('# MODFLOW Hydraulic Conductivity Depth-Dependence Capability Package created by RMODFLOW, version',v,'\n'), file = file)
+  cat(paste('#', comment(kdep)), sep='\n', file=file, append=TRUE)
+  
+  # data set 1
+  rmfi_write_variables(kdep$npkdep, kdep$ifkdep, file = file)
+  
+  # data set 2
+  if(kdep$ifkdep > 0) rmfi_write_array(kdep$rs, file = file, iprn = iprn, ...) 
+
+  # data set 3-4
+  for(i in 1:kdep$npkdep) {
+    attrb <- attributes(kdep$parameters[[i]])
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
+    for(j in 1:length(attrb$mlt)) {
+      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
+    }
+  }
+  
+}
+
+#' Create an \code{RMODFLOW} lvda object
+#' 
+#' \code{rmf_create_lvda} creates an \code{RMODFLOW} lvda object.
+#'
+#' @param parameters either a single \code{rmf_parameter} or a list of \code{rmf_parameters} specifying the angle between the grid axis and the principal direction of horizontal hydraulic conductivity. See details.
+#'
+#' @return a \code{RMODFLOW} lvda object
+#' @export
+#' @details All parameters should have a hgunam attribute and their partyp attribute set to 'LVDA'.
+#'          The LVDA package can only be used in conjunction with the HUF package.
+#' @seealso \code{\link{rmf_read_lvda}}, \code{\link{rmf_write_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}
+
+rmf_create_lvda <- function(parameters) {
+  
+  if(length(parameters) == 1 && inherits(parameters[[1]], 'list') && !(inherits(parameters[[1]], 'rmf_parameter'))) parameters <- parameters[[1]]
+  
+  lvda <- list()
+  
+  # data set 0
+  # to provide comments, use ?comment on the resulting lvda object
+  
+  # data set 1
+  lvda$nplvda <- length(parameters)
+  
+  # data set 2 & 3
+  # error check
+  if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
+    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute')
+  }
+  
+  lvda$parameters <- list()
+  lvda$parameter_values <- NULL
+  for(i in 1:lvda$nplvda) {
+    attrb <- attributes(parameters[[i]])
+    parnam <- attrb$parnam
+    lvda$parameter_values[parnam] <- attrb$parval
+    lvda$parameters[[parnam]] <- parameters[[i]]
+  }
+  
+  class(lvda) <- c('lvda', 'rmf_package')
+  return(lvda)
+  
+}
+
+#' Read a MODFLOW model-layer variable-direction horizontal anisotropy capability file
+#' 
+#' \code{rmf_read_lvda} reads in a MODFLOW Model-Layer Variable-Direction Horizontal Anisotropy Capability file and returns it as an \code{RMODFLOW} lvda object.
+#' 
+#' @param filename filename; typically *.lvda
+#' @param dis \code{RMODFLOW} dis object
+#' @param ... ignored
+#' @return object of class lvda
+#' @export
+#' @seealso \code{\link{rmf_create_lvda}}, \code{\link{rmf_write_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}
+rmf_read_lvda <- function(file, 
+                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                          ...) {
+  
+  
+  lvda_lines <- readr::read_lines(file)
+  lvda <- list()
+  
+  # data set 0
+  data_set_0 <- rmfi_parse_comments(lvda_lines)
+  comments <- data_set_0$comments
+  lvda_lines <- data_set_0$remaining_lines
+  rm(data_set_0)
+  
+  # data set 1
+  data_set_1 <- rmfi_parse_variables(lvda_lines)
+  lvda$nplvda <- as.numeric(data_set_1$variables[1])
+  lvda_lines <- data_set_1$remaining_lines
+  rm(data_set_1)
+  
+  # data set 2-3
+  for(i in 1:lvda$nplvda) {
+    data_set_2 <- rmfi_parse_variables(lvda_lines)
+    parnam <- data_set_2$variables[1]
+    partyp <- data_set_2$variables[2]
+    parval <- as.numeric(data_set_2$variables[3])
+    nclu <- as.numeric(data_set_2$variables[4])
+    lvda_lines <- data_set_2$remaining_lines
+    rm(data_set_2)
+    
+    ds3 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
+    for(j in 1:nclu) {
+      data_set_3 <- rmfi_parse_variables(lvda_lines)
+      ds3$hgunam[j] <- data_set_3$variables[1]
+      ds3$mltarr[j] <- data_set_3$variables[2]
+      ds3$zonarr[j] <- data_set_3$variables[3]
+      # zero or character entry terminates IZ
+      if(ds3$zonarr[j] == 'ALL') {
+        ds3$iz[[j]] <- NULL
+      } else {
+        iz <- suppressWarnings(as.numeric(data_set_3$variables[4:length(data_set_3$variables)]))
+        ds3$iz[[j]] <- iz[1:min(length(iz), which(is.na(iz))[1] - 1, which(iz == 0)[1] - 1, na.rm = TRUE)]
+      }
+      lvda_lines <- data_set_3$remaining_lines
+      
+      if(toupper(data_set_3$variables[2]) != 'NONE') {
+        if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+      }
+      if(toupper(data_set_3$variables[3]) != 'ALL') {
+        if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+      }
+      rm(data_set_3)
+      
+    }
+    
+    lvda$parameter_values[parnam] <- parval
+    lvda$parameters[[parnam]] <- rmf_create_parameter(dis = dis, parnam = parnam, partyp = partyp, parval = parval, hgunam = ds3$hgunam, mltnam = ds3$mltarr, zonnam = ds3$zonarr, iz = ds3$iz, mlt = mlt, zon = zon)
+    
+    # if(is.null(lvda[[tolower(partyp)]])) lvda[[tolower(partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
+    # lvda[[tolower(partyp)]][,,unique(ds3$layer)] <- c(lvda$parameters[[parnam]])
+    # 
+    # if(!(toupper(partyp) %in% types)) types <- append(types, toupper(partyp))
+  }
+  
+  comment(lvda) <- comments
+  class(lvda) <- c('lvda','rmf_package')
+  return(lvda)
+  
+}
+
+
+#' Write a MODFLOW model-layer variable-direction horizontal anisotropy capability file
+#' 
+#' @param lvda an \code{RMODFLOW} lvda object
+#' @param file filename to write to; typically '*.lvda'
+#' @param ... ignored
+#'
+#' @return \code{NULL}
+#' @export
+#'
+#' @seealso \code{\link{rmf_create_lvda}}, \code{\link{rmf_read_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}
+rmf_write_lvda <- function(lvda,
+                           file = {cat('Please select lvda file to overwrite or provide new filename ...\n'); file.choose()},
+                           ...) {
+  
+  # data set 0
+  v <- packageDescription("RMODFLOW")$Version
+  cat(paste('# MODFLOW Model-Layer Variable-Direction Horizontal Anisotropy Capability Package created by RMODFLOW, version',v,'\n'), file = file)
+  cat(paste('#', comment(lvda)), sep='\n', file=file, append=TRUE)
+  
+  # data set 1
+  rmfi_write_variables(lvda$nplvda, file = file)
+  
+  # data set 3-4
+  for(i in 1:lvda$nplvda) {
+    attrb <- attributes(lvda$parameters[[i]])
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
+    for(j in 1:length(attrb$mlt)) {
+      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
+    }
+  }
+  
 }
