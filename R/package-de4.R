@@ -101,12 +101,12 @@ rmf_read_de4 = function(file = {cat('Please select direct solver file ...\n'); f
 #' 
 #' @param de4 an \code{RMODFLOW} de4 object
 #' @param file filename to write to; typically '*.de4'
-#' 
+#' @param ... ignored
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_de4}}, \code{\link{rmf_create_de4}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?de4.htm}
 
-rmf_write_de4 = function(de4, file={cat('Please choose de4 file to overwrite or provide new filename ...\n'); file.choose()} ){
+rmf_write_de4 = function(de4, file={cat('Please choose de4 file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version

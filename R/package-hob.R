@@ -252,10 +252,11 @@ rmf_read_ob_hob <- function(...) {
 #' 
 #' @param hob an \code{\link{RMODFLOW}} hob object
 #' @param file filename to write to; typically '*.hob'
+#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
 #' @return \code{NULL}
 #' @export
 rmf_write_hob <- function(hob,
-                          file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}) {
+                          file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -267,7 +268,7 @@ rmf_write_hob <- function(hob,
   
   # data set 2
   # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh),1,hob$evh), file=file) # MODFLOW-2000
-  rmfi_write_variables(hob$tomulth, file=file)
+  rmfi_write_variables(hob$tomulth, file=file, ...)
   
   # data set 3 - 6
   i <- 1

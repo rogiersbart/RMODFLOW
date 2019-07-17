@@ -78,10 +78,11 @@ read_pvl <- function(...) {
 #' 
 #' @param pvl an \code{\link{RMODFLOW}} pvl object
 #' @param file filename to write to; typically '*.pvl'
+#' @param ... ignored
 #' @return \code{NULL}
 #' @export
 rmf_write_pvl <- function(pvl,
-                          file = {cat('Please select pvl file to overwrite or provide new filename ...\n'); file.choose()}) {
+                          file = {cat('Please select pvl file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
