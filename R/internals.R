@@ -432,6 +432,64 @@ rmfi_ifelse0 <- function(test, yes, no) {
   }
 }
 
+#' List supported MODFLOW packages
+#'
+#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc'}
+#'
+#' @return data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} abbreviations for the requested packages
+#' @keywords internal
+#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data
+#' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
+rmfi_list_packages <- function(type = 'all') {
+  
+  # update these two vectors everytime a new package is supported
+  # NAM file is not in here but is supported
+  pack_names <- c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF','RCH','CHD','BCF6','HFB6','RIV','DRN','EVT','SIP','DE4','NWT','UPW','LVDA')
+  rmf_names  <- c('hob','pvl', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda')
+  
+  df <- data.frame(ftype = pack_names, rmf = rmf_names, stringsAsFactors = FALSE)
+  
+  # Below is an exhaustive overview of all packages in MODFLOW-2005 & variants
+  # basic
+  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pvl', 'lgr')
+  
+  # flow packages
+  flow <- c('bcf', 'lpf', 'huf', 'swi', 'hfb', 'uzf', 'upw', 'kdep', 'lvda')
+  
+  # boundary conditions
+  boundary <- c('chd', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'bfh', 'rip')
+  
+  # solver
+  solver <- c('de4', 'gmg', 'lmg', 'pcg', 'pcgn', 'sip', 'nwt')
+  
+  # output control
+  oc <- c('gage', 'hyd', 'lmt', 'mnwi', 'oc')
+  
+  # subsidence
+  sub <- c('ibs', 'sub', 'swt') 
+  
+  # observation
+  obs <- c('chob', 'drob', 'gbob', 'hob', 'rvob', 'stob')
+  
+  # Surface-water routing
+  swr <- c('swr', 'sswrlstrd', 'sswr_rdtabdata', 'sswr_rddro')
+  
+  # Conduit flow process
+  cfp <- c('cfp', 'crch', 'coc')
+  
+  # Farm process
+  farm <- c('fmp')
+  
+  # cbc (uzf and swi need to be set separately)
+  cbc <- c('bcf', 'lpf', 'huf', 'upw', 'uzf', 'swi', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'ibs', 'sub', 'swt', 'swr', 'rip')
+  
+  # subset
+  if(type != 'all') df <- subset(df, rmf %in% get(type))
+  
+  return(df)
+  
+}
+
 #' Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param remaining_lines lines to read the array from
 #' @param nrow number of rows in the array
