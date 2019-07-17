@@ -247,6 +247,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
 #' @param evt an \code{RMODFLOW} evt object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.evt'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_array}
 #' 
 #' @return \code{NULL}
@@ -254,7 +255,11 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
 
-rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose evt file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_evt <-  function(evt, 
+                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                           file={cat('Please choose evt file to overwrite or provide new filename ...\n'); file.choose()}, 
+                           iprn = -1,
+                           ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -269,7 +274,12 @@ rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose e
   
   # parameters
   partyp <- 'EVT'
-  if(evt$dimensions$np > 0) rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', ...)
+  if(evt$dimensions$np > 0) {
+    parm_names <- names(evt$parameter_values)
+    tv_parm <- rep(FALSE, evt$dimensions$np)
+    if(!is.null(evt$dimensions$instances)) tv_parm <- evt$dimensions$instances > 0
+    rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', ...)
+  }
   
   # stress periods
   for (i in 1:dis$nper){
@@ -327,10 +337,10 @@ rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose e
     rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, ...)
     
     # data set 6
-    if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, ...)
+    if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, iprn = iprn, ...)
     
     # data set 7
-    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$recharge[[names_act]], file = file, ...)
+    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$recharge[[names_act]], file = file, iprn = iprn, ...)
     
     # data set 8
     if(np > 0){
@@ -340,11 +350,11 @@ rmf_write_evt <-  function(evt, dis = rmf_read_dis(), file={cat('Please choose e
     }
     
     # data set 9
-    if(inexdp >= 0) rmfi_write_array(evt$exdp[[inexdp_act]], file = file, ...)
+    if(inexdp >= 0) rmfi_write_array(evt$exdp[[inexdp_act]], file = file, iprn = iprn, ...)
     
     # data set 10
     if(evt$nevtop == 2 && inievt >= 0) {
-      rmfi_write_array(evt$ievt[[inievt_act]], file = file, ...)
+      rmfi_write_array(evt$ievt[[inievt_act]], file = file, iprn = iprn, ...)
     }
   }
   

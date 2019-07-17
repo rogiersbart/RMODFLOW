@@ -225,6 +225,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
 #' @param bcf an \code{RMODFLOW} bcf object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.bcf'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @param ... arguments passed to \code{rmfi_write_array} and \code{rmfi_write_variables}. Can be ignored when format is free and arrays are INTERNAL or CONSTANT.
 #'
 #' @return \code{NULL}
@@ -234,6 +235,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
 rmf_write_bcf <- function(bcf, 
                           dis =  {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                           file = {cat('Please select bcf file to overwrite or provide new filename ...\n'); file.choose()}, 
+                          iprn = -1,
                           ...){
   
   # data set 0
@@ -261,15 +263,15 @@ rmf_write_bcf <- function(bcf,
   }
   
   # data set 3
-  rmfi_write_array(bcf$trpy, file=file, ...)
+  rmfi_write_array(bcf$trpy, file=file, iprn = iprn, ...)
   
   # data set 4-9
   for(i in 1:dis$nlay){
-    if('TR' %in% dis$sstr) rmfi_write_array(bcf$sf1[,,i], file=file, ...)
-    if(bcf$laycon[i] %in% c(0,2)) rmfi_write_array(bcf$tran[,,i], file=file, ...)
-    if(bcf$laycon[i] %in% c(1,3)) rmfi_write_array(bcf$hy[,,i], file=file, ...)
-    if(i != dis$nlay) rmfi_write_array(bcf$vcont[,,i], file=file, ...)
-    if(('TR' %in% dis$sstr) && bcf$laycon[i] %in% c(2,3)) rmfi_write_array(bcf$sf2[,,i], file=file, ...)
-    if((bcf$iwdflg != 0) && (bcf$laycon[i] %in% c(1,3))) rmfi_write_array(bcf$wetdry[,,i], file=file, ...)
+    if('TR' %in% dis$sstr) rmfi_write_array(bcf$sf1[,,i], file=file, iprn =iprn, ...)
+    if(bcf$laycon[i] %in% c(0,2)) rmfi_write_array(bcf$tran[,,i], file=file, iprn = iprn, ...)
+    if(bcf$laycon[i] %in% c(1,3)) rmfi_write_array(bcf$hy[,,i], file=file, iprn = iprn, ...)
+    if(i != dis$nlay) rmfi_write_array(bcf$vcont[,,i], file=file, iprn = iprn, ...)
+    if(('TR' %in% dis$sstr) && bcf$laycon[i] %in% c(2,3)) rmfi_write_array(bcf$sf2[,,i], file=file, iprn = iprn, ...)
+    if((bcf$iwdflg != 0) && (bcf$laycon[i] %in% c(1,3))) rmfi_write_array(bcf$wetdry[,,i], file=file, iprn = iprn, ...)
   }
 }

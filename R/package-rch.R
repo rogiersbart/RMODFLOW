@@ -191,14 +191,18 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
 #' @param rch an \code{RMODFLOW} rch object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.rch'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_array}
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_rch}}, \code{\link{rmf_create_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
-
-rmf_write_rch <-  function(rch, dis = rmf_read_dis(), file={cat('Please choose rch file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_rch <-  function(rch,
+                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                           file={cat('Please choose rch file to overwrite or provide new filename ...\n'); file.choose()},
+                           iprn = -1,
+                           ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -213,7 +217,12 @@ rmf_write_rch <-  function(rch, dis = rmf_read_dis(), file={cat('Please choose r
   
   # parameters
   partyp <- 'RCH'
-  if(rch$dimensions$np > 0) rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', ...)
+  if(rch$dimensions$np > 0) {
+    parm_names <- names(rch$parameter_values)
+    tv_parm <- rep(FALSE, rch$dimensions$np)
+    if(!is.null(rch$dimensions$instances)) tv_parm <- rch$dimensions$instances > 0
+    rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', ...)
+  }
   
   # stress periods
   for (i in 1:dis$nper){
@@ -249,7 +258,7 @@ rmf_write_rch <-  function(rch, dis = rmf_read_dis(), file={cat('Please choose r
     rmfi_write_variables(inrech, ifelse(rch$nrchop == 2, inirch, ''), file=file, ...)
     
     # data set 6
-    if(np == 0 && inrech >= 0) rmfi_write_array(rch$recharge[[names_act]], file = file, ...)
+    if(np == 0 && inrech >= 0) rmfi_write_array(rch$recharge[[names_act]], file = file, iprn = iprn, ...)
     
     # data set 7
     if(np > 0){
@@ -260,7 +269,7 @@ rmf_write_rch <-  function(rch, dis = rmf_read_dis(), file={cat('Please choose r
     
     # data set 8
     if(rch$nrchop == 2 && inirch >= 0) {
-      rmfi_write_array(rch$irch[[irch_act]], file = file, ...)
+      rmfi_write_array(rch$irch[[irch_act]], file = file, iprn = iprn, ...)
     }
   }
   

@@ -95,12 +95,16 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
 #' 
 #' @param zon an \code{RMODFLOW} zon object
 #' @param file filename to write to; typically '*.zon'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_zon}}, \code{\link{rmf_create_zon}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?zone.htm}
 
-rmf_write_zon <-  function(zon, file = {cat('Please choose zon file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_zon <-  function(zon,
+                           file = {cat('Please choose zon file to overwrite or provide new filename ...\n'); file.choose()},
+                           iprn = -1,
+                           ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -116,7 +120,7 @@ rmf_write_zon <-  function(zon, file = {cat('Please choose zon file to overwrite
     rmfi_write_variables(zon$zonnam[i], file=file)
     
     # data set 3
-    rmfi_write_array(zon$izon[[i]], file=file, ...)
+    rmfi_write_array(zon$izon[[i]], file=file, iprn = iprn, ...)
     
   }
 }
