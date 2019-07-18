@@ -85,9 +85,9 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
   mlt$rmlt <- list()
   for(i in 1:mlt$nml) {
     # data set 2
-    data_set_2 <- rmfi_parse_variables(mlt_lines)
+    data_set_2 <- rmfi_parse_variables(mlt_lines, character = TRUE)
     mlt$mltnam[i] <- data_set_2$variables[1]
-    mlt$functn[i] <- length(data_set_2$variables) > 1
+    mlt$functn[i] <- 'FUNCTION' %in% toupper(data_set_2$variables)
     mlt_lines <- data_set_2$remaining_lines
     rm(data_set_2)
     

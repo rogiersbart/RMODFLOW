@@ -253,7 +253,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     lpf$parameter_values <- NULL
     
     for(i in 1:lpf$nplpf) {
-      data_set_8 <- rmfi_parse_variables(lpf_lines)
+      data_set_8 <- rmfi_parse_variables(lpf_lines, character = TRUE)
       parnam <- data_set_8$variables[1]
       partyp <- data_set_8$variables[2]
       parval <- as.numeric(data_set_8$variables[3])
@@ -263,7 +263,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
 
       ds9 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
       for(j in 1:nclu) {
-        data_set_9 <- rmfi_parse_variables(lpf_lines)
+        data_set_9 <- rmfi_parse_variables(lpf_lines, character = TRUE)
         ds9$layer[j] <- as.numeric(data_set_9$variables[1])
         ds9$mltarr[j] <- data_set_9$variables[2]
         ds9$zonarr[j] <- data_set_9$variables[3]

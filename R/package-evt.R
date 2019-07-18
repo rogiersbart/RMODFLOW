@@ -194,7 +194,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     } else {
       for(j in 1:np){
         # data set 8
-        data_set_8 <-  rmfi_parse_variables(lines)
+        data_set_8 <-  rmfi_parse_variables(lines, character = TRUE)
         p_name <-  as.character(data_set_8$variables[1])
         if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
           i_name <- data_set_8$variables[2]

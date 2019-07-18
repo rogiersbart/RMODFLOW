@@ -835,7 +835,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
   while(i <= np){
     
     # data set 3
-    data_set_3 <- rmfi_parse_variables(lines)
+    data_set_3 <- rmfi_parse_variables(lines, character = TRUE)
     parnam <-   as.character(data_set_3$variables[1])
     parval <-  as.numeric(data_set_3$variables[3])
     nclu <- as.numeric(data_set_3$variables[4])
@@ -858,7 +858,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
       for(j in 1:numinst){
         
         # data set 4a
-        data_set_4a <- rmfi_parse_variables(lines)
+        data_set_4a <- rmfi_parse_variables(lines, character = TRUE)
         instnam <- as.character(data_set_4a$variables)
         lines <-  data_set_4a$remaining_lines
         rm(data_set_4a)
@@ -866,7 +866,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
         # loop over clusters
         for(k in 1:nclu) {
           # data set 4b
-          data_set_4b <- rmfi_parse_variables(lines)
+          data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
           mltarr[k] <- toupper(data_set_4b$variables[1])
           zonarr[k] <- toupper(data_set_4b$variables[2])
           
@@ -892,7 +892,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
       # loop over clusters
       for(k in 1:nclu) {
         # data set 4b
-        data_set_4b <- rmfi_parse_variables(lines)
+        data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
         mltarr[k] <- toupper(data_set_4b$variables[1])
         zonarr[k] <- toupper(data_set_4b$variables[2])
         
@@ -1044,10 +1044,11 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
 #' If all are numbers, returns numeric, otherwise returns character vector
 #' @param n integer; number of variables to be returned. Only used when format is \code{'fixed'}.  
 #' @param nlay integer; number of layers for which values are to be read. Only used when format is \code{'free'} and a 1D(NLAY) variable is read which may be specified on multiple lines.
+#' @param character logical; should a character vector be returned. Prevents conversion from character names to numeric. Defaults to FALSE. Useful if only characters are present on the line.
 #' @param format character, either \code{'free'} or \code{'fixed'}. When 'fixed', reads 10-character fields and converts to numeric. Empty fields are set to zero.
 #' @param ... ignored
 #' @keywords internal
-rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free', ...) {
+rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FALSE, format = 'free', ...) {
   if(format == 'free') {
     variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]])
     if(!is.null(nlay)) {
@@ -1056,14 +1057,14 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free
         variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]]))
       }
     }
-    if(!any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
+    if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
                                 function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
     variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
-    if(!any(is.na(suppressWarnings(as.numeric(variables))))) {
+    if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) {
       variables <- as.numeric(variables)
       if(length(variables) < n) variables <- c(variables, rep(0, n - length(variables))) # append 0's if values are missing
     }
@@ -1152,7 +1153,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     i <- 1
     while(i <= np_def){
       # data set 3
-      data_set_3 <-  rmfi_parse_variables(lines)
+      data_set_3 <-  rmfi_parse_variables(lines, character = TRUE)
       p_name <-  as.character(data_set_3$variables[1])
       p_val <-  as.numeric(data_set_3$variables[3])
       p_nlst <- as.numeric(data_set_3$variables[4])
@@ -1173,7 +1174,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         j=1
         while(j <= p_numinst){
           # data set 4a
-          data_set_4a <- rmfi_parse_variables(lines)
+          data_set_4a <- rmfi_parse_variables(lines, character = TRUE)
           instnam <- as.character(data_set_4a$variables)
           lines <-  data_set_4a$remaining_lines
           rm(data_set_4a)
@@ -1237,7 +1238,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     if(np > 0){
       for(j in 1:np){
         # data set 7
-        data_set_7 <-  rmfi_parse_variables(lines)
+        data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
         p_name <-  as.character(data_set_7$variables[1])
         i_name <- rmfi_ifelse0(tv[[p_name]], as.character(data_set_7$variables[2]), NULL)
         

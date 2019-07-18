@@ -204,7 +204,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     upw$parameter_values <- NULL
     
     for(i in 1:upw$npupw) {
-      data_set_8 <- rmfi_parse_variables(upw_lines)
+      data_set_8 <- rmfi_parse_variables(upw_lines, character = TRUE)
       parnam <- data_set_8$variables[1]
       partyp <- data_set_8$variables[2]
       parval <- as.numeric(data_set_8$variables[3])
@@ -214,7 +214,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       
       ds9 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
       for(j in 1:nclu) {
-        data_set_9 <- rmfi_parse_variables(upw_lines)
+        data_set_9 <- rmfi_parse_variables(upw_lines, character = TRUE)
         ds9$layer[j] <- as.numeric(data_set_9$variables[1])
         ds9$mltarr[j] <- data_set_9$variables[2]
         ds9$zonarr[j] <- data_set_9$variables[3]

@@ -246,7 +246,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
     huf$top <- rmf_create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
     huf$thck <- rmf_create_array(dim=c(dis$nrow, dis$ncol, huf$nhuf))
     for(i in 1:huf$nhuf) {
-      data_set_6 <- rmfi_parse_variables(huf_lines)
+      data_set_6 <- rmfi_parse_variables(huf_lines, character = TRUE)
       huf$hgunam[i] <- as.character(data_set_6$variables[1])
       huf_lines <- data_set_6$remaining_lines
       rm(data_set_6)
@@ -265,7 +265,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
   # data set 9
     huf$hguhani <- vector(mode='numeric',length=huf$nhuf)   
     huf$hguvani <- vector(mode='numeric',length=huf$nhuf)
-    data_set_9 <- rmfi_parse_variables(huf_lines)
+    data_set_9 <- rmfi_parse_variables(huf_lines, character = TRUE)
     if(data_set_9$variables[1] == 'ALL') {
       huf$hguhani <- rep(as.numeric(data_set_9$variables[2]),huf$nhuf)
       huf$hguvani <- rep(as.numeric(data_set_9$variables[3]),huf$nhuf)
@@ -293,7 +293,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
       huf$parameter_values <- NULL
       
       for(i in 1:huf$nphuf) {
-        data_set_10 <- rmfi_parse_variables(huf_lines)
+        data_set_10 <- rmfi_parse_variables(huf_lines, character = TRUE)
         parnam <- data_set_10$variables[1]
         partyp <- data_set_10$variables[2]
         parval <- as.numeric(data_set_10$variables[3])
@@ -303,7 +303,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
         
         ds11 <- list(layer = NULL, mltarr = NULL, zonarr = NULL, iz = list())
         for(j in 1:nclu) {
-          data_set_11 <- rmfi_parse_variables(huf_lines)
+          data_set_11 <- rmfi_parse_variables(huf_lines, character = TRUE)
           ds11$hgunam[j] <- data_set_11$variables[1]
           ds11$mltarr[j] <- data_set_11$variables[2]
           ds11$zonarr[j] <- data_set_11$variables[3]
