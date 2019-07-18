@@ -968,9 +968,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     
     if(binary) {
       con <- file(extfile, open='rb')
-      aa = readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
+      aa <-  readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
       close(con)
-      df = matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
+      df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
       ext_lines <- readr::read_lines(extfile)
       header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(ext_lines[1]),' |\t')[[1]])
@@ -981,7 +981,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       for(nl in 1:nlst) {
         values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
         if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values[1:(3+length(varnames))]
+        df[nl,] <- as.numeric(values[1:(3+length(varnames))])
         ext_lines <- ext_lines[-1]
       }
     }
@@ -993,9 +993,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     
     if(binary) {
       con <- file(extfile, open='rb')
-      aa = readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
+      aa <-  readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
       close(con)
-      df = matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
+      df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
       
       ext_lines <- readr::read_lines(extfile)
@@ -1008,7 +1008,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       for(nl in 1:nlst) {
         values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
         if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values[1:(3+length(varnames))]
+        df[nl,] <- as.numeric(values[1:(3+length(varnames))])
         ext_lines <- ext_lines[-1]
       }
     }
@@ -1019,23 +1019,23 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     for(nl in 1:nlst) {
       values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
       if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values[1:(3+length(varnames))]
+      df[nl,] <- as.numeric(values[1:(3+length(varnames))])
       remaining_lines <- remaining_lines[-1]
     }
   } else {
     for(nl in 1:nlst) {
       values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
       if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values[1:(3+length(varnames))]
+      df[nl,] <- as.numeric(values[1:(3+length(varnames))])
       remaining_lines <- remaining_lines[-1]
     }
   }
   
-  df <- data.frame(df)
+  df <- data.frame(df, stringsAsFactors = FALSE)
   colnames(df) <- c('k','i','j',varnames)
   if(!is.null(l)) df$l <- l
   class(df) <- c('rmf_list', 'data.frame')
-  if(scale != 1.0) df[scalevar] <- scale*df[scalevar]
+  if(scale != 1.0) df[[scalevar]] <- scale*df[[scalevar]]
   
   return(list(list = df, remaining_lines = remaining_lines))
   
