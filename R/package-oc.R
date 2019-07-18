@@ -124,7 +124,7 @@ rmf_create_oc <- function(dis = create_dis(),
       oc$hdsv <- hdsv
       oc$ddsv <- ddsv
     }
-  class(oc) <- c('oc')
+  class(oc) <- c('oc', 'rmf_package')
   return(oc)
 }
 
@@ -348,7 +348,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
     
   }
   
-  class(oc) <- c('oc')
+  class(oc) <- c('oc', 'rmf_package')
   return(oc)
 }
 

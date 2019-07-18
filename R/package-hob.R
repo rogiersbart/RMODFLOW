@@ -131,8 +131,8 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   hob$nh <- as.numeric(line.split[1])
   hob$mobs <- as.numeric(line.split[2])
   hob$maxm <- as.numeric(line.split[3])
-  hob$iuhobsv <- as.numeric(line.split[4])
-  hob$hobdry <- as.numeric(line.split[5])
+  hob$iuhobsv <- ifelse(is.na(as.numeric(line.split[4])), 0, as.numeric(line.split[4]))
+  hob$hobdry <- ifelse(is.na(as.numeric(line.split[5])), -888, as.numeric(line.split[5]))
   hob$noprint <- F
   if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
   

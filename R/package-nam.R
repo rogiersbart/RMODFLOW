@@ -37,7 +37,7 @@ rmf_create_nam <- function(...) {
     oc <-  fobjects[[which(nam$ftype=='OC')-1]]
     if(!is.null(oc$ihedun) && !is.na(oc$ihedun)) {
       type <- rmfi_ifelse0(is.null(oc$chedfm) || is.na(oc$chedfm), 'DATA(BINARY)', "DATA")
-      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$hedun, fname = 'output.hed', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$ihedun, fname = 'output.hed', options = NA))  
     } 
     if(!is.null(oc$iddnun) && !is.na(oc$iddnun)) {
       type <- rmfi_ifelse0(is.null(oc$cddnfm) || is.na(oc$cddnfm), 'DATA(BINARY)', "DATA")
@@ -60,10 +60,10 @@ rmf_create_nam <- function(...) {
     }
     cbcnum <-  unique(cbcnum[cbcnum > 0])
     if(length(cbcnum) == 1) {
-      nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum, fname = 'output.bud', options = NA)  )
+      nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum, fname = 'output.cbc', options = NA)  )
     } else {
       for(i in 1:length(cbcnum)) {
-        nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste0('output_',i,'.bud'), options = NA))  
+        nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste0('output_',i,'.cbc'), options = NA))  
       }
     }
   }
@@ -121,7 +121,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   
   comment(nam) <- comments
   attr(nam, 'dir') <- dirname(file)
-  class(nam) <- c('nam','data.frame')
+  class(nam) <- c('nam', 'rmf_package', 'data.frame')
   return(nam)
 }
 
@@ -138,10 +138,19 @@ read_nam <- function(...) {
 #' 
 #' @param nam an \code{\link{RMODFLOW}} nam object
 #' @param file filename to write to; typically '*.nam'
+#' @param exclude character vector with packages names to exclude from the simulation. Defaults to NULL
 #' @return \code{NULL}
 #' @export
 rmf_write_nam <- function(nam,
-                          file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()}) {
+                          file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()},
+                          exclude = NULL) {
+  
+  if(!is.null(exclude)) {
+    df <- rmfi_list_packages(type = 'all')
+    ftype <- df$ftype[which(df$rmf %in% exclude)]
+    nam <- nam[-which(nam$ftype %in% ftype), ]
+  }
+  if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified')
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
