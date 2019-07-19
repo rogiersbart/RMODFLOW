@@ -2451,7 +2451,7 @@ performance <- function(...) {
 #'
 #' @param sim numeric vector with simulated values
 #' @param obs numeric vector with observed values corresponding to sim
-#' @param na_value value to set to NA; defaults to NULL
+#' @param na_value numeric; flags values to remove from the calculations; defaults to -888
 #' @param measures character vector with the required performance measures. Possible values are any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
 #' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' 
@@ -2461,7 +2461,7 @@ performance <- function(...) {
 #' @method rmf_performance default
 #' @export
 #'
-rmf_performance.default <- function(sim, obs, na_value = NULL, measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+rmf_performance.default <- function(sim, obs, na_value = -888, measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
   
   obsAndSims <- data.frame(sim=sim, obs=obs)[which(sim!=na_value),]
   
@@ -2473,7 +2473,7 @@ rmf_performance.default <- function(sim, obs, na_value = NULL, measures = c('ssq
 #' Get model performance measures from a hpr object
 #' 
 #' @param hpr head predictions file object
-#' @param hnoflo value used to flag dry cells; defaults to -888
+#' @param hobdry value used to flag dry cells; defaults to -888
 #' @param measures character vector with the required performance measures. Possible values are any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
 #' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' @return data.frame with performance measures
