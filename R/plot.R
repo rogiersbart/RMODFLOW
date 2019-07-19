@@ -890,11 +890,13 @@ rmf_plot.ghb = function(ghb,
 #' Plot a MODFLOW head predictions file
 #' 
 #' @param hpr head predictions file object
-#' @param type plot type: 'scatter' or 'residual'
+#' @param type plot type: 'scatter', 'residual' or 'histogram'
+#' @param hobdry value used to flag dry cells; defaults to -888
+#' @param bins number of bins to use in the histrogram plot; defaults to the Freedman-Diaconis rule
 #' @method rmf_plot hpr
 #' @export
-rmf_plot.hpr <- function(hpr,type='scatter') {
-  dat <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=-888),]
+rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
+  dat <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=hobdry),]
   if(type=='scatter') {
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=observed_value,y=simulated_equivalent))+
                ggplot2::geom_point(ggplot2::aes(colour=abs(observed_value-simulated_equivalent)))+
@@ -902,14 +904,25 @@ rmf_plot.hpr <- function(hpr,type='scatter') {
                ggplot2::scale_colour_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
                ggplot2::xlab('Observed value')+
                ggplot2::ylab('Simulated equivalent')
-    )
+           )
   } else if(type=='residual') {
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=observation_name,y=simulated_equivalent-observed_value))+
                ggplot2::geom_bar(ggplot2::aes(fill=abs(observed_value-simulated_equivalent)),stat='identity')+
                ggplot2::scale_fill_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
                ggplot2::xlab('Observation name')+
                ggplot2::ylab('Simulated equivalent - observed value')
-    )
+           )
+  } else if(type=='histogram') {
+    if(is.null(bins)) {
+      residuals <- dat$simulated_equivalent-dat$observed_value
+      bins <- (max(residuals) - min(residuals))/(2*IQR(residuals)*length(residuals)^(-1/3))
+    }
+      
+    return(  ggplot2::ggplot(dat,ggplot2::aes(x=simulated_equivalent-observed_value))+
+               ggplot2::geom_histogram(ggplot2::aes(fill=..count..), bins=bins)+
+               ggplot2::scale_fill_gradientn('Count',colours=rev(rainbow(7)))+
+               ggplot2::xlab('Simulated equivalent - observed value')
+           )
   }
 }
 
