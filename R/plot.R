@@ -913,10 +913,7 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
                ggplot2::ylab('Simulated equivalent - observed value')
            )
   } else if(type=='histogram') {
-    if(is.null(bins)) {
-      residuals <- dat$simulated_equivalent-dat$observed_value
-      bins <- (max(residuals) - min(residuals))/(2*IQR(residuals)*length(residuals)^(-1/3))
-    }
+    if(is.null(bins)) bins <- nclass.FD(dat$simulated_equivalent-dat$observed_value)
       
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=simulated_equivalent-observed_value))+
                ggplot2::geom_histogram(ggplot2::aes(fill=..count..), bins=bins)+
