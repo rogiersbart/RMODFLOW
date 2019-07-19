@@ -2431,28 +2431,6 @@ rmf_export_vector.rmf_2d_array <- function(array,
   rgdal::writeOGR(SPDF, dsn = '.', layer = file, driver = type, overwrite_layer = TRUE)
 }
 
-#' Get model performance measures from a hpr object
-#' 
-#' @param hpr head predictions file object
-#' @return performance measures
-#'
-#' @rdname rmf_performance
-#' @method rmf_performance hpr
-#' @export
-rmf_performance.hpr <- function(hpr) {
-  obsAndSims <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=-888),]
-  observations <- obsAndSims$observed_value
-  predictions <- obsAndSims$simulated_equivalent
-  dry <- 0; if(-888 %in% predictions) dry <- length(which(predictions == -888))
-  if(dry > 0) predictions <- predictions[-which(predictions == -888)]
-  names <- obsAndSims$observation_name
-  perform <- rmfi_performance_measures(observations,predictions)
-  perform$rmse <- sqrt(perform$mse)
-  #  notRoundedPerformance <- perform
-  perform <- round(perform,2)
-  return(perform)
-}
-
 #' Generic function to get model performance measures
 #' 
 #' @rdname rmf_performance
@@ -2466,6 +2444,52 @@ rmf_performance <- function(...) {
 performance <- function(...) {
   .Deprecated(new = "rmf_performance", old = "performance")
   rmf_performance(...)
+}
+
+
+#' Get model performance measures
+#'
+#' @param sim numeric vector with simulated values
+#' @param obs numeric vector with observed values corresponding to sim
+#' @param na_value value to set to NA; defaults to NULL
+#' @param measures character vector with the required performance measures. Possible values are any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
+#' @param ... arguments passes to \code{\link{hydroGOF::gof}}
+#' 
+#' @return data.frame with performance measures
+#' 
+#' @rdname rmf_performance
+#' @method rmf_performance default
+#' @export
+#'
+rmf_performance.default <- function(sim, obs, na_value = NULL, measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+  
+  obsAndSims <- data.frame(sim=sim, obs=obs)[which(sim!=na_value),]
+  
+  perform <- rmfi_performance_measures(obsAndSims$obs,obsAndSims$sim, measures = measures, ...)
+  return(perform)
+  
+}
+
+#' Get model performance measures from a hpr object
+#' 
+#' @param hpr head predictions file object
+#' @param hnoflo value used to flag dry cells; defaults to -888
+#' @param measures character vector with the required performance measures. Possible values are any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
+#' @param ... arguments passes to \code{\link{hydroGOF::gof}}
+#' @return data.frame with performance measures
+#'
+#' @rdname rmf_performance
+#' @method rmf_performance hpr
+#' @export
+rmf_performance.hpr <- function(hpr, hobdry = -888, measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+  obsAndSims <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=hobdry),]
+  observations <- obsAndSims$observed_value
+  predictions <- obsAndSims$simulated_equivalent
+  dry <- 0; if(hobdry %in% predictions) dry <- length(which(predictions == hobdry))
+  if(dry > 0) predictions <- predictions[-which(predictions == hobdry)]
+  names <- obsAndSims$observation_name
+  perform <- rmfi_performance_measures(observations,predictions, measures = measures, ...)
+  return(perform)
 }
 
 #' Read a GMS 2D grid file

@@ -1073,22 +1073,36 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
 }
 
 #' Model performance measures
+#' @param measures any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
+#' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' @keywords internal
-rmfi_performance_measures <- function(observations, predictions,print=F) {
-  mse <- hydroGOF::mse(observations, predictions)
-  mae <- hydroGOF::mae(observations, predictions)
-  me <- hydroGOF::me(observations, predictions)
-  r2 <- cor(observations, predictions)^2
-  nseff <- hydroGOF::NSE(observations, predictions)
-  if(print)
-  {
-    cat(paste('MSE: ', round(mse,2), ' (Mean Squared Error)\n'))
-    cat(paste('MAE: ', round(mae,2), ' (Mean Absolute Error)\n'))
-    cat(paste('ME: ', round(me,2), ' (Mean Error)\n'))
-    cat(paste('R^2: ', round(r2,2), ' (R squared)\n'))
-    cat(paste('NSeff: ',round(nseff,2), ' (Nash-Sutcliffe efficiency)\n'))  
+rmfi_performance_measures <- function(observations, predictions,print=F,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+  gof <- hydroGOF::gof(predictions, observations, ...)
+  name <- c('Mean error', 'Mean absolute error', 'Mean square error', 'Root mean square error', 'Normalized root mean square error',
+            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standars deviations', 'Nash-Sutcliffe efficiency', 
+            'Modified Nash-Sutcliffe efficiency', 'Relative Nash-Sutcliffe efficiency','Index of agreement', 'Modified index of agreement', 
+            'Relative index of agreement', 'Coefficient of persistance', 'Pearson product-moment correlation coefficient', 'Coefficient of determination',
+            'R2 multiplied with slope of linear regressions between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
+  gof <- data.frame(measure = rownames(gof), value = c(gof), name = name)
+  gof <- rbind(gof, data.frame(measure = 'SSQ', value = sum((predictions - observations)^2), name ='Sum of squared errors'))
+  measures <- tolower(measures)
+  if("pbias" %in% measures) measures <- replace(measures, which(measures == 'pbias'), 'pbias %')
+  if("nrmse" %in% measures) measures <- replace(measures, which(measures == 'nmrse'), 'nrmse %')
+  
+  indx <- which(tolower(gof$measure) %in% measures)
+  gof <- gof[indx, ]
+  
+  if(print){
+    for(i in 1:nrow(gof)) {
+      cat(paste(paste0(gof$measure[i], ': '), round(gof$value[i],2), paste0(' (',gof$name[i],')\n')))
+    }
   }
-  return(data.frame(mse=mse, mae=mae, me=me, r2=r2, nseff=nseff))
+  
+  measures <- tolower(gof$measure)
+  if("pbias %" %in% measures) measures <- replace(measures, which(measures == 'pbias %'), 'pbias')
+  if("nrmse %" %in% measures) measures <- replace(measures, which(measures == 'nmrse %'), 'nrmse')
+  gof <- setNames(data.frame(as.list(gof$value)), measures)
+  return(gof)
 }
 
 #' Read input for a MODFLOW boundary condition package which uses list-directed input
