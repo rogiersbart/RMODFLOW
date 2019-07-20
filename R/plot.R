@@ -166,305 +166,67 @@ rmf_plot.bud <-  function(bud,
   return(p)
 }
 
-#' Plot a 2D section of an RMODFLOW chd object
-#' 
-#' \code{rmf_plot.chd} plots a 2D section of an \code{RMODFLOW} chd object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW chd object
 #' 
 #' @param chd an \code{RMODFLOW} chd object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the constant-head cells' locations), "layer", "row", "column", "shead", "ehead", "shdfact" (for parameter data), "ehdfact" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npchd} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{chd$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot chd
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.chd = function(chd,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.chd <- function(chd,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = mean,
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(chb$npchb) || (!is.null(chb$npchb) && chb$npchb == 0))) stop('RMODFLOW chb object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      chd_df = data.frame(layer = unlist(chd$layer_parm), row = unlist(chd$row_parm), column = unlist(chd$column_parm), shdfact = unlist(chd$shdfact_parm), ehdfact = unlist(chd$ehdfact_parm) )
-      
-      # add head values & parameter names & parameter values
-      chd_df$shead = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$parval[x]*chd$shdfact_parm[[x]][1,]))
-      chd_df$ehead = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$parval[x]*chd$ehdfact_parm[[x]][1,]))
-      chd_df$parnam = rep(chd$parnam, chd$nlst) # as.character(unlist(lapply(seq_along(chd$parnam), function(x) rep(chd$parnam[x], chd$nlst[x]))))   
-      chd_df$parval = rep(chd$parval, chd$nlst) # as.numeric(unlist(lapply(seq_along(chd$parval), function(x) rep(chd$parval[x], chd$nlst[x]))))   
-      
-      
-    } else { # time varying
-      chd_df = data.frame(layer = unlist(lapply(seq_along(chd$layer_parm), function(x) chd$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(chd$row_parm), function(x) chd$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(chd$column_parm), function(x) chd$column_parm[[x]][instnum[x],])), shdfact = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$shdfact_parm[[x]][instnum[x],])), ehdfact = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$ehdfact_parm[[x]][instnum[x],])) )
-      
-      # add head values & parameter names & instance names & parameter values
-      chd_df$shead = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$parval[x]*chd$shdfact_parm[[x]][instnum[x],]))
-      chd_df$ehead = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$parval[x]*chd$ehdfact_parm[[x]][instnum[x],]))
-      chd_df$parnam = rep(chd$parnam, chd$nlst)  # as.character(unlist(lapply(seq_along(chd$parnam), function(x) rep(chd$parnam[x], chd$nlst[x]))))
-      chd_df$instnam = as.character(unlist(lapply(seq_along(chd$instnam)), function(x) rep(chd$instnam[[x]][instnum[x]], chd$nlst[x])))
-      chd_df$parval = rep(chd$parval, chd$nlst)  # as.numeric(unlist(lapply(seq_along(chd$parval), function(x) rep(chd$parval[x], chd$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(chd$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(chd$iname) || (!is.null(chd$iname) && (is.null(chd$iname[[sp]]) || all(is.na(unlist(chd$iname[[sp]])))) )){
-        
-        chd_df_parm = data.frame(layer = unlist(chd$layer_parm[which(chd$parnam %in% chd$pname[[sp]])]), row = unlist(chd$row_parm[which(chd$parnam %in% chd$pname[[sp]])]), column = unlist(chd$column_parm[which(chd$parnam %in% chd$pname[[sp]])]), shdfact = unlist(chd$shdfact_parm[which(chd$parnam %in% chd$pname[[sp]])]), ehdfact = unlist(chd$ehdfact_parm[which(chd$parnam %in% chd$pname[[sp]])]) )
-        
-        # add head values & parameter names & parameter values
-        chd_df_parm$shead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][1,])))
-        chd_df_parm$ehead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][1,])))
-        chd_df_parm$parnam = as.character(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$pname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  # long code instead of a simple rep(chd$pname[[sp]], chd$nlst[which(chd$parnam %in% chd$pname[[sp]])]) because of possible ordering issues in chd$pname relative to chd$nlst
-        chd_df_parm$parval = as.numeric(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$parval[which(chd$parnam == chd$pname[[sp]][x])], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        chd_df_parm = data.frame(layer = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$layer_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$row_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$column_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), shdfact = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), ehdfact = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])) )
-        
-        # add head values & parameter names & instance names & parameter values
-        chd_df_parm$shead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])))
-        chd_df_parm$ehead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])))
-        chd_df_parm$parnam = as.character(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$pname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  # long code instead of a simple rep(chd$pname[[sp]], chd$nlst[which(chd$parnam %in% chd$pname[[sp]])]) because of possible ordering issues in chd$pname relative to chd$nlst
-        chd_df_parm$instnam = as.character(unlist(lapply(seq_along(chd$iname[[sp]]), function(x) rep(chd$iname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))
-        chd_df_parm$parval = as.numeric(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$parval[which(chd$parnam == chd$pname[[sp]][x])], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  
-        
-      }
-      
-      chd_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(chd$itmp[sp] != 0){
-      sp = tail(subset(which(chd$itmp >= 0), which(chd$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(chd$itmp[sp] > 0){
-        chd_df_sp = data.frame(layer = unlist(chd$layer_sp[[sp]]), row = unlist(chd$row_sp[[sp]]), column = unlist(chd$column_sp[[sp]]), shead = unlist(chd$shead_sp[[sp]]), ehead = unlist(chd$ehead_sp[[sp]]) )
-        chd_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind chd_df_parm & chd_df_sp into chd_df (check if they exist first)
-    if(exists('chd_df_parm') && exists('chd_df_sp')){
-      
-      chd_df = rbind(chd_df_parm[colnames(chd_df_sp)], chd_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('chd_df_parm')){
-      chd_df = chd_df_sp
-    } else if(!exists('chd_df_sp')){
-      chd_df = chd_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=chd_df$row, j=chd_df$column, k=chd_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable %in% c('shead', 'ehead') && any(duplicated(id))){
-    
-    chb_df$id = id
-    id_dupl = id[duplicated(id)]
-    chb_df_dupl = chb_df[id %in% id_dupl,]
-    aggr = aggregate(chb_df_dupl[[variable]], by=list(chb_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      chb_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    chb_df = chb_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=chb_df$row, j=chb_df$column, k=chb_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(chd_df[,variable])), as.vector(table(factor(chd_df[,variable], levels=as.character(unique(chd_df[,variable])))))), labels = unique(chd_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(chd_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = chd, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
 
-#' Plot a 2D section of an RMODFLOW drn object
-#' 
-#' \code{rmf_plot.drn} plots a 2D section of an \code{RMODFLOW} drn object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW drn object
 #' 
 #' @param drn an \code{RMODFLOW} drn object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the drain locations), "layer", "row", "column", "elevation", "condfact" (for parameter data), "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npdrn} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{drn$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'elevation' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot drn
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.drn = function(drn,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.drn <- function(drn,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = ifelse(variable == 'elevation', mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(drn$npdrn) || (!is.null(drn$npdrn) && drn$npdrn == 0))) stop('RMODFLOW drn object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      drn_df = data.frame(layer = unlist(drn$layer_parm), row = unlist(drn$row_parm), column = unlist(drn$column_parm), elevation = unlist(drn$elevation_parm), condfact = unlist(drn$condfact_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      drn_df$conductance = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$parval[x]*drn$condfact_parm[[x]][1,]))
-      drn_df$parnam = rep(drn$parnam, drn$nlst) # as.character(unlist(lapply(seq_along(drn$parnam), function(x) rep(drn$parnam[x], drn$nlst[x]))))   
-      drn_df$parval = rep(drn$parval, drn$nlst) # as.numeric(unlist(lapply(seq_along(drn$parval), function(x) rep(drn$parval[x], drn$nlst[x]))))   
-      
-      
-    } else { # time varying
-      drn_df = data.frame(layer = unlist(lapply(seq_along(drn$layer_parm), function(x) drn$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(drn$row_parm), function(x) drn$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(drn$column_parm), function(x) drn$column_parm[[x]][instnum[x],])), elevation = unlist(lapply(seq_along(drn$elevation_parm), function(x) drn$elevation_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$condfact_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      drn_df$conductance = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$parval[x]*drn$condfact_parm[[x]][instnum[x],]))
-      drn_df$parnam = rep(drn$parnam, drn$nlst)  # as.character(unlist(lapply(seq_along(drn$parnam), function(x) rep(drn$parnam[x], drn$nlst[x]))))
-      drn_df$instnam = as.character(unlist(lapply(seq_along(drn$instnam)), function(x) rep(drn$instnam[[x]][instnum[x]], drn$nlst[x])))
-      drn_df$parval = rep(drn$parval, drn$nlst)  # as.numeric(unlist(lapply(seq_along(drn$parval), function(x) rep(drn$parval[x], drn$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(drn$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(drn$iname) || (!is.null(drn$iname) && (is.null(drn$iname[[sp]]) || all(is.na(unlist(drn$iname[[sp]])))) )){
-        
-        drn_df_parm = data.frame(layer = unlist(drn$layer_parm[which(drn$parnam %in% drn$pname[[sp]])]), row = unlist(drn$row_parm[which(drn$parnam %in% drn$pname[[sp]])]), column = unlist(drn$column_parm[which(drn$parnam %in% drn$pname[[sp]])]), elevation = unlist(drn$elevation_parm[which(drn$parnam %in% drn$pname[[sp]])]), condfact = unlist(drn$condfact_parm[which(drn$parnam %in% drn$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        drn_df_parm$conductance = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$parval[which(drn$parnam == drn$pname[[sp]][x])]*unlist(drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][1,])))
-        drn_df_parm$parnam = as.character(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$pname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  # long code instead of a simple rep(drn$pname[[sp]], drn$nlst[which(drn$parnam %in% drn$pname[[sp]])]) because of possible ordering issues in drn$pname relative to drn$nlst
-        drn_df_parm$parval = as.numeric(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$parval[which(drn$parnam == drn$pname[[sp]][x])], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        drn_df_parm = data.frame(layer = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$layer_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$row_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$column_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), elevation = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$elevation_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        drn_df_parm$conductance = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$parval[which(drn$parnam == drn$pname[[sp]][x])]*unlist(drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])))
-        drn_df_parm$parnam = as.character(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$pname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  # long code instead of a simple rep(drn$pname[[sp]], drn$nlst[which(drn$parnam %in% drn$pname[[sp]])]) because of possible ordering issues in drn$pname relative to drn$nlst
-        drn_df_parm$instnam = as.character(unlist(lapply(seq_along(drn$iname[[sp]]), function(x) rep(drn$iname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))
-        drn_df_parm$parval = as.numeric(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$parval[which(drn$parnam == drn$pname[[sp]][x])], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  
-        
-      }
-      
-      drn_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(drn$itmp[sp] != 0){
-      sp = tail(subset(which(drn$itmp >= 0), which(drn$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(drn$itmp[sp] > 0){
-        drn_df_sp = data.frame(layer = unlist(drn$layer_sp[[sp]]), row = unlist(drn$row_sp[[sp]]), column = unlist(drn$column_sp[[sp]]), elevation = unlist(drn$elevation_sp[[sp]]), conductance = unlist(drn$cond_sp[[sp]]) )
-        drn_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind drn_df_parm & drn_df_sp into drn_df (check if they exist first)
-    if(exists('drn_df_parm') && exists('drn_df_sp')){
-      
-      drn_df = rbind(drn_df_parm[colnames(drn_df_sp)], drn_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('drn_df_parm')){
-      drn_df = drn_df_sp
-    } else if(!exists('drn_df_sp')){
-      drn_df = drn_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=drn_df$row, j=drn_df$column, k=drn_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    drn_df$id = id
-    id_dupl = id[duplicated(id)]
-    drn_df_dupl = drn_df[id %in% id_dupl,]
-    aggr = aggregate(drn_df_dupl[[variable]], by=list(drn_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      drn_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    drn_df = drn_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=drn_df$row, j=drn_df$column, k=drn_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(drn_df[,variable])), as.vector(table(factor(drn_df[,variable], levels=as.character(unique(drn_df[,variable])))))), labels = unique(drn_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(drn_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = drn, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
 
@@ -738,154 +500,38 @@ rmf_plot.evt = function(evt,
   
 }
 
-#' Plot a 2D section of an RMODFLOW ghb object
-#' 
-#' \code{rmf_plot.ghb} plots a 2D section of an \code{RMODFLOW} ghb object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW ghb object
 #' 
 #' @param ghb an \code{RMODFLOW} ghb object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the head-boundary locations), "layer", "row", "column", "bhead", "condfact" (for parameter data), "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npghb} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{ghb$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'bhead' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot ghb
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.ghb = function(ghb,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.ghb <- function(ghb,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = ifelse(variable == 'bhead', mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(ghb$npghb) || (!is.null(ghb$npghb) && ghb$npghb == 0))) stop('RMODFLOW ghb object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      ghb_df = data.frame(layer = unlist(ghb$layer_parm), row = unlist(ghb$row_parm), column = unlist(ghb$column_parm), bhead = unlist(ghb$bhead_parm), condfact = unlist(ghb$condfact_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      ghb_df$conductance = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$parval[x]*ghb$condfact_parm[[x]][1,]))
-      ghb_df$parnam = rep(ghb$parnam, ghb$nlst) # as.character(unlist(lapply(seq_along(ghb$parnam), function(x) rep(ghb$parnam[x], ghb$nlst[x]))))   
-      ghb_df$parval = rep(ghb$parval, ghb$nlst) # as.numeric(unlist(lapply(seq_along(ghb$parval), function(x) rep(ghb$parval[x], ghb$nlst[x]))))   
-      
-      
-    } else { # time varying
-      ghb_df = data.frame(layer = unlist(lapply(seq_along(ghb$layer_parm), function(x) ghb$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(ghb$row_parm), function(x) ghb$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(ghb$column_parm), function(x) ghb$column_parm[[x]][instnum[x],])), bhead = unlist(lapply(seq_along(ghb$bhead_parm), function(x) ghb$bhead_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$condfact_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      ghb_df$conductance = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$parval[x]*ghb$condfact_parm[[x]][instnum[x],]))
-      ghb_df$parnam = rep(ghb$parnam, ghb$nlst)  # as.character(unlist(lapply(seq_along(ghb$parnam), function(x) rep(ghb$parnam[x], ghb$nlst[x]))))
-      ghb_df$instnam = as.character(unlist(lapply(seq_along(ghb$instnam)), function(x) rep(ghb$instnam[[x]][instnum[x]], ghb$nlst[x])))
-      ghb_df$parval = rep(ghb$parval, ghb$nlst)  # as.numeric(unlist(lapply(seq_along(ghb$parval), function(x) rep(ghb$parval[x], ghb$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(ghb$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(ghb$iname) || (!is.null(ghb$iname) && (is.null(ghb$iname[[sp]]) || all(is.na(unlist(ghb$iname[[sp]])))) )){
-        
-        ghb_df_parm = data.frame(layer = unlist(ghb$layer_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), row = unlist(ghb$row_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), column = unlist(ghb$column_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), bhead = unlist(ghb$bhead_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), condfact = unlist(ghb$condfact_parm[which(ghb$parnam %in% ghb$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        ghb_df_parm$conductance = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])]*unlist(ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][1,])))
-        ghb_df_parm$parnam = as.character(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$pname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  # long code instead of a simple rep(ghb$pname[[sp]], ghb$nlst[which(ghb$parnam %in% ghb$pname[[sp]])]) because of possible ordering issues in ghb$pname relative to ghb$nlst
-        ghb_df_parm$parval = as.numeric(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        ghb_df_parm = data.frame(layer = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$layer_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$row_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$column_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), bhead = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$bhead_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        ghb_df_parm$conductance = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])]*unlist(ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])))
-        ghb_df_parm$parnam = as.character(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$pname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  # long code instead of a simple rep(ghb$pname[[sp]], ghb$nlst[which(ghb$parnam %in% ghb$pname[[sp]])]) because of possible ordering issues in ghb$pname relative to ghb$nlst
-        ghb_df_parm$instnam = as.character(unlist(lapply(seq_along(ghb$iname[[sp]]), function(x) rep(ghb$iname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))
-        ghb_df_parm$parval = as.numeric(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  
-        
-      }
-      
-      ghb_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(ghb$itmp[sp] != 0){
-      sp = tail(subset(which(ghb$itmp >= 0), which(ghb$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(ghb$itmp[sp] > 0){
-        ghb_df_sp = data.frame(layer = unlist(ghb$layer_sp[[sp]]), row = unlist(ghb$row_sp[[sp]]), column = unlist(ghb$column_sp[[sp]]), bhead = unlist(ghb$bhead_sp[[sp]]), conductance = unlist(ghb$cond_sp[[sp]]) )
-        ghb_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind ghb_df_parm & ghb_df_sp into ghb_df (check if they exist first)
-    if(exists('ghb_df_parm') && exists('ghb_df_sp')){
-      
-      ghb_df = rbind(ghb_df_parm[colnames(ghb_df_sp)], ghb_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('ghb_df_parm')){
-      ghb_df = ghb_df_sp
-    } else if(!exists('ghb_df_sp')){
-      ghb_df = ghb_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=ghb_df$row, j=ghb_df$column, k=ghb_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    ghb_df$id = id
-    id_dupl = id[duplicated(id)]
-    ghb_df_dupl = ghb_df[id %in% id_dupl,]
-    aggr = aggregate(ghb_df_dupl[[variable]], by=list(ghb_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      ghb_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    ghb_df = ghb_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=ghb_df$row, j=ghb_df$column, k=ghb_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(ghb_df[,variable])), as.vector(table(factor(ghb_df[,variable], levels=as.character(unique(ghb_df[,variable])))))), labels = unique(ghb_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(ghb_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = ghb, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
+
 
 #' Plot a MODFLOW head predictions file
 #' 
@@ -1239,155 +885,38 @@ rmf_plot.rch = function(rch,
   
 }
 
-#' Plot a 2D section of an RMODFLOW riv object
-#' 
-#' \code{rmf_plot.riv} plots a 2D section of an \code{RMODFLOW} riv object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW riv object
 #' 
 #' @param riv an \code{RMODFLOW} riv object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the reach locations), "layer", "row", "column", "stage", "condfact" (for parameter data), "rbot", "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npriv} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{riv$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'stage' & 'rbot' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot riv
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.riv = function(riv,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.riv <- function(riv,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = ifelse(variable %in% c('stage', 'rbot'), mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(riv$npriv) || (!is.null(riv$npriv) && riv$npriv == 0))) stop('RMODFLOW riv object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      riv_df = data.frame(layer = unlist(riv$layer_parm), row = unlist(riv$row_parm), column = unlist(riv$column_parm), stage = unlist(riv$stage_parm), condfact = unlist(riv$condfact_parm), rbot = unlist(riv$rbot_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][1,]))
-      riv_df$parnam = rep(riv$parnam, riv$nlst) # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))   
-      riv_df$parval = rep(riv$parval, riv$nlst) # as.numeric(unlist(lapply(seq_along(riv$parval), function(x) rep(riv$parval[x], riv$nlst[x]))))   
-      
-      
-    } else { # time varying
-      riv_df = data.frame(layer = unlist(lapply(seq_along(riv$layer_parm), function(x) riv$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(riv$row_parm), function(x) riv$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(riv$column_parm), function(x) riv$column_parm[[x]][instnum[x],])), stage = unlist(lapply(seq_along(riv$stage_parm), function(x) riv$stage_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$condfact_parm[[x]][instnum[x],])), rbot = unlist(lapply(seq_along(riv$rbot_parm), function(x) riv$rbot_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][instnum[x],]))
-      riv_df$parnam = rep(riv$parnam, riv$nlst)  # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))
-      riv_df$instnam = as.character(unlist(lapply(seq_along(riv$instnam)), function(x) rep(riv$instnam[[x]][instnum[x]], riv$nlst[x])))
-      riv_df$parval = rep(riv$parval, riv$nlst)  # as.numeric(unlist(lapply(seq_along(riv$parval), function(x) rep(riv$parval[x], riv$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(riv$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(riv$iname) || (!is.null(riv$iname) && (is.null(riv$iname[[sp]]) || all(is.na(unlist(riv$iname[[sp]])))) )){
-        
-        riv_df_parm = data.frame(layer = unlist(riv$layer_parm[which(riv$parnam %in% riv$pname[[sp]])]), row = unlist(riv$row_parm[which(riv$parnam %in% riv$pname[[sp]])]), column = unlist(riv$column_parm[which(riv$parnam %in% riv$pname[[sp]])]), stage = unlist(riv$stage_parm[which(riv$parnam %in% riv$pname[[sp]])]), condfact = unlist(riv$condfact_parm[which(riv$parnam %in% riv$pname[[sp]])]), rbot = unlist(riv$rbot_parm[which(riv$parnam %in% riv$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        riv_df_parm$conductance = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$parval[which(riv$parnam == riv$pname[[sp]][x])]*unlist(riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][1,])))
-        riv_df_parm$parnam = as.character(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$pname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  # long code instead of a simple rep(riv$pname[[sp]], riv$nlst[which(riv$parnam %in% riv$pname[[sp]])]) because of possible ordering issues in riv$pname relative to riv$nlst
-        riv_df_parm$parval = as.numeric(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$parval[which(riv$parnam == riv$pname[[sp]][x])], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        riv_df_parm = data.frame(layer = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$layer_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$row_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$column_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), stage = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$stage_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), rbot = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$rbot_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        riv_df_parm$conductance = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$parval[which(riv$parnam == riv$pname[[sp]][x])]*unlist(riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])))
-        riv_df_parm$parnam = as.character(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$pname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  # long code instead of a simple rep(riv$pname[[sp]], riv$nlst[which(riv$parnam %in% riv$pname[[sp]])]) because of possible ordering issues in riv$pname relative to riv$nlst
-        riv_df_parm$instnam = as.character(unlist(lapply(seq_along(riv$iname[[sp]]), function(x) rep(riv$iname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))
-        riv_df_parm$parval = as.numeric(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$parval[which(riv$parnam == riv$pname[[sp]][x])], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  
-        
-      }
-      
-      riv_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(riv$itmp[sp] != 0){
-      sp = tail(subset(which(riv$itmp >= 0), which(riv$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp > 0 before current stress period
-      
-      if(riv$itmp[sp] > 0){
-        riv_df_sp = data.frame(layer = unlist(riv$layer_sp[[sp]]), row = unlist(riv$row_sp[[sp]]), column = unlist(riv$column_sp[[sp]]), stage = unlist(riv$stage_sp[[sp]]), conductance = unlist(riv$cond_sp[[sp]]), rbot = unlist(riv$rbot_sp[[sp]]) )
-        riv_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind riv_df_parm & riv_df_sp into riv_df (check if they exist first)
-    if(exists('riv_df_parm') && exists('riv_df_sp')){
-      
-      riv_df = rbind(riv_df_parm[colnames(riv_df_sp)], riv_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('riv_df_parm')){
-      riv_df = riv_df_sp
-    } else if(!exists('riv_df_sp')){
-      riv_df = riv_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    riv_df$id = id
-    id_dupl = id[duplicated(id)]
-    riv_df_dupl = riv_df[id %in% id_dupl,]
-    aggr = aggregate(riv_df_dupl[[variable]], by=list(riv_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      riv_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    riv_df = riv_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
-    
-  }
-  
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(riv_df[,variable])), as.vector(table(factor(riv_df[,variable], levels=as.character(unique(riv_df[,variable])))))), labels = unique(riv_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(riv_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = riv, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
+
 
 #' Plot a MODFLOW 2D array
 #' 
@@ -1832,6 +1361,44 @@ plot.rmf_4d_array <- function(...) {
   rmf_plot.rmf_4d_array(...)
 }
 
+#' Plot a RMODFLOW list object
+#'
+#' @param obj a \code{RMODFLOW} object of class \code{rmf_list}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#' 
+#' @return ggplot2 object or layer
+#' @method rmf_plot rmf_list
+#' 
+#' @export
+#' @details the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+#'
+rmf_plot.rmf_list <- function(obj, 
+                              dis, 
+                              variable = 'id',
+                              active_only = FALSE,
+                              fun = sum,
+                              ...) {
+  
+  na_value <- ifelse(active_only, NA, 0)
+  
+  if(variable == 'id') {
+    arr <- rmf_as_array(obj, dis = dis, select = 4, sparse = FALSE, na_value = na_value, fun = fun)
+    indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
+    arr[indx] <- 1
+    rmf_plot(arr, dis = dis, type = 'factor', ...)
+    
+  } else {
+    arr <- rmf_as_array(obj, dis = dis, select = variable, sparse = FALSE, na_value = na_value, fun = fun)
+    rmf_plot(arr, dis = dis, ...)
+  }
+  
+}
+
+
 #' Plot a MODFLOW sensitivity analysis object
 #' 
 #' @param sen sensitivity analysis object
@@ -1861,150 +1428,34 @@ plot.sen <- function(...) {
   rmf_plot.sen(...)
 }
 
-#' Plot a 2D section of an RMODFLOW wel object
-#' 
-#' \code{rmf_plot.wel} plots a 2D section of an \code{RMODFLOW} wel object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW wel object
 #' 
 #' @param wel an \code{RMODFLOW} wel object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the well locations), "layer", "row", "column", "qfact" (for parameter data), "q", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npwel} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{wel$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'q'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot wel
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.wel = function(wel,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.wel <- function(wel,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = sum,
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(wel$npwel) || (!is.null(wel$npwel) && wel$npwel == 0))) stop('RMODFLOW wel object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      wel_df = data.frame(layer = unlist(wel$layer_parm), row = unlist(wel$row_parm), column = unlist(wel$column_parm),  qfact = unlist(wel$qfact_parm) )
-      
-      # add q values & parameter names & parameter values
-      wel_df$q = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$parval[x]*wel$qfact_parm[[x]][1,]))
-      wel_df$parnam = rep(wel$parnam, wel$nlst) # as.character(unlist(lapply(seq_along(wel$parnam), function(x) rep(wel$parnam[x], wel$nlst[x]))))   
-      wel_df$parval = rep(wel$parval, wel$nlst) # as.numeric(unlist(lapply(seq_along(wel$parval), function(x) rep(wel$parval[x], wel$nlst[x]))))   
-      
-      
-    } else { # time varying
-      wel_df = data.frame(layer = unlist(lapply(seq_along(wel$layer_parm), function(x) wel$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(wel$row_parm), function(x) wel$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(wel$column_parm), function(x) wel$column_parm[[x]][instnum[x],])),  qfact = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$qfact_parm[[x]][instnum[x],])) )
-      
-      # add q values & parameter names & instance names & parameter values
-      wel_df$q = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$parval[x]*wel$qfact_parm[[x]][instnum[x],]))
-      wel_df$parnam = rep(wel$parnam, wel$nlst)  # as.character(unlist(lapply(seq_along(wel$parnam), function(x) rep(wel$parnam[x], wel$nlst[x]))))
-      wel_df$instnam = as.character(unlist(lapply(seq_along(wel$instnam)), function(x) rep(wel$instnam[[x]][instnum[x]], wel$nlst[x])))
-      wel_df$parval = rep(wel$parval, wel$nlst)  # as.numeric(unlist(lapply(seq_along(wel$parval), function(x) rep(wel$parval[x], wel$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(wel$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(wel$iname) || (!is.null(wel$iname) && (is.null(wel$iname[[sp]]) || all(is.na(unlist(wel$iname[[sp]])))) )){
-        
-        wel_df_parm = data.frame(layer = unlist(wel$layer_parm[which(wel$parnam %in% wel$pname[[sp]])]), row = unlist(wel$row_parm[which(wel$parnam %in% wel$pname[[sp]])]), column = unlist(wel$column_parm[which(wel$parnam %in% wel$pname[[sp]])]) )
-        
-        # add q values & parameter names & parameter values
-        wel_df_parm$q = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$parval[which(wel$parnam == wel$pname[[sp]][x])]*unlist(wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][1,])))
-        wel_df_parm$parnam = as.character(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$pname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  # long code instead of a simple rep(wel$pname[[sp]], wel$nlst[which(wel$parnam %in% wel$pname[[sp]])]) because of possible ordering issues in wel$pname relative to wel$nlst
-        wel_df_parm$parval = as.numeric(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$parval[which(wel$parnam == wel$pname[[sp]][x])], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        wel_df_parm = data.frame(layer = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$layer_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$row_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$column_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), qfact = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])) )
-        
-        # add q values & parameter names & instance names & parameter values
-        wel_df_parm$q = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$parval[which(wel$parnam == wel$pname[[sp]][x])]*unlist(wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])))
-        wel_df_parm$parnam = as.character(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$pname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  # long code instead of a simple rep(wel$pname[[sp]], wel$nlst[which(wel$parnam %in% wel$pname[[sp]])]) because of possible ordering issues in wel$pname relative to wel$nlst
-        wel_df_parm$instnam = as.character(unlist(lapply(seq_along(wel$iname[[sp]]), function(x) rep(wel$iname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))
-        wel_df_parm$parval = as.numeric(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$parval[which(wel$parnam == wel$pname[[sp]][x])], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  
-        
-      }
-      
-      wel_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(wel$itmp[sp] != 0){
-      sp = tail(subset(which(wel$itmp >= 0), which(wel$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(wel$itmp[sp] > 0){
-        wel_df_sp = data.frame(layer = unlist(wel$layer_sp[[sp]]), row = unlist(wel$row_sp[[sp]]), column = unlist(wel$column_sp[[sp]]), q = unlist(wel$q_sp[[sp]]) )
-        wel_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind wel_df_parm & wel_df_sp into wel_df (check if they exist first)
-    if(exists('wel_df_parm') && exists('wel_df_sp')){
-      
-      wel_df = rbind(wel_df_parm[colnames(wel_df_sp)], wel_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('wel_df_parm')){
-      wel_df = wel_df_sp
-    } else if(!exists('wel_df_sp')){
-      wel_df = wel_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=wel_df$row, j=wel_df$column, k=wel_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'q' && any(duplicated(id))){
-    
-    wel_df$id = id
-    id_dupl = id[duplicated(id)]
-    wel_df_dupl = wel_df[id %in% id_dupl,]
-    aggr = aggregate(wel_df_dupl[[variable]], by=list(wel_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      wel_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    wel_df = wel_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=wel_df$row, j=wel_df$column, k=wel_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(wel_df[,variable])), as.vector(table(factor(wel_df[,variable], levels=as.character(unique(wel_df[,variable])))))), labels = unique(wel_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(wel_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = wel, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }

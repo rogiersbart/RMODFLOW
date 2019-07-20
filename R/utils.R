@@ -19,7 +19,9 @@ rmf_as_array <- function(...) {
 #' @param na_value value of the cells in the array which are not specified in obj; defaults to 0
 #' @param sparse logical; indicating if the returned array should be 2D or 3D. See details. Defaults to TRUE.
 #' @param kper sets the kper attribute of the returned array; defaults to the kper attribute of obj
-#'
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to fun.
+#' 
 #' @details the dimension of the returned array is guessed from the supplied dis object. If there is only one unique k value in obj, 
 #'  \code{sparse}, determines the dimensions of the returned array. If \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE}, a 3D array is returned.
 #'  When there is more than one unique k value in obj, a 3D array is always returned.
@@ -30,24 +32,29 @@ rmf_as_array <- function(...) {
 #' @seealso \code{\link{rmf_as_list}}
 #' 
 
-
 rmf_as_array.rmf_list <- function(obj, 
                                   dis, 
                                   select = 4,
                                   na_value = 0,
                                   sparse = TRUE,
-                                  kper = attr(obj, 'kper')) {
+                                  kper = attr(obj, 'kper'),
+                                  fun = sum,
+                                  ...) {
   
+  df <- list(values = obj[[select]])
   
   if(length(unique(obj$k)) == 1 && sparse) {
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = 1, dis = dis, type = 'r')
+    df$id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = 1, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol), kper = kper)
   } else {
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
+    df$id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol, dis$nlay), kper = kper)
   }
   
-  ar[id] <- obj[[select]]
+  # deal with additive data
+  if(is.numeric(df$values)) df <- aggregate(list(values = obj[[select]]), by = list(id = df$id), FUN = fun, ...)
+  
+  ar[as.numeric(df$id)] <- as.numeric(df$values)
   return(ar)
   
 }
