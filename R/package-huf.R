@@ -276,7 +276,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
       huf$hguvani[k] <- as.numeric(data_set_9$variables[3])
       huf_lines <- data_set_9$remaining_lines
       for(i in 2:huf$nhuf) {
-        data_set_9 <- rmfi_parse_variables(huf_lines)
+        data_set_9 <- rmfi_parse_variables(huf_lines, character = TRUE)
         k <- which(huf$hgunam == data_set_9$variables[1])
         huf$hguhani[k] <- as.numeric(data_set_9$variables[2])
         huf$hguvani[k] <- as.numeric(data_set_9$variables[3])
