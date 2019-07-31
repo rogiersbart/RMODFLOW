@@ -692,13 +692,14 @@ rmf_plot.rmf_2d_array <- function(array,
                  ggplot2::ggtitle(title))
       }
     } else if(type=='factor') {  
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::coord_equal() +
                  ggplot2::ggtitle(title))
       }
@@ -923,13 +924,14 @@ rmf_plot.rmf_3d_array <- function(array,
                  ggplot2::ggtitle(title))
       }
     } else if(type=='factor') {
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::xlab(xlabel) +
                  ggplot2::ylab(ylabel) +
                  ggplot2::ggtitle(title))
