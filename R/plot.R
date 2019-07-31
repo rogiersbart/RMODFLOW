@@ -175,7 +175,7 @@ rmf_plot.bud <-  function(bud,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -190,7 +190,7 @@ rmf_plot.chd <- function(chd,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = mean,
                          ...) {
   
@@ -207,7 +207,7 @@ rmf_plot.chd <- function(chd,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'elevation' and sum for variable 'cond'.
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -222,7 +222,7 @@ rmf_plot.drn <- function(drn,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = ifelse(variable == 'elevation', mean, sum),
                          ...) {
   
@@ -288,7 +288,7 @@ rmf_plot.evt <- function(evt,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'bhead' and sum for variable 'cond'.
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -303,7 +303,7 @@ rmf_plot.ghb <- function(ghb,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = ifelse(variable == 'bhead', mean, sum),
                          ...) {
   
@@ -319,7 +319,7 @@ rmf_plot.ghb <- function(ghb,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'hydchr'
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -333,7 +333,7 @@ rmf_plot.hfb <- function(hfb,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = ifelse(variable == 'hydchr', sum, mean),
                          ...) {
   
@@ -525,7 +525,7 @@ rmf_plot.rch <- function(rch,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'stage' & 'rbot' and sum for variable 'cond'.
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -540,7 +540,7 @@ rmf_plot.riv <- function(riv,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = ifelse(variable %in% c('stage', 'rbot'), mean, sum),
                          ...) {
   
@@ -1070,7 +1070,7 @@ plot.sen <- function(...) {
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'q'.
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
@@ -1085,7 +1085,7 @@ rmf_plot.wel <- function(wel,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         active_only = FALSE,
+                         active_only = TRUE,
                          fun = sum,
                          ...) {
   
