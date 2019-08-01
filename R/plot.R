@@ -338,9 +338,9 @@ rmf_plot.hfb <- function(hfb,
                          ...) {
   
   # TODO: plot line instead of cells
-
+  
   # rmf_plot.rmf_list
-  rmf_plot(hfb, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)  
+  rmf_plot(hfb$data, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
 }
 
 
@@ -361,22 +361,22 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
                ggplot2::scale_colour_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
                ggplot2::xlab('Observed value')+
                ggplot2::ylab('Simulated equivalent')
-           )
+    )
   } else if(type=='residual') {
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=observation_name,y=simulated_equivalent-observed_value))+
                ggplot2::geom_bar(ggplot2::aes(fill=abs(observed_value-simulated_equivalent)),stat='identity')+
                ggplot2::scale_fill_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
                ggplot2::xlab('Observation name')+
                ggplot2::ylab('Simulated equivalent - observed value')
-           )
+    )
   } else if(type=='histogram') {
     if(is.null(bins)) bins <- nclass.FD(dat$simulated_equivalent-dat$observed_value)
-      
+    
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=simulated_equivalent-observed_value))+
                ggplot2::geom_histogram(ggplot2::aes(fill=..count..), bins=bins)+
                ggplot2::scale_fill_gradientn('Count',colours=rev(rainbow(7)))+
                ggplot2::xlab('Simulated equivalent - observed value')
-           )
+    )
   }
 }
 
@@ -573,7 +573,7 @@ rmf_plot.riv <- function(riv,
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param title plot title
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask)
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
@@ -597,7 +597,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   plot3d=FALSE,
                                   height=NULL,
                                   title = NULL,
-                                  crop = FALSE) {
+                                  crop = TRUE) {
   
   
   
@@ -789,7 +789,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param title plot title
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask)
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param prj projection file object
@@ -813,7 +813,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   gridlines = FALSE,
                                   add=FALSE,
                                   title = NULL,
-                                  crop = FALSE,
+                                  crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
                                   prj = NULL,
@@ -843,7 +843,7 @@ rmf_plot.rmf_3d_array <- function(array,
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
     rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, title = title, crop = crop, prj = prj, crs = crs, ...)
-    } else {
+  } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
