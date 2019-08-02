@@ -1657,6 +1657,125 @@ rmf_create_parameter.rmf_list <- function(rmf_list,
   return(rmf_list)
 }
 
+
+#' Calculate a gradient field
+#'
+#' @rdname rmf_gradient
+#' @export
+#'
+rmf_gradient <- function(...) {
+  UseMethod('rmf_gradient')
+}
+
+
+#' Calculate a 2d gradient field
+#' 
+#' \code{rmf_gradient.rmf_2d_array} calculates the x and y components of the gradient from a 2d scalar field
+#'
+#' @param obj 2d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
+#'
+#' @return a list with the x and y components of the gradient field as 2d arrays
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+  
+  coords <- rmf_cell_coordinates(dis)
+  x <- coords$x[1,,1]
+  y <- coords$y[,1,1]
+  
+  n <- dis$nrow
+  m <- dis$ncol
+  
+  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
+  obj <- obj*mask
+    
+  gX <- gY <- 0 * obj
+  if(n > 1) {
+    gY[1, ] <- (obj[2, ] - obj[1, ])/(y[2] - y[1])
+    gY[n, ] <- (obj[n, ] - obj[n - 1, ])/(y[n] - y[n - 1])
+    if (n > 2) gY[2:(n - 1), ] <- (obj[3:n, ] - obj[1:(n - 2), ])/(y[3:n] - y[1:(n - 2)])
+  }
+  if(m > 1) {
+    gX[, 1] <- (obj[, 2] - obj[, 1])/(x[2] - x[1])
+    gX[, m] <- (obj[, m] - obj[, m - 1])/(x[m] - x[m - 1])
+    if (m > 2) gX[, 2:(m - 1)] <- (obj[, 3:m] - obj[, 1:(m - 2)])/(x[3:m] - x[1:(m - 2)])
+  }
+  
+  return(list(x = gX, y = gY))
+  
+}
+
+#' Calculate a 3d gradient field
+#' 
+#' \code{rmf_gradient.rmf_3d_array} calculates the x, y and z components of the gradient from a 3d scalar field
+#'
+#' @param obj 3d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
+#'
+#' @return a list with the x, y and z components of the gradient field as 3d arrays
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+  
+  coords <- rmf_cell_coordinates(dis)
+  x <- coords$x[1,,1]
+  y <- coords$y[,1,1]
+  z <- coords$z
+  
+  n <- dis$nrow
+  m <- dis$ncol
+  k <- dis$nlay
+  
+  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
+  obj <- obj*mask
+  
+  gX <- gY <- gZ <- 0 * obj
+  if(n > 1) {
+    gY[1,,] <- (obj[2,,] - obj[1,,])/(y[2] - y[1])
+    gY[n,,] <- (obj[n,,] - obj[n - 1,,])/(y[n] - y[n - 1])
+    if (n > 2) gY[2:(n - 1),,] <- (obj[3:n,,] - obj[1:(n - 2),,])/(y[3:n] - y[1:(n - 2)])
+  }
+  if(m > 1) {
+    gX[,1,] <- (obj[,2,] - obj[,1,])/(x[2] - x[1])
+    gX[,m,] <- (obj[,m,] - obj[,m - 1,])/(x[m] - x[m - 1])
+    if (m > 2) gX[,2:(m - 1),] <- (obj[,3:m,] - obj[,1:(m - 2),])/(x[3:m] - x[1:(m - 2)])
+  }
+  if(k > 1) {
+    gZ[,,1] <- (obj[,,2] - obj[,,1])/(z[,,2] - z[,,1])
+    gZ[,,k] <- (obj[,,k] - obj[,,k - 1])/(z[,,k] - z[,,k - 1])
+    if (k > 2) gZ[,,2:(k - 1)] <- (obj[,,3:k] - obj[,,1:(k - 2)])/(z[,,3:k] - z[,,1:(k - 2)])
+  }
+  
+  return(list(x = gX, y = gY, z = -gZ))
+  
+}
+
+#' Calculate a 3d gradient field from a 4d array
+#' 
+#' \code{rmf_gradient.rmf_4d_array} calculates the x, y and z components of the gradient from a 4d scalar field where the 4th dimension is time
+#'
+#' @param obj 4d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param ... additional arguments passed to \code{\link{rmf_gradient.rmf_3d_array}}
+#' @return a list with the x, y and z components of the gradient field as 3d arrays
+#' @details the 4d array is subsetted on the 4th dimension to a 3d array from which the gradient is calculated
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
+  rmf_gradient(obj[,,,l], dis = dis, ...)
+}
+
 #' Calculate the internal time step sequence of a transient MODFLOW model
 #' 
 #' \code{rmf_time_steps} calculates the internal sequence of time steps of a transient MODFLOW model from either an \code{RMODFLOW} dis object or separate parameters
