@@ -61,7 +61,7 @@ rmf_create_nam <- function(...) {
     cbcnum <-  unique(cbcnum[cbcnum > 0])
     if(length(cbcnum) == 1) {
       nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum, fname = 'output.cbc', options = NA)  )
-    } else {
+    } else if(length(cbcnum) > 1){
       for(i in 1:length(cbcnum)) {
         nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste0('output_',i,'.cbc'), options = NA))  
       }

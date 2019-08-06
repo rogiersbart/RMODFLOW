@@ -16,9 +16,25 @@ rmf_create <- function(..., cbc = NULL) {
   ftype <- vapply(modflow, function(i) class(i)[which(class(i) == 'rmf_package') - 1], 'text')
   names(modflow) <- ftype
   
+  # reset cbc if necessary
+  if(!is.null(cbc)) {
+    # some packages have i*cb1, i*cb2. SWI has iswibd
+    set_cbc <- function(package) {
+      cbc_name <- paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'cb')
+      if(!is.null(package[[cbc_name]])) package[[cbc_name]] <- cbc
+      if(!is.null(package[[paste0(cbc_name, '1')]])) package[[paste0(cbc_name, '1')]] <- cbc
+      if(!is.null(package[[paste0(cbc_name, '2')]])) package[[paste0(cbc_name, '2')]] <- cbc
+      if(!is.null(package[[paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'bd')]])) package[[paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'bd')]] <- cbc
+      
+      return(package)
+    }
+    
+    modflow <- lapply(modflow, set_cbc)
+  }
+  
   # find nam object; if not present, create one. If present, check if all packages are also in nam
   if(!('nam' %in% ftype)) {
-    modflow$nam <- rmf_create_nam(...)
+    modflow$nam <- rmf_create_nam(modflow)
   } else {
     df <- rmfi_list_packages(type = 'all')
     mf_types <- df$ftype[which(df$rmf %in% ftype)]
@@ -41,21 +57,6 @@ rmf_create <- function(..., cbc = NULL) {
     stop('The upw and nwt have to be used together.')
   }
   
-  # reset cbc if necessary
-  if(!is.null(cbc)) {
-    # some packages have i*cb1, i*cb2. SWI has iswibd
-    set_cbc <- function(package) {
-      cbc_name <- paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'cb')
-      if(!is.null(package[[cbc_name]])) package[[cbc_name]] <- cbc
-      if(!is.null(package[[paste0(cbc_name, '1')]])) package[[paste0(cbc_name, '1')]] <- cbc
-      if(!is.null(package[[paste0(cbc_name, '2')]])) package[[paste0(cbc_name, '2')]] <- cbc
-      if(!is.null(package[[paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'bd')]])) package[[paste0('i', class(package)[which(class(package) == 'rmf_package')-1], 'bd')]] <- cbc
-      
-      return(package)
-    }
-    
-    modflow <- lapply(modflow, set_cbc)
-  }
   
   class(modflow) <- c('modflow')
   return(modflow)
