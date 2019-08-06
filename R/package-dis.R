@@ -27,8 +27,8 @@ rmf_create_dis <- function(nlay = 3,
                            itmuni = 1,
                            lenuni = 2,
                            laycbd = rep(0, nlay),
-                           delr = rep(100, ncol),
-                           delc = rep(100, nrow),
+                           delr = 100,
+                           delc = 100,
                            top = matrix(0, nrow = nrow, ncol = ncol),
                            botm = array(rep(seq(0,-10 * (nlay + sum(laycbd != 0)),length = nlay + sum(laycbd != 0) + 1)[2:(nlay + sum(laycbd != 0) + 1)], each = nrow * ncol), dim = c(nrow, ncol, nlay + sum(laycbd != 0))),
                            perlen = rep(1, nper),
@@ -56,8 +56,10 @@ rmf_create_dis <- function(nlay = 3,
     }
   
   # data set 3
+    if(length(delr) == 1) delr <- rep(delr, ncol)
     dis$delr <- delr
   # data set 4
+    if(length(delc) == 1) delc <- rep(delc, nrow)
     dis$delc <- delc
   
   # data set 5
