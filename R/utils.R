@@ -1026,6 +1026,7 @@ convert_huf_to_mask <- function(...) {
 
 #' Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
 #' 
+<<<<<<< Updated upstream
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
 #' @param bas bas object, corresponding to the huf object
@@ -1058,6 +1059,8 @@ convert_huf_to_nlay <- function(...) {
 
 #' Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 #' 
+=======
+>>>>>>> Stashed changes
 #' @param ibound 3d \code{ibound} array as specified in a MODFLOW BAS object
 #' @return list of lower, upper, left, right, front and back logical 3d arrays
 #' @export
