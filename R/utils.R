@@ -1733,6 +1733,7 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #'
 #' @param obj 4d array with the scalars
 #' @param dis \code{RMODFLOW} dis object
+#' @param l integer index used to subset the 4th dimension of the 4d array
 #' @param ... additional arguments passed to \code{\link{rmf_gradient.rmf_3d_array}}
 #' @return a list with the x, y and z components of the gradient field as 3d arrays
 #' @details the 4d array is subsetted on the 4th dimension to a 3d array from which the gradient is calculated

@@ -323,7 +323,7 @@ rmf_plot.ghb <- function(ghb,
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'hydchr'
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
-#' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
+#' @return ggplot2 object or layer; 
 #' @export
 #' @method rmf_plot hfb
 
@@ -333,14 +333,88 @@ rmf_plot.hfb <- function(hfb,
                          i = NULL,
                          j = NULL,
                          k = NULL,
+                         type = 'fill',
                          active_only = TRUE,
                          fun = ifelse(variable == 'hydchr', sum, mean),
+                         prj = NULL,
+                         crs = NULL,
+                         size = 1,
+                         colour = 'black',
+                         crop = TRUE,
+                         add = FALSE,
                          ...) {
   
-  # TODO: plot line instead of cells
+  if(is.null(i) & is.null(j) & is.null(k)) {
+    stop('Please provide i, j or k.', call. = FALSE)
+  }
+  
+  if(!is.null(k)) {
+    layer <- k
+    data <- subset(hfb$data, hfb$data$k == layer)
+    if(!is.character(variable)) variable <- colnames(data)[variable]
+    data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
+    data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=layer, dis = dis, type = 'modflow')
+    
+    # coordinate tibble
+  
+    get_face <- function(data) {
+      i <- data$i
+      j <- data$j
+      irow2 <- data$irow2
+      icol2 <- data$icol2
+      df <- as.data.frame(df[which(as.character(df$id) == data$id),])
+      
+      if(i < irow2) {
+        # back
+        return(df[c(1,4),])
+        
+      } else if(i > irow2) {
+        # front
+        return(df[c(2,3),]) 
+        
+      } else if(j < icol2) {
+        # right
+        return(df[c(3,4),]) 
+        
+      } else if(j > icol2) {
+        # left
+        return(df[c(1,2),])
+        
+      }
+    }
+    
+    df_mask <- rmf_as_array(data, dis = dis, sparse = TRUE, na_value = 0)
+    df_mask[which(df_mask != 0)] <- 1
+    
+    df <- data %>%
+      rmf_as_array(dis = dis, select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), sparse = TRUE) %>%
+      rmf_as_tibble(dis = dis, prj = prj, crs = crs, mask = df_mask)
+    
+    df <- lapply(1:nrow(data), function(i) get_face(data[i,]))
+    df <- do.call(rbind, df)
+    df$row <- rep(1:(nrow(df)/2), each = 2)
+
+    # plot
+    if(variable == 'id') {
+      p <-  geom_path(data = df, aes(x=x, y=y, group = row), size = size, colour = colour)
+    } else {
+      p <-  geom_path(data = df, aes(x=x, y=y, group = row, colour = value), size = size)
+    }
+    
+    if(!crop) p <- p + lims(x = , y =)
+    
+    if(add) {
+      return(p)
+    } else {
+      return(ggplot() + p)
+    }
+    
+  } else {
+    stop('Not yet implemented')
+  }
   
   # rmf_plot.rmf_list
-  rmf_plot(hfb$data, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
+  #rmf_plot(hfb$data, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
 }
 
 
