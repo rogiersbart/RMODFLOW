@@ -396,22 +396,29 @@ rmf_plot.hfb <- function(hfb,
 
     # plot
     if(variable == 'id') {
-      p <-  geom_path(data = df, aes(x=x, y=y, group = row), size = size, colour = colour)
+      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row), size = size, colour = colour)
     } else {
-      p <-  geom_path(data = df, aes(x=x, y=y, group = row, colour = value), size = size)
+      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = value), size = size)
     }
-    
-    if(!crop) p <- p + lims(x = , y =)
     
     if(add) {
       return(p)
     } else {
-      return(ggplot() + p)
+      if(!crop) {
+        corners <- data.frame(x = rep(c(0, sum(dis$delr)), 2), y = rep(c(0, sum(dis$delc)), each = 2))
+        xy <- rmf_convert_grid_to_xyz(x=corners$x,y=corners$y, dis = dis, prj=prj)
+        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y)))
+        return(p)
+      } else {
+        return(ggplot2::ggplot() + p)
+      }
     }
     
   } else {
     stop('Not yet implemented')
   }
+  
+  # TODO: sum multiple instances (additive) at same cell as is done in rmf_plot.rmf_list through rmf_as_array
   
   # rmf_plot.rmf_list
   #rmf_plot(hfb$data, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
