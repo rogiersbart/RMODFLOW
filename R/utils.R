@@ -1026,7 +1026,6 @@ convert_huf_to_mask <- function(...) {
 
 #' Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
 #' 
-<<<<<<< Updated upstream
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
 #' @param bas bas object, corresponding to the huf object
