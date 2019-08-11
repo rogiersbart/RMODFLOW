@@ -655,6 +655,7 @@ rmf_plot.riv <- function(riv,
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param title plot title
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
@@ -678,7 +679,8 @@ rmf_plot.rmf_2d_array <- function(array,
                                   plot3d=FALSE,
                                   height=NULL,
                                   title = NULL,
-                                  crop = TRUE) {
+                                  crop = TRUE,
+                                  vecint = 1) {
   
   
   
@@ -815,7 +817,7 @@ rmf_plot.rmf_2d_array <- function(array,
       xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
       if(crop) {
         xlim = c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
-        ylim = c(min(xy$y, na.rm = T), max(xy$xy, na.rm = T))
+        ylim = c(min(xy$y, na.rm = T), max(xy$y, na.rm = T))
       } else {
         xlim = c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
         ylim = c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
@@ -839,6 +841,36 @@ rmf_plot.rmf_2d_array <- function(array,
                    ggplot2::ggtitle(title))
         }
       }
+    } else if(type == 'vector') {
+      # x & y are center of cells
+      datapoly <- xy
+      if(!is.null(prj)) {
+        new_positions <- rmf_convert_grid_to_xyz(x=datapoly$x,y=datapoly$y,prj=prj)
+        datapoly$x <- new_positions$x
+        datapoly$y <- new_positions$y
+      }
+      if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        datapoly <- rmfi_convert_coordinates(datapoly,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+      }
+      if(crop) datapoly <- na.omit(datapoly)
+      
+      # add gradient values
+      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      datapoly$u <-  c(t(grad$x))
+      datapoly$v <- c(t(grad$y))
+      datapoly <- datapoly[seq(1,nrow(datapoly),vecint),]
+      vecsize <- 0.75*vecint
+
+      if(add) {
+        return(ggquiver::geom_quiver(data = datapoly, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize)) 
+      } else {
+        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y, u=u, v=v)) +
+                 ggquiver::geom_quiver(center = TRUE, vecsize = vecsize) +
+                 ggplot2::coord_equal() +
+                 ggplot2::ggtitle(title))
+      }
+      
     } else {
       stop('Please provide valid plot type.', call. = FALSE)
     }

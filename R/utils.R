@@ -1644,7 +1644,7 @@ rmf_gradient <- function(...) {
 #' @param dis \code{RMODFLOW} dis object
 #' @param na_value optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
-#'
+#' @details gradient values are positive in the direction of increasing x & y axes
 #' @return a list with the x and y components of the gradient field as 2d arrays
 #' @export
 #'
@@ -1674,7 +1674,7 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
     if (m > 2) gX[, 2:(m - 1)] <- (obj[, 3:m] - obj[, 1:(m - 2)])/(x[3:m] - x[1:(m - 2)])
   }
   
-  return(list(x = gX, y = gY))
+  return(list(x = -gX, y = -gY))
   
 }
 
@@ -1686,7 +1686,7 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #' @param dis \code{RMODFLOW} dis object
 #' @param na_value optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
-#'
+#' @details gradient values are positive in the direction of increasing x, y & z axes
 #' @return a list with the x, y and z components of the gradient field as 3d arrays
 #' @export
 #'
@@ -1723,7 +1723,7 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
     if (k > 2) gZ[,,2:(k - 1)] <- (obj[,,3:k] - obj[,,1:(k - 2)])/(z[,,3:k] - z[,,1:(k - 2)])
   }
   
-  return(list(x = gX, y = gY, z = -gZ))
+  return(list(x = -gX, y = -gY, z = -gZ))
   
 }
 
