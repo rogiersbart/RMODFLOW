@@ -332,7 +332,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
     if('OC' %in% modflow$nam$ftype) {
       
       # heads
-      if(!is.null(modflow$oc$ihedun) && !is.na(modflow$oc$ihedun)) {
+      if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0))) {
         if(verbose) print_reading('Head', file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], output = TRUE)
         
         # huf heads
@@ -346,43 +346,45 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       }
       
       # drawdown
-      if(!is.null(modflow$oc$iddnun) && !is.na(modflow$oc$iddnun)) {
+      if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0))) {
         if(verbose) print_reading('Drawdown', file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], output = TRUE)
         modflow$drawdown <- rmf_read_drawdown(file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], dis = modflow$dis, bas = modflow$bas, oc = modflow$oc,
                                               binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$iddnun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)
       }
       
       # cbc
-      cbc_packages <- rmfi_list_packages(type = 'cbc')
-      cbcnum <-  vector(mode = "integer")
-      for(i in 1:length(cbc_packages$ftype)) {
-        if(cbc_packages$ftype[i] %in% modflow$nam$ftype) {
-          obj <- modflow[[cbc_packages$rmf[i]]]
-          # some packages have i*cb1, i*cb2. SWI has iswibd
-          cbc_base <- paste0('i',cbc_packages$rmf[i],'cb')
-          cbcnum <-  c(cbcnum, c(obj[[cbc_base]], obj[[paste0(cbc_base, '1')]], obj[[paste0(cbc_base, '2')]], obj[[paste0('i',cbc_packages$rmf[i],'bd')]]))
+      if((!is.null(modflow$oc$save_budget) && any(modflow$oc$save_budget)) || (!is.null(modflow$oc$icbcfl) && any(modflow$oc$icbcfl != 0))) {
+        cbc_packages <- rmfi_list_packages(type = 'cbc')
+        cbcnum <-  vector(mode = "integer")
+        for(i in 1:length(cbc_packages$ftype)) {
+          if(cbc_packages$ftype[i] %in% modflow$nam$ftype) {
+            obj <- modflow[[cbc_packages$rmf[i]]]
+            # some packages have i*cb1, i*cb2. SWI has iswibd
+            cbc_base <- paste0('i',cbc_packages$rmf[i],'cb')
+            cbcnum <-  c(cbcnum, c(obj[[cbc_base]], obj[[paste0(cbc_base, '1')]], obj[[paste0(cbc_base, '2')]], obj[[paste0('i',cbc_packages$rmf[i],'bd')]]))
+          }
         }
-      }
-      cbcnum <-  unique(cbcnum[cbcnum > 0])
-      if(length(cbcnum) == 1) {
-        if(verbose) print_reading('Cell-by-cell flow', file = fname[which(modflow$nam$nunit == cbcnum)], output = TRUE)
-        
-        if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0) {
-          modflow$cbc <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum)], dis = modflow$dis, huf = modflow$huf, oc = modflow$oc, precision = precision)
-        } else {
-          modflow$cbc <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum)], dis = modflow$dis, oc = modflow$oc, precision = precision)
-        }      
-        
-      } else {
-        if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0) huf_cbc <- modflow$huf$iohufflows       
-        for(i in 1:length(cbcnum)) {
-          if(verbose) print_reading('Cell-by-cell flow', file = fname[which(modflow$nam$nunit == cbcnum[i])], output = TRUE)
+        cbcnum <-  unique(cbcnum[cbcnum > 0])
+        if(length(cbcnum) == 1) {
+          if(verbose) print_reading('Cell-by-cell flow', file = fname[which(modflow$nam$nunit == cbcnum)], output = TRUE)
           
-          if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0 && cbcnum[i] == huf_cbc) {
-            modflow[[paste0('cbc_',i)]] <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum[i])], dis = modflow$dis, huf = modflow$huf, oc = modflow$oc, precision = precision)
+          if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0) {
+            modflow$cbc <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum)], dis = modflow$dis, huf = modflow$huf, oc = modflow$oc, precision = precision)
           } else {
-            modflow[[paste0('cbc_',i)]] <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum[i])], dis = modflow$dis, oc = modflow$oc, precision = precision)
-          }     
+            modflow$cbc <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum)], dis = modflow$dis, oc = modflow$oc, precision = precision)
+          }      
+          
+        } else if(length(cbcnum) > 1){
+          if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0) huf_cbc <- modflow$huf$iohufflows       
+          for(i in 1:length(cbcnum)) {
+            if(verbose) print_reading('Cell-by-cell flow', file = fname[which(modflow$nam$nunit == cbcnum[i])], output = TRUE)
+            
+            if(!is.null(modflow$huf) && modflow$huf$iohufflows != 0 && cbcnum[i] == huf_cbc) {
+              modflow[[paste0('cbc_',i)]] <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum[i])], dis = modflow$dis, huf = modflow$huf, oc = modflow$oc, precision = precision)
+            } else {
+              modflow[[paste0('cbc_',i)]] <- rmf_read_cbc(file = fname[which(modflow$nam$nunit == cbcnum[i])], dis = modflow$dis, oc = modflow$oc, precision = precision)
+            }     
+          }
         }
       }
       
