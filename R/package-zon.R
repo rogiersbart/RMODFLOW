@@ -66,25 +66,28 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
   zon_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
-  # data set 2 + 3
-  zon$izon <- list()
-  for(i in 1:zon$nzn){
-    
-    # data set 2
-    data_set_2 <- rmfi_parse_variables(zon_lines)
-    zon$zonnam[i] <- as.character(data_set_2$variables[1])
-    zon_lines <- data_set_2$remaining_lines
-    rm(data_set_2)
-    
-    # data set 3
-    data_set_3 <- rmfi_parse_array(zon_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, integer = TRUE, ...)
-    zon$izon[[i]] <- apply(data_set_3$array, 1:length(dim(data_set_3$array)), function(i) as.integer(i))
-    zon_lines <- data_set_3$remaining_lines
-    rm(data_set_3)
+  if(zon$nzn > 0) {
+    # data set 2 + 3
+    zon$izon <- list()
+    for(i in 1:zon$nzn){
+      
+      # data set 2
+      data_set_2 <- rmfi_parse_variables(zon_lines)
+      zon$zonnam[i] <- as.character(data_set_2$variables[1])
+      zon_lines <- data_set_2$remaining_lines
+      rm(data_set_2)
+      
+      # data set 3
+      data_set_3 <- rmfi_parse_array(zon_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, integer = TRUE, ...)
+      zon$izon[[i]] <- apply(data_set_3$array, 1:length(dim(data_set_3$array)), function(i) as.integer(i))
+      zon_lines <- data_set_3$remaining_lines
+      rm(data_set_3)
+    }
+    zon$izon <- lapply(zon$izon, rmf_create_array)
+    names(zon$izon) <- zon$zonnam
   }
-  zon$izon <- lapply(zon$izon, rmf_create_array)
-  names(zon$izon) <- zon$zonnam
-  class(zon) = c('zon', 'rmf_package')
+  
+  class(zon) <- c('zon', 'rmf_package')
   return(zon)
   
 }

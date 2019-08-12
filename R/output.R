@@ -450,7 +450,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           }
           # oc using codes
         } else {
-          nsteps <- length(which(apply(oc$hdsv,2,function(i) any(i==TRUE))==TRUE))
+          nsteps <- length(which(apply(oc$hdsv,1,function(i) any(i==TRUE))==TRUE))
         }
       } else {
         nsteps <- sum(dis$nstp)
@@ -844,7 +844,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           
           # oc using codes
         } else {
-          nsteps <- length(which(apply(oc$ddsv,2,function(i) any(i==TRUE))==TRUE))
+          nsteps <- length(which(apply(oc$ddsv,1,function(i) any(i==TRUE))==TRUE))
         }
       } else {
         nsteps <- sum(dis$nstp)

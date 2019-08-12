@@ -120,7 +120,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
   
   # data set 2
   counter <- 0
-  format <- ifelse('format' %in% names(list(...)), get('format'), 'free')
+  format <- ifelse('format' %in% names(list(...)), list(...)[['format']], 'free')
   
   while(counter != dis$nlay) {
     if(format == 'free') {

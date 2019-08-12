@@ -373,7 +373,7 @@ rmfi_fortran_format <- function(format) {
   
   # from read.fortran()
   format <- toupper(format)
-  template <- "^([0-9]*)([FXAI])([0-9]*)\\.?([0-9]*)"
+  template <- "^([0-9]*)([FXAIGED])([0-9]*)\\.?([0-9]*)"
   
   # repetitions
   reps <- as.numeric(sub(template, "\\1", format))
@@ -393,8 +393,8 @@ rmfi_fortran_format <- function(format) {
   
   lengths <- rep(lengths, reps)
   types <- rep(types, reps)
-  types <- match(types, c("F", "D", "X", "A", "I"))
-  lengths[types == 3] <- -lengths[types == 3L]
+  types <- match(types, c("F", "X", "A", "I", "G", "E", "D"))
+  lengths[types == 2] <- -lengths[types == 2L]
   
   return(lengths)
 }
@@ -705,7 +705,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           
           fname <-  nam$fname[which(nam$nunit == locat)]
           direct <-  attr(nam, 'dir')
-          absfile = paste(direct, fname, sep='/')
+          absfile <-  paste(direct, fname, sep='/')
           
           # ASCII
           if(locat > 0) {
