@@ -857,8 +857,8 @@ rmf_plot.rmf_2d_array <- function(array,
       
       # add gradient values
       grad <- rmf_gradient(array, dis = dis, mask = mask) 
-      datapoly$u <-  c(t(grad$x))
-      datapoly$v <- c(t(grad$y))
+      datapoly$u <- -c(t(grad$x))
+      datapoly$v <- -c(t(grad$y))
       datapoly <- datapoly[seq(1,nrow(datapoly),vecint),]
       vecsize <- 0.75*vecint
 
