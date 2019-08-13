@@ -1867,6 +1867,24 @@ t.rmf_2d_array <- function(obj) {
 
 }
 
+#' @export
+as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
+#' @export
+as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
+#' @export
+as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
 #'
 #' Create a MODFLOW parameter
 #'
@@ -2906,10 +2924,13 @@ rmf_create_list <-  function(df, kper = NULL) {
   if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j')
   
   attr(df, 'kper') <- kper  
-  class(df) = c('rmf_list', class(df))
+  class(df) <-  c('rmf_list', class(df))
   return(df)
   
 }
+
+#' @export
+as.data.frame.rmf_list <- function(obj) as.data.frame.data.frame(structure(obj, kper = NULL))
 
 #' Read a projection file
 #' 
