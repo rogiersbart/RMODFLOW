@@ -1920,18 +1920,20 @@ rmf_create_parameter.default <- function(dis,
   if(is.null(kper) && (is.null(layer) && is.null(hgunam))) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
   if(!is.null(layer) && is.null(partyp)) stop("Please specify the partyp argument")
   if(!is.null(layer) && !is.null(hgunam)) stop("Please specify either the layer or the hgunam argument")
-  mltarr <- list(mltnam)
-  zonarr <- list(zonnam)
+  mltarr <- as.list(mltnam)
+  zonarr <- as.list(zonnam)
   
   if(any(toupper(mltnam) != "NONE")) {
     if(is.null(mlt)) stop('Please provide a mlt object')
-    mltarr[which(toupper(mltnam) != "NONE")] <- mlt$rmlt[mltnam]
+    mlt_id <- which(toupper(mltnam) != "NONE")
+    mltarr[mlt_id] <- mlt$rmlt[mltnam[mlt_id]]
   }
   if(any(toupper(zonnam) != "ALL")) {
     if(is.null(zon)) stop('Please provide a zon object')
     if(is.null(iz)) stop('Please provide a iz argument')
     if(!inherits(iz, 'list')) stop('The iz argument should be a list')
-    zonarr[which(toupper(zonnam) != "ALL")] <- zon$izon[zonnam]
+    zon_id <- which(toupper(zonnam) != "ALL")
+    zonarr[zon_id] <- zon$izon[zonnam[zon_id]]
   }
   
   
