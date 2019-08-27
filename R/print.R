@@ -99,9 +99,27 @@ print.dis <- function(dis) {
   # }
   
   # delr & delc
+  if(sum(dis$delr)/dis$ncol == dis$delr[1]) {
+    delr <- c(dis$delr[1], '(constant)') 
+  } else {
+    if(dis$ncol > 7) {
+      delr <- c(dis$delr[1:7], '...')
+    } else {
+      delr <- dis$delr
+    }
+  }
+  if(sum(dis$delc)/dis$nrow == dis$delc[1]) {
+    delc <- c(dis$delc[1], '(constant)')
+  } else {
+    if(dis$nrow > 7) {
+      delc <- c(dis$delc[1:7], '...')
+    } else {
+      delc <- dis$delc
+    }
+  }
   cat('\n')
-  cat('Spacing along rows (DELR): ', if(dis$ncol > 7) c(dis$delr[1:7], '...') else dis$delr, '\n')
-  cat('Spacing along columns (DELC): ', if(dis$nrow > 7) c(dis$delc[1:7], '...') else dis$delc, '\n')
+  cat('Spacing along rows (DELR): ', delr, '\n')
+  cat('Spacing along columns (DELC): ', delc, '\n')
   cat('\n')
   
   # top
@@ -176,19 +194,36 @@ print.bas <- function(bas) {
     setNames(paste('Layer', 1:dim(bas$strt)[3])) %>% subset(select = 1:nlay) %>% print()
 }
 
-#' 
-#' #' @export
-#' print.hob
-#' 
-#' #' @export
-#' print.pvl
-#' 
-#' #' @export
-#' print.zon
-#' 
-#' #' @export
-#' print.mlt
-#' 
+#' @export
+print.pvl <- function(pvl) {
+  cat('RMODFLOW Parameter Value File object with:\n')
+  cat(pvl$np, 'parameter values', '\n')
+  cat('\n')
+  print(data.frame(parnam = pvl$parnam, parval = pvl$parval))
+}
+
+#' @export
+print.zon <- function(zon) {
+  cat('RMODFLOW Zone File object with:\n')
+  cat(zon$nzn, 'zone array:', '\n')
+  cat('\n')
+  nlay <- ifelse(zon$nzn > 5, 5, zon$nzn)
+  cat(ifelse(zon$nzn > 5, 'Summary of zone arrays (first 5 arrays):', 'Summary of zone arrays:'), '\n')
+  abind::abind(zon$izon, along = 3) %>% apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(zon$zonnam) %>% subset(select = 1:nlay) %>% print()
+}
+
+#' @export
+print.mlt <- function(mlt) {
+  cat('RMODFLOW Multipler File object with:\n')
+  cat(mlt$nml, 'multiplier arrays', '\n')
+  cat('\n')
+  nlay <- ifelse(mlt$nml > 5, 5, mlt$nml)
+  cat(ifelse(mlt$nml > 5, 'Summary of multiplier arrays (first 5 arrays):', 'Summary of multiplier arrays:'), '\n')
+  abind::abind(mlt$rmlt, along = 3) %>% apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(mlt$mltnam) %>% subset(select = 1:nlay) %>% print()
+}
+
 #' #' @export
 #' print.huf
 #' 
@@ -245,7 +280,10 @@ print.bas <- function(bas) {
 #' 
 #' #' @export
 #' print.lvda
-
+#'
+#' #' @export
+#' print.hob
+#' 
 #' #' @export
 #' print.hed
 #' 
@@ -257,3 +295,9 @@ print.bas <- function(bas) {
 #' 
 #' #' @export
 #' print.cbc
+#' 
+#' #' @export
+#' print.hpr
+#' 
+#' #' @export
+#' print.modflow
