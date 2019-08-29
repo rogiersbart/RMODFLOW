@@ -356,9 +356,11 @@ rmf_plot.hfb <- function(hfb,
     stop('Please provide i, j or k.', call. = FALSE)
   }
   
+  na_value <- ifelse(active_only, NA, 0)
+  
   if(!is.null(k)) {
     layer <- k
-    data <- subset(hfb$data, hfb$data$k == layer)
+    data <- subset(hfb$data, k == layer)
     if(!is.character(variable)) variable <- colnames(data)[variable]
     data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
     data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=layer, dis = dis, type = 'modflow')
@@ -395,7 +397,8 @@ rmf_plot.hfb <- function(hfb,
     df_mask[which(df_mask != 0)] <- 1
     
     df <- data %>%
-      rmf_as_array(dis = dis, select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), sparse = TRUE) %>%
+      rmf_as_array(dis = dis, select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), 
+                   sparse = TRUE, na_value = na_value, fun = fun) %>%
       rmf_as_tibble(dis = dis, prj = prj, crs = crs, mask = df_mask)
     
     df <- lapply(1:nrow(data), function(i) get_face(data[i,]))
@@ -423,13 +426,29 @@ rmf_plot.hfb <- function(hfb,
     }
     
   } else {
-    stop('Not yet implemented')
+    if(!is.null(i)) {
+      ind <- i
+      data <- subset(hfb$data, i == ind)
+    } else if(!is.null(j)) {
+      ind <- j
+      data <- subset(hfb$data, j == ind)
+    }
+    
+    if(!is.character(variable)) variable <- colnames(data)[variable]
+    data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
+    
+    df <- rmf_as_array(data, dis = dis, 
+                       select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), 
+                       sparse = FALSE, na_value = na_value, fun = fun)
+    if(variable == 'id') {
+      indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(df)), which(df != na_value))
+      df[indx] <- 1
+    }
+    
+    # plot
+    rmf_plot(df, dis = dis, i=i, j=j, k=k, type = type, prj=prj, crs=crs, crop=crop, add=add, ...)
+    
   }
-  
-  # TODO: sum multiple instances (additive) at same cell as is done in rmf_plot.rmf_list through rmf_as_array
-  
-  # rmf_plot.rmf_list
-  #rmf_plot(hfb$data, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
 }
 
 
@@ -745,7 +764,7 @@ rmf_plot.rmf_2d_array <- function(array,
     xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
-    if(type %in% c('fill','factor','grid')) {
+    if(type %in% c('fill','factor','grid','vector')) {
       ids <- factor(1:(dis$nrow*dis$ncol))
       xWidth <- rep(dis$delr,dis$nrow)
       yWidth <- rep(dis$delc,each=dis$ncol)
@@ -851,30 +870,32 @@ rmf_plot.rmf_2d_array <- function(array,
       }
     } else if(type == 'vector') {
       # x & y are center of cells
-      datapoly <- xy
+      vector_df <- xy
       if(!is.null(prj)) {
-        new_positions <- rmf_convert_grid_to_xyz(x=datapoly$x,y=datapoly$y,prj=prj)
-        datapoly$x <- new_positions$x
-        datapoly$y <- new_positions$y
+        new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=vector_df$y,prj=prj)
+        vector_df$x <- new_positions$x
+        vector_df$y <- new_positions$y
       }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        datapoly <- rmfi_convert_coordinates(datapoly,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
-      if(crop) datapoly <- na.omit(datapoly)
+      if(crop) vector_df <- na.omit(vector_df)
       
-      # add gradient values
+      # add gradient values; negative because Darcy flux also has negative sign
       grad <- rmf_gradient(array, dis = dis, mask = mask) 
-      datapoly$u <- -c(t(grad$x))
-      datapoly$v <- -c(t(grad$y))
-      datapoly <- datapoly[seq(1,nrow(datapoly),vecint),]
+      vector_df$u <- -c(t(grad$x))
+      vector_df$v <- -c(t(grad$y))
+      vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
       vecsize <- 0.75*vecint
 
       if(add) {
-        return(ggquiver::geom_quiver(data = datapoly, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize)) 
+        return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize))) 
       } else {
-        return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y, u=u, v=v)) +
-                 ggquiver::geom_quiver(center = TRUE, vecsize = vecsize) +
+        return(ggplot2::ggplot() +
+                 ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize = vecsize) +
                  ggplot2::coord_equal() +
                  ggplot2::ggtitle(title))
       }
@@ -915,6 +936,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param l time step number for subsetting the hed object
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
+#' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @param ... parameters provided to plot.rmf_2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_3d_array
@@ -939,6 +961,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   l = NULL,
                                   prj = NULL,
                                   crs = NULL,
+                                  vecint = 1,
                                   ...) {
   
   if(is.null(i) & is.null(j) & is.null(k)) {
@@ -1067,6 +1090,64 @@ rmf_plot.rmf_3d_array <- function(array,
                  ggplot2::ylab(ylabel) +
                  ggplot2::ggtitle(title))
       }
+    } else if(type == 'vector') {
+        
+      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      
+      if(is.null(i) && !is.null(j)) {
+        vector_df <- data.frame(x=xy$y,y=c(dis$center[,j,]))
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=vector_df$x,z=vector_df$y,prj=prj)
+          vector_df$x <- new_positions$y
+          vector_df$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        
+        # add gradient values; negative because Darcy flux also has negative sign
+        vector_df$u <- -c(t(grad$y[,j,]))
+        vector_df$v <- -c(grad$z[,j,])
+        
+      } else if(!is.null(i) && is.null(j)) {
+        vector_df <- data.frame(x=xy$x,y=c(dis$center[i,,]))
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=vector_df$y,prj=prj)
+          vector_df$x <- new_positions$x
+          vector_df$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        
+        # add gradient values; negative because Darcy flux also has negative sign
+        vector_df$u <- -c(t(grad$x[i,,]))
+        vector_df$v <- -c(grad$z[i,,])
+      }
+
+        if(crop) vector_df <- na.omit(vector_df)
+        
+        vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
+        vecsize <- 0.75*vecint
+        
+        if(add) {
+          return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize))) 
+        } else {
+          return(ggplot2::ggplot() +
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v), center = TRUE, vecsize = vecsize) +
+                   ggplot2::xlab(xlabel) +
+                   ggplot2::ylab(ylabel) +
+                   ggplot2::ggtitle(title))
+        }
+        
+    } else {
+      stop('Please provide valid plot type.', call. = FALSE)
     }
   }
 }

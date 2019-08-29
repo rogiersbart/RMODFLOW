@@ -1645,12 +1645,13 @@ rmf_gradient <- function(...) {
 #' @param na_value optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x and y components of the gradient field as 2d arrays
+#' @details The gradient is evaluated in the direction of increasing x & y values.
 #' @export
 #'
 #' @rdname rmf_gradient
 #' 
 rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
-  
+    
   coords <- rmf_cell_coordinates(dis)
   x <- coords$x[1,,1]
   y <- coords$y[,1,1]
@@ -1686,6 +1687,7 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #' @param na_value optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x, y and z components of the gradient field as 3d arrays
+#' @details The gradient is evaluated in the direction of increasing x, y & z values.
 #' @export
 #'
 #' @rdname rmf_gradient
