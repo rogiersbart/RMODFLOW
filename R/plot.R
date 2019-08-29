@@ -689,7 +689,7 @@ rmf_plot.riv <- function(riv,
 rmf_plot.rmf_2d_array <- function(array,
                                   dis,
                                   bas = NULL,
-                                  mask = rmfi_ifelse0(is.null(bas), array*0+1, {warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
+                                  mask = rmfi_ifelse0(is.null(bas), array*0+1, {if(dis$nlay > 1) warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
                                   colour_palette = rmfi_rev_rainbow,
                                   zlim = range(array[as.logical(mask)], finite=TRUE),
                                   nlevels = 7,
@@ -1164,6 +1164,7 @@ plot.rmf_3d_array <- function(...) {
 #' \code{rmf_plot.rmf_4d_array} plots a 2D section through a MODFLOW 4D array.
 #' 
 #' @param array an object of class rmf_3d_array
+#' @param dis discretization file object
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
@@ -1173,6 +1174,7 @@ plot.rmf_3d_array <- function(...) {
 #' @method rmf_plot rmf_4d_array
 #' @export
 rmf_plot.rmf_4d_array <- function(array,
+                                  dis, 
                                   i = NULL,
                                   j = NULL,
                                   k = NULL,
@@ -1184,7 +1186,7 @@ rmf_plot.rmf_4d_array <- function(array,
     ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
       ggplot2::geom_path()
   } else {
-    warning('Plotting final stress period results.', call. = FALSE)
+    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
     rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
   }
 }
