@@ -174,6 +174,48 @@ rmf_plot.bud <-  function(bud,
   return(p)
 }
 
+#' Plot a component of a cell-by-cell budget object
+#'
+#' @param cbc a \code{RMODFLOW} cell-by-cell budget object
+#' @param dis a \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot
+#' @param flux character denoting which flux to plot. See details.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}
+#' 
+#' @details Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot cbc
+#' @export
+#'
+rmf_plot.cbc <- function(cbc, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         flux = NULL,
+                         ...) {
+  if(is.null(flux)) stop('Please specify a flux to plot.', call. = FALSE)
+  if(is.null(l)) {
+    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+    l <- sum(dis$nstp)
+  }
+  
+  obj <- cbc[[flux]]
+  if(inherits(obj, 'rmf_list')) {
+    obj <- subset(obj, nstp == l)
+    rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', ...)
+  } else {
+    rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+  }
+  
+}
+
 #' Plot a RMODFLOW chd object
 #' 
 #' @param chd an \code{RMODFLOW} chd object
@@ -1181,13 +1223,13 @@ rmf_plot.rmf_4d_array <- function(array,
                                   l = NULL,
                                   ...) {
   if(!is.null(l)) {
-    rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
+    rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
       ggplot2::geom_path()
   } else {
     if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-    rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
+    rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   }
 }
 

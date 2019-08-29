@@ -190,7 +190,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
               }
             }
             
-            # return a data.frame --> might change to list of multiple rmf_list for more consistency with e.g. plotting
+            # return a rmf_list
             if(itype %in% c(2,5)) { 
               nlist <- readBin(con,what='integer',n=1)
               if(nlist > 0) {
@@ -203,6 +203,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                   nstp <- ifelse(is.null(dis), 1, stp_nr)
                   cbc[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,as.data.frame(df)[,-1], nstp, kper, kstp))
                   names(cbc[[name]]) <- c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper','kstp')
+                  cbc[[name]] <- rmf_create_list(cbc[[name]])
                   rm(df)
                 } else {
                   nstp <- ifelse(is.null(dis), cbc[[name]][nrow(cbc[[name]]),nstp]+1, stp_nr)
