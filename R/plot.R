@@ -866,7 +866,7 @@ rmf_plot.riv <- function(riv,
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'factor', 'grid' or 'contour'
+#' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
 #' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
@@ -881,6 +881,7 @@ rmf_plot.riv <- function(riv,
 #' @param title plot title
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
@@ -1125,7 +1126,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param colour_palette a colour palette for imaging the array values
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'factor' or 'grid'
+#' @param type plot type: 'fill' (default), 'factor', 'grid' or 'vector'
 #' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param title plot title
@@ -1136,6 +1137,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param crs coordinate reference system for the plot
 #' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @param ... parameters provided to plot.rmf_2d_array
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_3d_array
 #' @export
