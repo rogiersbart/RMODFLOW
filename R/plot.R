@@ -1190,12 +1190,21 @@ rmf_plot.rmf_3d_array <- function(array,
     xy$x <- cumsum(dis$delr)-dis$delr/2
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
     mask[which(mask==0)] <- NA
-    dis$thck <- dis$botm
-    dis$thck[,,1] <- dis$top-dis$botm[,,1]
-    nnlay <- dis$nlay+length(which(dis$laycbd != 0))
-    if(nnlay > 1) for(a in 2:nnlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
+    
+    if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
+      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
+      dis$botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
+      nnlay <- dis$nlay
+    } else {
+      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis)
+      nnlay <- dis$nlay + sum(dis$laycbd != 0)
+    }
+    
     dis$center <- dis$botm
     for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+
     if(is.null(i) & !is.null(j)) {
       ids <- factor(1:(dis$nrow*nnlay))
       xWidth <- rep(rev(dis$delc),nnlay)
