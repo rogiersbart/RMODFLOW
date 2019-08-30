@@ -174,19 +174,28 @@ rmf_plot.bud <-  function(bud,
   return(p)
 }
 
-#' Plot a component of a cell-by-cell budget object
+#' Plot a flux component of a cell-by-cell budget object
 #'
 #' @param cbc a \code{RMODFLOW} cell-by-cell budget object
 #' @param dis a \code{RMODFLOW} dis object
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param l time step number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
 #' @param flux character denoting which flux to plot. See details.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param active_only logical; indicating if only the active cells should be plotted for list-directed components of the cbc object. Non-active cells are set to NA. Defaults to FALSE.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}
 #' 
 #' @details Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+#'
+#'  There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 #'
 #' @return ggplot2 object or layer
 #' @method rmf_plot cbc
@@ -199,21 +208,52 @@ rmf_plot.cbc <- function(cbc,
                          k = NULL,
                          l = NULL,
                          flux = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         active_only = FALSE,
                          ...) {
+  
   if(is.null(flux)) stop('Please specify a flux to plot.', call. = FALSE)
-  if(is.null(l)) {
-    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-    l <- sum(dis$nstp)
-  }
-  
   obj <- cbc[[flux]]
-  if(inherits(obj, 'rmf_list')) {
-    obj <- subset(obj, nstp == l)
-    rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', ...)
-  } else {
-    rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
-  }
   
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(inherits(obj, 'rmf_list')) {
+      if(!(l %in% obj$nstp)) stop('No output written for specified time step.', call. = FALSE)
+      obj <- subset(obj, nstp == l)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', active_only = active_only, ...)
+    } else {
+      if(!(l %in% attr(obj, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+    
+  } else {
+    if(inherits(obj, 'rmf_list')) {
+      convert <- function(l) {
+         subset(obj, nstp == l) %>%
+          rmf_as_array(dis = dis, sparse = FALSE, na_value = ifelse(active_only, NA, 0), variable = which(colnames(obj) == 'flow'))
+      } 
+      obj <- lapply(attr(obj, 'nstp'), convert) %>%
+                abind::abind(along = 4) %>%
+                structure(dimnames = NULL, totim = attr(obj, 'totim')) %>%
+                rmf_create_array() 
+                
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+      
+    } else {
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+  }
 }
 
 #' Plot a RMODFLOW chd object
@@ -245,6 +285,59 @@ rmf_plot.chd <- function(chd,
                          ...) {
   
   rmfi_plot_bc(obj = chd, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  
+}
+
+#' Plot a MODFLOW drawdown file object
+#'
+#' @param ddn \code{RMODFLOW} ddn object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
+#'
+#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot ddn
+#' @export
+#'
+rmf_plot.ddn <- function(ddn, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         ...) {
+  
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+    
+  } 
+  
+  rmf_plot.rmf_4d_array(ddn, dis = dis, i=i, j=j, k=k, l=l, ...)
   
 }
 
@@ -358,6 +451,69 @@ rmf_plot.ghb <- function(ghb,
                          ...) {
   
   rmfi_plot_bc(obj = ghb, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  
+}
+
+#' Plot a MODFLOW head file object
+#'
+#' @param hed \code{RMODFLOW} hed object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param saturated logical indicating if the saturated grid should be used. Defaults to FALSE. See details.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
+#'
+#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful 
+#'  for cross-sections with \code{grid = TRUE}.
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot hed
+#' @export
+#'
+rmf_plot.hed <- function(hed, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         saturated = FALSE,
+                         ...) {
+  
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+    
+    if(saturated) {  
+      satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+      rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, ...)
+    } else {
+      rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+  } else {
+    rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+  }
   
 }
 
@@ -1226,7 +1382,7 @@ rmf_plot.rmf_4d_array <- function(array,
     rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
-      ggplot2::geom_path()
+      rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point())
   } else {
     if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
     rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)

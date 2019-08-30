@@ -153,7 +153,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
           if(!is.null(huf) && !is.null(huf$iohufflows) && huf$iohufflows > 0 && name %in% c('constant_head','flow_right_face','flow_front_face','flow_lower_face')) nnlay <- huf$nhuf
           if(is.null(cbc[[name]])) {
             cbc[[name]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, nnlay, nsteps))
-            attr(cbc[[name]], 'kstp') <- attr(cbc[[name]], 'kper') <- attr(cbc[[name]], 'pertim') <- attr(cbc[[name]], 'totim') <- attr(cbc[[name]], 'delt') <- rep(NA, nsteps)
+            attr(cbc[[name]], 'kstp') <- attr(cbc[[name]], 'kper') <- attr(cbc[[name]], 'pertim') <- attr(cbc[[name]], 'totim') <- attr(cbc[[name]], 'delt') <- attr(cbc[[name]], 'nstp') <- rep(NA, nsteps)
           }
           # set step number
           if(is.null(oc)) {
@@ -244,6 +244,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
             
             attr(cbc[[name]], 'kstp')[stp_nr] <- kstp
             attr(cbc[[name]], 'kper')[stp_nr] <- kper
+            attr(cbc[[name]], 'nstp')[stp_nr] <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1]+kstp)
             if(nlay < 0) {
               attr(cbc[[name]], 'pertim')[stp_nr] <- pertim
               attr(cbc[[name]], 'totim')[stp_nr] <- totim
@@ -363,7 +364,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
-#' @return object of class hed and rmf_4d_array. See details.
+#' @return object of class hed and rmf_4d_array.
 #' @details 
 #' When huf heads are to be read, a \code{huf} object should also be supplied. The final array will have NHUF layers instead of NLAY.
 #' 
@@ -502,7 +503,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           
           if(first) {
             hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
-            attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- rep(NA, nsteps)
+            attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- attr(hed, 'nstp') <- rep(NA, nsteps)
           }
           if(is.null(oc)) {
             stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
@@ -520,6 +521,8 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           attr(hed,'kper')[stp_nr] <- kper
           attr(hed,'pertim')[stp_nr] <- pertim
           attr(hed,'totim')[stp_nr] <- totim
+          attr(hed, 'nstp')[stp_nr] <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1]+kstp)
+          
           
           first <- FALSE
           kstp <- readBin(con,what='integer',n=1)
@@ -665,7 +668,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       
       if(first) {
         hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
-        attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- rep(NA, nsteps)
+        attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- attr(hed, 'nstp') <- rep(NA, nsteps)
       }
       if(is.null(oc)) {
         stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
@@ -682,6 +685,8 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       attr(hed,'kper')[stp_nr] <- kper
       attr(hed,'pertim')[stp_nr] <- pertim
       attr(hed,'totim')[stp_nr] <- totim
+      attr(hed, 'nstp')[stp_nr] <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1]+kstp)
+      
       
       first <- FALSE
       hed.lines <- data_set$remaining_lines
@@ -757,7 +762,7 @@ rmf_read_bhd <- function(...) {
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
-#' @return object or list with objects of class ddn and rmf_4d_array. See details.
+#' @return object of class ddn and rmf_4d_array
 #' @details 
 #' 
 #' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
@@ -896,7 +901,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           
           if(first) {
             hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
-            attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- rep(NA, nsteps)
+            attr(hed, 'kstp') <- attr(hed, 'kper') <-  attr(hed, 'pertim') <-  attr(hed, 'totim') <- attr(hed, 'nstp') <- rep(NA, nsteps)
           }
           if(is.null(oc)) {
             stp_nr <- ifelse(kper==1,kstp,cumsum(dis$nstp)[kper-1]+kstp)
@@ -914,6 +919,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           attr(hed,'kper')[stp_nr] <- kper
           attr(hed,'pertim')[stp_nr] <- pertim
           attr(hed,'totim')[stp_nr] <- totim
+          attr(hed,'nstp')[stp_nr] <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1]+kstp)
           
           first <- FALSE
           kstp <- readBin(con,what='integer',n=1)
