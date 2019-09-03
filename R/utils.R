@@ -1792,6 +1792,7 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
+  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
   
   return(obj)
 }
@@ -1821,6 +1822,7 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
+  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
   
   return(obj)
 }
@@ -1848,6 +1850,7 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
+  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
   
   return(obj)
 }
@@ -1884,11 +1887,9 @@ aperm.rmf_4d_array <- function(obj, perm, ...) {
 
 #' @export
 t.rmf_2d_array <- function(obj) {
-
   obj <- t.default(obj)
   attr(obj, "dimlabels") <- rev(attr(obj, "dimlabels"))
   return(obj)
-
 }
 
 #'
