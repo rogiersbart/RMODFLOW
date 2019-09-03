@@ -1183,9 +1183,11 @@ rmf_plot.rmf_3d_array <- function(array,
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
-    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add)
+    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,
+                  levels = levels, add=add, crop = crop, prj = prj, crs = crs, 
+                  binwidth=binwidth, label=label, vecint=vecint, legend=legend,...)
     if(gridlines) {
-      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
+      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, crop=crop, prj=prj,crs=crs,...))
     } else {
       return(p)
     }
