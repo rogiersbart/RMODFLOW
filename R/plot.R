@@ -878,7 +878,6 @@ rmf_plot.riv <- function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param title plot title
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
@@ -904,7 +903,6 @@ rmf_plot.rmf_2d_array <- function(array,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  title = NULL,
                                   crop = TRUE,
                                   vecint = 1) {
   
@@ -941,7 +939,7 @@ rmf_plot.rmf_2d_array <- function(array,
         sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
         
         p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
-                      type = type, levels = levels, gridlines = gridlines, add = add, title = title, crop = crop, prj = prj, crs = crs,
+                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
                       height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
         return(p)
         
@@ -954,7 +952,7 @@ rmf_plot.rmf_2d_array <- function(array,
         sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
         
         p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
-                      type = type, levels = levels, gridlines = gridlines, add = add, title = title, crop = crop, prj = prj, crs = crs,
+                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
                       height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
         return(p)
       }
@@ -997,8 +995,7 @@ rmf_plot.rmf_2d_array <- function(array,
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
                  ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::coord_equal())
       }
     } else if(type=='factor') {  
       datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
@@ -1009,8 +1006,7 @@ rmf_plot.rmf_2d_array <- function(array,
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
                  ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::coord_equal())
       }
     } else if(type=='grid') {  
       if(add) {
@@ -1018,8 +1014,7 @@ rmf_plot.rmf_2d_array <- function(array,
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(group=id),alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::coord_equal())
       }
     } else if(type=='contour') {
       if(!is.null(prj)) {
@@ -1061,14 +1056,12 @@ rmf_plot.rmf_2d_array <- function(array,
                    ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
                    ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
-                   ggplot2::theme(legend.position="none") +
-                   ggplot2::ggtitle(title))
+                   ggplot2::theme(legend.position="none"))
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
                    ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
-                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
-                   ggplot2::ggtitle(title))
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim))
         }
       }
     } else if(type == 'vector') {
@@ -1101,8 +1094,7 @@ rmf_plot.rmf_2d_array <- function(array,
                  ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
                  ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
                  ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::coord_equal())
       }
       
     } else {
@@ -1135,7 +1127,6 @@ plot.rmf_2d_array <- function(...) {
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
 #' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param title plot title
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
@@ -1163,7 +1154,6 @@ rmf_plot.rmf_3d_array <- function(array,
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  title = NULL,
                                   crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
@@ -1179,7 +1169,7 @@ rmf_plot.rmf_3d_array <- function(array,
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
-    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,title=title)
+    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add)
     if(gridlines) {
       return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
     } else {
@@ -1196,7 +1186,7 @@ rmf_plot.rmf_3d_array <- function(array,
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
-    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, title = title, crop = crop, prj = prj, crs = crs, ...)
+    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
@@ -1330,8 +1320,7 @@ rmf_plot.rmf_3d_array <- function(array,
                  ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
                  ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
     } else if(type=='factor') {
       datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
@@ -1343,8 +1332,7 @@ rmf_plot.rmf_3d_array <- function(array,
                  ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
                  ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
     } else if(type=='grid') {
       if(add) {
@@ -1353,8 +1341,7 @@ rmf_plot.rmf_3d_array <- function(array,
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(group=id),colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
     } else if(type == 'contour') {
       xy <- as.data.frame(xy)
@@ -1384,8 +1371,7 @@ rmf_plot.rmf_3d_array <- function(array,
                    ggplot2::xlim(xlim)+
                    ggplot2::ylim(ylim) + 
                    ggplot2::xlab(xlabel) +
-                   ggplot2::ylab(ylabel) +
-                   ggplot2::ggtitle(title))
+                   ggplot2::ylab(ylabel))
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
@@ -1393,8 +1379,7 @@ rmf_plot.rmf_3d_array <- function(array,
                    ggplot2::xlim(xlim)+
                    ggplot2::ylim(ylim) + 
                    ggplot2::xlab(xlabel) +
-                   ggplot2::ylab(ylabel) +
-                   ggplot2::ggtitle(title))
+                   ggplot2::ylab(ylabel))
         }
       }
     } else if(type == 'vector') {
@@ -1451,8 +1436,7 @@ rmf_plot.rmf_3d_array <- function(array,
                    ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
                    ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
                    ggplot2::xlab(xlabel) +
-                   ggplot2::ylab(ylabel) +
-                   ggplot2::ggtitle(title))
+                   ggplot2::ylab(ylabel))
         }
         
     } else {
