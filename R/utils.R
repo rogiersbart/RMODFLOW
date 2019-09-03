@@ -1852,12 +1852,36 @@ create_rmodflow_array <- function(...) {
   return(obj)
 }
 
-#'
-#' Transpose a rmf_2d_array
-#'
-#' @param obj a \code{rmf_2d_array}
-#' @return the transposed obj
-#' @details switches the rows and columns and corresponding dimlabels of a \code{rmf_2d_array}
+#' @export
+aperm.rmf_2d_array <- function(obj, perm, ...) {
+  att <- attributes(obj)
+  obj <- aperm.default(obj, perm = perm, ...)
+  att$dimlabels <- att$dimlabels[perm]
+  att$dim <- attr(obj, 'dim')
+  attributes(obj) <- att
+  return(obj)
+}
+
+#' @export
+aperm.rmf_3d_array <- function(obj, perm, ...) {
+  att <- attributes(obj)
+  obj <- aperm.default(obj, perm = perm, ...)
+  att$dimlabels <- att$dimlabels[perm]
+  att$dim <- attr(obj, 'dim')
+  attributes(obj) <- att
+  return(obj)
+}
+
+#' @export
+aperm.rmf_4d_array <- function(obj, perm, ...) {
+  att <- attributes(obj)
+  obj <- aperm.default(obj, perm = perm, ...)
+  att$dimlabels <- att$dimlabels[perm]
+  att$dim <- attr(obj, 'dim')
+  attributes(obj) <- att
+  return(obj)
+}
+
 #' @export
 t.rmf_2d_array <- function(obj) {
 
