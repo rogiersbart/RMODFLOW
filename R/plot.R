@@ -1196,16 +1196,17 @@ rmf_plot.rmf_3d_array <- function(array,
     if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
       warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
       dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
-      dis$botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
+      botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
       nnlay <- dis$nlay
+      dis$center <- botm
+      for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
     } else {
       if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
       dis$thck <- rmf_calculate_thickness(dis)
       nnlay <- dis$nlay + sum(dis$laycbd != 0)
+      dis$center <- dis$botm
+      for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
     }
-    
-    dis$center <- dis$botm
-    for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
 
     if(is.null(i) & !is.null(j)) {
       ids <- factor(1:(dis$nrow*nnlay))
