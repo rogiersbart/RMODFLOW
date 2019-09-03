@@ -797,18 +797,17 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
       if(ncol==1 || nrow==1) {
         array <- c(array(array,dim=nrow*ncol*nlay))
       } else {
-        array <- as.matrix(array[,,1])
-        class(array) <- 'rmf_2d_array'   
+        array <- rmf_create_array(array[,,1])
       }
+    } else {
+      array <- rmf_create_array(array)
     }
-    if(nlay > 1) class(array) <- 'rmf_3d_array'
   } else if(ndim == 1) {
     array <- c(array(array,dim=nrow*ncol*nlay))
   } else if(ndim == 2) {
-    array <- matrix(array[,,1], nrow = nrow, ncol = ncol)
-    class(array) <- 'rmf_2d_array'     
+    array <- rmf_create_array(array[,,1], dim = c(nrow, ncol))
   } else if(ndim == 3) {
-    class(array) <- 'rmf_3d_array'
+    array <- rmf_create_array(array, dim = c(nrow, ncol, nlay))
   }
   
   # Return output of reading function 
