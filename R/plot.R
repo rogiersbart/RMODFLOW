@@ -863,7 +863,7 @@ rmf_plot.riv <- function(riv,
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
-#' @param colour_palette a colour palette for imaging the array values
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
@@ -1050,12 +1050,15 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour")))
-        if(!label) return(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth))
+        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
       } else {
         if(label) {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
                    ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
                    ggplot2::theme(legend.position="none") +
@@ -1063,6 +1066,7 @@ rmf_plot.rmf_2d_array <- function(array,
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
                    ggplot2::ggtitle(title))
         }
@@ -1090,11 +1094,13 @@ rmf_plot.rmf_2d_array <- function(array,
 
       if(add) {
         return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
-                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize))) 
+                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize=vecsize),
+                    ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
       } else {
         return(ggplot2::ggplot() +
                  ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
-                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize = vecsize) +
+                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
+                 ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
                  ggplot2::coord_equal() +
                  ggplot2::ggtitle(title))
       }
@@ -1123,7 +1129,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound
-#' @param colour_palette a colour palette for imaging the array values
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
@@ -1364,12 +1370,15 @@ rmf_plot.rmf_3d_array <- function(array,
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour")))
-        if(!label) return(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth))
+        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
       } else {
         if(label) {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
                    ggplot2::theme(legend.position="none") +
                    ggplot2::xlim(xlim)+
@@ -1380,6 +1389,7 @@ rmf_plot.rmf_3d_array <- function(array,
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
                    ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    ggplot2::xlim(xlim)+
                    ggplot2::ylim(ylim) + 
                    ggplot2::xlab(xlabel) +
@@ -1433,11 +1443,13 @@ rmf_plot.rmf_3d_array <- function(array,
         
         if(add) {
           return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
-                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v), center = TRUE, vecsize=vecsize))) 
+                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize=vecsize),
+                      ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
         } else {
           return(ggplot2::ggplot() +
                    ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
-                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v), center = TRUE, vecsize = vecsize) +
+                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
+                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
                    ggplot2::xlab(xlabel) +
                    ggplot2::ylab(ylabel) +
                    ggplot2::ggtitle(title))
