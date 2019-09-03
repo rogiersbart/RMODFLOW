@@ -863,7 +863,7 @@ rmf_plot.riv <- function(riv,
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
-#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
@@ -879,7 +879,8 @@ rmf_plot.riv <- function(riv,
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
-#' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
@@ -888,7 +889,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   dis,
                                   bas = NULL,
                                   mask = rmfi_ifelse0(is.null(bas), array*0+1, {if(dis$nlay > 1) warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
-                                  colour_palette = rmfi_rev_rainbow,
+                                  colour_palette = ifelse(type %in% c('contour', 'vector'), 'black', rmfi_rev_rainbow),
                                   zlim = range(array[as.logical(mask)], finite=TRUE),
                                   nlevels = 7,
                                   type = 'fill',
@@ -904,7 +905,8 @@ rmf_plot.rmf_2d_array <- function(array,
                                   plot3d=FALSE,
                                   height=NULL,
                                   crop = TRUE,
-                                  vecint = 1) {
+                                  vecint = 1,
+                                  legend = !add) {
   
   
   
@@ -928,6 +930,7 @@ rmf_plot.rmf_2d_array <- function(array,
   } else {
     
     # if array is already a cross-section, e.g. rmf_plot(array[,1,], dis = dis)
+    # TODO: can not know what index was subsetted so assumes 1
     if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
       if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
       if("j" %in% attr(array, 'dimlabels')) {
@@ -987,25 +990,31 @@ rmf_plot.rmf_2d_array <- function(array,
       datapoly <- merge(values, positions, by=c("id"))
       if(crop) datapoly <- na.omit(datapoly)
     }
+    if(is.logical(legend)) {
+      name <- "value"
+    } else {
+      name <- legend
+      legend <- TRUE
+    }
     if(type=='fill') {  
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(name, colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend, alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(name, colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
                  ggplot2::coord_equal())
       }
     } else if(type=='factor') {  
       datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::coord_equal())
       }
     } else if(type=='grid') {  
@@ -1045,22 +1054,21 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
-                              ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
-        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),
-                               ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
       } else {
         if(label) {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
-                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
-                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
-                   ggplot2::theme(legend.position="none"))
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim))
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
-                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    ggplot2::coord_equal(xlim = xlim, ylim = ylim))
         }
       }
@@ -1077,23 +1085,21 @@ rmf_plot.rmf_2d_array <- function(array,
         vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       if(crop) vector_df <- na.omit(vector_df)
-      
       # add gradient values; negative because Darcy flux also has negative sign
       grad <- rmf_gradient(array, dis = dis, mask = mask) 
       vector_df$u <- -c(t(grad$x))
       vector_df$v <- -c(t(grad$y))
       vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
       vecsize <- 0.75*vecint
-
       if(add) {
         return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
-                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize=vecsize),
-                    ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
+                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
+                    ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
       } else {
         return(ggplot2::ggplot() +
                  ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
-                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
-                 ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
+                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
+                 ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
                  ggplot2::coord_equal())
       }
       
@@ -1134,7 +1140,8 @@ plot.rmf_2d_array <- function(...) {
 #' @param label logical; should labels be added to contour plot
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
-#' @param vecint positive integer specifying the interval to smooth the appearence of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... parameters provided to plot.rmf_2d_array
 #' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -1148,7 +1155,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   bas = NULL,
                                   mask = rmfi_ifelse0(is.null(bas),array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1)), bas$ibound)),
                                   zlim = range(array[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)][as.logical(mask[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)])], finite=TRUE),
-                                  colour_palette = rmfi_rev_rainbow,
+                                  colour_palette = ifelse(type %in% c('contour', 'vector'), 'black', rmfi_rev_rainbow),
                                   nlevels = 7,
                                   type='fill',
                                   levels = NULL,
@@ -1162,6 +1169,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   prj = NULL,
                                   crs = NULL,
                                   vecint = 1,
+                                  legend = !add,
                                   ...) {
   
   if(is.null(i) & is.null(j) & is.null(k)) {
@@ -1186,7 +1194,8 @@ rmf_plot.rmf_3d_array <- function(array,
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
-    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, ...)
+    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, 
+             binwidth=binwidth, label=label, vecint=vecint, legend=legend, ...)
   } else {
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
@@ -1311,26 +1320,32 @@ rmf_plot.rmf_3d_array <- function(array,
       xlabel <- 'x'
       ylabel <- 'z'
     }
+    if(is.logical(legend)) {
+      name <- "value"
+    } else {
+      name <- legend
+      legend <- TRUE
+    }
     if(type=='fill') {
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(name,colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(name,colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
                  ggplot2::xlab(xlabel) +
                  ggplot2::ylab(ylabel))
       }
     } else if(type=='factor') {
       datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value', breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend,colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::xlab(xlabel) +
                  ggplot2::ylab(ylabel))
       }
@@ -1357,25 +1372,24 @@ rmf_plot.rmf_3d_array <- function(array,
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
-                              ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
-        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),
-                               ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
       } else {
         if(label) {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
-                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
-                   ggplot2::theme(legend.position="none") +
                    ggplot2::xlim(xlim)+
                    ggplot2::ylim(ylim) + 
                    ggplot2::xlab(xlabel) +
                    ggplot2::ylab(ylabel))
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
-                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    ggplot2::xlim(xlim)+
                    ggplot2::ylim(ylim) + 
                    ggplot2::xlab(xlabel) +
@@ -1383,9 +1397,7 @@ rmf_plot.rmf_3d_array <- function(array,
         }
       }
     } else if(type == 'vector') {
-        
       grad <- rmf_gradient(array, dis = dis, mask = mask) 
-      
       if(is.null(i) && !is.null(j)) {
         vector_df <- data.frame(x=xy$y,y=c(dis$center[,j,]))
         if(!is.null(prj)) {
@@ -1398,7 +1410,6 @@ rmf_plot.rmf_3d_array <- function(array,
           #warning('Transforming vertical coordinates', call. = FALSE)
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
-        
         # add gradient values; negative because Darcy flux also has negative sign
         vector_df$u <- -c(t(grad$y[,j,]))
         vector_df$v <- -c(grad$z[,j,])
@@ -1415,30 +1426,25 @@ rmf_plot.rmf_3d_array <- function(array,
           #warning('Transforming vertical coordinates', call. = FALSE)
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
-        
         # add gradient values; negative because Darcy flux also has negative sign
         vector_df$u <- -c(t(grad$x[i,,]))
         vector_df$v <- -c(grad$z[i,,])
       }
-
         if(crop) vector_df <- na.omit(vector_df)
-        
         vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
         vecsize <- 0.75*vecint
-        
         if(add) {
           return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
-                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize=vecsize),
-                      ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
+                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
+                      ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
         } else {
           return(ggplot2::ggplot() +
                    ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
-                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)), center = TRUE, vecsize = vecsize) +
-                   ggplot2::scale_colour_gradientn('value', colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
+                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
                    ggplot2::xlab(xlabel) +
                    ggplot2::ylab(ylabel))
         }
-        
     } else {
       stop('Please provide valid plot type.', call. = FALSE)
     }
