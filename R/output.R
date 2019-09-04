@@ -104,7 +104,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
           }
         }
         if(any(fail)) {
-          stop(paste('Header descriptions do not match. Are you sure the file is', precision,'precision?'))
+          stop(paste('Header descriptions do not match. Are you sure the file is', precision,'precision?'), call. = FALSE)
         }
         
         read <- ifelse((fluxes != 'all' && !(name %in% fluxes)), FALSE, TRUE) 
@@ -272,7 +272,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
     return(cbc)
     
   } else {
-    stop('Code not up to date')
+    stop('Code not up to date', call. = FALSE)
     #     # update this to match the above structure!
     #     cbc <- list()
     #     cbc.lines <- readr::read_lines(file)
@@ -466,7 +466,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
       desc <- trimws(readChar(con,nchars=16))
       if(! desc %in% headers) {
-        stop('Array description not recognized. Is the file really binary? If so, you could try double precision. If not, set the binary argument to FALSE.')
+        stop('Array description not recognized. Is the file really binary? If so, you could try double precision. If not, set the binary argument to FALSE.', call. = FALSE)
       }
       while(length(desc != 0)) {
         
@@ -534,6 +534,19 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           desc <- trimws(readChar(con,nchars=16))
         }
       }
+      
+      if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+      
+      if(!is.null(other_desc) && length(other_desc) != 0) {
+        warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
+        warning(other_desc, call. = FALSE)
+        warning('Returning NULL', call. = FALSE)
+        return(NULL)
+      } else {
+        class(hed) <- c('hed','rmf_4d_array')
+        attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+        return(hed)
+      }
     })
     close(con)
     
@@ -544,13 +557,13 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
     if(! desc %in% headers) {
       if(variables[2] != dis$ncol) { # weak test to check if there's a label
-        stop('Array description not recognized. Are you sure the file is not binary ?')
+        stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
       }
       label <- FALSE
       if(is.null(oc)) {
-        stop('No label line detected. Please specify an OC object.')
+        stop('No label line detected. Please specify an OC object.', call. = FALSE)
       } else {
-        warning('Assuming file being read only contains head values.')
+        warning('Assuming file being read only contains head values.', call. = FALSE)
       }
     }
     
@@ -604,7 +617,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
         totim <- as.numeric(variables[4])
         desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
         if(! desc %in% headers) {
-          stop('Array description not recognized. Are you sure the file is not binary ?')
+          stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
         }
         name <- gsub(' ', '_', tolower(trimws(desc)))
         
@@ -713,19 +726,19 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
       
     }
-  }
-  
-  if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
-  
-  if(!is.null(other_desc) && length(other_desc) != 0) {
-    warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-    warning(other_desc, call. = FALSE)
-    warning('Returning NULL', call. = FALSE)
-    return(NULL)
-  } else {
-    class(hed) <- c('hed','rmf_4d_array')
-    attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
-    return(hed)
+    
+    if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+    
+    if(!is.null(other_desc) && length(other_desc) != 0) {
+      warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
+      warning(other_desc, call. = FALSE)
+      warning('Returning NULL', call. = FALSE)
+      return(NULL)
+    } else {
+      class(hed) <- c('hed','rmf_4d_array')
+      attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+      return(hed)
+    }
   }
 }
 
@@ -864,7 +877,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
       desc <- trimws(readChar(con,nchars=16))
       if(! desc %in% headers) {
-        stop('Array description not recognized. Is the file really binary? If so, you could try double precision. If not, set the binary argument to FALSE.')
+        stop('Array description not recognized. Is the file really binary? If so, you could try double precision. If not, set the binary argument to FALSE.', call. = FALSE)
       }
       while(length(desc != 0)) {
         
@@ -932,6 +945,18 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           desc <- trimws(readChar(con,nchars=16))
         }
       }
+      
+      if(!is.null(other_desc) && length(other_desc) != 0) {
+        warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
+        warning(other_desc, call. = FALSE)
+        warning('Returning NULL', call. = FALSE)
+        return(NULL)
+      } else {
+        if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+        attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+        class(hed) <- c('ddn','rmf_4d_array')
+        return(hed)
+      }
     })
     close(con)
     
@@ -942,13 +967,13 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
     if(! desc %in% headers) {
       if(variables[2] != dis$ncol) { # weak test to check if there's a label
-        stop('Array description not recognized. Are you sure the file is not binary ?')
+        stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
       }
       label <- FALSE
       if(is.null(oc)) {
-        stop('No label line detected. Please specify an OC object.')
+        stop('No label line detected. Please specify an OC object.', call. = FALSE)
       } else {
-        warning('Assuming file being read only contains head values.')
+        warning('Assuming file being read only contains head values.', call. = FALSE)
       }
     }
     
@@ -996,7 +1021,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
         totim <- as.numeric(variables[4])
         desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
         if(! desc %in% headers) {
-          stop('Array description not recognized. Are you sure the file is not binary ?')
+          stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
         }
         name <- gsub(' ', '_', tolower(trimws(desc)))
         
@@ -1092,19 +1117,17 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
       
     }
-  }
-  
-  
-  if(!is.null(other_desc) && length(other_desc) != 0) {
-    warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-    warning(other_desc, call. = FALSE)
-    warning('Returning NULL', call. = FALSE)
-    return(NULL)
-  } else {
-    if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
-    attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
-    class(hed) <- c('ddn','rmf_4d_array')
-    return(hed)
+    if(!is.null(other_desc) && length(other_desc) != 0) {
+      warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
+      warning(other_desc, call. = FALSE)
+      warning('Returning NULL', call. = FALSE)
+      return(NULL)
+    } else {
+      if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+      attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+      class(hed) <- c('ddn','rmf_4d_array')
+      return(hed)
+    }
   }
 }
 
@@ -1189,7 +1212,7 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
     
     # no budget is printed
   } else {
-    stop("No budget was printed to listing file. You can change this in the OC file.")
+    stop("No budget was printed to listing file. You can change this in the OC file.", call. = FALSE)
   }
   
   class(balance) = 'bud'

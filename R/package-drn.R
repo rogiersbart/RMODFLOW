@@ -20,7 +20,7 @@ rmf_create_drn <-  function(...,
                           aux = NULL
                           
 ) {
-  vars <- c('elevation', 'cond')
+  vars <- c('elevation', 'conductance')
   arg <- rmfi_create_bc_list(arg = list(...), dis = dis, varnames = vars, aux = aux)
   
   # create drn object
@@ -53,7 +53,7 @@ rmf_create_drn <-  function(...,
 rmf_read_drn <-  function(file = {cat('Please select drain file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}, ...){
   
-  vars <- c('elevation', 'cond')
+  vars <- c('elevation', 'conductance')
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
@@ -80,7 +80,7 @@ rmf_read_drn <-  function(file = {cat('Please select drain file ...\n'); file.ch
 
 rmf_write_drn <-  function(drn, dis = rmf_read_dis(), file={cat('Please choose drn file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
-  vars <- c('elevation', 'cond')
+  vars <- c('elevation', 'conductance')
   header <-  'Drain Package'
   package <- 'drn'
   partyp <- 'DRN'

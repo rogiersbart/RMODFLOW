@@ -336,7 +336,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     tibble::tibble(value = array[i, j, k, ], time = attributes(array)$totim)
   } else {
-    warning('Using final stress period results.', call. = FALSE)
+    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Using final stress period results.', call. = FALSE)
     rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask[,,,dim(array)[4]], prj = prj, crs = crs)
   }
 }
@@ -2413,6 +2413,7 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #' @rdname rmf_gradient
 #' 
 rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
+  if(missing(l)) stop('Please specify a l argument')
   rmf_gradient(obj[,,,l], dis = dis, ...)
 }
 
@@ -2678,7 +2679,7 @@ rmf_export_table.rmf_4d_array <- function(array,
     
     cell_coord <- cell_coordinates(dis)
     if(!is.null(prj)) {
-      cell_coord <- convert_grid_to_xyz(x=c(cell_coord$x[,,k]),y=c(cell_coord$y[,,k]),prj=prj,dis=dis)
+      cell_coord <- rmf_convert_grid_to_xyz(x=c(cell_coord$x[,,k]),y=c(cell_coord$y[,,k]),prj=prj,dis=dis)
     } else {
       cell_coord <- data.frame(x = c(cell_coord$x[,,k]), y = c(cell_coord$y[,,k]))
     }
@@ -2735,7 +2736,7 @@ rmf_export_vector.rmf_2d_array <- function(array,
   positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
   positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
   if(!is.null(prj)) {
-    new_positions <- convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
+    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
   }
@@ -2823,12 +2824,12 @@ rmf_performance.default <- function(sim, obs, na_value = -888, measures = c('ssq
 #' @method rmf_performance hpr
 #' @export
 rmf_performance.hpr <- function(hpr, hobdry = -888, measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
-  obsAndSims <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=hobdry),]
-  observations <- obsAndSims$observed_value
-  predictions <- obsAndSims$simulated_equivalent
+  obsAndSims <- data.frame(simulated=hpr$simulated, observed=hpr$observed,name=hpr$name)[which(hpr$simulated!=hobdry),]
+  observations <- obsAndSims$observed
+  predictions <- obsAndSims$simulated
   dry <- 0; if(hobdry %in% predictions) dry <- length(which(predictions == hobdry))
   if(dry > 0) predictions <- predictions[-which(predictions == hobdry)]
-  names <- obsAndSims$observation_name
+  names <- obsAndSims$name
   perform <- rmfi_performance_measures(observations,predictions, measures = measures, ...)
   return(perform)
 }

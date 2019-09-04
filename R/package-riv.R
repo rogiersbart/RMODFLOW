@@ -19,7 +19,7 @@ rmf_create_riv <-  function(...,
                             aux = NULL
                             
 ) {
-  vars <- c('stage', 'cond', 'rbot')
+  vars <- c('stage', 'conductance', 'rbot')
   arg <- rmfi_create_bc_list(arg = list(...), dis = dis, varnames = vars, aux = aux)
   
   # create riv object
@@ -53,7 +53,7 @@ rmf_create_riv <-  function(...,
 rmf_read_riv <-  function(file = {cat('Please select river file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}, ...){
   
-  vars <- c('stage', 'cond', 'rbot')
+  vars <- c('stage', 'conductance', 'rbot')
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
@@ -80,7 +80,7 @@ rmf_read_riv <-  function(file = {cat('Please select river file ...\n'); file.ch
 
 rmf_write_riv <-  function(riv, dis = rmf_read_dis(), file={cat('Please choose riv file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
-  vars <- c('stage', 'cond', 'rbot')
+  vars <- c('stage', 'conductance', 'rbot')
   header <-  'River Package'
   package <- 'riv'
   partyp <- 'RIV'

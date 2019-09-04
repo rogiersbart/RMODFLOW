@@ -19,7 +19,7 @@ rmf_create_ghb <-  function(...,
                             aux = NULL
                             
 ) {
-  vars <- c('bhead', 'cond')
+  vars <- c('bhead', 'conductance')
   arg <- rmfi_create_bc_list(arg = list(...), dis = dis, varnames = vars, aux = aux)
   
   # create ghb object
@@ -54,7 +54,7 @@ rmf_create_ghb <-  function(...,
 rmf_read_ghb <-  function(file = {cat('Please select general-head boundary file ...\n'); file.choose()},
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}, ...){
   
-  vars <- c('bhead', 'cond')
+  vars <- c('bhead', 'conductance')
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
@@ -81,7 +81,7 @@ rmf_read_ghb <-  function(file = {cat('Please select general-head boundary file 
 
 rmf_write_ghb <-  function(ghb, dis = rmf_read_dis(), file={cat('Please choose ghb file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
-  vars <- c('bhead', 'cond')
+  vars <- c('bhead', 'conductance')
   header <-  'General-Head Boundary Package'
   package <- 'ghb'
   partyp <- 'GHB'
