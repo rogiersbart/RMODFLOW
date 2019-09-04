@@ -1762,8 +1762,12 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
-rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL, dimlabels = attr(obj, 'dimlabels')) {
-  if(!is.null(dim)) obj <- array(obj, dim = dim)
+rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dimlabels = attr(obj, 'dimlabels')) {
+  if(!is.null(dim)) {
+    att <- attributes(obj)
+    obj <- array(obj, dim = dim)
+    attributes(obj) <- c(attributes(obj), att[-which(names(att) %in% c('dim','dimlabels'))])
+  }
   if(is.null(dimlabels)) dimlabels <- c('i', 'j', 'k', 'l')[1:length(dim(obj))]
   if(length(dim(obj))==2) {
     class(obj) <- 'rmf_2d_array'
@@ -1819,7 +1823,13 @@ create_rmodflow_array <- function(...) {
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
   if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
-  
+  if(!missing(l)) {
+    if(!is.null(attr(obj,'kstp'))) attr(obj,'kstp') <- attr(obj,'kstp')[l]
+    if(!is.null(attr(obj,'kper'))) attr(obj,'kper') <- attr(obj,'kper')[l]
+    if(!is.null(attr(obj,'pertim'))) attr(obj,'pertim') <- attr(obj,'pertim')[l]
+    if(!is.null(attr(obj,'totim'))) attr(obj,'totim') <- attr(obj,'totim')[l]
+    if(!is.null(attr(obj,'nstp'))) attr(obj,'nstp') <- attr(obj,'nstp')[l]
+  }
   return(obj)
 }
 
