@@ -32,7 +32,7 @@ rmf_plot.bud <-  function(bud,
                           type = 'area', 
                           timestep = NULL) {
   
-  if(!is.null(timestep) && length(timestep) > 1) stop('Timestep should be a single value')
+  if(!is.null(timestep) && length(timestep) > 1) stop('Argument timestep should be a single value', call. = FALSE)
   
   # nstp
   bud <- lapply(bud, function(i) cbind(i, nstp = c(0,cumsum(dis$nstp)[i$kper-1])+i$kstp))
@@ -413,7 +413,7 @@ rmf_plot.evt <- function(evt,
     obj <- evt$exdp[[kper]]
     
   } else if(variable == 'irch') {
-    if(evt$nevtop != 2) stop('No ievt arrays defined in evt object; nevtop does not equal 2')
+    if(evt$nevtop != 2) stop('No ievt arrays defined in evt object; nevtop does not equal 2', call. = FALSE)
     obj <- evt$ievt[[kper]]
     
   } 
@@ -813,7 +813,7 @@ rmf_plot.rch <- function(rch,
     obj <- Reduce('+', obj)
     
   } else if(variable == 'irch') {
-    if(rch$nrchop != 2) stop('No irch arrays defined in rch object; nrchop does not equal 2')
+    if(rch$nrchop != 2) stop('No irch arrays defined in rch object; nrchop does not equal 2', call. = FALSE)
     obj <- rch$irch[[kper]]
     
   } 
@@ -929,13 +929,14 @@ rmf_plot.rmf_2d_array <- function(array,
   } else {
     
     # if array is already a cross-section, e.g. rmf_plot(array[,1,], dis = dis)
-    # TODO: can not know what index was subsetted so assumes 1
+    # TODO: can not know what index was subsetted so assumes a subset on index 1; 
+    # might remove later
     if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
       if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
       if("j" %in% attr(array, 'dimlabels')) {
         sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
         if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
-          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
           mask <- array*0 + 1
         }
         sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
@@ -948,7 +949,7 @@ rmf_plot.rmf_2d_array <- function(array,
       } else if("i" %in% attr(array, 'dimlabels')) {
         sub_array <- rmf_create_array(array, dim = c(dim(array)[1], 1, dim(array)[2]))
         if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
-          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
           mask <- array*0 + 1
         }
         sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
@@ -1575,7 +1576,7 @@ rmf_plot.sen <- function(sen,type='css')
     )
   } else if(type=='dss')
   {
-    stop('dss plotting not implemented yet')
+    stop('dss plotting not implemented yet', call. = FALSE)
   }
   
 }

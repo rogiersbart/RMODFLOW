@@ -127,7 +127,7 @@ rmf_as_list.rmf_2d_array <- function(obj, ...) {
 #' @rdname rmf_as_list
 #' @export
 rmf_as_list.rmf_4d_array <- function(obj, l, ...) {
-  if(missing(l)) stop('Please specify a l argument')
+  if(missing(l)) stop('Please specify a l argument', call. = FALSE)
   rmf_as_list(obj[,,,l], ...)
 }
 
@@ -259,14 +259,14 @@ rmf_as_tibble.rmf_3d_array <- function(array,
     # reason for optionally explicitely representing confining bed thickness:
     # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
     if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
-      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
+      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
       dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
       botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
       nnlay <- dis$nlay
       dis$center <- botm
       for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
     } else {
-      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
+      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
       dis$thck <- rmf_calculate_thickness(dis)
       nnlay <- dis$nlay + sum(dis$laycbd != 0)
       dis$center <- dis$botm
@@ -843,7 +843,7 @@ rmf_convert_bcf_to_lpf <- function(bcf,
     if(any(dis$laycbd != 0)) {
       
       # vkcb
-      warning('vkcb will be set equal to vk')
+      warning('vkcb will be set equal to vk', call. = FALSE)
       thck <- rmf_calculate_thickness(dis = dis, collapse_cbd = TRUE)
       for(k in (dis$nlay - 1):1) {
         bcf$vka[,,k] <- (0.5*thck[,,k])/((1/bcf$vcont[,,k]) - (0.5*thck[,,k+1]/bcf$vka[,,k+1]))
@@ -1039,14 +1039,14 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
     ifelse(!is.null(z),return(data.frame(x=x,y=y,z=z)),return(data.frame(x=x,y=y)))
     
   } else if(!is.null(i)) {
-    if(is.null(dis)) stop('Please provide a dis object')
+    if(is.null(dis)) stop('Please provide a dis object', call. = FALSE)
     y_grid <- c(cumsum(rev(dis$delc))-rev(dis$delc)/2)[(dis$nrow-i+1)]
     x_grid <- c(cumsum(dis$delr)-dis$delr/2)[j]
     
     if(!is.null(k)) {
       
       # set thicknesses of cells
-      if(any(k > dis$nlay)) stop('k is greater than dis$nlay')
+      if(any(k > dis$nlay)) stop('k is greater than dis$nlay', call. = FALSE)
       thck <- rmf_calculate_thickness(dis)
       nnlay <- ifelse(length(dim(dis$botm)) > 2, dim(dis$botm)[3], 1)
       
@@ -1191,10 +1191,10 @@ rmf_convert_huf_to_grid <- function(huf,
     parm_type <- vapply(parameters, function(i) attr(i, 'partyp'), 'HK')
     
     # error check
-    if(partyp == "VK" && all(huf$hguvani > 0)) stop('No VK specified in huf object through parameters or HGUVANI values')
-    if(partyp == "VANI" && all(huf$hguvani == 0)) stop('No VANI specified in huf object through parameters or HGUVANI values')
-    if(partyp == "HANI" && all(huf$hguhani == 0) && !("HANI" %in% parm_type)) stop('No HANI specified in huf object through parameters or HGUHANI values')
-    if(partyp %in% c("HK", "SS", "SY", "SYTP") && !(partyp %in% parm_type)) stop(paste('No', partyp, 'parameters specified in huf object'))
+    if(partyp == "VK" && all(huf$hguvani > 0)) stop('No VK specified in huf object through parameters or HGUVANI values', call. = FALSE)
+    if(partyp == "VANI" && all(huf$hguvani == 0)) stop('No VANI specified in huf object through parameters or HGUVANI values', call. = FALSE)
+    if(partyp == "HANI" && all(huf$hguhani == 0) && !("HANI" %in% parm_type)) stop('No HANI specified in huf object through parameters or HGUHANI values', call. = FALSE)
+    if(partyp %in% c("HK", "SS", "SY", "SYTP") && !(partyp %in% parm_type)) stop(paste('No', partyp, 'parameters specified in huf object'), call. = FALSE)
     
     parameters <- parameters[parm_type == partyp]
     hgunam <- unique(unlist(lapply(parameters, function(i) attr(i, 'hgunam'))))
@@ -1478,7 +1478,7 @@ rmf_convert_id_to_ijk <- function(id,
     j <- id-i*dis$ncol
     return(data.frame(i=i+1,j=j,k=k+1))
   } else {
-    stop('Please provide a valid id type.')
+    stop('Please provide a valid id type.', call. = FALSE)
   }  
 }
 
@@ -1508,7 +1508,7 @@ rmf_convert_ijk_to_id <- function(i,
   } else if (type == 'modflow') {
     return((k-1)*dis$nrow*dis$ncol+(i-1)*dis$ncol+j)
   } else {
-    stop('Please provide a valid id type.')
+    stop('Please provide a valid id type.', call. = FALSE)
   }
   
 }
@@ -1648,7 +1648,7 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
   if(output_ijk || output_off) {
-    if(is.null(dis)) stop('Please provide dis argument ...')    
+    if(is.null(dis)) stop('Please provide dis argument', call. = FALSE)    
     if(ncol(dat)==3) {
       dis$thck <- dis$tops <- dis$botm
       dis$thck <- rmf_calculate_thickness(dis)
@@ -1670,22 +1670,22 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
         dat$j[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
-        warning('x coordinate out of bounds. Setting j index and roff/coff to NA')
+        warning('x coordinate out of bounds. Setting j index and roff/coff to NA', call. = FALSE)
       } 
       if(dat$y[i] < 0 || dat$y[i] > sum(dis$delc)) {
         dat$i[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
-        warning('y coordinate out of bounds. Setting i index and roff/coff to NA')
+        warning('y coordinate out of bounds. Setting i index and roff/coff to NA', call. = FALSE)
       }
       
       if(!is.null(z)) {
         if(is.na(dat$i[i]) || is.na(dat$j[i])) {
-          warning('i and/or j index is NA. Setting corresponding k index and loff to NA as well.')
+          warning('i and/or j index is NA. Setting corresponding k index and loff to NA as well.', call. = FALSE)
           dat$k[i] <- NA
           dat$loff[i] <- NA
         } else if(dat$z[i] < dis$botm[dat$i[i], dat$j[i],nnlay] || dat$z[i] > dis$top[dat$i[i], dat$j[i]]) {
-          warning('z coordinate out of bounds. Setting k index and loff to NA.')
+          warning('z coordinate out of bounds. Setting k index and loff to NA.', call. = FALSE)
           dat$k[i] <- NA
           dat$loff[i] <- NA
         } else {
@@ -1771,7 +1771,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = NULL, dimlabels = attr
   } else if(length(dim(obj))==4) {
     class(obj) <- 'rmf_4d_array'
   } else {
-    stop('Please provide 2d matrix, or 2d, 3d or 4d array.')
+    stop('Please provide 2d matrix, or 2d, 3d or 4d array.', call. = FALSE)
   }
   attr(obj, 'kper') <- kper
   attr(obj, 'dimlabels') <- dimlabels
@@ -1967,21 +1967,21 @@ rmf_create_parameter.default <- function(dis,
                                          instnam = NULL,
                                          hgunam = NULL) {
   
-  if(is.null(kper) && (is.null(layer) && is.null(hgunam))) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
-  if(!is.null(layer) && is.null(partyp)) stop("Please specify the partyp argument")
-  if(!is.null(layer) && !is.null(hgunam)) stop("Please specify either the layer or the hgunam argument")
+  if(is.null(kper) && (is.null(layer) && is.null(hgunam))) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).", call. = FALSE)
+  if(!is.null(layer) && is.null(partyp)) stop("Please specify the partyp argument", call. = FALSE)
+  if(!is.null(layer) && !is.null(hgunam)) stop("Please specify either the layer or the hgunam argument", call. = FALSE)
   mltarr <- as.list(mltnam)
   zonarr <- as.list(zonnam)
   
   if(any(toupper(mltnam) != "NONE")) {
-    if(is.null(mlt)) stop('Please provide a mlt object')
+    if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
     mlt_id <- which(toupper(mltnam) != "NONE")
     mltarr[mlt_id] <- mlt$rmlt[mltnam[mlt_id]]
   }
   if(any(toupper(zonnam) != "ALL")) {
-    if(is.null(zon)) stop('Please provide a zon object')
-    if(is.null(iz)) stop('Please provide a iz argument')
-    if(!inherits(iz, 'list')) stop('The iz argument should be a list')
+    if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+    if(is.null(iz)) stop('Please provide a iz argument', call. = FALSE)
+    if(!inherits(iz, 'list')) stop('The iz argument should be a list', call. = FALSE)
     zon_id <- which(toupper(zonnam) != "ALL")
     zonarr[zon_id] <- zon$izon[zonnam[zon_id]]
   }
@@ -2039,8 +2039,8 @@ rmf_create_parameter.rmf_2d_array <-  function(array,
                                                mltnam = parnam,
                                                instnam = NULL) {
   
-  if(is.null(kper) && is.null(layer)) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).")
-  if(!is.null(layer) && is.null(partyp)) stop("Please specify the parameter partyp")
+  if(is.null(kper) && is.null(layer)) stop("Please specify either the kper argument (for boundary condition arrays) or the layer argument (for flow parameter arrays).", call. = FALSE)
+  if(!is.null(layer) && is.null(partyp)) stop("Please specify the parameter partyp", call. = FALSE)
   
   if(length(unique(c(array))) == 1) mltnam <-  'NONE'
   
@@ -2260,7 +2260,7 @@ rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1,
 #' @export
 #' @rdname rmf_darcy_flux
 rmf_darcy_flux.rmf_4d_array <- function(hed, dis, l, ...) {
-  if(missing(l)) stop('Please specify a l argument')
+  if(missing(l)) stop('Please specify a l argument', call. = FALSE)
   rmf_darcy_flux(hed[,,,l], dis = dis, ...)
 }
 
@@ -2474,7 +2474,7 @@ rmf_time_steps = function(dis = NULL,
 rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header = ifelse(binary, TRUE, FALSE), dis=NULL, desc = 'HEAD', precision = 'single', xsection = FALSE) {
   
   if(binary) { # binary
-    if(header && is.integer(array)) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE")
+    if(header && is.integer(array)) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE", call. = FALSE)
     write_binary = function() {
       real_number_bytes <- ifelse(precision == 'single', 4, 8)
       size <- ifelse(is.integer(array), NA_integer_, real_number_bytes)
@@ -2525,7 +2525,7 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
         
       } else if(length(dim(array))==4) {    # 4D
         
-        if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.')
+        if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.', call. = FALSE)
         
         for(l in 1:dim(array)[4]) {
           for(k in 1:dim(array)[3]) {
@@ -2574,7 +2574,7 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
         write.table(array[,,k], file=file, col.names = F, row.names = F, append = TRUE)
       }
     } else if(length(dim(array))==4) {    # 4D
-      if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.')
+      if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.', call. = FALSE)
       
       for(l in 1:dim(array)[4]) {
         for(k in 1:dim(array)[3]) {
@@ -2651,7 +2651,7 @@ rmf_export_table.rmf_4d_array <- function(array,
     write.csv(na.omit(data.frame(x = c(cell_coord$x), y = c(cell_coord$y), value = c(array[,,k,l]))), file = file, row.names = FALSE)
     
   } else {
-    stop('Please provide valid type.')
+    stop('Please provide valid type.', call. = FALSE)
   }
 }
 
@@ -2868,7 +2868,7 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
   
   if(!header) {
     if(is.null(nrow) || is.null(ncol) || is.null(nlay) || is.null(nstp)) {
-      stop('Either provide nrow, ncol, nlay and nstp or set header to TRUE')
+      stop('Either provide nrow, ncol, nlay and nstp or set header to TRUE', call. = FALSE)
     }
   }
   
@@ -3069,10 +3069,10 @@ rmf_create_list <-  function(df, kper = NULL) {
   
   df <- as.data.frame(df)
   colnames(df) <- tolower(colnames(df))
-  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j')
+  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j', call. = FALSE)
   
   attr(df, 'kper') <- kper  
-  class(df) = c('rmf_list', class(df))
+  class(df) <- c('rmf_list', class(df))
   return(df)
   
 }

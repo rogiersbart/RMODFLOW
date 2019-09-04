@@ -26,7 +26,7 @@ rmfi_confining_beds <- function(dis) {
 rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
   nrs <- which(!is.na(dat[[names_from[1]]]+dat[[names_from[2]]]))
   # dat_names <- names(dat)
-  if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming')
+  if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming', call. = FALSE)
   converted_coords <- sf::st_transform(sf::st_sfc(sf::st_multipoint(cbind(dat[,names_from[1]], dat[,names_from[2]])[nrs, ]), crs = sf::st_crs(from)), crs = sf::st_crs(to))
   converted_coords <- data.frame(sf::st_coordinates(converted_coords))[,c('X','Y')]
   
@@ -107,7 +107,7 @@ rmfi_create_bc_array <- function(arg, dis) {
   if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if matrix or 2d-array, make rmf_2d_array which is always active
   arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
-                                              {rmf_create_array(i, kper = 1:dis$nper); warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.")},
+                                              {rmf_create_array(i, kper = 1:dis$nper); warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.", call. = FALSE)},
                                               i) )
   
   
@@ -187,14 +187,14 @@ rmfi_create_bc_array <- function(arg, dis) {
     
     parm_df <- subset(kper, select = names(parameters))
     parm_err <- any(vapply(1:dis$nper, function(i) all(is.na(parm_df[i,]) | parm_df[i,] == FALSE), TRUE))
-    if(parm_err) stop('If parameter arrays are provided, please make sure at least 1 parameter array is active during each stress period.')
+    if(parm_err) stop('If parameter arrays are provided, please make sure at least 1 parameter array is active during each stress period.', call. = FALSE)
   }
   # multiple non-parameter arrays can not be active for the same stress period
   if(length(arrays) > 0) {
     select <- rmfi_ifelse0(length(parameters > 0), names(kper) != names(parameters), names(kper))
     nparm_df <- subset(kper, select = select[-1])
     nparm_err <- vapply(1:dis$nper, function(i) sum(is.na(nparm_df[i,]) | nparm_df[i,] == TRUE) > 1, TRUE)
-    if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'))
+    if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'), call. = FALSE)
   }
   
   
@@ -233,7 +233,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if data.frame, make rmf_list which is always active
   arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
-                                              {rmf_create_list(i, kper = 1:dis$nper); warning("Coercing data.frame to rmf_list; list active for all stress-periods")}, 
+                                              {rmf_create_list(i, kper = 1:dis$nper); warning("Coercing data.frame to rmf_list; list active for all stress-periods", call. = FALSE)}, 
                                               i) )
   
   # check for parameters and/or lists and name them
@@ -299,7 +299,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     #check aux
     if(!is.null(aux)) {
       all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
-      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list')
+      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
     set_parm <- function(i) {
@@ -330,7 +330,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     #check aux
     if(!is.null(aux)) {
       all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
-      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list')
+      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
     # itmp
@@ -570,7 +570,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         fmtin <-  as.character(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[4])
         binary <- ifelse(toupper(fmtin) == "(BINARY)", TRUE, FALSE)
         
-        if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays')
+        if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays', call. = FALSE)
         fname <-  nam$fname[which(nam$nunit == nunit)]
         direct <-  attr(nam, 'dir')
         absfile = paste(direct, fname, sep = '/')
@@ -601,7 +601,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         } else {
           con <- file(absfile,open='rb')
           type <- ifelse(integer, 'integer', 'numeric')
-          if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally')
+          if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally', call. = FALSE)
           real_number_bytes <- ifelse(precision == 'single', 4, 8)
           size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
           try({ 
@@ -702,7 +702,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           array[,,k] <- cnst
           nLines <- 1
         } else {
-          if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays')
+          if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
           fname <-  nam$fname[which(nam$nunit == locat)]
           direct <-  attr(nam, 'dir')
@@ -754,7 +754,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
             real_number_bytes <- ifelse(precision == 'single', 4, 8)
             type <- ifelse(integer, 'integer', 'numeric')
             size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
-            if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally')
+            if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally', call. = FALSE)
             
             try({          
               if(!is.null(attr(nam, as.character(locat)))) {
@@ -961,7 +961,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
   df <-  matrix(nrow=nlst, ncol=3+length(varnames))
   
   if(toupper(header[1]) == 'EXTERNAL') {
-    if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object')
+    if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object', call. = FALSE)
     remaining_lines <-  remaining_lines[-1]
     extfile <- paste(attr(nam, 'dir'), nam$fname[which(nam$nunit==as.numeric(header[2]))], sep='/')
     binary <-  ifelse(toupper(nam$ftype[which(nam$nunit==as.numeric(header[2]))]) == 'DATA(BINARY)', TRUE, FALSE)
@@ -1367,19 +1367,19 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   binary <- rmfi_ifelse0(is.null(binary), FALSE, arrname %in% binary)
   
   if(is.null(names(cnstnt))) {
-    if(length(cnstnt) > 1)  stop('Please supply a single value or a named vector for cnstnt')
+    if(length(cnstnt) > 1)  stop('Please supply a single value or a named vector for cnstnt', call. = FALSE)
   } else {
     cnstnt <- ifelse(is.na(cnstnt[arrname]), 1, cnstnt[arrname])
   }
   
   if(is.null(names(iprn))) {
-    if(length(iprn) > 1)  stop('Please supply a single value or a named vector for iprn')
+    if(length(iprn) > 1)  stop('Please supply a single value or a named vector for iprn', call. = FALSE)
   } else {
     iprn <- ifelse(is.na(iprn[arrname]), -1, iprn[arrname])
   }
   
   if(external) { # external
-    if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays')
+    if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays', call. = FALSE)
     extfile <-  paste(dirname(file), paste(arrname, 'ext', sep='.'), sep='/')
     
     # set unit number in nam file
@@ -1403,8 +1403,8 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     }
     
     rmf_write_array(array = array, file = extfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
-    warning(paste('Remember to add the external file to the nam file.\nftype =', ifelse(binary,"DATA(BINARY)","DATA"),
-                  '\nnunit =', nunit, '\nfname =', extfile))
+    warning(paste('Please remember to add the external file to the nam file.\nftype =', ifelse(binary,"DATA(BINARY)","DATA"),
+                  '\nnunit =', nunit, '\nfname =', extfile), call. = FALSE)
     #return(data.frame(ftype = ifelse(binary[arrname], 'DATA(BINARY)', 'DATA'), nunit=nunit, fname=extfile, options=NA))
     
   } else if(fname) { # open/close
