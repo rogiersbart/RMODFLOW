@@ -17,7 +17,7 @@ rmf_plot <- function(...) {
 #' @param fluxes character; either "all" or a character vector with the flux components to plot. Only used when \code{what} is "rates" or "cumulative"
 #' @param net logical; if TRUE, it sums the inflows and outflows of the flux component to plot the net fluxes. If FALSE, it will plot both the inflows and outflows. Only used when \code{what} is "rates", "cumulative" or "total".
 #' @param type character; plot type. Either "bar" or "area"
-#' 
+#' @param timestep integer timestep index to select from a transient budget. A negative value will select the last available timestep. Defaults to NULL.
 #' @details any flux components that are zero for the entire simulation are ommited from the plot. This might be the case with constant head cells, since these are always written to the budget even if no constant head cells are specified in the model.
 #'          By default, geom_area is used for plotting (type = "area"). If there is only one stress period and this stress period is steady-state however, this will return unstacked bar plots. If type is "bar", geom_col is used and stacked bar plots are returned. 
 #'          
@@ -29,10 +29,18 @@ rmf_plot.bud <-  function(bud,
                           what = 'rates',
                           fluxes = 'all',
                           net = FALSE,
-                          type = 'area') {
+                          type = 'area', 
+                          timestep = NULL) {
+  
+  if(!is.null(timestep) && length(timestep) > 1) stop('Timestep should be a single value')
   
   # nstp
   bud <- lapply(bud, function(i) cbind(i, nstp = c(0,cumsum(dis$nstp)[i$kper-1])+i$kstp))
+  
+  if(!is.null(timestep)) {
+    if(timestep < 0) timestep <- nrow(bud[[1]])
+    bud <- lapply(bud, function(i) i[timestep,])
+  }
   
   # create df for plotting
   c_names <-  !(colnames(bud$rates) %in% c('kstp','kper','nstp'))
@@ -55,7 +63,7 @@ rmf_plot.bud <-  function(bud,
   }
   
   df <- lapply(bud, tidy_df)
-  
+
   # plot
   
   if(what %in% c('difference', 'discrepancy', 'total')) {
@@ -66,11 +74,11 @@ rmf_plot.bud <-  function(bud,
     df$volume <- factor(df$volume)
     
     x_label <- 'nstp'
-    x <- sym('nstp')
-    gm_line <- geom_path()
+    x <- ggplot2::sym('nstp')
+    gm_line <- ggplot2::geom_path()
     
     # check if ss 
-    if(dis$nper == 1 && dis$sstr == "SS") {
+    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timestep)) {
       if(type == "area") {
         type <- 'bar'
         df$nstp <- factor(df$nstp)
@@ -119,13 +127,13 @@ rmf_plot.bud <-  function(bud,
     if(length(fluxes) > 1 || fluxes != 'all') df <- subset(df, flux %in% fluxes)
     
     x_label <- 'nstp'
-    x <- sym('nstp')
+    x <- ggplot2::sym('nstp')
     
     # check if ss 
-    if(dis$nper == 1 && dis$sstr == "SS") {
+    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timestep)) {
       if(type == "area") {
         type <- 'bar'
-        x <- sym('flux')
+        x <- ggplot2::sym('flux')
         x_label <- 'flux'
       } else {
         df$nstp <- factor(df$nstp)
@@ -166,735 +174,492 @@ rmf_plot.bud <-  function(bud,
   return(p)
 }
 
-#' Plot a 2D section of an RMODFLOW chd object
+#' Plot a flux component of a cell-by-cell budget object
+#'
+#' @param cbc a \code{RMODFLOW} cell-by-cell budget object
+#' @param dis a \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param flux character denoting which flux to plot. See details.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param active_only logical; indicating if only the active cells should be plotted for list-directed components of the cbc object. Non-active cells are set to NA. Defaults to FALSE.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}
 #' 
-#' \code{rmf_plot.chd} plots a 2D section of an \code{RMODFLOW} chd object using \code{rmf_plot.rmf-3d-array}
+#' @details Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+#'
+#'  There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot cbc
+#' @export
+#'
+rmf_plot.cbc <- function(cbc, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         flux = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         active_only = FALSE,
+                         ...) {
+  
+  if(is.null(flux)) stop('Please specify a flux to plot.', call. = FALSE)
+  obj <- cbc[[flux]]
+  
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(inherits(obj, 'rmf_list')) {
+      if(!(l %in% obj$nstp)) stop('No output written for specified time step.', call. = FALSE)
+      obj <- subset(obj, nstp == l)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', active_only = active_only, ...)
+    } else {
+      if(!(l %in% attr(obj, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+    
+  } else {
+    if(inherits(obj, 'rmf_list')) {
+      convert <- function(l) {
+         subset(obj, nstp == l) %>%
+          rmf_as_array(dis = dis, sparse = FALSE, na_value = ifelse(active_only, NA, 0), variable = which(colnames(obj) == 'flow'))
+      } 
+      obj <- lapply(attr(obj, 'nstp'), convert) %>%
+                abind::abind(along = 4) %>%
+                structure(dimnames = NULL, totim = attr(obj, 'totim')) %>%
+                rmf_create_array() 
+                
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+      
+    } else {
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+  }
+}
+
+#' Plot a RMODFLOW chd object
 #' 
 #' @param chd an \code{RMODFLOW} chd object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the constant-head cells' locations), "layer", "row", "column", "shead", "ehead", "shdfact" (for parameter data), "ehdfact" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npchd} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{chd$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot chd
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.chd = function(chd,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.chd <- function(chd,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = TRUE,
+                         fun = mean,
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(chb$npchb) || (!is.null(chb$npchb) && chb$npchb == 0))) stop('RMODFLOW chb object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      chd_df = data.frame(layer = unlist(chd$layer_parm), row = unlist(chd$row_parm), column = unlist(chd$column_parm), shdfact = unlist(chd$shdfact_parm), ehdfact = unlist(chd$ehdfact_parm) )
-      
-      # add head values & parameter names & parameter values
-      chd_df$shead = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$parval[x]*chd$shdfact_parm[[x]][1,]))
-      chd_df$ehead = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$parval[x]*chd$ehdfact_parm[[x]][1,]))
-      chd_df$parnam = rep(chd$parnam, chd$nlst) # as.character(unlist(lapply(seq_along(chd$parnam), function(x) rep(chd$parnam[x], chd$nlst[x]))))   
-      chd_df$parval = rep(chd$parval, chd$nlst) # as.numeric(unlist(lapply(seq_along(chd$parval), function(x) rep(chd$parval[x], chd$nlst[x]))))   
-      
-      
-    } else { # time varying
-      chd_df = data.frame(layer = unlist(lapply(seq_along(chd$layer_parm), function(x) chd$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(chd$row_parm), function(x) chd$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(chd$column_parm), function(x) chd$column_parm[[x]][instnum[x],])), shdfact = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$shdfact_parm[[x]][instnum[x],])), ehdfact = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$ehdfact_parm[[x]][instnum[x],])) )
-      
-      # add head values & parameter names & instance names & parameter values
-      chd_df$shead = unlist(lapply(seq_along(chd$shdfact_parm), function(x) chd$parval[x]*chd$shdfact_parm[[x]][instnum[x],]))
-      chd_df$ehead = unlist(lapply(seq_along(chd$ehdfact_parm), function(x) chd$parval[x]*chd$ehdfact_parm[[x]][instnum[x],]))
-      chd_df$parnam = rep(chd$parnam, chd$nlst)  # as.character(unlist(lapply(seq_along(chd$parnam), function(x) rep(chd$parnam[x], chd$nlst[x]))))
-      chd_df$instnam = as.character(unlist(lapply(seq_along(chd$instnam)), function(x) rep(chd$instnam[[x]][instnum[x]], chd$nlst[x])))
-      chd_df$parval = rep(chd$parval, chd$nlst)  # as.numeric(unlist(lapply(seq_along(chd$parval), function(x) rep(chd$parval[x], chd$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(chd$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(chd$iname) || (!is.null(chd$iname) && (is.null(chd$iname[[sp]]) || all(is.na(unlist(chd$iname[[sp]])))) )){
-        
-        chd_df_parm = data.frame(layer = unlist(chd$layer_parm[which(chd$parnam %in% chd$pname[[sp]])]), row = unlist(chd$row_parm[which(chd$parnam %in% chd$pname[[sp]])]), column = unlist(chd$column_parm[which(chd$parnam %in% chd$pname[[sp]])]), shdfact = unlist(chd$shdfact_parm[which(chd$parnam %in% chd$pname[[sp]])]), ehdfact = unlist(chd$ehdfact_parm[which(chd$parnam %in% chd$pname[[sp]])]) )
-        
-        # add head values & parameter names & parameter values
-        chd_df_parm$shead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][1,])))
-        chd_df_parm$ehead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][1,])))
-        chd_df_parm$parnam = as.character(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$pname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  # long code instead of a simple rep(chd$pname[[sp]], chd$nlst[which(chd$parnam %in% chd$pname[[sp]])]) because of possible ordering issues in chd$pname relative to chd$nlst
-        chd_df_parm$parval = as.numeric(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$parval[which(chd$parnam == chd$pname[[sp]][x])], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        chd_df_parm = data.frame(layer = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$layer_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$row_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$column_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), shdfact = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])), ehdfact = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])) )
-        
-        # add head values & parameter names & instance names & parameter values
-        chd_df_parm$shead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$shdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])))
-        chd_df_parm$ehead = unlist(lapply(seq_along(chd$pname[[sp]]), function(x) chd$parval[which(chd$parnam == chd$pname[[sp]][x])]*unlist(chd$ehdfact_parm[[which(chd$parnam == chd$pname[[sp]][x])]][ifelse(is.null(chd$iname[[sp]][x]) || is.na(chd$iname[[sp]][x]), 1, which(chd$instnam[[which(chd$parnam == chd$pname[[sp]][x])]] == chd$iname[[sp]][x]) ), ])))
-        chd_df_parm$parnam = as.character(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$pname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  # long code instead of a simple rep(chd$pname[[sp]], chd$nlst[which(chd$parnam %in% chd$pname[[sp]])]) because of possible ordering issues in chd$pname relative to chd$nlst
-        chd_df_parm$instnam = as.character(unlist(lapply(seq_along(chd$iname[[sp]]), function(x) rep(chd$iname[[sp]][x], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))
-        chd_df_parm$parval = as.numeric(unlist(lapply(seq_along(chd$pname[[sp]]), function(x) rep(chd$parval[which(chd$parnam == chd$pname[[sp]][x])], chd$nlst[which(chd$parnam == chd$pname[[sp]][x])]) )))  
-        
-      }
-      
-      chd_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(chd$itmp[sp] != 0){
-      sp = tail(subset(which(chd$itmp >= 0), which(chd$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(chd$itmp[sp] > 0){
-        chd_df_sp = data.frame(layer = unlist(chd$layer_sp[[sp]]), row = unlist(chd$row_sp[[sp]]), column = unlist(chd$column_sp[[sp]]), shead = unlist(chd$shead_sp[[sp]]), ehead = unlist(chd$ehead_sp[[sp]]) )
-        chd_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind chd_df_parm & chd_df_sp into chd_df (check if they exist first)
-    if(exists('chd_df_parm') && exists('chd_df_sp')){
-      
-      chd_df = rbind(chd_df_parm[colnames(chd_df_sp)], chd_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('chd_df_parm')){
-      chd_df = chd_df_sp
-    } else if(!exists('chd_df_sp')){
-      chd_df = chd_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=chd_df$row, j=chd_df$column, k=chd_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable %in% c('shead', 'ehead') && any(duplicated(id))){
-    
-    chb_df$id = id
-    id_dupl = id[duplicated(id)]
-    chb_df_dupl = chb_df[id %in% id_dupl,]
-    aggr = aggregate(chb_df_dupl[[variable]], by=list(chb_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      chb_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    chb_df = chb_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=chb_df$row, j=chb_df$column, k=chb_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(chd_df[,variable])), as.vector(table(factor(chd_df[,variable], levels=as.character(unique(chd_df[,variable])))))), labels = unique(chd_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(chd_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = chd, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
 
-#' Plot a 2D section of an RMODFLOW drn object
-#' 
-#' \code{rmf_plot.drn} plots a 2D section of an \code{RMODFLOW} drn object using \code{rmf_plot.rmf-3d-array}
+#' Plot a MODFLOW drawdown file object
+#'
+#' @param ddn \code{RMODFLOW} ddn object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
+#'
+#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot ddn
+#' @export
+#'
+rmf_plot.ddn <- function(ddn, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         ...) {
+  
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+    
+  } 
+  
+  rmf_plot.rmf_4d_array(ddn, dis = dis, i=i, j=j, k=k, l=l, ...)
+  
+}
+
+#' Plot a RMODFLOW drn object
 #' 
 #' @param drn an \code{RMODFLOW} drn object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the drain locations), "layer", "row", "column", "elevation", "condfact" (for parameter data), "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npdrn} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{drn$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'elevation' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot drn
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.drn = function(drn,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.drn <- function(drn,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = TRUE,
+                         fun = ifelse(variable == 'elevation', mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(drn$npdrn) || (!is.null(drn$npdrn) && drn$npdrn == 0))) stop('RMODFLOW drn object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      drn_df = data.frame(layer = unlist(drn$layer_parm), row = unlist(drn$row_parm), column = unlist(drn$column_parm), elevation = unlist(drn$elevation_parm), condfact = unlist(drn$condfact_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      drn_df$conductance = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$parval[x]*drn$condfact_parm[[x]][1,]))
-      drn_df$parnam = rep(drn$parnam, drn$nlst) # as.character(unlist(lapply(seq_along(drn$parnam), function(x) rep(drn$parnam[x], drn$nlst[x]))))   
-      drn_df$parval = rep(drn$parval, drn$nlst) # as.numeric(unlist(lapply(seq_along(drn$parval), function(x) rep(drn$parval[x], drn$nlst[x]))))   
-      
-      
-    } else { # time varying
-      drn_df = data.frame(layer = unlist(lapply(seq_along(drn$layer_parm), function(x) drn$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(drn$row_parm), function(x) drn$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(drn$column_parm), function(x) drn$column_parm[[x]][instnum[x],])), elevation = unlist(lapply(seq_along(drn$elevation_parm), function(x) drn$elevation_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$condfact_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      drn_df$conductance = unlist(lapply(seq_along(drn$condfact_parm), function(x) drn$parval[x]*drn$condfact_parm[[x]][instnum[x],]))
-      drn_df$parnam = rep(drn$parnam, drn$nlst)  # as.character(unlist(lapply(seq_along(drn$parnam), function(x) rep(drn$parnam[x], drn$nlst[x]))))
-      drn_df$instnam = as.character(unlist(lapply(seq_along(drn$instnam)), function(x) rep(drn$instnam[[x]][instnum[x]], drn$nlst[x])))
-      drn_df$parval = rep(drn$parval, drn$nlst)  # as.numeric(unlist(lapply(seq_along(drn$parval), function(x) rep(drn$parval[x], drn$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(drn$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(drn$iname) || (!is.null(drn$iname) && (is.null(drn$iname[[sp]]) || all(is.na(unlist(drn$iname[[sp]])))) )){
-        
-        drn_df_parm = data.frame(layer = unlist(drn$layer_parm[which(drn$parnam %in% drn$pname[[sp]])]), row = unlist(drn$row_parm[which(drn$parnam %in% drn$pname[[sp]])]), column = unlist(drn$column_parm[which(drn$parnam %in% drn$pname[[sp]])]), elevation = unlist(drn$elevation_parm[which(drn$parnam %in% drn$pname[[sp]])]), condfact = unlist(drn$condfact_parm[which(drn$parnam %in% drn$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        drn_df_parm$conductance = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$parval[which(drn$parnam == drn$pname[[sp]][x])]*unlist(drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][1,])))
-        drn_df_parm$parnam = as.character(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$pname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  # long code instead of a simple rep(drn$pname[[sp]], drn$nlst[which(drn$parnam %in% drn$pname[[sp]])]) because of possible ordering issues in drn$pname relative to drn$nlst
-        drn_df_parm$parval = as.numeric(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$parval[which(drn$parnam == drn$pname[[sp]][x])], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        drn_df_parm = data.frame(layer = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$layer_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$row_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$column_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), elevation = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$elevation_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        drn_df_parm$conductance = unlist(lapply(seq_along(drn$pname[[sp]]), function(x) drn$parval[which(drn$parnam == drn$pname[[sp]][x])]*unlist(drn$condfact_parm[[which(drn$parnam == drn$pname[[sp]][x])]][ifelse(is.null(drn$iname[[sp]][x]) || is.na(drn$iname[[sp]][x]), 1, which(drn$instnam[[which(drn$parnam == drn$pname[[sp]][x])]] == drn$iname[[sp]][x]) ), ])))
-        drn_df_parm$parnam = as.character(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$pname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  # long code instead of a simple rep(drn$pname[[sp]], drn$nlst[which(drn$parnam %in% drn$pname[[sp]])]) because of possible ordering issues in drn$pname relative to drn$nlst
-        drn_df_parm$instnam = as.character(unlist(lapply(seq_along(drn$iname[[sp]]), function(x) rep(drn$iname[[sp]][x], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))
-        drn_df_parm$parval = as.numeric(unlist(lapply(seq_along(drn$pname[[sp]]), function(x) rep(drn$parval[which(drn$parnam == drn$pname[[sp]][x])], drn$nlst[which(drn$parnam == drn$pname[[sp]][x])]) )))  
-        
-      }
-      
-      drn_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(drn$itmp[sp] != 0){
-      sp = tail(subset(which(drn$itmp >= 0), which(drn$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(drn$itmp[sp] > 0){
-        drn_df_sp = data.frame(layer = unlist(drn$layer_sp[[sp]]), row = unlist(drn$row_sp[[sp]]), column = unlist(drn$column_sp[[sp]]), elevation = unlist(drn$elevation_sp[[sp]]), conductance = unlist(drn$cond_sp[[sp]]) )
-        drn_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind drn_df_parm & drn_df_sp into drn_df (check if they exist first)
-    if(exists('drn_df_parm') && exists('drn_df_sp')){
-      
-      drn_df = rbind(drn_df_parm[colnames(drn_df_sp)], drn_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('drn_df_parm')){
-      drn_df = drn_df_sp
-    } else if(!exists('drn_df_sp')){
-      drn_df = drn_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=drn_df$row, j=drn_df$column, k=drn_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    drn_df$id = id
-    id_dupl = id[duplicated(id)]
-    drn_df_dupl = drn_df[id %in% id_dupl,]
-    aggr = aggregate(drn_df_dupl[[variable]], by=list(drn_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      drn_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    drn_df = drn_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=drn_df$row, j=drn_df$column, k=drn_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(drn_df[,variable])), as.vector(table(factor(drn_df[,variable], levels=as.character(unique(drn_df[,variable])))))), labels = unique(drn_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(drn_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = drn, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
 
-#' Plot a 2D section of an RMODFLOW evt object
-#' 
-#' \code{rmf_plot.evt} plots a 2D section of an \code{RMODFLOW} evt object using \code{rmf_plot.rmf-3d-array}
+
+#' Plot a RMODFLOW evt object
 #' 
 #' @param evt an \code{RMODFLOW} evt object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param mlt optional; an \code{RMODFLOW} mlt object; used for plotting parameter data
-#' @param zon optional; an \code{RMODFLOW} zon object; used for plotting parameter data
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (plots the evapotranspiration cells' locations), "evt" (default) which defines the values of maximum ET, "surf" (for stress period data), "exdp" (for stress period data), "mltnam" (for parameter data), "zonnam" (for parameter data), "iz" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "evt"
-#' @param instnum numeric vector of length \code{npevt} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable character specifying which variable to plot. Possible values are 'evt' (default), 'surf', 'exdp' and 'ievt' if defined. 
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_2d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot evt
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.evt = function(evt,
-                        dis,
-                        mlt = NULL,
-                        zon = NULL,
-                        all_parm = F, 
-                        variable = 'evt',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.evt <- function(evt,
+                         dis,
+                         kper = NULL,
+                         variable = 'evt',
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(evt$npevt) || (!is.null(evt$npevt) && evt$npevt == 0))) stop('RMODFLOW evt object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  if(all_parm && variable %in% c('surf', 'exdp')) stop('Variables surf and exdp can only be plotted for stress period data. Please set all_parm to FALSE')
-  
-  ##### calculate new multiplier arrays if FUNCTION is specified in mlt ####
-  if(!all(unlist(evt$mltarr) == "NONE") && (!is.null(mlt) && !is.null(mlt$functn) && any(mlt$functn) )  ){
-    
-    rmlts = lapply(seq_along(dim(mlt$rmlt)), function(x) mlt$rmlt[,,x])
-    names(rmlts) = mlt$mltnam
-    
-    for(i in 1:mlt$nml){
-      if(!is.null(mlt$functn) && mlt$functn[i]){
-        funct = strsplit(mlt$operator[[i]], split=' ')[[1]]
-        for(i in 1:((length(funct)-1)/2)){
-          funct = append(append('(', funct), ')', after=i*1+3*i)
-        }
-        mlt$rmlt[,,i] = eval(parse(text=funct), envir = rmlts)
-      }
-    }
+  if(is.null(kper)) {
+    if(dis$nper > 1) warning('Setting kper to last stress-period', call. = FALSE)
+    kper <- dis$nper
   }
   
-  ##### create data frame  #####
-  
-  #### 0.1 check if variable can only be defined from stress period data ####
-  if(!(variable %in% c('surf', 'exdp'))){
+  if(variable == 'evt') {
+    active_arrays <- colnames(evt$kper)[-1]
+    active_arrays <- active_arrays[which(evt$kper[kper,-1] == TRUE)] 
     
-    #### 1. parameters defined  ####
-    if(!is.null(evt$npevt) && evt$npevt > 0){   
-      
-      if(is.null(zon) && !all(unlist(evt$zonarr)=='ALL')) stop('Please specify an RMODFLOW zon object')
-      if(is.null(mlt) && !all(unlist(evt$mltarr)=='NONE')) stop('Please specify an RMODFLOW mlt object')
-      
-      ### 1.1 for stress period data ###
-      if(!all_parm && evt$npevt > 0){ 
-        
-        ## 1.1.1 stress data with time-varying parameters ##
-        if(!is.null(evt$iname) && !(is.null(evt$iname[[sp]]) || all(is.na(unlist(evt$iname[[sp]]))))){ 
-          
-          sp_new = tail(subset(which(evt$inevtr > 0), which(evt$inevtr > 0) <= sp), 1)  # set stress period to last stress period with inevtr >= 0 before current stress period
-          parnams = evt$pname[[sp_new]]
-          instnum = unlist(lapply(1:evt$inevtr[sp_new], function(x) which(evt$instnam[[which(evt$parnam==parnams[x])]] == evt$iname[[sp_new]][x])))
-          
-          # lists with evt$npevt elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-          zones = lapply(1:evt$inevtr[sp_new], function(x) lapply(1:length(evt$zonarr[[which(evt$parnam == parnams[x])]][instnum[x],]), function(y)  if(evt$zonarr[[which(evt$parnam == parnams[x])]][instnum[x],y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == evt$zonarr[[which(evt$parnam == parnams[x])]][instnum[x],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-          multp = lapply(1:evt$inevtr[sp_new], function(x) lapply(1:length(evt$mltarr[[which(evt$parnam == parnams[x])]][instnum[x],]), function(y)  if(evt$mltarr[[which(evt$parnam == parnams[x])]][instnum[x],y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == evt$mltarr[[which(evt$parnam == parnams[x])]][instnum[x],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-          
-          ## 1.1.2  stress data with non-time-varying parameters ##
-        } else {  
-          
-          sp_new = tail(subset(which(evt$inevtr > 0), which(evt$inevtr > 0) <= sp), 1)  # set stress period to last stress period with inevtr >= 0 before current stress period
-          parnams = evt$pname[[sp_new]]
-          
-          # lists with evt$npevt elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-          zones = lapply(1:evt$inevtr[sp_new], function(x) lapply(1:length(evt$zonarr[[which(evt$parnam == parnams[x])]][1,]), function(y)  if(evt$zonarr[[which(evt$parnam == parnams[x])]][1,y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == evt$zonarr[[which(evt$parnam == parnams[x])]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-          multp = lapply(1:evt$inevtr[sp_new], function(x) lapply(1:length(evt$mltarr[[which(evt$parnam == parnams[x])]][1,]), function(y)  if(evt$mltarr[[which(evt$parnam == parnams[x])]][1,y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == evt$mltarr[[which(evt$parnam == parnams[x])]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-          
-        }
-        
-        npevt = evt$inevtr[sp_new]
-        parnam = evt$pname[[sp_new]]
-        parval = evt$parval[which(evt$parnam %in% evt$pname[[sp_new]])]
-        
-        ### 1.2  for parameter data ###
-      } else if((all_parm && evt$npevt > 0) ){ 
-        
-        ## 1.2.1 not time-varying parameter data ##
-        if(is.null(instnum)){      
-          
-          # lists with evt$npevt elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-          zones = lapply(1:evt$npevt, function(x) lapply(1:length(evt$zonarr[[x]][1,]), function(y)  if(evt$zonarr[[x]][1,y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == evt$zonarr[[x]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-          multp = lapply(1:evt$npevt, function(x) lapply(1:length(evt$mltarr[[x]][1,]), function(y)  if(evt$mltarr[[x]][1,y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == evt$mltarr[[x]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-          
-          ## 1.2.2 time varying parameter data ##
-        } else if(!is.null(instnum)){
-          
-          # lists with evt$npevt elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-          zones = lapply(1:evt$npevt, function(x) lapply(1:length(evt$zonarr[[x]][evt$instnam[[x]][instnum[x]],]), function(y)  if(evt$zonarr[[x]][evt$instnam[[x]][instnum[x]],y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == evt$zonarr[[x]][evt$instnam[[x]][instnum[x]],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-          multp = lapply(1:evt$npevt, function(x) lapply(1:length(evt$mltarr[[x]][evt$instnam[[x]][instnum[x]],]), function(y)  if(evt$mltarr[[x]][evt$instnam[[x]][instnum[x]],y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == evt$mltarr[[x]][evt$instnam[[x]][instnum[x]],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-          
-        }
-        npevt = evt$npevt
-        parnam = evt$parnam
-        parval = evt$parval
-      }
-      
-      # if multiple clusters are used (rarely the case), than bind these clusters to 1 array [needs to be tested more]
-      zones = lapply(zones, function(x) rmf_create_array(unlist(x), dim=c(dis$nrow, dis$ncol)) )
-      multp = lapply(multp, function(x) rmf_create_array(unlist(x), dim=c(dis$nrow, dis$ncol)) )
-      
-      # for each parameter, create an array with final parameter values for the active cells defined by the corresponding zone array and multiply them with the corresponding multiplier array
-      for(i in 1:npevt){
-        
-        if(!is.character(zones[[i]])){ # zone
-          if(!is.character(multp[[i]])){ # zone + multiplier
-            zones[[i]][which(!(zones[[i]] %in% as.numeric(strsplit(as.character(evt$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = NA
-            zones[[i]][which((zones[[i]] %in% as.numeric(strsplit(as.character(evt$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = evt$parval[i]*multp[[i]][which(zones[[i]] %in% as.numeric(strsplit(as.character(evt$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]]))]
-            
-          } else { # zone no multiplier
-            zones[[i]][which(!(zones[[i]] %in% as.numeric(strsplit(as.character(evt$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = NA
-            zones[[i]][which((zones[[i]] %in% as.numeric(strsplit(as.character(evt$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = evt$parval[i]
-          }
-        } else { # no zone
-          if(!is.character(multp[[i]])){ # no zone + multiplier
-            zones[[i]] = evt$parval[i]*multp[[i]]
-          } else { # no zone + no multiplier
-            zones[[i]] = rmf_create_array(evt$parval[i], dim=c(dis$nrow, dis$ncol))
-          }
-        } 
-        
-      }
-      
-      # create data frame from npevt arrays
-      evt_df = data.frame(id = rep((1:(dis$nrow*dis$ncol)), npevt), 
-                          parnam = rep(parnam, each=dis$nrow*dis$ncol),
-                          parval=rep(parval, each=dis$nrow*dis$ncol),
-                          evt = unlist(zones))
-      evt_df = cbind(evt_df, rmf_convert_id_to_ijk(evt_df$id, dis=dis, type='modflow'))
-      
-      # # add multiplier and zone names
-      # if(variable %in% c('zonnam', 'mltnam')){
-      #   if(any(evt$nclu > 1)){
-      #     stop('Plotting of multiple zone/multiplier names for a single parameter not yet implemented. Please specify a different variable to plot.')
-      #   } else {
-      #     evt_df = cbind(evt_df, )
-      #   }
-      # } else if(variable == 'iz'){
-      #   
-      # } 
-      
-      # remove NA rows
-      evt_df = na.omit(evt_df)
-      
-    } else { 
-      #### 2. no parameters defined (so stress period data) ####
-      
-      if(variable %in% c('parnam', 'parval', 'instnam', 'mltnam', 'zonnam', 'iz')){
-        stop('No parameter data specified for this stress period. Please choose a different variable to plot.')
-      }
-      sp_new = tail(subset(which(evt$inevtr >= 0), which(evt$inevtr >= 0) <= sp), 1)  # set stress period to last stress period with inevtr >= 0 before current stress period
-      evtr = rmf_create_array(evt$evtr[,,sp_new], dim=c(dis$nrow, dis$ncol))
-      evt_df = data.frame(id = 1:(dis$nrow*dis$ncol), 
-                          evt = unlist(evtr))
-      evt_df = cbind(evt_df, rmf_convert_id_to_ijk(evt_df$id, dis=dis, type='modflow'))
-    } 
-  } else {
-    #### 0.2 variables can only be defined from stress period data ####
+    obj <- evt$evt[active_arrays]
     
-    if(variable == 'surf'){
-      sp_new = tail(subset(which(evt$insurf >= 0), which(evt$insurf >= 0) <= sp), 1)  # set stress period to last stress period with insurf >= 0 before current stress period
-      surf = rmf_create_array(evt$surf[,,sp_new])
-      evt_df = data.frame(id = 1:(dis$nrow*dis$ncol),
-                          surf = unlist(surf))
-      evt_df = cbind(evt_df, rmf_convert_id_to_ijk(evt_df$id, dis=dis, type='modflow'))
-    } else if(variable == 'exdp'){
-      sp_new = tail(subset(which(evt$inexdp >= 0), which(evt$inexdp >= 0) <= sp), 1)  # set stress period to last stress period with inexdp >= 0 before current stress period
-      exdp = rmf_create_array(evt$exdp[,,sp_new])
-      evt_df = data.frame(id = 1:(dis$nrow*dis$ncol),
-                          exdp = unlist(exdp))
-      evt_df = cbind(evt_df, rmf_convert_id_to_ijk(evt_df$id, dis=dis, type='modflow'))
-    }
+    # sum if multiple arrays are active
+    obj <- Reduce('+', obj)
+    
+  } else if(variable == 'surf') {
+    obj <- evt$surf[[kper]]
+    
+  } else if(variable == 'exdp') {
+    obj <- evt$exdp[[kper]]
+    
+  } else if(variable == 'irch') {
+    if(evt$nevtop != 2) stop('No ievt arrays defined in evt object; nevtop does not equal 2')
+    obj <- evt$ievt[[kper]]
+    
   } 
   
-  
-  
-  ##### transform data frame of parameter data into rmf_array #####
-  
-  # adjust id for nevtop != 1
-  if(evt$nevtop == 2){
-    sp_new = tail(subset(which(evt$inievt >= 0), which(evt$inievt >= 0) <= sp), 1)  # set stress period to last stress period with inievt >= 0 before current stress period
-    ievt = evt$ievt[,,sp_new]
-    evt_df$k = ievt[evt_df$id]
-    
-  } else if(evt$nevtop == 3 ){
-    if(!('bas' %in% names(list(...))) ){
-      warning('nevtop = 3; please specify an RMODFLOW bas object to correctly plot the highest active evapotranspiration cells')
-    } else {
-      
-      bas = list(...)$bas
-      
-      # highest active cells
-      high_act = data.frame(active = c(bas$ibound), id = 1:(dis$nrow*dis$ncol*dis$nlay))
-      high_act = cbind(high_act, rmf_convert_id_to_ijk(id=high_act$id, dis=dis, type='modflow'))
-      high_act$id2d = rep(1:(dis$nrow*dis$ncol), dis$nlay)
-      high_act = subset(high_act, high_act$active != 0)
-      high_act = do.call(rbind, lapply(split(high_act, high_act$id2d), function(x) x[which.min(x$k), c('id','i','j','k', 'id2d')]))
-      high_act = high_act[order(high_act$id),]
-      
-      # create new id2d column in evt_df and merge with high_active$k on that column
-      evt_df$id2d = rmf_convert_ijk_to_id(i=evt_df$i, j=evt_df$j, k=1, dis=dis, type='modflow')
-      evt_df = evt_df[which(evt_df$id2d %in% high_act$id2d),] # only use cells that are defined in bas$ibound (via high_act)
-      evt_df$k = high_act$k[match(evt_df$id2d, high_act$id2d)] # replace values
-      
-    }
-  }
-  
-  id =  rmf_convert_ijk_to_id(i=evt_df$i, j=evt_df$j, k=evt_df$k, dis=dis, type='modflow')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'evt' && any(duplicated(id))){
-    
-    evt_df$id = id
-    id_dupl = id[duplicated(id)]
-    evt_df_dupl = evt_df[id %in% id_dupl,]
-    aggr = aggregate(evt_df_dupl[[variable]], by=list(evt_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      evt_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    evt_df = evt_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=evt_df$i, j=evt_df$j, k=evt_df$k, dis=dis, type='modflow')
-    
-  }
-  
-  # create rmf_array
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam', 'mltnam', 'zonnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(evt_df[,variable])), as.vector(table(factor(evt_df[,variable], levels=as.character(unique(evt_df[,variable])))))), labels = unique(evt_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(evt_df[variable])
-  }
-  
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam', 'mltnam', 'zonnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...) 
+  rmf_plot(obj, dis = dis, ...)
   
 }
 
-#' Plot a 2D section of an RMODFLOW ghb object
-#' 
-#' \code{rmf_plot.ghb} plots a 2D section of an \code{RMODFLOW} ghb object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW ghb object
 #' 
 #' @param ghb an \code{RMODFLOW} ghb object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the head-boundary locations), "layer", "row", "column", "bhead", "condfact" (for parameter data), "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npghb} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{ghb$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'bhead' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot ghb
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.ghb = function(ghb,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.ghb <- function(ghb,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = TRUE,
+                         fun = ifelse(variable == 'bhead', mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(ghb$npghb) || (!is.null(ghb$npghb) && ghb$npghb == 0))) stop('RMODFLOW ghb object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      ghb_df = data.frame(layer = unlist(ghb$layer_parm), row = unlist(ghb$row_parm), column = unlist(ghb$column_parm), bhead = unlist(ghb$bhead_parm), condfact = unlist(ghb$condfact_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      ghb_df$conductance = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$parval[x]*ghb$condfact_parm[[x]][1,]))
-      ghb_df$parnam = rep(ghb$parnam, ghb$nlst) # as.character(unlist(lapply(seq_along(ghb$parnam), function(x) rep(ghb$parnam[x], ghb$nlst[x]))))   
-      ghb_df$parval = rep(ghb$parval, ghb$nlst) # as.numeric(unlist(lapply(seq_along(ghb$parval), function(x) rep(ghb$parval[x], ghb$nlst[x]))))   
-      
-      
-    } else { # time varying
-      ghb_df = data.frame(layer = unlist(lapply(seq_along(ghb$layer_parm), function(x) ghb$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(ghb$row_parm), function(x) ghb$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(ghb$column_parm), function(x) ghb$column_parm[[x]][instnum[x],])), bhead = unlist(lapply(seq_along(ghb$bhead_parm), function(x) ghb$bhead_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$condfact_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      ghb_df$conductance = unlist(lapply(seq_along(ghb$condfact_parm), function(x) ghb$parval[x]*ghb$condfact_parm[[x]][instnum[x],]))
-      ghb_df$parnam = rep(ghb$parnam, ghb$nlst)  # as.character(unlist(lapply(seq_along(ghb$parnam), function(x) rep(ghb$parnam[x], ghb$nlst[x]))))
-      ghb_df$instnam = as.character(unlist(lapply(seq_along(ghb$instnam)), function(x) rep(ghb$instnam[[x]][instnum[x]], ghb$nlst[x])))
-      ghb_df$parval = rep(ghb$parval, ghb$nlst)  # as.numeric(unlist(lapply(seq_along(ghb$parval), function(x) rep(ghb$parval[x], ghb$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(ghb$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(ghb$iname) || (!is.null(ghb$iname) && (is.null(ghb$iname[[sp]]) || all(is.na(unlist(ghb$iname[[sp]])))) )){
-        
-        ghb_df_parm = data.frame(layer = unlist(ghb$layer_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), row = unlist(ghb$row_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), column = unlist(ghb$column_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), bhead = unlist(ghb$bhead_parm[which(ghb$parnam %in% ghb$pname[[sp]])]), condfact = unlist(ghb$condfact_parm[which(ghb$parnam %in% ghb$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        ghb_df_parm$conductance = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])]*unlist(ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][1,])))
-        ghb_df_parm$parnam = as.character(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$pname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  # long code instead of a simple rep(ghb$pname[[sp]], ghb$nlst[which(ghb$parnam %in% ghb$pname[[sp]])]) because of possible ordering issues in ghb$pname relative to ghb$nlst
-        ghb_df_parm$parval = as.numeric(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        ghb_df_parm = data.frame(layer = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$layer_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$row_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$column_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), bhead = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$bhead_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        ghb_df_parm$conductance = unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])]*unlist(ghb$condfact_parm[[which(ghb$parnam == ghb$pname[[sp]][x])]][ifelse(is.null(ghb$iname[[sp]][x]) || is.na(ghb$iname[[sp]][x]), 1, which(ghb$instnam[[which(ghb$parnam == ghb$pname[[sp]][x])]] == ghb$iname[[sp]][x]) ), ])))
-        ghb_df_parm$parnam = as.character(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$pname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  # long code instead of a simple rep(ghb$pname[[sp]], ghb$nlst[which(ghb$parnam %in% ghb$pname[[sp]])]) because of possible ordering issues in ghb$pname relative to ghb$nlst
-        ghb_df_parm$instnam = as.character(unlist(lapply(seq_along(ghb$iname[[sp]]), function(x) rep(ghb$iname[[sp]][x], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))
-        ghb_df_parm$parval = as.numeric(unlist(lapply(seq_along(ghb$pname[[sp]]), function(x) rep(ghb$parval[which(ghb$parnam == ghb$pname[[sp]][x])], ghb$nlst[which(ghb$parnam == ghb$pname[[sp]][x])]) )))  
-        
-      }
-      
-      ghb_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(ghb$itmp[sp] != 0){
-      sp = tail(subset(which(ghb$itmp >= 0), which(ghb$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(ghb$itmp[sp] > 0){
-        ghb_df_sp = data.frame(layer = unlist(ghb$layer_sp[[sp]]), row = unlist(ghb$row_sp[[sp]]), column = unlist(ghb$column_sp[[sp]]), bhead = unlist(ghb$bhead_sp[[sp]]), conductance = unlist(ghb$cond_sp[[sp]]) )
-        ghb_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind ghb_df_parm & ghb_df_sp into ghb_df (check if they exist first)
-    if(exists('ghb_df_parm') && exists('ghb_df_sp')){
-      
-      ghb_df = rbind(ghb_df_parm[colnames(ghb_df_sp)], ghb_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('ghb_df_parm')){
-      ghb_df = ghb_df_sp
-    } else if(!exists('ghb_df_sp')){
-      ghb_df = ghb_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=ghb_df$row, j=ghb_df$column, k=ghb_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    ghb_df$id = id
-    id_dupl = id[duplicated(id)]
-    ghb_df_dupl = ghb_df[id %in% id_dupl,]
-    aggr = aggregate(ghb_df_dupl[[variable]], by=list(ghb_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      ghb_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    ghb_df = ghb_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=ghb_df$row, j=ghb_df$column, k=ghb_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(ghb_df[,variable])), as.vector(table(factor(ghb_df[,variable], levels=as.character(unique(ghb_df[,variable])))))), labels = unique(ghb_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(ghb_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = ghb, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
+
+#' Plot a MODFLOW head file object
+#'
+#' @param hed \code{RMODFLOW} hed object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
+#' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
+#' @param saturated logical indicating if the saturated grid should be used. Defaults to FALSE. See details.
+#' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
+#'
+#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
+#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#'  A negative \code{kstp} will plot the final time step of the stress-period.
+#'  
+#'  If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful 
+#'  for cross-sections with \code{grid = TRUE}.
+#'  
+#'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+#'
+#' @return ggplot2 object or layer
+#' @method rmf_plot hed
+#' @export
+#'
+rmf_plot.hed <- function(hed, 
+                         dis,
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         l = NULL,
+                         kper = NULL,
+                         kstp = NULL,
+                         saturated = FALSE,
+                         ...) {
+  
+  # skip if ijk are specified and a time series should be plotted
+  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- sum(dis$nstp)
+    }
+    
+    if(is.null(l)) {
+      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+    }
+    
+    if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+    
+    if(saturated) {  
+      satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+      rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, ...)
+    } else {
+      rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+    }
+  } else {
+    rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+  }
+  
+}
+
+#' Plot a RMODFLOW hfb object
+#' 
+#' @param hfb an \code{RMODFLOW} hfb object
+#' @param dis a \code{RMODFLOW} dis object
+#' @param variable single character or numeric indicating which column of \code{hfb$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'hydchr'
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#' 
+#' @return ggplot2 object or layer; 
+#' @export
+#' @method rmf_plot hfb
+
+rmf_plot.hfb <- function(hfb,
+                         dis,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         type = 'fill',
+                         active_only = TRUE,
+                         fun = ifelse(variable == 'hydchr', sum, mean),
+                         prj = NULL,
+                         crs = NULL,
+                         size = 1,
+                         colour = 'black',
+                         crop = TRUE,
+                         add = FALSE,
+                         ...) {
+  
+  if(is.null(i) & is.null(j) & is.null(k)) {
+    stop('Please provide i, j or k.', call. = FALSE)
+  }
+  
+  na_value <- ifelse(active_only, NA, 0)
+  
+  if(!is.null(k)) {
+    layer <- k
+    data <- subset(hfb$data, k == layer)
+    if(!is.character(variable)) variable <- colnames(data)[variable]
+    data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
+    data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=layer, dis = dis, type = 'modflow')
+    
+    # coordinate tibble
+  
+    get_face <- function(data) {
+      i <- data$i
+      j <- data$j
+      irow2 <- data$irow2
+      icol2 <- data$icol2
+      df <- as.data.frame(df[which(as.character(df$id) == data$id),])
+      
+      if(i < irow2) {
+        # back
+        return(df[c(1,4),])
+        
+      } else if(i > irow2) {
+        # front
+        return(df[c(2,3),]) 
+        
+      } else if(j < icol2) {
+        # right
+        return(df[c(3,4),]) 
+        
+      } else if(j > icol2) {
+        # left
+        return(df[c(1,2),])
+        
+      }
+    }
+    
+    df_mask <- rmf_as_array(data, dis = dis, sparse = TRUE, na_value = 0)
+    df_mask[which(df_mask != 0)] <- 1
+    
+    df <- data %>%
+      rmf_as_array(dis = dis, select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), 
+                   sparse = TRUE, na_value = na_value, fun = fun) %>%
+      rmf_as_tibble(dis = dis, prj = prj, crs = crs, mask = df_mask)
+    
+    df <- lapply(1:nrow(data), function(i) get_face(data[i,]))
+    df <- do.call(rbind, df)
+    df$row <- rep(1:(nrow(df)/2), each = 2)
+
+    # plot
+    if(variable == 'id') {
+      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row), size = size, colour = colour)
+    } else {
+      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = value), size = size)
+    }
+    
+    if(add) {
+      return(p)
+    } else {
+      if(!crop) {
+        corners <- data.frame(x = rep(c(0, sum(dis$delr)), 2), y = rep(c(0, sum(dis$delc)), each = 2))
+        xy <- rmf_convert_grid_to_xyz(x=corners$x,y=corners$y, dis = dis, prj=prj)
+        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y)))
+        return(p)
+      } else {
+        return(ggplot2::ggplot() + p)
+      }
+    }
+    
+  } else {
+    if(!is.null(i)) {
+      ind <- i
+      data <- subset(hfb$data, i == ind)
+    } else if(!is.null(j)) {
+      ind <- j
+      data <- subset(hfb$data, j == ind)
+    }
+    
+    if(!is.character(variable)) variable <- colnames(data)[variable]
+    data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
+    
+    df <- rmf_as_array(data, dis = dis, 
+                       select = ifelse(variable == 'id', 1, which(colnames(data) == variable)), 
+                       sparse = FALSE, na_value = na_value, fun = fun)
+    if(variable == 'id') {
+      indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(df)), which(df != na_value))
+      df[indx] <- 1
+    }
+    
+    # plot
+    rmf_plot(df, dis = dis, i=i, j=j, k=k, type = type, prj=prj, crs=crs, crop=crop, add=add, ...)
+    
+  }
+}
+
 
 #' Plot a MODFLOW head predictions file
 #' 
 #' @param hpr head predictions file object
-#' @param type plot type: 'scatter' or 'residual'
+#' @param type plot type: 'scatter', 'residual' or 'histogram'
+#' @param hobdry value used to flag dry cells; defaults to -888
+#' @param bins number of bins to use in the histrogram plot; defaults to the Freedman-Diaconis rule
 #' @method rmf_plot hpr
 #' @export
-rmf_plot.hpr <- function(hpr,type='scatter') {
-  dat <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=-888),]
+rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
+  dat <- data.frame(simulated_equivalent=hpr$simulated_equivalent, observed_value=hpr$observed_value,observation_name=hpr$observation_name)[which(hpr$simulated_equivalent!=hobdry),]
   if(type=='scatter') {
     return(  ggplot2::ggplot(dat,ggplot2::aes(x=observed_value,y=simulated_equivalent))+
                ggplot2::geom_point(ggplot2::aes(colour=abs(observed_value-simulated_equivalent)))+
@@ -909,6 +674,14 @@ rmf_plot.hpr <- function(hpr,type='scatter') {
                ggplot2::scale_fill_gradientn('Misfit',colours=rev(rainbow(7)),trans='log10')+
                ggplot2::xlab('Observation name')+
                ggplot2::ylab('Simulated equivalent - observed value')
+    )
+  } else if(type=='histogram') {
+    if(is.null(bins)) bins <- nclass.FD(dat$simulated_equivalent-dat$observed_value)
+    
+    return(  ggplot2::ggplot(dat,ggplot2::aes(x=simulated_equivalent-observed_value))+
+               ggplot2::geom_histogram(ggplot2::aes(fill=..count..), bins=bins)+
+               ggplot2::scale_fill_gradientn('Count',colours=rev(rainbow(7)))+
+               ggplot2::xlab('Simulated equivalent - observed value')
     )
   }
 }
@@ -925,50 +698,76 @@ plot.hpr <- function(...) {
 #' \code{rmf_plot.huf} plots a 2D section through a MODFLOW 3D array.
 #' 
 #' @param huf an object of class huf
+#' @param dis discretization file object
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param dis discretization file object
+#' @param hgu character or integer of hgu to plot
 #' @param bas basic file object; optional
-#' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound
+#' @param mask a 3D array with 0 or F indicating inactive cells optional; 
 #' @param colour_palette a colour palette for imaging the array values
-#' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'factor' or 'grid'
 #' @param levels labels that should be used on the factor legend; huf$hgunam is used by default
-#' @param grid logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param title plot title
-#' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
-#' @param l time step number for subsetting the hed object
+#' @param type plot type: 'fill', 'factor' (default) or 'grid'
+#' @param gridlines logical; should grid lines be plotted? Alternatively, provide colour of the grid lines or set to 'huf' which plots the outline of the hgu's
 #' @param ... parameters provided to plot.rmf_2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot huf
 #' @export
 rmf_plot.huf <- function(huf,
+                         dis,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         dis,
+                         hgu = NULL,
                          bas = NULL,
-                         #mask = rmfi_ifelse0(is.null(bas),array*0+1,bas$ibound),
-                         #zlim = range(array[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)][as.logical(mask[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)])], finite=TRUE),
+                         mask = rmf_convert_huf_to_mask(huf = huf, dis = dis, bas = bas),
                          colour_palette = rmfi_rev_rainbow,
                          nlevels = 7,
-                         levels = huf$hgunam,
-                         type='fill',
-                         grid = FALSE,
-                         add=FALSE,
-                         title = NULL,
-                         hed = NULL,
-                         l = NULL,
+                         levels = setNames(huf$hgunam, 1:huf$nhuf),
+                         type='factor',
+                         gridlines = FALSE,
                          ...) {
+  if(is.null(i) && is.null(j) && is.null(k) && is.null(hgu)) stop('Please provide i, j, k or hgu.', call. = FALSE)
+  
   hufdis <- rmf_convert_huf_to_dis(huf = huf, dis = dis)
-  huf_array <- rmf_create_array(rep(1:huf$nhuf,each=dis$nrow*dis$ncol),dim=c(dis$nrow,dis$ncol,huf$nhuf))
-  p <- rmf_plot(huf_array, dis = hufdis, i=i,j=j,k=k,colour_palette=colour_palette,nlevels=nlevels,type='factor',add=add,title=title,levels=levels)
-  if(grid == TRUE) {
-    return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',add=TRUE))
-  } else if(grid == 'huf') {
-    return(p + rmf_plot(hufdis$botm, dis = hufdis, i=i,j=j,k=k,type='grid',add=TRUE))
+  
+  if(!is.null(hgu) && is.character(hgu)) hgu <- which(huf$hgunam == hgu)
+  
+  if(!is.null(k)) {
+    huf_array <- rmf_create_array(dim=c(dis$nrow,dis$ncol))
+    if(k == 1) {
+      for(i in rev(1:dim(hufdis$botm)[3])) {
+        huf_array[which(mask[,,i] == 1)] <- i
+      }
+    } else {
+      for(i in rev(1:dim(hufdis$botm)[3])) {
+        huf_array[which(dis$botm[,,k-1] >= hufdis$botm[,,i])] <- i
+      }
+    }
+    mask <- rmfi_ifelse0(is.null(bas),huf_array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,k], bas$ibound[,,k]))
+    p <- rmf_plot(huf_array, dis = hufdis, mask=mask,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE,...)
+    
+  } else {
+    huf_array <- rmf_create_array(rep(1:huf$nhuf,each=dis$nrow*dis$ncol),dim=c(dis$nrow,dis$ncol,huf$nhuf))
+    if(!is.null(hgu) && (!is.null(i) || !is.null(j))) {
+      huf_array[which(huf_array != hgu)] <- NA
+      hgu <- NULL
+    }
+    p <- rmf_plot(huf_array, dis = hufdis, mask=mask, i=i,j=j,k=hgu,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE,...)
+    
+  }
+  
+  if(gridlines != FALSE) {
+    if(gridlines == 'huf') {
+      if(!is.null(k)) {
+        return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',add=TRUE))
+      } else {
+        return(p + rmf_plot(huf_array, mask=mask, dis = hufdis, i=i,j=j,k=hgu,type='grid',add=TRUE))
+      }
+    } else {
+      return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',gridlines = ifelse(is.character(gridlines), gridlines, 'black'),add=TRUE))
+    }
   } else {
     return(p)
   }
@@ -981,403 +780,80 @@ plot.huf <- function(...) {
   rmf_plot.huf(...)
 }
 
-#' Plot a 2D section of an RMODFLOW rch object
-#' 
-#' \code{rmf_plot.rch} plots a 2D section of an \code{RMODFLOW} rch object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW rch object
 #' 
 #' @param rch an \code{RMODFLOW} rch object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param mlt optional; an \code{RMODFLOW} mlt object; used for plotting parameter data
-#' @param zon optional; an \code{RMODFLOW} zon object; used for plotting parameter data
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (plots the recharge cells' locations), "recharge" (default) "mltnam" (for parameter data), "zonnam" (for parameter data), "iz" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "recharge"
-#' @param instnum numeric vector of length \code{nprch} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable character specifying which variable to plot. Possible values are 'recharge' (default) and 'irch' if defined. 
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_2d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot rch
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.rch = function(rch,
-                        dis,
-                        mlt = NULL,
-                        zon = NULL,
-                        all_parm = F, 
-                        variable = 'recharge',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.rch <- function(rch,
+                         dis,
+                         kper = NULL,
+                         variable = 'recharge',
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(rch$nprch) || (!is.null(rch$nprch) && rch$nprch == 0))) stop('RMODFLOW rch object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  ##### calculate new multiplier arrays if FUNCTION is specified in mlt ####
-  if(!all(unlist(rch$mltarr) == "NONE") && (!is.null(mlt) && !is.null(mlt$functn) && any(mlt$functn) )  ){
-    
-    rmlts = lapply(seq_along(dim(mlt$rmlt)), function(x) mlt$rmlt[,,x])
-    names(rmlts) = mlt$mltnam
-    
-    for(i in 1:mlt$nml){
-      if(!is.null(mlt$functn) && mlt$functn[i]){
-        funct = strsplit(mlt$operator[[i]], split=' ')[[1]]
-        for(i in 1:((length(funct)-1)/2)){
-          funct = append(append('(', funct), ')', after=i*1+3*i)
-        }
-        mlt$rmlt[,,i] = eval(parse(text=funct), envir = rmlts)
-      }
-    }
+  if(is.null(kper)) {
+    if(dis$nper > 1) warning('Setting kper to last stress-period', call. = FALSE)
+    kper <- dis$nper
   }
   
-  ##### create data frame  #####
-  
-  #### 1. parameters defined  ####
-  if(!is.null(rch$nprch) && rch$nprch > 0){   
+  if(variable == 'recharge') {
+    active_arrays <- colnames(rch$kper)[-1]
+    active_arrays <- active_arrays[which(rch$kper[kper,-1] == TRUE)] 
     
-    if(is.null(zon) && !all(unlist(rch$zonarr)=='ALL')) stop('Please specify an RMODFLOW zon object')
-    if(is.null(mlt) && !all(unlist(rch$mltarr)=='NONE')) stop('Please specify an RMODFLOW mlt object')
+    obj <- rch$recharge[active_arrays]
     
-    ### 1.1 for stress period data ###
-    if(!all_parm && rch$nprch > 0){ 
-      
-      ## 1.1.1 stress data with time-varying parameters ##
-      if(!is.null(rch$iname) && !(is.null(rch$iname[[sp]]) || all(is.na(unlist(rch$iname[[sp]]))))){ 
-        
-        sp_new = tail(subset(which(rch$inrech > 0), which(rch$inrech > 0) <= sp), 1)  # set stress period to last stress period with inrech > 0 before current stress period
-        parnams = rch$pname[[sp_new]]
-        instnum = unlist(lapply(1:rch$inrech[sp_new], function(x) which(rch$instnam[[which(rch$parnam==parnams[x])]] == rch$iname[[sp_new]][x])))
-        
-        # lists with rch$nprch elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-        zones = lapply(1:rch$inrech[sp_new], function(x) lapply(1:length(rch$zonarr[[which(rch$parnam == parnams[x])]][instnum[x],]), function(y)  if(rch$zonarr[[which(rch$parnam == parnams[x])]][instnum[x],y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == rch$zonarr[[which(rch$parnam == parnams[x])]][instnum[x],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-        multp = lapply(1:rch$inrech[sp_new], function(x) lapply(1:length(rch$mltarr[[which(rch$parnam == parnams[x])]][instnum[x],]), function(y)  if(rch$mltarr[[which(rch$parnam == parnams[x])]][instnum[x],y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == rch$mltarr[[which(rch$parnam == parnams[x])]][instnum[x],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-        
-        ## 1.1.2  stress data with non-time-varying parameters ##
-      } else {  
-        
-        sp_new = tail(subset(which(rch$inrech > 0), which(rch$inrech > 0) <= sp), 1)  # set stress period to last stress period with inrech > 0 before current stress period
-        parnams = rch$pname[[sp_new]]
-        
-        # lists with rch$nprch elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-        zones = lapply(1:rch$inrech[sp_new], function(x) lapply(1:length(rch$zonarr[[which(rch$parnam == parnams[x])]][1,]), function(y)  if(rch$zonarr[[which(rch$parnam == parnams[x])]][1,y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == rch$zonarr[[which(rch$parnam == parnams[x])]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-        multp = lapply(1:rch$inrech[sp_new], function(x) lapply(1:length(rch$mltarr[[which(rch$parnam == parnams[x])]][1,]), function(y)  if(rch$mltarr[[which(rch$parnam == parnams[x])]][1,y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == rch$mltarr[[which(rch$parnam == parnams[x])]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-        
-      }
-      
-      nprch = rch$inrech[sp_new]
-      parnam = rch$pname[[sp_new]]
-      parval = rch$parval[which(rch$parnam %in% rch$pname[[sp_new]])]
-      
-      ### 1.2  for parameter data ###
-    } else if((all_parm && rch$nprch > 0) ){ 
-      
-      ## 1.2.1 not time-varying parameter data ##
-      if(is.null(instnum)){      
-        
-        # lists with rch$nprch elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-        zones = lapply(1:rch$nprch, function(x) lapply(1:length(rch$zonarr[[x]][1,]), function(y)  if(rch$zonarr[[x]][1,y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == rch$zonarr[[x]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-        multp = lapply(1:rch$nprch, function(x) lapply(1:length(rch$mltarr[[x]][1,]), function(y)  if(rch$mltarr[[x]][1,y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == rch$mltarr[[x]][1,y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-        
-        ## 1.2.2 time varying parameter data ##
-      } else if(!is.null(instnum)){
-        
-        # lists with rch$nprch elements where each element specifies the multiplier and zone arrays; obtained from provided mlt and zon objects
-        zones = lapply(1:rch$nprch, function(x) lapply(1:length(rch$zonarr[[x]][rch$instnam[[x]][instnum[x]],]), function(y)  if(rch$zonarr[[x]][rch$instnam[[x]][instnum[x]],y] != "ALL")  rmf_create_array(zon$izon[,,which(zon$zonnam == rch$zonarr[[x]][rch$instnam[[x]][instnum[x]],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("ALL", dim=c(dis$nrow, dis$ncol)) ))
-        multp = lapply(1:rch$nprch, function(x) lapply(1:length(rch$mltarr[[x]][rch$instnam[[x]][instnum[x]],]), function(y)  if(rch$mltarr[[x]][rch$instnam[[x]][instnum[x]],y] != "NONE") rmf_create_array(mlt$rmlt[,,which(mlt$mltnam == rch$mltarr[[x]][rch$instnam[[x]][instnum[x]],y])], dim=c(dis$nrow, dis$ncol)) else rmf_create_array("NONE", dim=c(dis$nrow, dis$ncol)) ))
-        
-      }
-      nprch = rch$nprch
-      parnam = rch$parnam
-      parval = rch$parval
-    }
+    # sum if multiple arrays are active
+    obj <- Reduce('+', obj)
     
-    # if multiple clusters are used (rarely the case), than bind these clusters to 1 array [needs to be tested more]
-    zones = lapply(zones, function(x) rmf_create_array(unlist(x), dim=c(dis$nrow, dis$ncol)) )
-    multp = lapply(multp, function(x) rmf_create_array(unlist(x), dim=c(dis$nrow, dis$ncol)) )
+  } else if(variable == 'irch') {
+    if(rch$nrchop != 2) stop('No irch arrays defined in rch object; nrchop does not equal 2')
+    obj <- rch$irch[[kper]]
     
-    # for each parameter, create an array with final parameter values for the active cells defined by the corresponding zone array and multiply them with the corresponding multiplier array
-    for(i in 1:nprch){
-      
-      if(!is.character(zones[[i]])){ # zone
-        if(!is.character(multp[[i]])){ # zone + multiplier
-          zones[[i]][which(!(zones[[i]] %in% as.numeric(strsplit(as.character(rch$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = NA
-          zones[[i]][which((zones[[i]] %in% as.numeric(strsplit(as.character(rch$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = rch$parval[i]*multp[[i]][which(zones[[i]] %in% as.numeric(strsplit(as.character(rch$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]]))]
-          
-        } else { # zone no multiplier
-          zones[[i]][which(!(zones[[i]] %in% as.numeric(strsplit(as.character(rch$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = NA
-          zones[[i]][which((zones[[i]] %in% as.numeric(strsplit(as.character(rch$iz[[i]][if(is.null(instnum)) 1 else instnum[i],]), split=' ')[[1]])))] = rch$parval[i]
-        }
-      } else { # no zone
-        if(!is.character(multp[[i]])){ # no zone + multiplier
-          zones[[i]] = rch$parval[i]*multp[[i]]
-        } else { # no zone + no multiplier
-          zones[[i]] = rmf_create_array(rch$parval[i], dim=c(dis$nrow, dis$ncol))
-        }
-      } 
-      
-    }
-    
-    # create data frame from nprch arrays
-    rch_df = data.frame(id = rep((1:(dis$nrow*dis$ncol)), nprch), 
-                        parnam = rep(parnam, each=dis$nrow*dis$ncol),
-                        parval=rep(parval, each=dis$nrow*dis$ncol),
-                        recharge = unlist(zones))
-    rch_df = cbind(rch_df, rmf_convert_id_to_ijk(rch_df$id, dis=dis, type='modflow'))
-    
-    # # add multiplier and zone names
-    # if(variable %in% c('zonnam', 'mltnam')){
-    #   if(any(rch$nclu > 1)){
-    #     stop('Plotting of multiple zone/multiplier names for a single parameter not yet implemented. Please specify a different variable to plot.')
-    #   } else {
-    #     rch_df = cbind(rch_df, )
-    #   }
-    # } else if(variable == 'iz'){
-    #   
-    # } 
-    
-    # remove NA rows
-    rch_df = na.omit(rch_df)
-    
-  } else { 
-    #### 2. no parameters defined (so stress period data) ####
-    
-    if(variable %in% c('parnam', 'parval', 'instnam', 'mltnam', 'zonnam', 'iz')){
-      stop('No parameter data specified for this stress period. Please choose a different variable to plot.')
-    }
-    sp_new = tail(subset(which(rch$inrech >= 0), which(rch$inrech >= 0) <= sp), 1)  # set stress period to last stress period with inrech >= 0 before current stress period
-    rech = rmf_create_array(rch$rech[,,sp_new], dim=c(dis$nrow, dis$ncol))
-    rch_df = data.frame(id = 1:(dis$nrow*dis$ncol), 
-                        recharge = unlist(rech))
-    rch_df = cbind(rch_df, rmf_convert_id_to_ijk(rch_df$id, dis=dis, type='modflow'))
   } 
   
-  
-  ##### transform data frame of parameter data into rmf_array #####
-  
-  # adjust id for nrchop != 1
-  if(rch$nrchop == 2){
-    sp_new = tail(subset(which(rch$inirch >= 0), which(rch$inirch >= 0) <= sp), 1)  # set stress period to last stress period with inirch >= 0 before current stress period
-    irch = rch$irch[,,sp_new]
-    rch_df$k = irch[rch_df$id]
-    
-  } else if(rch$nrchop == 3 ){
-    if(!("bas" %in% names(list(...)) )){
-      warning('nrchop = 3; please specify an RMODFLOW bas object to correctly plot the highest active recharge cells')
-    } else {
-      
-      bas = list(...)$bas
-      
-      # highest active cells
-      high_act = data.frame(active = c(bas$ibound), id = 1:(dis$nrow*dis$ncol*dis$nlay))
-      high_act = cbind(high_act, rmf_convert_id_to_ijk(id=high_act$id, dis=dis, type='modflow'))
-      high_act$id2d = rep(1:(dis$nrow*dis$ncol), dis$nlay)
-      high_act = subset(high_act, high_act$active != 0)
-      high_act = do.call(rbind, lapply(split(high_act, high_act$id2d), function(x) x[which.min(x$k), c('id','i','j','k', 'id2d')]))
-      high_act = high_act[order(high_act$id),]
-      
-      # create new id2d column in rch_df and merge with high_active$k on that column
-      rch_df$id2d = rmf_convert_ijk_to_id(i=rch_df$i, j=rch_df$j, k=1, dis=dis, type='modflow')
-      rch_df = rch_df[which(rch_df$id2d %in% high_act$id2d),] # only use cells that are defined in bas$ibound (via high_act)
-      rch_df$k = high_act$k[match(rch_df$id2d, high_act$id2d)] # replace values
-      
-    }
-  }
-  
-  id =  rmf_convert_ijk_to_id(i=rch_df$i, j=rch_df$j, k=rch_df$k, dis=dis, type='modflow')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'recharge' && any(duplicated(id))){
-    
-    rch_df$id = id
-    id_dupl = id[duplicated(id)]
-    rch_df_dupl = rch_df[id %in% id_dupl,]
-    aggr = aggregate(rch_df_dupl[[variable]], by=list(rch_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      rch_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    rch_df = rch_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=rch_df$i, j=rch_df$j, k=rch_df$k, dis=dis, type='modflow')
-    
-  }
-  
-  # create rmf_array
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam', 'mltnam', 'zonnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(rch_df[,variable])), as.vector(table(factor(rch_df[,variable], levels=as.character(unique(rch_df[,variable])))))), labels = unique(rch_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(rch_df[variable])
-  }
-  
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam', 'mltnam', 'zonnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...) 
+  rmf_plot(obj, dis = dis, ...)
   
 }
 
-#' Plot a 2D section of an RMODFLOW riv object
-#' 
-#' \code{rmf_plot.riv} plots a 2D section of an \code{RMODFLOW} riv object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW riv object
 #' 
 #' @param riv an \code{RMODFLOW} riv object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the reach locations), "layer", "row", "column", "stage", "condfact" (for parameter data), "rbot", "conductance", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npriv} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{riv$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'stage' & 'rbot' and sum for variable 'cond'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot riv
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.riv = function(riv,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.riv <- function(riv,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = TRUE,
+                         fun = ifelse(variable %in% c('stage', 'rbot'), mean, sum),
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(riv$npriv) || (!is.null(riv$npriv) && riv$npriv == 0))) stop('RMODFLOW riv object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      riv_df = data.frame(layer = unlist(riv$layer_parm), row = unlist(riv$row_parm), column = unlist(riv$column_parm), stage = unlist(riv$stage_parm), condfact = unlist(riv$condfact_parm), rbot = unlist(riv$rbot_parm) )
-      
-      # add conductance values & parameter names & parameter values
-      riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][1,]))
-      riv_df$parnam = rep(riv$parnam, riv$nlst) # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))   
-      riv_df$parval = rep(riv$parval, riv$nlst) # as.numeric(unlist(lapply(seq_along(riv$parval), function(x) rep(riv$parval[x], riv$nlst[x]))))   
-      
-      
-    } else { # time varying
-      riv_df = data.frame(layer = unlist(lapply(seq_along(riv$layer_parm), function(x) riv$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(riv$row_parm), function(x) riv$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(riv$column_parm), function(x) riv$column_parm[[x]][instnum[x],])), stage = unlist(lapply(seq_along(riv$stage_parm), function(x) riv$stage_parm[[x]][instnum[x],])), condfact = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$condfact_parm[[x]][instnum[x],])), rbot = unlist(lapply(seq_along(riv$rbot_parm), function(x) riv$rbot_parm[[x]][instnum[x],])) )
-      
-      # add conductance values & parameter names & instance names & parameter values
-      riv_df$conductance = unlist(lapply(seq_along(riv$condfact_parm), function(x) riv$parval[x]*riv$condfact_parm[[x]][instnum[x],]))
-      riv_df$parnam = rep(riv$parnam, riv$nlst)  # as.character(unlist(lapply(seq_along(riv$parnam), function(x) rep(riv$parnam[x], riv$nlst[x]))))
-      riv_df$instnam = as.character(unlist(lapply(seq_along(riv$instnam)), function(x) rep(riv$instnam[[x]][instnum[x]], riv$nlst[x])))
-      riv_df$parval = rep(riv$parval, riv$nlst)  # as.numeric(unlist(lapply(seq_along(riv$parval), function(x) rep(riv$parval[x], riv$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(riv$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(riv$iname) || (!is.null(riv$iname) && (is.null(riv$iname[[sp]]) || all(is.na(unlist(riv$iname[[sp]])))) )){
-        
-        riv_df_parm = data.frame(layer = unlist(riv$layer_parm[which(riv$parnam %in% riv$pname[[sp]])]), row = unlist(riv$row_parm[which(riv$parnam %in% riv$pname[[sp]])]), column = unlist(riv$column_parm[which(riv$parnam %in% riv$pname[[sp]])]), stage = unlist(riv$stage_parm[which(riv$parnam %in% riv$pname[[sp]])]), condfact = unlist(riv$condfact_parm[which(riv$parnam %in% riv$pname[[sp]])]), rbot = unlist(riv$rbot_parm[which(riv$parnam %in% riv$pname[[sp]])]) )
-        
-        # add conductance values & parameter names & parameter values
-        riv_df_parm$conductance = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$parval[which(riv$parnam == riv$pname[[sp]][x])]*unlist(riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][1,])))
-        riv_df_parm$parnam = as.character(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$pname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  # long code instead of a simple rep(riv$pname[[sp]], riv$nlst[which(riv$parnam %in% riv$pname[[sp]])]) because of possible ordering issues in riv$pname relative to riv$nlst
-        riv_df_parm$parval = as.numeric(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$parval[which(riv$parnam == riv$pname[[sp]][x])], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        riv_df_parm = data.frame(layer = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$layer_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$row_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$column_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), stage = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$stage_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), condfact = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])), rbot = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$rbot_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])) )
-        
-        # add conductance values & parameter names & instance names & parameter values
-        riv_df_parm$conductance = unlist(lapply(seq_along(riv$pname[[sp]]), function(x) riv$parval[which(riv$parnam == riv$pname[[sp]][x])]*unlist(riv$condfact_parm[[which(riv$parnam == riv$pname[[sp]][x])]][ifelse(is.null(riv$iname[[sp]][x]) || is.na(riv$iname[[sp]][x]), 1, which(riv$instnam[[which(riv$parnam == riv$pname[[sp]][x])]] == riv$iname[[sp]][x]) ), ])))
-        riv_df_parm$parnam = as.character(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$pname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  # long code instead of a simple rep(riv$pname[[sp]], riv$nlst[which(riv$parnam %in% riv$pname[[sp]])]) because of possible ordering issues in riv$pname relative to riv$nlst
-        riv_df_parm$instnam = as.character(unlist(lapply(seq_along(riv$iname[[sp]]), function(x) rep(riv$iname[[sp]][x], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))
-        riv_df_parm$parval = as.numeric(unlist(lapply(seq_along(riv$pname[[sp]]), function(x) rep(riv$parval[which(riv$parnam == riv$pname[[sp]][x])], riv$nlst[which(riv$parnam == riv$pname[[sp]][x])]) )))  
-        
-      }
-      
-      riv_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(riv$itmp[sp] != 0){
-      sp = tail(subset(which(riv$itmp >= 0), which(riv$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp > 0 before current stress period
-      
-      if(riv$itmp[sp] > 0){
-        riv_df_sp = data.frame(layer = unlist(riv$layer_sp[[sp]]), row = unlist(riv$row_sp[[sp]]), column = unlist(riv$column_sp[[sp]]), stage = unlist(riv$stage_sp[[sp]]), conductance = unlist(riv$cond_sp[[sp]]), rbot = unlist(riv$rbot_sp[[sp]]) )
-        riv_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind riv_df_parm & riv_df_sp into riv_df (check if they exist first)
-    if(exists('riv_df_parm') && exists('riv_df_sp')){
-      
-      riv_df = rbind(riv_df_parm[colnames(riv_df_sp)], riv_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('riv_df_parm')){
-      riv_df = riv_df_sp
-    } else if(!exists('riv_df_sp')){
-      riv_df = riv_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'conductance' && any(duplicated(id))){
-    
-    riv_df$id = id
-    id_dupl = id[duplicated(id)]
-    riv_df_dupl = riv_df[id %in% id_dupl,]
-    aggr = aggregate(riv_df_dupl[[variable]], by=list(riv_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      riv_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    riv_df = riv_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=riv_df$row, j=riv_df$column, k=riv_df$layer, dis=dis, type='r')
-    
-  }
-  
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(riv_df[,variable])), as.vector(table(factor(riv_df[,variable], levels=as.character(unique(riv_df[,variable])))))), labels = unique(riv_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(riv_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = riv, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }
+
 
 #' Plot a MODFLOW 2D array
 #' 
@@ -1387,11 +863,11 @@ rmf_plot.riv = function(riv,
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
-#' @param colour_palette a colour palette for imaging the array values
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'factor', 'grid' or 'contour'
-#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
+#' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
+#' @param levels (named) character vector with labels for the factor legend. If not named, factor levels are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param height_exaggeration height exaggeration for 3D plot; optional
@@ -1402,16 +878,19 @@ rmf_plot.riv = function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param title plot title
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask)
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
 rmf_plot.rmf_2d_array <- function(array,
                                   dis,
                                   bas = NULL,
-                                  mask = rmfi_ifelse0(is.null(bas), array*0+1, {warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
-                                  colour_palette = rmfi_rev_rainbow,
+                                  mask = rmfi_ifelse0(is.null(bas), array*0+1, {if(dis$nlay > 1) warning('Using first ibound layer as mask.', call. = FALSE); rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,1], bas$ibound[,,1])}),
+                                  colour_palette = ifelse(type %in% c('contour', 'vector'), 'black', rmfi_rev_rainbow),
                                   zlim = range(array[as.logical(mask)], finite=TRUE),
                                   nlevels = 7,
                                   type = 'fill',
@@ -1426,9 +905,9 @@ rmf_plot.rmf_2d_array <- function(array,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  title = NULL,
-                                  crop = FALSE) {
-  
+                                  crop = TRUE,
+                                  vecint = 1,
+                                  legend = !add) {
   
   if(plot3d) {
     xyz <- rmf_cell_coordinates(dis)
@@ -1448,56 +927,99 @@ rmf_plot.rmf_2d_array <- function(array,
     if(type=='fill') rgl::surface3d(t(x),t(y),z,color=col,alpha=alpha,back='lines',smooth=FALSE) 
     if(type=='grid') rgl::surface3d(t(x),t(y),z,front='lines',alpha=alpha,back='lines',smooth=FALSE) 
   } else {
+    
+    # if array is already a cross-section, e.g. rmf_plot(array[,1,], dis = dis)
+    # TODO: can not know what index was subsetted so assumes 1
+    if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
+      if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
+      if("j" %in% attr(array, 'dimlabels')) {
+        sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
+        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          mask <- array*0 + 1
+        }
+        sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
+        
+        p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+        return(p)
+        
+      } else if("i" %in% attr(array, 'dimlabels')) {
+        sub_array <- rmf_create_array(array, dim = c(dim(array)[1], 1, dim(array)[2]))
+        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+          warning("Dimensions of mask do not match those of array. Skipping mask.")
+          mask <- array*0 + 1
+        }
+        sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
+        
+        p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+        return(p)
+      }
+    }
+    
+    # datapoly
     xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
-    if(type %in% c('fill','factor','grid')) {
-      ids <- factor(1:(dis$nrow*dis$ncol))
-      xWidth <- rep(dis$delr,dis$nrow)
-      yWidth <- rep(dis$delc,each=dis$ncol)
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c(t(array*mask^2)))
-      if(!is.null(prj)) {
-        new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
-        positions$x <- new_positions$x
-        positions$y <- new_positions$y
-      }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
-      }
-      datapoly <- merge(values, positions, by=c("id"))
-      if(crop) datapoly <- na.omit(datapoly)
+    
+    ids <- factor(1:(dis$nrow*dis$ncol))
+    xWidth <- rep(dis$delr,dis$nrow)
+    yWidth <- rep(dis$delc,each=dis$ncol)
+    positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
+    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+    values <- data.frame(id = ids,value = c(t(array*mask^2)))
+    if(!is.null(prj)) {
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
+      positions$x <- new_positions$x
+      positions$y <- new_positions$y
     }
+    if(!is.null(crs)) {
+      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+      positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+    }
+    datapoly <- merge(values, positions, by=c("id"))
+    if(crop) datapoly <- na.omit(datapoly)
+    
+    # legend
+    if(is.logical(legend)) {
+      name <- "value"
+    } else {
+      name <- legend
+      legend <- TRUE
+    }
+    
+    # plot
     if(type=='fill') {  
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(name, colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend, alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(name, colours=colour_palette(nlevels),limits=zlim,  na.value = NA) +
+                 ggplot2::coord_equal())
       }
     } else if(type=='factor') {  
+      labels <- rmfi_ifelse0(is.null(names(levels)), levels, levels[as.character(sort(na.omit(unique(datapoly$value))))])
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, labels = labels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id),alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
+                 ggplot2::coord_equal())
       }
     } else if(type=='grid') {  
       if(add) {
@@ -1505,8 +1027,7 @@ rmf_plot.rmf_2d_array <- function(array,
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(group=id),alpha=alpha,colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
-                 ggplot2::coord_equal() +
-                 ggplot2::ggtitle(title))
+                 ggplot2::coord_equal())
       }
     } else if(type=='contour') {
       if(!is.null(prj)) {
@@ -1519,7 +1040,7 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
-      xy <- na.omit(xy)
+      xy <- na.omit(as.data.frame(xy))
       xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
       xy$x <- rep(xy$x,ceiling(sum(dis$delc)/min(dis$delc)))
       xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
@@ -1529,31 +1050,67 @@ rmf_plot.rmf_2d_array <- function(array,
       closestGridPoints <- apply(xy[,c('x','y')],1,function(x) which.min((x[1]-xyBackup$x)^2 + (x[2]-xyBackup$y)^2))
       xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
       if(crop) {
-        xlim = c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
-        ylim = c(min(xy$y, na.rm = T), max(xy$xy, na.rm = T))
+        xlim <- c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
+        ylim <- c(min(xy$y, na.rm = T), max(xy$y, na.rm = T))
       } else {
-        xlim = c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
-        ylim = c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
+        xlim <- c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
+        ylim <- c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
       }
       rm(xyBackup)
       if(add) {
-        if(label) return(list(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour")))
-        if(!label) return(ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,binwidth=binwidth))
+        if(label) return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                              ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                               ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
       } else {
         if(label) {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),binwidth=binwidth) +
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
                    directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
-                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
-                   ggplot2::theme(legend.position="none") +
-                   ggplot2::ggtitle(title))
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim))
         } else {
           return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
-                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),binwidth=binwidth) +
-                   ggplot2::coord_equal(xlim = xlim, ylim = ylim) +
-                   ggplot2::ggtitle(title))
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::coord_equal(xlim = xlim, ylim = ylim))
         }
       }
+    } else if(type == 'vector') {
+      # x & y are center of cells
+      vector_df <- xy
+      if(!is.null(prj)) {
+        new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=vector_df$y,prj=prj)
+        vector_df$x <- new_positions$x
+        vector_df$y <- new_positions$y
+      }
+      if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+      }
+      if(crop) vector_df <- na.omit(vector_df)
+      # add gradient values; negative because Darcy flux also has negative sign
+      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      vector_df$u <- -c(t(grad$x))
+      vector_df$v <- -c(t(grad$y))
+      vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
+      vecsize <- 0.75*vecint
+      if(add) {
+        return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
+                    ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
+      } else {
+        return(ggplot2::ggplot() +
+                 ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
+                 ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
+                 ggplot2::coord_equal())
+      }
+      
     } else {
       stop('Please provide valid plot type.', call. = FALSE)
     }
@@ -1578,19 +1135,24 @@ plot.rmf_2d_array <- function(...) {
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound
-#' @param colour_palette a colour palette for imaging the array values
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
-#' @param type plot type: 'fill' (default), 'factor' or 'grid'
-#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
+#' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
+#' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param title plot title
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask)
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
+#' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
+#' @param label logical; should labels be added to contour plot
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
+#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... parameters provided to plot.rmf_2d_array
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_3d_array
 #' @export
@@ -1602,18 +1164,21 @@ rmf_plot.rmf_3d_array <- function(array,
                                   bas = NULL,
                                   mask = rmfi_ifelse0(is.null(bas),array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1)), bas$ibound)),
                                   zlim = range(array[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)][as.logical(mask[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)])], finite=TRUE),
-                                  colour_palette = rmfi_rev_rainbow,
+                                  colour_palette = ifelse(type %in% c('contour', 'vector'), 'black', rmfi_rev_rainbow),
                                   nlevels = 7,
                                   type='fill',
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  title = NULL,
-                                  crop = FALSE,
+                                  crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
+                                  binwidth = round(diff(zlim)/20),
+                                  label = TRUE,
                                   prj = NULL,
                                   crs = NULL,
+                                  vecint = 1,
+                                  legend = !add,
                                   ...) {
   
   if(is.null(i) & is.null(j) & is.null(k)) {
@@ -1621,14 +1186,17 @@ rmf_plot.rmf_3d_array <- function(array,
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
-    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,title=title)
+    p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,
+                  levels = levels, add=add, crop = crop, prj = prj, crs = crs, 
+                  binwidth=binwidth, label=label, vecint=vecint, legend=legend,...)
     if(gridlines) {
-      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE))
+      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, crop=crop, prj=prj,crs=crs,...))
     } else {
       return(p)
     }
   }
   
+  # layer is plotted
   if(!is.null(k)) {
     if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Make sure k index is adjusted correctly if the array explicitly represents Quasi-3D confining beds.', 
                                      call. = FALSE)
@@ -1638,18 +1206,31 @@ rmf_plot.rmf_3d_array <- function(array,
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
-    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, title = title, crop = crop, prj = prj, crs = crs, ...)
-    } else {
+    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, 
+             binwidth=binwidth, label=label, vecint=vecint, legend=legend, ...)
+  } else {
+    # cross-section
+    # datapoly
     xy <- NULL
     xy$x <- cumsum(dis$delr)-dis$delr/2
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
     mask[which(mask==0)] <- NA
-    dis$thck <- dis$botm
-    dis$thck[,,1] <- dis$top-dis$botm[,,1]
-    nnlay <- dis$nlay+length(which(dis$laycbd != 0))
-    if(nnlay > 1) for(a in 2:nnlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
-    dis$center <- dis$botm
-    for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+    
+    if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
+      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
+      botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
+      nnlay <- dis$nlay
+      dis$center <- botm
+      for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+    } else {
+      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis)
+      nnlay <- dis$nlay + sum(dis$laycbd != 0)
+      dis$center <- dis$botm
+      for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+    }
+
     if(is.null(i) & !is.null(j)) {
       ids <- factor(1:(dis$nrow*nnlay))
       xWidth <- rep(rev(dis$delc),nnlay)
@@ -1678,6 +1259,29 @@ rmf_plot.rmf_3d_array <- function(array,
       if(crop) datapoly <- na.omit(datapoly)
       xlabel <- 'y'
       ylabel <- 'z'
+      
+      if(type == 'contour') {
+        xy$x <- rep(xy$y, each = nnlay)
+        xy$y <- c(t(dis$center[,j,]))
+        if(!is.null(prj)) {
+          new_xy <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]], y=xy$x,z=xy$y,prj=prj)
+          xy$x <- new_xy$y
+          xy$y <- new_xy$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        xy$z <- c(t(array[,j,]*mask[,j,]^2))
+        xyBackup <- xy
+        xy <- na.omit(as.data.frame(xy))
+        thck <- na.omit(c(dis$thck[,j,]*mask[,j,]^2))
+        xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delc)/min(dis$delc))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(thck)/min(thck))))
+        xy$x <- rep(xy$x,ceiling(sum(thck)/min(thck)))
+        xy$y <- rep(xy$y,each=ceiling(sum(dis$delc)/min(dis$delc)))
+        xy$z <- c(xy$z)
+      }
     } else if(!is.null(i) & is.null(j)) {
       ids <- factor(1:(dis$ncol*nnlay))
       xWidth <- rep(dis$delr,nnlay)
@@ -1706,30 +1310,63 @@ rmf_plot.rmf_3d_array <- function(array,
       if(crop) datapoly <- na.omit(datapoly)
       xlabel <- 'x'
       ylabel <- 'z'
+      
+      if(type == 'contour') {
+        xy$x <- rep(xy$x, each = nnlay)
+        xy$y <- c(t(dis$center[i,,]))
+        if(!is.null(prj)) {
+          new_xy <- rmf_convert_grid_to_xyz(x=xy$x, y=rmf_convert_grid_to_xyz(i=i, j=1, dis=dis)[[2]],z=xy$y,prj=prj)
+          xy$x <- new_xy$x
+          xy$y <- new_xy$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        xy$z <- c(t(array[i,,]*mask[i,,]^2))
+        xyBackup <- xy
+        xy <- na.omit(as.data.frame(xy))
+        thck <- na.omit(c(dis$thck[i,,]*mask[i,,]^2))
+        xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(thck)/min(thck))))
+        xy$x <- rep(xy$x,ceiling(sum(thck)/min(thck)))
+        xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
+        xy$z <- c(xy$z)
+      } 
     }
+    
+    # legend
+    if(is.logical(legend)) {
+      name <- "value"
+    } else {
+      name <- legend
+      legend <- TRUE
+    }
+    
+    # plot
     if(type=='fill') {
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_gradientn(name,colours=colour_palette(nlevels),limits=zlim, na.value = NA))) 
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_gradientn(colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_gradientn(name,colours=colour_palette(nlevels),limits=zlim, na.value = NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
     } else if(type=='factor') {
+      labels <- rmfi_ifelse0(is.null(names(levels)), levels, levels[as.character(sort(na.omit(unique(datapoly$value))))])
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, labels = labels))
       if(add) {
-        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=factor(value), group=id),data=datapoly, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
-                    ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA)))
+        return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
+                    ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
       } else {
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
-                 ggplot2::geom_polygon(ggplot2::aes(fill=factor(value), group=id), colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
-                 ggplot2::scale_fill_discrete('value',labels=rmfi_ifelse0(is.null(levels),levels(factor(datapoly$value)),levels), na.value = NA) +
+                 ggplot2::geom_polygon(ggplot2::aes(fill=value, group=id),show.legend=legend,colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))) +
+                 ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
     } else if(type=='grid') {
       if(add) {
@@ -1738,9 +1375,101 @@ rmf_plot.rmf_3d_array <- function(array,
         return(ggplot2::ggplot(datapoly, ggplot2::aes(x=x, y=y)) +
                  ggplot2::geom_polygon(ggplot2::aes(group=id),colour=ifelse(is.logical(gridlines),'black',gridlines),fill=NA) +
                  ggplot2::xlab(xlabel) +
-                 ggplot2::ylab(ylabel) +
-                 ggplot2::ggtitle(title))
+                 ggplot2::ylab(ylabel))
       }
+    } else if(type == 'contour') {
+      xy <- as.data.frame(xy)
+      xy <- xy[which(xy$z >= zlim[1] & xy$z <= zlim[2]),]
+      closestGridPoints <- apply(xy[,c('x','y')],1,function(x) which.min((x[1]-xyBackup$x)^2 + (x[2]-xyBackup$y)^2))
+      xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
+      if(crop) {
+        xlim <- c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
+        ylim <- c(min(xy$y, na.rm = T), max(xy$y, na.rm = T))
+      } else {
+        xlim <- c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
+        ylim <- c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
+      }
+      rm(xyBackup)
+      if(add) {
+        if(label) return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                              ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),directlabels::geom_dl(ggplot2::aes(x=x, y=y, z=z, label=..level.., colour=..level..),data=xy,method="top.pieces", stat="contour"),
+                              ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+        if(!label) return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                               ggplot2::stat_contour(ggplot2::aes(x=x,y=y,z=z,colour = ..level..),data=xy,show.legend=legend,binwidth=binwidth),
+                               ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA)))
+      } else {
+        if(label) {
+          return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z, colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   directlabels::geom_dl(ggplot2::aes(z=z, label=..level.., colour=..level..),method="top.pieces", stat="contour") +
+                   ggplot2::xlim(xlim)+
+                   ggplot2::ylim(ylim) + 
+                   ggplot2::xlab(xlabel) +
+                   ggplot2::ylab(ylabel))
+        } else {
+          return(ggplot2::ggplot(xy, ggplot2::aes(x=x, y=y)) +
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggplot2::stat_contour(ggplot2::aes(z=z,colour = ..level..),show.legend=legend,binwidth=binwidth) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),limits=zlim,  na.value = NA) +
+                   ggplot2::xlim(xlim)+
+                   ggplot2::ylim(ylim) + 
+                   ggplot2::xlab(xlabel) +
+                   ggplot2::ylab(ylabel))
+        }
+      }
+    } else if(type == 'vector') {
+      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      if(is.null(i) && !is.null(j)) {
+        vector_df <- data.frame(x=xy$y,y=c(dis$center[,j,]))
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=vector_df$x,z=vector_df$y,prj=prj)
+          vector_df$x <- new_positions$y
+          vector_df$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        # add gradient values; negative because Darcy flux also has negative sign
+        vector_df$u <- -c(t(grad$y[,j,]))
+        vector_df$v <- -c(grad$z[,j,])
+        
+      } else if(!is.null(i) && is.null(j)) {
+        vector_df <- data.frame(x=xy$x,y=c(dis$center[i,,]))
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=vector_df$y,prj=prj)
+          vector_df$x <- new_positions$x
+          vector_df$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          #warning('Transforming vertical coordinates', call. = FALSE)
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+        }
+        # add gradient values; negative because Darcy flux also has negative sign
+        vector_df$u <- -c(t(grad$x[i,,]))
+        vector_df$v <- -c(grad$z[i,,])
+      }
+        if(crop) vector_df <- na.omit(vector_df)
+        vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
+        vecsize <- 0.75*vecint
+        if(add) {
+          return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
+                      ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
+        } else {
+          return(ggplot2::ggplot() +
+                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
+                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
+                   ggplot2::xlab(xlabel) +
+                   ggplot2::ylab(ylabel))
+        }
+    } else {
+      stop('Please provide valid plot type.', call. = FALSE)
     }
   }
 }
@@ -1757,6 +1486,7 @@ plot.rmf_3d_array <- function(...) {
 #' \code{rmf_plot.rmf_4d_array} plots a 2D section through a MODFLOW 4D array.
 #' 
 #' @param array an object of class rmf_3d_array
+#' @param dis discretization file object
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
@@ -1766,19 +1496,20 @@ plot.rmf_3d_array <- function(...) {
 #' @method rmf_plot rmf_4d_array
 #' @export
 rmf_plot.rmf_4d_array <- function(array,
+                                  dis, 
                                   i = NULL,
                                   j = NULL,
                                   k = NULL,
                                   l = NULL,
                                   ...) {
   if(!is.null(l)) {
-    rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
+    rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
     ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
-      ggplot2::geom_path()
+      rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point())
   } else {
-    warning('Plotting final stress period results.', call. = FALSE)
-    rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), i=i, j=j, k=k, ...)
+    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+    rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   }
 }
 
@@ -1788,6 +1519,44 @@ plot.rmf_4d_array <- function(...) {
   .Deprecated(new = "rmf_plot.rmf_4d_array", old = "plot.rmf_4d_array")
   rmf_plot.rmf_4d_array(...)
 }
+
+#' Plot a RMODFLOW list object
+#'
+#' @param obj a \code{RMODFLOW} object of class \code{rmf_list}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#' 
+#' @return ggplot2 object or layer
+#' @method rmf_plot rmf_list
+#' 
+#' @export
+#' @details the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+#'
+rmf_plot.rmf_list <- function(obj, 
+                              dis, 
+                              variable = 'id',
+                              active_only = FALSE,
+                              fun = sum,
+                              ...) {
+  
+  na_value <- ifelse(active_only, NA, 0)
+  
+  if(variable == 'id') {
+    arr <- rmf_as_array(obj, dis = dis, select = 4, sparse = FALSE, na_value = na_value, fun = fun)
+    indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
+    arr[indx] <- 1
+    rmf_plot(arr, dis = dis, type = 'factor', ...)
+    
+  } else {
+    arr <- rmf_as_array(obj, dis = dis, select = variable, sparse = FALSE, na_value = na_value, fun = fun)
+    rmf_plot(arr, dis = dis, ...)
+  }
+  
+}
+
 
 #' Plot a MODFLOW sensitivity analysis object
 #' 
@@ -1818,150 +1587,34 @@ plot.sen <- function(...) {
   rmf_plot.sen(...)
 }
 
-#' Plot a 2D section of an RMODFLOW wel object
-#' 
-#' \code{rmf_plot.wel} plots a 2D section of an \code{RMODFLOW} wel object using \code{rmf_plot.rmf-3d-array}
+#' Plot a RMODFLOW wel object
 #' 
 #' @param wel an \code{RMODFLOW} wel object
-#' @param dis an \code{RMODFLOW} dis object
-#' @param all_parm logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE
-#' @param variable character, what data should be plotted. Possible values are: "identity" (default; plots the well locations), "layer", "row", "column", "qfact" (for parameter data), "q", "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"
-#' @param instnum numeric vector of length \code{npwel} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL
-#' @param l time step number for selecting which stress period to plot; defaults to NULL (last stress period)
-#' @param sp optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL
-#' @param ... additional arguments passed to \code{rmf_plot.rmf-3d-array}
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column of \code{wel$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'q'.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @export
 #' @method rmf_plot wel
 
-# Function can benefit from a standardized function which transforms stress packages to data frames (might also be useful for data analysis)
-
-rmf_plot.wel = function(wel,
-                        dis,
-                        all_parm = F, 
-                        variable = 'identity',
-                        instnum = NULL, 
-                        l = NULL, 
-                        sp = NULL, 
-                        ... 
-){
+rmf_plot.wel <- function(wel,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = TRUE,
+                         fun = sum,
+                         ...) {
   
-  # set stress period
-  if(is.null(l) && is.null(sp) && !all_parm){
-    warning('No stress period or time step defined; setting time step to last time step and setting stress period accordingly')
-    l = tail(cumsum(dis$nstp), 1)
-  } 
-  if(is.null(sp)) sp = tail(which(cumsum(dis$nstp) <= l), 1)
-  
-  if(all_parm && (is.null(wel$npwel) || (!is.null(wel$npwel) && wel$npwel == 0))) stop('RMODFLOW wel object does not have parameters. Please specify parameters or set all_parm to FALSE')
-  
-  ##### create data frame  #####
-  
-  
-  if(all_parm){ #### plot only parameters (independent of stress period) ####
-    if(is.null(instnum)){ # not time-varying
-      wel_df = data.frame(layer = unlist(wel$layer_parm), row = unlist(wel$row_parm), column = unlist(wel$column_parm),  qfact = unlist(wel$qfact_parm) )
-      
-      # add q values & parameter names & parameter values
-      wel_df$q = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$parval[x]*wel$qfact_parm[[x]][1,]))
-      wel_df$parnam = rep(wel$parnam, wel$nlst) # as.character(unlist(lapply(seq_along(wel$parnam), function(x) rep(wel$parnam[x], wel$nlst[x]))))   
-      wel_df$parval = rep(wel$parval, wel$nlst) # as.numeric(unlist(lapply(seq_along(wel$parval), function(x) rep(wel$parval[x], wel$nlst[x]))))   
-      
-      
-    } else { # time varying
-      wel_df = data.frame(layer = unlist(lapply(seq_along(wel$layer_parm), function(x) wel$layer_parm[[x]][instnum[x],])), row = unlist(lapply(seq_along(wel$row_parm), function(x) wel$row_parm[[x]][instnum[x],])), column = unlist(lapply(seq_along(wel$column_parm), function(x) wel$column_parm[[x]][instnum[x],])),  qfact = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$qfact_parm[[x]][instnum[x],])) )
-      
-      # add q values & parameter names & instance names & parameter values
-      wel_df$q = unlist(lapply(seq_along(wel$qfact_parm), function(x) wel$parval[x]*wel$qfact_parm[[x]][instnum[x],]))
-      wel_df$parnam = rep(wel$parnam, wel$nlst)  # as.character(unlist(lapply(seq_along(wel$parnam), function(x) rep(wel$parnam[x], wel$nlst[x]))))
-      wel_df$instnam = as.character(unlist(lapply(seq_along(wel$instnam)), function(x) rep(wel$instnam[[x]][instnum[x]], wel$nlst[x])))
-      wel_df$parval = rep(wel$parval, wel$nlst)  # as.numeric(unlist(lapply(seq_along(wel$parval), function(x) rep(wel$parval[x], wel$nlst[x]))))  
-      
-    }
-    
-    
-  } else { ####  data in use for the specified stress period ####
-    
-    if(wel$np[sp] > 0){ # parameter data in use
-      
-      # not time-varying
-      if(is.null(wel$iname) || (!is.null(wel$iname) && (is.null(wel$iname[[sp]]) || all(is.na(unlist(wel$iname[[sp]])))) )){
-        
-        wel_df_parm = data.frame(layer = unlist(wel$layer_parm[which(wel$parnam %in% wel$pname[[sp]])]), row = unlist(wel$row_parm[which(wel$parnam %in% wel$pname[[sp]])]), column = unlist(wel$column_parm[which(wel$parnam %in% wel$pname[[sp]])]) )
-        
-        # add q values & parameter names & parameter values
-        wel_df_parm$q = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$parval[which(wel$parnam == wel$pname[[sp]][x])]*unlist(wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][1,])))
-        wel_df_parm$parnam = as.character(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$pname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  # long code instead of a simple rep(wel$pname[[sp]], wel$nlst[which(wel$parnam %in% wel$pname[[sp]])]) because of possible ordering issues in wel$pname relative to wel$nlst
-        wel_df_parm$parval = as.numeric(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$parval[which(wel$parnam == wel$pname[[sp]][x])], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  
-        
-        
-      } else { # time-varying
-        wel_df_parm = data.frame(layer = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$layer_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), row = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$row_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), column = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$column_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])), qfact = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])) )
-        
-        # add q values & parameter names & instance names & parameter values
-        wel_df_parm$q = unlist(lapply(seq_along(wel$pname[[sp]]), function(x) wel$parval[which(wel$parnam == wel$pname[[sp]][x])]*unlist(wel$qfact_parm[[which(wel$parnam == wel$pname[[sp]][x])]][ifelse(is.null(wel$iname[[sp]][x]) || is.na(wel$iname[[sp]][x]), 1, which(wel$instnam[[which(wel$parnam == wel$pname[[sp]][x])]] == wel$iname[[sp]][x]) ), ])))
-        wel_df_parm$parnam = as.character(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$pname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  # long code instead of a simple rep(wel$pname[[sp]], wel$nlst[which(wel$parnam %in% wel$pname[[sp]])]) because of possible ordering issues in wel$pname relative to wel$nlst
-        wel_df_parm$instnam = as.character(unlist(lapply(seq_along(wel$iname[[sp]]), function(x) rep(wel$iname[[sp]][x], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))
-        wel_df_parm$parval = as.numeric(unlist(lapply(seq_along(wel$pname[[sp]]), function(x) rep(wel$parval[which(wel$parnam == wel$pname[[sp]][x])], wel$nlst[which(wel$parnam == wel$pname[[sp]][x])]) )))  
-        
-      }
-      
-      wel_df_parm$type = 'parameter'
-      
-    } # non-parameter data in use
-    if(wel$itmp[sp] != 0){
-      sp = tail(subset(which(wel$itmp >= 0), which(wel$itmp >= 0) <= sp), 1)  # set stress period to last stress period with itmp >= 0 before current stress period
-      
-      if(wel$itmp[sp] > 0){
-        wel_df_sp = data.frame(layer = unlist(wel$layer_sp[[sp]]), row = unlist(wel$row_sp[[sp]]), column = unlist(wel$column_sp[[sp]]), q = unlist(wel$q_sp[[sp]]) )
-        wel_df_sp$type = 'non-parameter'
-      }
-    } 
-    
-    # bind wel_df_parm & wel_df_sp into wel_df (check if they exist first)
-    if(exists('wel_df_parm') && exists('wel_df_sp')){
-      
-      wel_df = rbind(wel_df_parm[colnames(wel_df_sp)], wel_df_sp)  # only use mutual column names. This will drop certain columns but only when both parameter AND non-parameter data is being used in the same stress period
-      
-    } else if(!exists('wel_df_parm')){
-      wel_df = wel_df_sp
-    } else if(!exists('wel_df_sp')){
-      wel_df = wel_df_parm
-    }
-  }
-  
-  ##### transform data frame into rmf_array #####
-  id =  rmf_convert_ijk_to_id(i=wel_df$row, j=wel_df$column, k=wel_df$layer, dis=dis, type='r')
-  
-  # additive parameters (can be a lot less verbose with dplyr)
-  if(variable == 'q' && any(duplicated(id))){
-    
-    wel_df$id = id
-    id_dupl = id[duplicated(id)]
-    wel_df_dupl = wel_df[id %in% id_dupl,]
-    aggr = aggregate(wel_df_dupl[[variable]], by=list(wel_df_dupl$id), FUN=sum)
-    
-    for(i in 1:nrow(aggr)){
-      wel_df[id==aggr[i, 1], variable] = aggr[i, 2]
-    }
-    
-    wel_df = wel_df[!duplicated(id),]
-    id =  rmf_convert_ijk_to_id(i=wel_df$row, j=wel_df$column, k=wel_df$layer, dis=dis, type='r')
-    
-  }
-  
-  rmf_array = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(variable == 'identity'){
-    rmf_array[id] = 1
-  }  else if(variable %in% c('parnam', 'instnam')){   # add changes for character vectors (parnam & instnam) because of incompatability with default mask (=numeric) in rmf_plot function
-    names = factor(rep(seq_along(unique(wel_df[,variable])), as.vector(table(factor(wel_df[,variable], levels=as.character(unique(wel_df[,variable])))))), labels = unique(wel_df[,variable]))
-    rmf_array[id] = names
-  } else {
-    rmf_array[id] = unlist(wel_df[variable])
-  }
-  
-  ##### plot #####
-  if(variable %in% c('parnam', 'instnam'))  rmf_plot(rmf_array, dis=dis, type='factor', levels=levels(names), ...) else rmf_plot(rmf_array, dis=dis, ...)
+  rmfi_plot_bc(obj = wel, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
   
 }

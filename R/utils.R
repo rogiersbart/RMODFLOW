@@ -19,7 +19,9 @@ rmf_as_array <- function(...) {
 #' @param na_value value of the cells in the array which are not specified in obj; defaults to 0
 #' @param sparse logical; indicating if the returned array should be 2D or 3D. See details. Defaults to TRUE.
 #' @param kper sets the kper attribute of the returned array; defaults to the kper attribute of obj
-#'
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to fun.
+#' 
 #' @details the dimension of the returned array is guessed from the supplied dis object. If there is only one unique k value in obj, 
 #'  \code{sparse}, determines the dimensions of the returned array. If \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE}, a 3D array is returned.
 #'  When there is more than one unique k value in obj, a 3D array is always returned.
@@ -30,24 +32,29 @@ rmf_as_array <- function(...) {
 #' @seealso \code{\link{rmf_as_list}}
 #' 
 
-
 rmf_as_array.rmf_list <- function(obj, 
                                   dis, 
                                   select = 4,
                                   na_value = 0,
                                   sparse = TRUE,
-                                  kper = attr(obj, 'kper')) {
+                                  kper = attr(obj, 'kper'),
+                                  fun = sum,
+                                  ...) {
   
+  df <- list(values = obj[[select]])
   
   if(length(unique(obj$k)) == 1 && sparse) {
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = 1, dis = dis, type = 'r')
+    df$id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = 1, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol), kper = kper)
   } else {
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
+    df$id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     ar <- rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol, dis$nlay), kper = kper)
   }
   
-  ar[id] <- obj[[select]]
+  # deal with additive data
+  if(is.numeric(df$values)) df <- aggregate(list(values = obj[[select]]), by = list(id = df$id), FUN = fun, ...)
+  
+  ar[as.numeric(df$id)] <- as.numeric(df$values)
   return(ar)
   
 }
@@ -2111,8 +2118,6 @@ rmf_create_parameter.rmf_list <- function(rmf_list,
   return(rmf_list)
 }
 
-
-
 #' Calculate the Darcy flux
 #'
 #' @export
@@ -2148,7 +2153,7 @@ rmf_darcy_flux.rmf_2d_array <- function(hed, dis, hk, hani = rep(1, dis$nlay), p
   } else {
     porosity <- rmf_create_array(porosity, dim = c(dis$nrow, dis$ncol))
   }
-
+  
   if(is.null(mask)) mask <- hed*0 + 1
   grad <- rmf_gradient(hed, dis = dis, mask = mask)
   
@@ -2200,7 +2205,7 @@ rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1,
   hk <- rmf_create_array(hk, dim = c(dis$nrow, dis$ncol, dis$nlay))
   vka <- rmf_create_array(vka, dim = c(dis$nrow, dis$ncol, dis$nlay))
   if(length(vani) == 1) vani <- rep(vani, dis$nlay)
-
+  
   vka[,,which(vani)] <- hk[,,which(vani)]/vka[,,which(vani)]
   
   if(!is.array(hani)) {
@@ -2227,7 +2232,6 @@ rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1,
   
 }
 
-
 #' Calculate the Darcy flux from a 4d array
 #'
 #' @param hed 4d array with the hydraulic heads
@@ -2240,7 +2244,124 @@ rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1,
 rmf_darcy_flux.rmf_4d_array <- function(hed, dis, l, ...) {
   if(missing(l)) stop('Please specify a l argument')
   rmf_darcy_flux(hed[,,,l], dis = dis, ...)
+}
+
+#' Calculate a gradient field
+#'
+#' @rdname rmf_gradient
+#' @export
+#'
+rmf_gradient <- function(...) {
+  UseMethod('rmf_gradient')
+}
+
+#' Calculate a 2d gradient field
+#' 
+#' \code{rmf_gradient.rmf_2d_array} calculates the x and y components of the gradient from a 2d scalar field
+#'
+#' @param obj 2d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
+#' @return a list with the x and y components of the gradient field as 2d arrays
+#' @details The gradient is evaluated in the direction of increasing x & y values.
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+    
+  coords <- rmf_cell_coordinates(dis)
+  x <- coords$x[1,,1]
+  y <- coords$y[,1,1]
   
+  n <- dis$nrow
+  m <- dis$ncol
+  
+  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
+  obj <- obj*mask
+    
+  gX <- gY <- 0 * obj
+  if(n > 1) {
+    gY[1, ] <- (obj[2, ] - obj[1, ])/(y[2] - y[1])
+    gY[n, ] <- (obj[n, ] - obj[n - 1, ])/(y[n] - y[n - 1])
+    if (n > 2) gY[2:(n - 1), ] <- (obj[3:n, ] - obj[1:(n - 2), ])/(y[3:n] - y[1:(n - 2)])
+  }
+  if(m > 1) {
+    gX[, 1] <- (obj[, 2] - obj[, 1])/(x[2] - x[1])
+    gX[, m] <- (obj[, m] - obj[, m - 1])/(x[m] - x[m - 1])
+    if (m > 2) gX[, 2:(m - 1)] <- (obj[, 3:m] - obj[, 1:(m - 2)])/(x[3:m] - x[1:(m - 2)])
+  }
+  
+  return(list(x = gX, y = gY))
+  
+}
+
+#' Calculate a 3d gradient field
+#' 
+#' \code{rmf_gradient.rmf_3d_array} calculates the x, y and z components of the gradient from a 3d scalar field
+#'
+#' @param obj 3d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
+#' @return a list with the x, y and z components of the gradient field as 3d arrays
+#' @details The gradient is evaluated in the direction of increasing x, y & z values.
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+  
+  coords <- rmf_cell_coordinates(dis)
+  x <- coords$x[1,,1]
+  y <- coords$y[,1,1]
+  z <- coords$z
+  
+  n <- dis$nrow
+  m <- dis$ncol
+  k <- dis$nlay
+  
+  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
+  obj <- obj*mask
+  
+  gX <- gY <- gZ <- 0 * obj
+  if(n > 1) {
+    gY[1,,] <- (obj[2,,] - obj[1,,])/(y[2] - y[1])
+    gY[n,,] <- (obj[n,,] - obj[n - 1,,])/(y[n] - y[n - 1])
+    if (n > 2) gY[2:(n - 1),,] <- (obj[3:n,,] - obj[1:(n - 2),,])/(y[3:n] - y[1:(n - 2)])
+  }
+  if(m > 1) {
+    gX[,1,] <- (obj[,2,] - obj[,1,])/(x[2] - x[1])
+    gX[,m,] <- (obj[,m,] - obj[,m - 1,])/(x[m] - x[m - 1])
+    if (m > 2) gX[,2:(m - 1),] <- (obj[,3:m,] - obj[,1:(m - 2),])/(x[3:m] - x[1:(m - 2)])
+  }
+  if(k > 1) {
+    gZ[,,1] <- (obj[,,2] - obj[,,1])/(z[,,2] - z[,,1])
+    gZ[,,k] <- (obj[,,k] - obj[,,k - 1])/(z[,,k] - z[,,k - 1])
+    if (k > 2) gZ[,,2:(k - 1)] <- (obj[,,3:k] - obj[,,1:(k - 2)])/(z[,,3:k] - z[,,1:(k - 2)])
+  }
+  
+  return(list(x = gX, y = gY, z = gZ))
+  
+}
+
+#' Calculate a 3d gradient field from a 4d array
+#' 
+#' \code{rmf_gradient.rmf_4d_array} calculates the x, y and z components of the gradient from a 4d scalar field where the 4th dimension is time
+#'
+#' @param obj 4d array with the scalars
+#' @param dis \code{RMODFLOW} dis object
+#' @param l integer index used to subset the 4th dimension of the 4d array
+#' @param ... additional arguments passed to \code{\link{rmf_gradient.rmf_3d_array}}
+#' @return a list with the x, y and z components of the gradient field as 3d arrays
+#' @details the 4d array is subsetted on the 4th dimension to a 3d array from which the gradient is calculated
+#' @export
+#'
+#' @rdname rmf_gradient
+#' 
+rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
+  rmf_gradient(obj[,,,l], dis = dis, ...)
 }
 
 #' Calculate the internal time step sequence of a transient MODFLOW model

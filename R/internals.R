@@ -1104,6 +1104,48 @@ rmfi_performance_measures <- function(observations, predictions,print=F,measures
   return(gof)
 }
 
+#' Plot a RMODFLOW list-directed boundary condition object
+#'
+#' @param obj a \code{RMODFLOW} list-directed boundary condition object, i.e. riv, chd, wel, drn, ghb, and derivatives
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#'
+#' @return ggplot2 object or layer
+#' @keywords internal
+#'
+rmfi_plot_bc <- function(obj,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = sum,
+                         ...) {
+  
+  if(is.null(kper)) {
+    if(dis$nper > 1) warning('Setting kper to last stress-period', call. = FALSE)
+    kper <- dis$nper
+  }
+  
+  active_lists <- colnames(obj$kper)[-1]
+  active_lists <- active_lists[which(obj$kper[kper,-1] == TRUE)] 
+  
+  obj <- subset(obj$data, name %in% active_lists)
+  
+  # rmf_plot.rmf_list
+  rmf_plot(obj, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
+  
+}
+
 #' Read input for a MODFLOW boundary condition package which uses list-directed input
 #'
 #' @param lines lines as returned from readr::read_lines
