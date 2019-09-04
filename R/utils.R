@@ -115,6 +115,7 @@ rmf_as_list.rmf_3d_array <- function(obj,
 
 #'
 #' @rdname rmf_as_list
+#' @details will set k to 1 
 #' @export
 rmf_as_list.rmf_2d_array <- function(obj, ...) {
   obj <- rmf_create_array(obj, dim = c(dim(obj), 1))
@@ -1881,6 +1882,24 @@ create_rmodflow_array <- function(...) {
 }
 
 #' @export
+as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
+
+#' @export
+as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
+#' @export
+as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
+#' @export
+as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+
+#' @export
 aperm.rmf_2d_array <- function(a, perm, ...) {
   att <- attributes(a)
   a <- aperm.default(a, perm = perm, ...)
@@ -1908,6 +1927,21 @@ aperm.rmf_4d_array <- function(a, perm, ...) {
   att$dim <- attr(a, 'dim')
   attributes(a) <- att
   return(a)
+}
+
+#' @export
+apply.rmf_2d_array <- function(X, ...) {
+  apply(as.array(X), ...)
+}
+
+#' @export
+apply.rmf_3d_array <- function(X, ...) {
+  apply(as.array(X), ...)
+}
+
+#' @export
+apply.rmf_4d_array <- function(X, ...) {
+  apply(as.array(X), ...)
 }
 
 #' @export
