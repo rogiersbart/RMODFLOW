@@ -211,7 +211,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
   values <- data.frame(id = ids,value = c(t(array*mask^2)))
   if(!is.null(prj)) {
-    new_positions <- convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
+    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
   }
@@ -1606,7 +1606,7 @@ rmf_convert_upw_to_lpf <- function(upw,
     
     if(any(upw$laytyp != 0)) {
       if(is.null(wetdry)) stop('Please specify a wetdry argument', call. = FALSE)
-      upw$wetdry <- rmf_create_array(wetdry, dim = dim(hk))
+      upw$wetdry <- rmf_create_array(wetdry, dim = dim(upw$hk))
     }
   }
   
@@ -1881,33 +1881,33 @@ create_rmodflow_array <- function(...) {
 }
 
 #' @export
-aperm.rmf_2d_array <- function(obj, perm, ...) {
-  att <- attributes(obj)
-  obj <- aperm.default(obj, perm = perm, ...)
+aperm.rmf_2d_array <- function(a, perm, ...) {
+  att <- attributes(a)
+  a <- aperm.default(a, perm = perm, ...)
   att$dimlabels <- att$dimlabels[perm]
-  att$dim <- attr(obj, 'dim')
-  attributes(obj) <- att
-  return(obj)
+  att$dim <- attr(a, 'dim')
+  attributes(a) <- att
+  return(a)
 }
 
 #' @export
-aperm.rmf_3d_array <- function(obj, perm, ...) {
-  att <- attributes(obj)
-  obj <- aperm.default(obj, perm = perm, ...)
+aperm.rmf_3d_array <- function(a, perm, ...) {
+  att <- attributes(a)
+  a <- aperm.default(a, perm = perm, ...)
   att$dimlabels <- att$dimlabels[perm]
-  att$dim <- attr(obj, 'dim')
-  attributes(obj) <- att
-  return(obj)
+  att$dim <- attr(a, 'dim')
+  attributes(a) <- att
+  return(a)
 }
 
 #' @export
-aperm.rmf_4d_array <- function(obj, perm, ...) {
-  att <- attributes(obj)
-  obj <- aperm.default(obj, perm = perm, ...)
+aperm.rmf_4d_array <- function(a, perm, ...) {
+  att <- attributes(a)
+  a <- aperm.default(a, perm = perm, ...)
   att$dimlabels <- att$dimlabels[perm]
-  att$dim <- attr(obj, 'dim')
-  attributes(obj) <- att
-  return(obj)
+  att$dim <- attr(a, 'dim')
+  attributes(a) <- att
+  return(a)
 }
 
 #' @export

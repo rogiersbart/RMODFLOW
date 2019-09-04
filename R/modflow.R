@@ -452,7 +452,7 @@ rmf_write <- function(modflow,
   not_supported <- not_supported[-which(not_supported %in% packages$ftype)]
 
   if(length(not_supported) > 0) {
-    warning(paste0('Packages in the NAME file not written:  \n ', paste(not_supported, collapse = '\n ')))
+    warning(paste0('Packages in the NAME file not written:  \n ', paste(not_supported, collapse = '\n ')), call. = FALSE)
     if(suppress) {
       warning('Removing non-supported packages in the NAME file', call. = FALSE)
       modflow$nam <- modflow$nam[-which(modflow$nam$ftype %in% not_supported),]

@@ -241,7 +241,7 @@ rmf_write_bcf <- function(bcf,
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Block-Centered Flow Package created by RMODFLOW, version',v,'\n'), file = file)
-  cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
+  cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
   rmfi_write_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file, ...)
