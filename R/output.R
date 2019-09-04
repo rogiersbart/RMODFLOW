@@ -9,16 +9,19 @@
 #' @param oc oc object; optional. See details.
 #' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
+#' @param timesteps optional integer vector specifying which time steps to read. If -1 is specified, only the last time step is read. Defaults to NULL. See details.
 #' @return object of class \code{cbc} which is a list consisting of named rmf_arrays and/or data.frames. The names of the elements correspond to the fluxes.
 #'
 #' @details 
 #' Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
 #'  
-#' If a \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
-#' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY is read and binded at each time step for which output is written. 
-#' The resulting dimensions of the final array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
-#'
+#' If no \code{oc} object is supplied, for all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
+#' If a \code{oc} object is supplied, rmf_arrays of dimensions NROW x NCOL x NLAY are read and binded at each time step for which output is written. 
+#' The resulting dimensions of the final arrays are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
+#' 
+#' If the timesteps argument is supplied, it overwrites the use of the oc argument. For all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x length(timesteps) is created and filled.
+#' 
 #' If flows are interpolated to huf units, a \code{huf} object is to be supplied as well to dimension the array. This will only affect the constant-head and cell flow terms.
 #' The final array will have NHUF layers instead of NLAY.
 #'
@@ -28,7 +31,8 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                          huf = NULL,
                          oc = NULL,
                          precision = 'single',
-                         fluxes = 'all') {
+                         fluxes = 'all',
+                         timesteps = NULL) {
   
   # headers <- c('   CONSTANT HEAD',
   #              '         STORAGE',
@@ -52,9 +56,13 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
       kper <- readBin(con,what='integer',n=1)
       desc <- readChar(con,nchars=16)
       trial <- 1
-      fail = c(FALSE,FALSE)
+      fail <- c(FALSE,FALSE)
       
       # nsteps to dimension array
+      if(!is.null(timesteps)) {
+        oc <- NULL
+        if(length(timesteps) == 1 && timesteps < 0) timesteps <- sum(dis$nstp)
+      }
       if(is.null(oc)) {
         nsteps <- sum(dis$nstp)
       } else {
@@ -187,7 +195,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
               if(is.null(attr(cbc[[name]], 'ctmp'))) attr(cbc[[name]], 'ctmp') <- as.list(rep(NA,nsteps))
               ctmp <- rep(NA, (nval-1))
               for(nr in 1:(nval-1)) {
-                ctmp[nr] <- trimws(readChar(con,nchars=16))
+                ctmp[nr] <- tolower(trimws(readChar(con,nchars=16)))
               }
             }
             
@@ -203,13 +211,13 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                 if(is.null(cbc[[name]]) || is.array(cbc[[name]])) {
                   nstp <- ifelse(is.null(dis), 1, stp_nr)
                   cbc[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,as.data.frame(df)[,-1], nstp, kper, kstp))
-                  names(cbc[[name]]) <- c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper','kstp')
+                  names(cbc[[name]]) <- tolower(c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper','kstp'))
                   cbc[[name]] <- rmf_create_list(cbc[[name]])
                   rm(df)
                 } else {
                   nstp <- ifelse(is.null(dis), cbc[[name]][nrow(cbc[[name]]),nstp]+1, stp_nr)
                   df <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j, as.data.frame(df)[,-1], nstp, kper, kstp))
-                  names(df) <- c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper', 'kstp')
+                  names(df) <- tolower(c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper', 'kstp'))
                   
                   cbc[[name]] <- rbind(cbc[[name]], df)
                 }
@@ -268,6 +276,18 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
     })
     
     close(con)
+    if(!is.null(timesteps)) {
+      
+      timestp <- function(list_obj) {
+        if(inherits(list_obj, 'data.frame')) {
+          subset(list_obj, nstp %in% timesteps)
+        } else if(inherits(list_obj, 'rmf_4d_array')) {
+          rmf_create_array(list_obj[,,,timesteps], dim = c(dim(list_obj)[1:3], length(timesteps)))
+        }
+      }
+      cbc <- lapply(cbc, timestp)
+    }
+    
     class(cbc) <- c('cbc','rmf_package')
     return(cbc)
     
@@ -365,6 +385,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
+#' @param timesteps optional integer vector specifying which time steps to read. If -1 is specified, only the last time step is read. Defaults to NULL. See details.
 #' @return object of class hed and rmf_4d_array.
 #' @details 
 #' When huf heads are to be read, a \code{huf} object should also be supplied. The final array will have NHUF layers instead of NLAY.
@@ -372,6 +393,8 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
 #' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
 #' If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
 #' If the array is in ASCII format and no headers are present, a \code{OC} object must be supplied. In that case, it is assumed that the file being read only contains head values and the keyword XSECTION in the bas file is not present.
+#' 
+#' If the timesteps argument is supplied, it overwrites the use of the oc argument. For all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x length(timesteps) is created and filled.
 #' 
 #' The only use of the bas argument is to replace the hnoflo values in the final array with NA's. 
 #'
@@ -382,7 +405,8 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
                          oc = NULL,
                          bas = NULL,
                          binary = TRUE,
-                         precision = 'single') {
+                         precision = 'single',
+                         timesteps = NULL) {
   
   headers <- c('HEAD',
                'DRAWDOWN',
@@ -420,6 +444,10 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
         dis$nlay <- huf$nhuf
       }
       
+      if(!is.null(timesteps)) {
+        oc <- NULL
+        if(length(timesteps) == 1 && timesteps < 0) timesteps <- sum(dis$nstp)
+      }
       # check time steps if oc is specified
       if(!is.null(oc)) {
         # oc using words
@@ -538,13 +566,14 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
       
       if(!is.null(other_desc) && length(other_desc) != 0) {
-        warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-        warning(other_desc, call. = FALSE)
-        warning('Returning NULL', call. = FALSE)
+        warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
         return(NULL)
       } else {
-        class(hed) <- c('hed','rmf_4d_array')
-        attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+        hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
+        if(!is.null(timesteps)) {
+          hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
+        }
+        class(hed) <- c('hed', class(hed))
         return(hed)
       }
     })
@@ -589,6 +618,10 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
     }
     
+    if(!is.null(timesteps)) {
+      oc <- NULL
+      if(length(timesteps) == 1 && timesteps < 0) timesteps <- sum(dis$nstp)
+    }
     # check time steps if oc is specified
     if(!is.null(oc)) {
       # oc using words
@@ -730,13 +763,14 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
     
     if(!is.null(other_desc) && length(other_desc) != 0) {
-      warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-      warning(other_desc, call. = FALSE)
-      warning('Returning NULL', call. = FALSE)
+      warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
       return(NULL)
     } else {
-      class(hed) <- c('hed','rmf_4d_array')
-      attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
+      hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
+      if(!is.null(timesteps)) {
+        hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
+      }
+      class(hed) <- c('hed', class(hed))
       return(hed)
     }
   }
@@ -777,12 +811,15 @@ rmf_read_bhd <- function(...) {
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
+#' @param timesteps optional integer vector specifying which time steps to read. If -1 is specified, only the last time step is read. Defaults to NULL. See details.
 #' @return object of class ddn and rmf_4d_array
 #' @details 
 #' 
 #' If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
 #' If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
 #' If the array is in ASCII format and no headers are present, a \code{OC} object must be supplied. In that case, it is assumed that the file being read only contains head values and the keyword XSECTION in the bas file is not present.
+#' 
+#' If the timesteps argument is supplied, it overwrites the use of the oc argument. For all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x length(timesteps) is created and filled.
 #' 
 #' The only use of the bas argument is to replace the hnoflo values in the final array with NA's. 
 #'
@@ -792,7 +829,8 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
                          oc = NULL,
                          bas = NULL,
                          binary = TRUE,
-                         precision = 'single') {
+                         precision = 'single',
+                         timesteps = NULL) {
   
   headers <- c('HEAD',
                'DRAWDOWN',
@@ -830,6 +868,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       #   dis$nlay <- huf$nhuf
       # }
       
+      if(!is.null(timesteps)) {
+        oc <- NULL
+        if(length(timesteps) == 1 && timesteps < 0) timesteps <- sum(dis$nstp)
+      }
       # check time steps if oc is specified
       if(!is.null(oc)) {
         # oc using words
@@ -947,14 +989,15 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
       
       if(!is.null(other_desc) && length(other_desc) != 0) {
-        warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-        warning(other_desc, call. = FALSE)
-        warning('Returning NULL', call. = FALSE)
+        warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
         return(NULL)
       } else {
         if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
-        attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
-        class(hed) <- c('ddn','rmf_4d_array')
+        hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
+        if(!is.null(timesteps)) {
+          hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
+        }
+        class(hed) <- c('ddn', class(hed))
         return(hed)
       }
     })
@@ -993,6 +1036,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       #   }
     }
     
+    if(!is.null(timesteps)) {
+      oc <- NULL
+      if(length(timesteps) == 1 && timesteps < 0) timesteps <- sum(dis$nstp)
+    }
     # check time steps if oc is specified
     if(!is.null(oc)) {
       # oc using words
@@ -1118,14 +1165,15 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       
     }
     if(!is.null(other_desc) && length(other_desc) != 0) {
-      warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), ' other descriptions'), call. = FALSE)
-      warning(other_desc, call. = FALSE)
-      warning('Returning NULL', call. = FALSE)
+      warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
       return(NULL)
     } else {
       if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
-      attr(hed, 'dimlabels') <- rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l'))
-      class(hed) <- c('ddn','rmf_4d_array')
+      hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
+      if(!is.null(timesteps)) {
+        hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
+      }
+      class(hed) <- c('ddn', class(hed))
       return(hed)
     }
   }
