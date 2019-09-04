@@ -16,14 +16,12 @@
 #' @param head_label logical; should labels be included in the unformatted head file?
 #' @param drawdown_label logical; should labels be included in the unformatted drawdown file?
 #' @param ibound_label logical; should labels be included in the unformatted ibound file?
-#' @param iperoc vector of stress period numbers
-#' @param itsoc vector of time step numbers (within the corresponding stress period). A negative number indicates the last time step within the corresponding stress period
-#' @param print_head logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param print_drawdown logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param print_head logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param print_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
 #' @param print_budget logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?
-#' @param save_head logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param save_drawdown logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param save_ibound logical vector or logical matrix of dimensions NLAY x length(iperoc); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param save_head logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param save_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
+#' @param save_ibound logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
 #' @param save_budget logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?
 #' @param incode vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #' @param ihddfl vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
@@ -51,8 +49,6 @@ rmf_create_oc <- function(dis,
                           head_label = TRUE,
                           drawdown_label = TRUE,
                           ibound_label = TRUE,
-                          iperoc = rep(1:dis$nper,dis$nstp),
-                          itsoc = unlist(apply(data.frame(1,dis$nstp),1,FUN=function(x) x[1]:x[2])),
                           print_head = FALSE,
                           print_drawdown = FALSE,
                           print_budget = TRUE,
@@ -92,17 +88,17 @@ rmf_create_oc <- function(dis,
       oc$ibound_label <- ibound_label
       
       # data set 2
-      oc$iperoc <- iperoc
-      oc$itsoc <- replace(itsoc, which(itsoc < 0), dis$nstp[oc$iperoc[which(itsoc < 0)]])
+      oc$iperoc <- rep(1:dis$nper,dis$nstp)
+      oc$itsoc <- unlist(lapply(dis$nstp, seq_len))
       
       # data set 3
-      oc$print_head <- rmfi_ifelse0(length(print_head) == 1, rep(print_head, length(iperoc)), print_head)
-      oc$print_drawdown <- rmfi_ifelse0(length(print_drawdown) == 1, rep(print_drawdown, length(iperoc)), print_drawdown)
-      oc$print_budget <- rmfi_ifelse0(length(print_budget) == 1, rep(print_budget, length(iperoc)), print_budget)
-      oc$save_head <- rmfi_ifelse0(length(save_head) == 1, rep(save_head, length(iperoc)), save_head)
-      oc$save_drawdown <- rmfi_ifelse0(length(save_drawdown) == 1, rep(save_drawdown, length(iperoc)), save_drawdown)
-      oc$save_ibound <- rmfi_ifelse0(length(save_ibound) == 1, rep(save_ibound, length(iperoc)), save_ibound)
-      oc$save_budget <- rmfi_ifelse0(length(save_budget) == 1, rep(save_budget, length(iperoc)), save_budget)
+      oc$print_head <- rmfi_ifelse0(length(print_head) == 1, rep(print_head, length(oc$iperoc)), print_head)
+      oc$print_drawdown <- rmfi_ifelse0(length(print_drawdown) == 1, rep(print_drawdown, length(oc$iperoc)), print_drawdown)
+      oc$print_budget <- rmfi_ifelse0(length(print_budget) == 1, rep(print_budget, length(oc$iperoc)), print_budget)
+      oc$save_head <- rmfi_ifelse0(length(save_head) == 1, rep(save_head, length(oc$iperoc)), save_head)
+      oc$save_drawdown <- rmfi_ifelse0(length(save_drawdown) == 1, rep(save_drawdown, length(oc$iperoc)), save_drawdown)
+      oc$save_ibound <- rmfi_ifelse0(length(save_ibound) == 1, rep(save_ibound, length(oc$iperoc)), save_ibound)
+      oc$save_budget <- rmfi_ifelse0(length(save_budget) == 1, rep(save_budget, length(oc$iperoc)), save_budget)
       
 
     } else { # numeric codes
@@ -193,7 +189,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
     # data set 2 & 3
     oc$iperoc <- NULL
     oc$itsoc <- NULL
-    oc$print_drawdown <-  oc$print_head <- matrix(nrow = dis$nlay, ncol = 0)
+    oc$print_drawdown <- oc$print_head <- matrix(nrow = dis$nlay, ncol = 0)
     oc$print_budget <- NULL
     oc$save_ibound <- oc$save_drawdown <-  oc$save_head <- matrix(nrow = dis$nlay, ncol = 0)
     oc$save_budget <- NULL
@@ -292,55 +288,55 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   } else { # OC using numeric codes
     
     # data set 1
-    data_set_1 = rmfi_parse_variables(oc_lines, n = 4, ...)
-    oc$ihedfm = rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
-    oc$iddnfm = rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
-    oc$ihedun = rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
-    oc$iddnun = rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4]))
-    oc_lines = data_set_1$remaining_lines
+    data_set_1 <- rmfi_parse_variables(oc_lines, n = 4, ...)
+    oc$ihedfm <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
+    oc$iddnfm <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
+    oc$ihedun <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
+    oc$iddnun <- rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4]))
+    oc_lines <- data_set_1$remaining_lines
     rm(data_set_1)
     
     # data set 2 & 3
-    oc$incode = oc$ihddfl = oc$ibudfl = oc$icbcfl = NULL
-    oc$hdpr = oc$ddpr = oc$hdsv = oc$ddsv = matrix(NA, nrow = sum(dis$nstp), ncol = dis$nlay)
+    oc$incode <- oc$ihddfl <- oc$ibudfl <- oc$icbcfl <- NULL
+    oc$hdpr <- oc$ddpr <- oc$hdsv <- oc$ddsv <- matrix(NA, nrow = sum(dis$nstp), ncol = dis$nlay)
     for (i in 1:sum(dis$nstp)) {
-      data_set_2 = rmfi_parse_variables(oc_lines, n = 4, ...)
-      oc$incode[i] = rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
-      oc$ihddfl[i] = rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
-      oc$ibudfl[i] = rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))
-      oc$icbcfl[i] = rmfi_ifelse0(is.na(data_set_2$variables[4]), 0, as.numeric(data_set_2$variables[4]))
-      oc_lines = data_set_2$remaining_lines
+      data_set_2 <- rmfi_parse_variables(oc_lines, n = 4, ...)
+      oc$incode[i] <- rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
+      oc$ihddfl[i] <- rmfi_ifelse0(is.na(data_set_2$variables[2]), 0, as.numeric(data_set_2$variables[2]))
+      oc$ibudfl[i] <-  rmfi_ifelse0(is.na(data_set_2$variables[3]), 0, as.numeric(data_set_2$variables[3]))
+      oc$icbcfl[i] <- rmfi_ifelse0(is.na(data_set_2$variables[4]), 0, as.numeric(data_set_2$variables[4]))
+      oc_lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
       if(oc$incode[i] < 0) {
         if(i == 1) {
-          oc$hdpr[i,] = NA
-          oc$ddpr[i,] = NA
-          oc$hdsv[i,] = NA
-          oc$ddsv[i,] = NA
+          oc$hdpr[i,] <- NA
+          oc$ddpr[i,] <- NA
+          oc$hdsv[i,] <- NA
+          oc$ddsv[i,] <- NA
         } else {
-          oc$hdpr[i,] = oc$hdpr[i-1,]
-          oc$ddpr[i,] = oc$ddpr[i-1,]
-          oc$hdsv[i,] = oc$hdsv[i-1,]
-          oc$ddsv[i,] = oc$ddsv[i-1,]
+          oc$hdpr[i,] <- oc$hdpr[i-1,]
+          oc$ddpr[i,] <- oc$ddpr[i-1,]
+          oc$hdsv[i,] <- oc$hdsv[i-1,]
+          oc$ddsv[i,] <- oc$ddsv[i-1,]
         }
         
       } else if(oc$incode[i] == 0) {
-        data_set_3 = rmfi_parse_variables(oc_lines, n = 4, ...)
-        oc$hdpr[i,] = rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
-        oc$ddpr[i,] = rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
-        oc$hdsv[i,] = rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))
-        oc$ddsv[i,] = rmfi_ifelse0(is.na(data_set_3$variables[4]), 0, as.numeric(data_set_3$variables[4]))  
-        oc_lines = data_set_3$remaining_lines
+        data_set_3 <- rmfi_parse_variables(oc_lines, n = 4, ...)
+        oc$hdpr[i,] <- rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
+        oc$ddpr[i,] <- rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
+        oc$hdsv[i,] <- rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))
+        oc$ddsv[i,] <- rmfi_ifelse0(is.na(data_set_3$variables[4]), 0, as.numeric(data_set_3$variables[4]))  
+        oc_lines <- data_set_3$remaining_lines
         rm(data_set_3)
       } else if(oc$incode[i] > 0) {
         for(k in 1:dis$nlay) {
-          data_set_3 = rmfi_parse_variables(oc_lines, n = 4, ...)
-          oc$hdpr[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
-          oc$ddpr[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
-          oc$hdsv[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))
-          oc$ddsv[i,k] = rmfi_ifelse0(is.na(data_set_3$variables[4]), 0, as.numeric(data_set_3$variables[4]))  
-          oc_lines = data_set_3$remaining_lines
+          data_set_3 <- rmfi_parse_variables(oc_lines, n = 4, ...)
+          oc$hdpr[i,k] <- rmfi_ifelse0(is.na(data_set_3$variables[1]), 0, as.numeric(data_set_3$variables[1]))
+          oc$ddpr[i,k] <- rmfi_ifelse0(is.na(data_set_3$variables[2]), 0, as.numeric(data_set_3$variables[2]))
+          oc$hdsv[i,k] <- rmfi_ifelse0(is.na(data_set_3$variables[3]), 0, as.numeric(data_set_3$variables[3]))
+          oc$ddsv[i,k] <- rmfi_ifelse0(is.na(data_set_3$variables[4]), 0, as.numeric(data_set_3$variables[4]))  
+          oc_lines <- data_set_3$remaining_lines
           rm(data_set_3)
         }
       }
