@@ -255,11 +255,24 @@ rmf_as_tibble.rmf_3d_array <- function(array,
     xy$x <- cumsum(dis$delr)-dis$delr/2
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
     mask[which(mask==0)] <- NA
-    dis$thck <- dis$botm
-    dis$thck[,,1] <- dis$top-dis$botm[,,1]
-    for(a in 2:dis$nlay) dis$thck[,,a] <- dis$botm[,,a-1]-dis$botm[,,a]
-    dis$center <- dis$botm
-    for(a in 1:dis$nlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+    
+    # reason for optionally explicitely representing confining bed thickness:
+    # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
+    if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
+      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
+      botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
+      nnlay <- dis$nlay
+      dis$center <- botm
+      for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+    } else {
+      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
+      dis$thck <- rmf_calculate_thickness(dis)
+      nnlay <- dis$nlay + sum(dis$laycbd != 0)
+      dis$center <- dis$botm
+      for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+    }
+    
     if(is.null(i) & !is.null(j)) {
       ids <- factor(1:(dis$nrow*dis$nlay))
       xWidth <- rep(rev(dis$delc),dis$nlay)
@@ -451,11 +464,12 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
                                      include_faces = FALSE) {
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates do not take those into account.")
   cell_coordinates <- NULL
   cell_coordinates$z <- dis$botm*NA
   cell_coordinates$z[,,1] <- (dis$top+dis$botm[,,1])/2
   
-  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
   if(nnlay > 1) {
     for(k in 2:nnlay) {
       cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
@@ -463,8 +477,7 @@ rmf_cell_coordinates.dis <- function(dis,
   }
   class(cell_coordinates$z) <- 'rmf_3d_array'
   # remove the confining beds
-  cbd <- rep(0, nnlay)
-  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  cbd <- rmfi_confining_beds(dis)
   cell_coordinates$z <- cell_coordinates$z[,,!cbd]
   
   cell_coordinates$x <- cell_coordinates$z*0
@@ -550,9 +563,9 @@ rmf_cell_dimensions.dis <- function(dis,
                                     include_faces = FALSE) {
   cell_dimensions <- list()
   # remove the confining beds
-  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
-  cbd <- rep(0, nnlay)
-  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z/upper/lower dimensions do not take those into account.")
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
+  cbd <- rmfi_confining_beds(dis)
   if (is.null(hed) | ifelse(is.null(hed),FALSE,dim(hed)[4] == 1)) {
     cell_top <- dis$botm
     cell_top[,,1] <- dis$top
@@ -669,22 +682,25 @@ rmf_cell_info.dis <- function(dis,
   cat('Vertical boundaries:\n')
   
   # layers: top bottom thickness
-  cat('\t\t Top \t\t Bottom \t Thickness\n', sep='')
-  cat('Layer 1:\t', dis$top[i, j], '\t', dis$botm[i,j,1],'\t', dis$top[i, j]-dis$botm[i,j,1],'\n', sep='')
+  df <- data.frame('Top' = dis$top[i,j], 'Botom' = dis$botm[i,j,1], 'Thickness' = dis$top[i, j]-dis$botm[i,j,1])
+  rows <- 'Layer 1'
   
-  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
   if(nnlay > 1) {
     cbd <- rep(0, nnlay)
     cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
     for(k in 2:nnlay)
     {
+      df[k, ] <- c(dis$botm[i, j, k-1], dis$botm[i, j, k], dis$botm[i, j, k-1] - dis$botm[i, j, k])
       if(cbd[k]) {
-        cat('Quasi-3D Confining Bed below layer ',k-1,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
+        rows <- c(rows, paste('Quasi-3D Confining Bed below layer ',k-1))
       } else {
-        cat('Layer ',k,':\t', dis$botm[i, j, k-1], '\t', dis$botm[i,j,k],'\t', dis$botm[i, j, k-1]-dis$botm[i,j,k],'\n', sep='')
+        rows <- c(rows, paste('Layer', k))
       }
     }
   }
+  row.names(df) <- rows
+  print(df)
   
 }
 
@@ -704,12 +720,19 @@ rmf_cell_info.huf <- function(huf,
   cat('Vertical boundaries:\n')
   
   # layers: top bottom thickness
-  cat('\t\t Name \t\t Top \t\t Bottom \t Thickness\n', sep='')
+  df <- data.frame('Name' = huf$hgunam[1], 'Top' = huf$top[i,j,k], 'Botom' = huf$top[i, j, k]-huf$thck[i, j, k], 'Thickness' =  huf$thck[i, j, k], stringsAsFactors = FALSE)
+  rows <- 'Unit 1'
   
-  for(k in 1:huf$nhuf)
-  {
-    cat('Layer ',k,':\t',huf$hgunam[k],'\t', huf$top[i, j, k], '\t', huf$top[i, j, k]-huf$thck[i, j, k],'\t', huf$thck[i, j, k],'\n', sep='')
+  if(huf$nhuf > 1) {
+    for(k in 2:huf$nhuf)
+    {
+      df[k,] <- c(huf$hgunam[k], huf$top[i,j,k], huf$top[i,j,k]-huf$thck[i,j,k], huf$thck[i,j,k])
+      rows <- c(rows, paste('Unit', k))
+    }
   }
+  row.names(df) <- rows
+  print(df)
+
 }
 
 #' Generic function to get information at a certain grid cell
@@ -946,13 +969,11 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     }
   }
   # adjusting confining beds  - REVIEW required
-  nnlay <- dis$nlay + length(which(dis$laycbd != 0))
-  cbd <- rep(0, nnlay)
-  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
+  cbd <- rmfi_confining_beds(dis)
   if(nnlay > 1) {
-    thck <- botm <- dis$botm
-    thck[,,1] <- dis$top - dis$botm[,,1]
-    thck[,,2:nnlay] <- dis$botm[,,(2:nnlay)-1] - dis$botm[,,2:nnlay]
+    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.')
+    dis$thck <- botm <- rmf_calculate_thickness(dis)
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
     botm[,,!cbd] <- dis$botm
@@ -1026,18 +1047,16 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       
       # set thicknesses of cells
       if(any(k > dis$nlay)) stop('k is greater than dis$nlay')
-      thck <- dis$botm
+      thck <- rmf_calculate_thickness(dis)
       nnlay <- ifelse(length(dim(dis$botm)) > 2, dim(dis$botm)[3], 1)
-      if(nnlay > 1) thck[,,2:nnlay] <- dis$botm[,,(2:nnlay)-1]-dis$botm[,,2:nnlay]
-      thck[,,1] <- dis$top - dis$botm[,,1]
       
       #  vectorize this:
       
       # adjust botm for presence of confining beds
       df <- data.frame(i=i,j=j,k=k)
       if(!is.null(loff)) df$loff <- loff
-      cbd <- rep(0, nnlay)
-      cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+      cbd <- rmfi_confining_beds(dis)
+      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of the z coordinate.')
       
       for(x in 1:nrow(df)) {
         k_adj <- ifelse(df$k[x] == 1, df$k[x], df$k[x] + sum((dis$laycbd != 0)[1:(df$k[x]-1)]))
@@ -1060,7 +1079,7 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
     if(!is.null(k)) z <- z_grid
     
     if(!is.null(prj)) {
-      if(length(prj$origin) <= 2) prj$origin = c(prj$origin, 0)
+      if(length(prj$origin) <= 2) prj$origin <- c(prj$origin, 0)
       s <- sqrt(x_grid^2+y_grid^2)
       angle <- asin(y_grid/s)*180/pi - prj$rotation
       x_grid <- cos(angle*pi/180)*s
@@ -1632,15 +1651,14 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
     if(is.null(dis)) stop('Please provide dis argument ...')    
     if(ncol(dat)==3) {
       dis$thck <- dis$tops <- dis$botm
-      dis$thck[,,1] <- dis$top - dis$botm[,,1]
+      dis$thck <- rmf_calculate_thickness(dis)
       dis$tops[,,1] <- dis$top
       nnlay <- dim(dis$botm)[3] 
-      if(nnlay > 1) dis$thck[,,2:nnlay] <- dis$botm[,,(2:nnlay)-1] - dis$botm[,,2:nnlay]
       if(nnlay > 1) dis$tops[,,2:nnlay] <- dis$botm[,,(2:nnlay)-1]
     }
     if(any(dis$laycbd != 0)) {
-      cbd <- rep(0, nnlay)
-      cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+      warning('Quasi-3D confining beds detected. Returned coordinates/indices only represent numerical layers.')
+      cbd <- rmfi_confining_beds(dis)
     }
     for(i in 1:nrow(dat)) {
       dat$i[i] <- which(cumsum(dis$delc) >= sum(dis$delc)-dat$y[i])[1]
@@ -1684,26 +1702,26 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
       }
     }
     
-    columns = vector(mode = "character")
+    columns <-  vector(mode = "character")
     if(output_xyz) {
       if(!is.null(z)){
-        columns = append(columns, c('x','y','z'))
+        columns <- append(columns, c('x','y','z'))
       } else {
-        columns = append(columns, c('x','y'))
+        columns <- append(columns, c('x','y'))
       }
     }
     if(output_ijk) {
       if(!is.null(z)) {
-        columns = append(columns, c('i','j','k'))
+        columns <- append(columns, c('i','j','k'))
       } else {
-        columns = append(columns, c('i','j'))
+        columns <- append(columns, c('i','j'))
       }
     }
     if(output_off) {
       if(!is.null(z)) {
-        columns = append(columns, c('roff','coff','loff'))
+        columns <- append(columns, c('roff','coff','loff'))
       } else {
-        columns = append(columns, c('roff','coff'))
+        columns <- append(columns, c('roff','coff'))
       }
     }
     
