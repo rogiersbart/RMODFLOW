@@ -724,7 +724,7 @@ rmf_plot.huf <- function(huf,
                          mask = rmf_convert_huf_to_mask(huf = huf, dis = dis, bas = bas),
                          colour_palette = rmfi_rev_rainbow,
                          nlevels = 7,
-                         levels = huf$hgunam,
+                         levels = setNames(huf$hgunam, 1:huf$nhuf),
                          type='factor',
                          gridlines = FALSE,
                          ...) {
@@ -738,7 +738,7 @@ rmf_plot.huf <- function(huf,
     huf_array <- rmf_create_array(dim=c(dis$nrow,dis$ncol))
     if(k == 1) {
       for(i in rev(1:dim(hufdis$botm)[3])) {
-        huf_array[which(hufmask[,,i] == 1)] <- i
+        huf_array[which(mask[,,i] == 1)] <- i
       }
     } else {
       for(i in rev(1:dim(hufdis$botm)[3])) {
@@ -867,7 +867,7 @@ rmf_plot.riv <- function(riv,
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
-#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
+#' @param levels (named) character vector with labels for the factor legend. If not named, factor levels are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param height_exaggeration height exaggeration for 3D plot; optional
@@ -882,6 +882,7 @@ rmf_plot.riv <- function(riv,
 #' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
 #' @export
@@ -1009,7 +1010,8 @@ rmf_plot.rmf_2d_array <- function(array,
                  ggplot2::coord_equal())
       }
     } else if(type=='factor') {  
-      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
+      labels <- rmfi_ifelse0(is.null(names(levels)), levels, levels[as.character(sort(na.omit(unique(datapoly$value))))])
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, labels = labels))
       if(add) {
         return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend,alpha=alpha, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
                     ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
@@ -1137,7 +1139,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
-#' @param levels labels that should be used on the factor legend; if NULL the array factor levels are used
+#' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
@@ -1150,6 +1152,7 @@ plot.rmf_2d_array <- function(...) {
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... parameters provided to plot.rmf_2d_array
 #' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_3d_array
 #' @export
@@ -1353,7 +1356,8 @@ rmf_plot.rmf_3d_array <- function(array,
                  ggplot2::ylab(ylabel))
       }
     } else if(type=='factor') {
-      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, levels = seq_along(levels), labels = levels))
+      labels <- rmfi_ifelse0(is.null(names(levels)), levels, levels[as.character(sort(na.omit(unique(datapoly$value))))])
+      datapoly$value <- rmfi_ifelse0(is.null(levels), factor(datapoly$value), factor(datapoly$value, labels = labels))
       if(add) {
         return(list(ggplot2::geom_polygon(ggplot2::aes(x=x,y=y,fill=value, group=id),data=datapoly,show.legend=legend, colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines))),
                     ggplot2::scale_fill_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(datapoly$value)), na.value = NA)))
