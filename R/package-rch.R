@@ -35,7 +35,7 @@ rmf_create_rch <- function(...,
   
   # irch
   if(nrchop == 2) {
-    if(is.null(irch)) stop('Please supply a irch argument when nrchop = 2')
+    if(is.null(irch)) stop('Please supply a irch argument when nrchop = 2', call. = FALSE)
     if(!inherits(irch, 'list')) irch <- list(irch)
     obj$irch <- irch
     names(obj$irch) <- paste('irch', length(irch), sep = '_')
@@ -46,7 +46,7 @@ rmf_create_rch <- function(...,
 
     # check if multiple irch arrays are active
     irch_err <- unlist(lapply(irch, function(i) attr(i, 'kper')))
-    if(any(duplicated(irch_err))) stop(paste('There can be only 1 active irch array per stress period. Stress period(s)', sort(unique(irch_err[duplicated(irch_err)])), 'have multiple active arrays.'))
+    if(any(duplicated(irch_err))) stop(paste('There can be only 1 active irch array per stress period. Stress period(s)', sort(unique(irch_err[duplicated(irch_err)])), 'have multiple active arrays.'), call. = FALSE)
   } 
   obj$irchpf <- irchpf
   

@@ -107,7 +107,7 @@ rmf_create_huf <- function(dis,
     huf$nphuf <- length(parameters)
     # error check
     if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
-      stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute')
+      stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute', call. = FALSE)
     }
     
     huf$parameters <- list()
@@ -454,7 +454,7 @@ rmf_create_kdep <- function(dis,
   # data set 3 & 4
   # error check
   if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
-    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute')
+    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute', call. = FALSE)
   }
   
   kdep$parameters <- list()
@@ -631,7 +631,7 @@ rmf_create_lvda <- function(parameters) {
   # data set 2 & 3
   # error check
   if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
-    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute')
+    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute', call. = FALSE)
   }
   
   lvda$parameters <- list()

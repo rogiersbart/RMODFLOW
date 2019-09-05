@@ -34,7 +34,7 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
   
   # data set 1
     bas$xsection <- xsection
-    if(bas$xsection) warning('XSECTION: assuming ibound and strt arrays are of dimensions NLAY x NCOL')
+    if(bas$xsection) warning('XSECTION: assuming ibound and strt arrays are of dimensions NLAY x NCOL', call. = FALSE)
     bas$chtoch <- chtoch
     bas$free <- free
     bas$printtime <- printtime
@@ -156,7 +156,7 @@ rmf_write_bas <- function(bas,
   options <- NULL
   if(bas$xsection) {
     options <- paste(options, 'XSECTION ',sep='')
-    warning('XSECTION: assuming ibound and strt arrays are of dimensions NLAY x NCOL')
+    warning('XSECTION: assuming ibound and strt arrays are of dimensions NLAY x NCOL', call. = FALSE)
   }
   if(bas$chtoch) options <- paste(options, 'CHTOCH ',sep='')
   if(bas$free) options <- paste(options, 'FREE ',sep='')

@@ -150,7 +150,7 @@ rmf_write_nam <- function(nam,
     ftype <- df$ftype[which(df$rmf %in% exclude)]
     nam <- nam[-which(nam$ftype %in% ftype), ]
   }
-  if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified')
+  if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified', call. = FALSE)
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version

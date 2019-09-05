@@ -51,7 +51,7 @@ rmf_create_dis <- function(nlay = 3,
   # data set 2
     dis$laycbd <- laycbd
     if(dis$laycbd[dis$nlay] != 0) {
-      warning("Setting laycbd for the bottom layer to zero.")
+      warning("Setting laycbd for the bottom layer to zero.", call. = FALSE)
       dis$laycbd[dis$nlay] <- 0
     }
   
@@ -123,7 +123,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   dis_lines <- data_set_2$remaining_lines
   rm(data_set_2)
   if(dis$laycbd[dis$nlay] != 0) {
-    warning("Setting laycbd for the bottom layer to zero.")
+    warning("Setting laycbd for the bottom layer to zero.", call. = FALSE)
     dis$laycbd[dis$nlay] <- 0
   }
   

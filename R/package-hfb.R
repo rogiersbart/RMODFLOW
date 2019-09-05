@@ -29,7 +29,7 @@ rmf_create_hfb <-  function(...,
       dis <- arg[dis_present][[1]]
       arg <- arg[!dis_present]
     } else {
-      stop('Please provide a dis argument')
+      stop('Please provide a dis argument', call. = FALSE)
     }
   }
   
@@ -45,11 +45,11 @@ rmf_create_hfb <-  function(...,
     if(is.null(attr(rmf_list, 'kper'))) {
       warning('Missing kper argument for hfb input list. Assuming this list is not active', call. = FALSE)
     } else if(!identical(as.numeric(attr(rmf_list, 'kper')), as.numeric(1:dis$nper))) {
-      stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.')
+      stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.', call. = FALSE)
     }
     
     if(inherits(rmf_list, 'rmf_parameter') && !is.null(attr(rmf_list, 'instnam'))) {
-      stop('Time-varying parameters are not supported for the hfb package.')
+      stop('Time-varying parameters are not supported for the hfb package.', call. = FALSE)
     }
     
     if('direction' %in% colnames(rmf_list)) {

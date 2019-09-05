@@ -48,7 +48,7 @@ rmf_create_evt <- function(...,
   
   # check if multiple surf arrays are active
   surf_err <- unlist(lapply(surf, function(i) attr(i, 'kper')))
-  if(any(duplicated(surf_err))) stop(paste('There can be only 1 active surf array per stress period. Stress period(s)', sort(unique(surf_err[duplicated(surf_err)])), 'have multiple active arrays.'))
+  if(any(duplicated(surf_err))) stop(paste('There can be only 1 active surf array per stress period. Stress period(s)', sort(unique(surf_err[duplicated(surf_err)])), 'have multiple active arrays.'), call. = FALSE)
   
   
   # exdp
@@ -62,12 +62,12 @@ rmf_create_evt <- function(...,
   
   # check if multiple exdp arrays are active
   exdp_err <- unlist(lapply(exdp, function(i) attr(i, 'kper')))
-  if(any(duplicated(exdp_err))) stop(paste('There can be only 1 active exdp array per stress period. Stress period(s)', sort(unique(exdp_err[duplicated(exdp_err)])), 'have multiple active arrays.'))
+  if(any(duplicated(exdp_err))) stop(paste('There can be only 1 active exdp array per stress period. Stress period(s)', sort(unique(exdp_err[duplicated(exdp_err)])), 'have multiple active arrays.'), call. = FALSE)
   
   
   # ievt
   if(nevtop == 2) {
-    if(is.null(ievt)) stop('Please supply a ievt argument when nevtop = 2')
+    if(is.null(ievt)) stop('Please supply a ievt argument when nevtop = 2', call. = FALSE)
     if(!inherits(ievt, 'list')) ievt <- list(ievt)
     obj$ievt <- ievt
     names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
@@ -78,7 +78,7 @@ rmf_create_evt <- function(...,
     
     # check if multiple ievt arrays are active
     ievt_err <- unlist(lapply(ievt, function(i) attr(i, 'kper')))
-    if(any(duplicated(ievt_err))) stop(paste('There can be only 1 active ievt array per stress period. Stress period(s)', sort(unique(ievt_err[duplicated(ievt_err)])), 'have multiple active arrays.'))
+    if(any(duplicated(ievt_err))) stop(paste('There can be only 1 active ievt array per stress period. Stress period(s)', sort(unique(ievt_err[duplicated(ievt_err)])), 'have multiple active arrays.'), call. = FALSE)
     
   } 
   obj$ievtpf <- ievtpf

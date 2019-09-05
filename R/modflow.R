@@ -39,7 +39,7 @@ rmf_create <- function(..., cbc = NULL) {
     df <- rmfi_list_packages(type = 'all')
     mf_types <- df$ftype[which(df$rmf %in% ftype)]
     nam_types <- modflow$nam$ftype[which(!(modflow$nam$ftype %in% c('DATA', 'DATA(BINARY)', 'LIST', 'GLOBAL', 'DATAGLO', 'DATAGLO(BINARY)')))]
-    if(!isTRUE(all.equal(sort(mf_types), sort(nam_types)))) stop('Please make sure all packages are listed in the nam file. ')
+    if(!isTRUE(all.equal(sort(mf_types), sort(nam_types)))) stop('Please make sure all packages are listed in the nam file.', call. = FALSE)
   }
   
   # check for dis, bas, flow package and solver
@@ -50,11 +50,11 @@ rmf_create <- function(..., cbc = NULL) {
   error[2] <- sum(ftype == 'bas')
   error[3] <- sum(flow_packages %in% ftype)
   error[4] <- sum(solvers %in% ftype)
-  if(any(error != 1)) stop('Please specify at least a dis, bas, solver and flow package. Only specify one of each.')
+  if(any(error != 1)) stop('Please specify at least a dis, bas, solver and flow package. Only specify one of each.', call. = FALSE)
   
   # error check for modflow-nwt
   if(('upw' %in% ftype && !('nwt' %in% ftype)) || ('nwt' %in% ftype && !('upw' %in% ftype))) {
-    stop('The upw and nwt have to be used together.')
+    stop('The upw and nwt have to be used together.', call. = FALSE)
   }
   
   
@@ -400,7 +400,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
    
   
   # warning for not-supported packages
-  if(length(ftype) > 0) warning(paste0('Following packages are not supported yet: \n ', paste(ftype, collapse = '\n ')))
+  if(length(ftype) > 0) warning(paste0('Following packages are not supported yet: \n ', paste(ftype, collapse = '\n ')), call. = FALSE)
   
   class(modflow) <- c('modflow')
   return(modflow)

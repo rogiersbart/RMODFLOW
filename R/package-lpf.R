@@ -102,7 +102,7 @@ rmf_create_lpf <- function(dis,
     lpf$nplpf <- length(parameters)
     # error check
     if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'layer')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
-      stop('Please make sure all parameters have a parnam, parval, partyp and layer attribute')
+      stop('Please make sure all parameters have a parnam, parval, partyp and layer attribute', call. = FALSE)
     }
     
     types <- toupper(unique(vapply(parameters, function(i) attr(i, 'partyp'), 'text')))
@@ -128,7 +128,7 @@ rmf_create_lpf <- function(dis,
     if('VKCB' %in% names(layer_check)) layer_check[['VKCB']] <- append(layer_check[['VKCB']], dis$nlay)
     
     layer_check <- structure(vapply(seq_along(layer_check), function(i) isTRUE(all.equal(sort(layer_check[[i]]), 1:dis$nlay)), TRUE), names = names(layer_check))
-    if(any(!layer_check)) stop(paste('Parameters are used to define ', names(layer_check)[!layer_check],', but not all layers are defined through parameters.'))
+    if(any(!layer_check)) stop(paste('Parameters are used to define ', names(layer_check)[!layer_check],', but not all layers are defined through parameters.'), call. = FALSE)
     
   } 
   
