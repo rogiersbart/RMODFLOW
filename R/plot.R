@@ -183,14 +183,19 @@ rmf_plot.bud <-  function(bud,
 #' @param k layer number to plot
 #' @param l time step number to plot; defaults to plotting the final time step.
 #' @param flux character denoting which flux to plot. See details.
+#' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
 #' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
 #' @param active_only logical; indicating if only the active cells should be plotted for list-directed components of the cbc object. Non-active cells are set to NA. Defaults to FALSE.
+#' @param hed optional hed object for only plotting the saturated part of the grid; possibly subsetted with time step number. Also used in \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'. 
+#' @param porosity optional 3d array with porosity values passed to \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}
 #' 
 #' @details Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
-#'
+#'  Additionally, flux can be \code{'darcy'}, in which case Darcy fluxes are computed by \code{\link{rmf_convert_cbc_to_darcy}} and the magnitude is plotted. If
+#'  type = 'vector', the x, y and z components are used to determine the direction of the arrows.
+#'  
 #'  There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
 #'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
 #'  A negative \code{kstp} will plot the final time step of the stress-period.
@@ -208,12 +213,20 @@ rmf_plot.cbc <- function(cbc,
                          k = NULL,
                          l = NULL,
                          flux = NULL,
+                         type = 'fill',
                          kper = NULL,
                          kstp = NULL,
                          active_only = FALSE,
+                         hed = NULL,
+                         porosity = NULL,
                          ...) {
   
   if(is.null(flux)) stop('Please specify a flux to plot.', call. = FALSE)
+  if(flux != 'darcy' && !flux %in% names(cbc)) stop('Specified flux component not present in cbc object.', call. = FALSE)
+  if(flux == 'darcy') {
+    darcy <- rmf_convert_cbc_to_darcy(cbc, dis = dis, hed = hed, porosity = porosity)
+    cbc$darcy <- darcy$q
+  } 
   obj <- cbc[[flux]]
   
   # skip if ijk are specified and a time series should be plotted
@@ -231,10 +244,10 @@ rmf_plot.cbc <- function(cbc,
     if(inherits(obj, 'rmf_list')) {
       if(!(l %in% obj$nstp)) stop('No output written for specified time step.', call. = FALSE)
       obj <- subset(obj, nstp == l)
-      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', active_only = active_only, ...)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', active_only = active_only, hed = hed, type = type, ...)
     } else {
       if(!(l %in% attr(obj, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
-      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, ...)
     }
     
   } else {
@@ -248,10 +261,16 @@ rmf_plot.cbc <- function(cbc,
                 structure(dimnames = NULL, totim = attr(obj, 'totim')) %>%
                 rmf_create_array() 
                 
-      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, ...)
       
     } else {
-      rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, ...)
+      if(flux == 'darcy' && type == 'vector') {
+        uvw <- list(u = darcy$qx, v = darcy$qy, w = darcy$qz)
+        rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, uvw=uvw, ...)
+        
+      } else {
+        rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, ...)
+      }
     }
   }
 }
@@ -880,8 +899,9 @@ rmf_plot.riv <- function(riv,
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
-#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
 #'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_2d_array
@@ -907,6 +927,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   height=NULL,
                                   crop = TRUE,
                                   vecint = 1,
+                                  uvw = NULL,
                                   legend = !add) {
   
   if(plot3d) {
@@ -943,7 +964,8 @@ rmf_plot.rmf_2d_array <- function(array,
         
         p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
                       type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
-                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height, 
+                      vecint = vecint, uvw=uvw,legend=legend)
         return(p)
         
       } else if("i" %in% attr(array, 'dimlabels')) {
@@ -956,7 +978,8 @@ rmf_plot.rmf_2d_array <- function(array,
         
         p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
                       type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
-                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height)
+                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height,
+                      vecint = vecint, uvw=uvw,legend=legend)
         return(p)
       }
     }
@@ -1082,6 +1105,7 @@ rmf_plot.rmf_2d_array <- function(array,
         }
       }
     } else if(type == 'vector') {
+
       # x & y are center of cells
       vector_df <- xy
       if(!is.null(prj)) {
@@ -1095,7 +1119,12 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       if(crop) vector_df <- na.omit(vector_df)
       # add gradient values; negative because Darcy flux also has negative sign
-      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      if(is.null(uvw)) {
+        grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      } else {
+        grad <- list(x = rmf_create_array(uvw$u, dim = c(dis$nrow, dis$ncol)),
+                     y = rmf_create_array(uvw$v, dim = c(dis$nrow, dis$ncol)))
+      }
       vector_df$u <- -c(t(grad$x))
       vector_df$v <- -c(t(grad$y))
       vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
@@ -1150,9 +1179,10 @@ plot.rmf_2d_array <- function(...) {
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
 #' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param uvw optional named list with u, v and w vectors or 3d arrays specifying the vector components in the x, y and z direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... parameters provided to plot.rmf_2d_array
-#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}}
+#' @details type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
 #'          For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot rmf_3d_array
@@ -1179,6 +1209,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   prj = NULL,
                                   crs = NULL,
                                   vecint = 1,
+                                  uvw = NULL,
                                   legend = !add,
                                   ...) {
   
@@ -1189,7 +1220,7 @@ rmf_plot.rmf_3d_array <- function(array,
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
     p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,
                   levels = levels, add=add, crop = crop, prj = prj, crs = crs, 
-                  binwidth=binwidth, label=label, vecint=vecint, legend=legend,...)
+                  binwidth=binwidth, label=label, vecint=vecint, legend=legend, uvw = uvw, ...)
     if(gridlines) {
       return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, crop=crop, prj=prj,crs=crs,...))
     } else {
@@ -1207,8 +1238,12 @@ rmf_plot.rmf_3d_array <- function(array,
     class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
     class(mask) <- 'rmf_2d_array'
+    if(!is.null(uvw)) {
+      if(!is.null(attr(uvw$u, 'dim'))) uvw$u <- uvw$u[,,k]
+      if(!is.null(attr(uvw$v, 'dim'))) uvw$v <- uvw$v[,,k]
+    }
     rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, 
-             binwidth=binwidth, label=label, vecint=vecint, legend=legend, ...)
+             binwidth=binwidth, label=label, vecint=vecint, legend=legend, uvw = uvw, ...)
   } else {
     # cross-section
     # datapoly
@@ -1421,7 +1456,13 @@ rmf_plot.rmf_3d_array <- function(array,
         }
       }
     } else if(type == 'vector') {
-      grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      if(is.null(uvw)) {
+        grad <- rmf_gradient(array, dis = dis, mask = mask) 
+      } else {
+        grad <- list(x = rmf_create_array(uvw$u, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                     y = rmf_create_array(uvw$v, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                     z = rmf_create_array(uvw$w, dim = c(dis$nrow, dis$ncol, dis$nlay)))
+      }
       if(is.null(i) && !is.null(j)) {
         vector_df <- data.frame(x=xy$y,y=c(dis$center[,j,]))
         if(!is.null(prj)) {
