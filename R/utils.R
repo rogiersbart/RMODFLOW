@@ -475,11 +475,10 @@ rmf_cell_coordinates.dis <- function(dis,
     for(k in 2:nnlay) {
       cell_coordinates$z[,,k] <- (dis$botm[,,(k-1)]+dis$botm[,,k])/2
     }
+    # remove the confining beds
+    cbd <- rmfi_confining_beds(dis)
+    cell_coordinates$z <- cell_coordinates$z[,,!cbd]
   }
-  class(cell_coordinates$z) <- 'rmf_3d_array'
-  # remove the confining beds
-  cbd <- rmfi_confining_beds(dis)
-  cell_coordinates$z <- cell_coordinates$z[,,!cbd]
   
   cell_coordinates$x <- cell_coordinates$z*0
   cell_coordinates$y <- cell_coordinates$z*0
@@ -888,26 +887,34 @@ rmf_convert_bcf_to_lpf <- function(bcf,
   return(bcf)
 }
 
-#' Convert bud object fluxes to darcy velocities
+#' Convert cbc object fluxes to darcy velocities
 #' 
-#' @param bud bud object
-#' @param dis dis object
-#' @param hed hed object; optional; if specified, the saturated cell thickness is used
-#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities: the first six at the different cell faces, the last four represent the components and magnitude at the cell center
+#' @param cbc \code{RMODFLOW} cbc object
+#' @param dis \code{RMODFLOW} dis object
+#' @param hed \code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used
+#' @param porosity optional 3d array with porosity values. If used, the groundwater velocities are returned.
+#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities (or groundwater velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 #' @export
-rmf_convert_bud_to_darcy <- function(bud,
+rmf_convert_cbc_to_darcy <- function(cbc,
                                      dis,
-                                     hed = NULL) {
-  thck <- rmf_create_array(cell_dimensions(dis = dis, hed = hed)$z,dim=dim(bud$flow_right_face))
-  delc <- rmf_create_array(rep(dis$delc,dis$ncol),dim=dim(bud$flow_right_face))
-  delr <- rmf_create_array(rep(dis$delr,each=dis$nrow),dim=dim(bud$flow_right_face))
+                                     hed = NULL,
+                                     porosity = NULL) {
+  
+  # check if all flow components are present
+  flow <- c('flow_front_face', 'flow_right_face', 'flow_lower_face')
+  flow <- flow[which(flow %in% names(cbc))[1]]
+  if(!"flow_front_face" %in% names(cbc)) cbc$flow_front_face <- cbc[[flow]] * 0
+  if(!"flow_right_face" %in% names(cbc)) cbc$flow_right_face <- cbc[[flow]] * 0
+  if(!"flow_lower_face" %in% names(cbc)) cbc$flow_lower_face <- cbc[[flow]] * 0
+  
+  thck <- rmf_create_array(rmf_cell_dimensions(dis = dis, hed = hed)$z,dim=dim(cbc$flow_right_face))
+  delc <- rmf_create_array(rep(dis$delc,dis$ncol),dim=dim(cbc$flow_right_face))
+  delr <- rmf_create_array(rep(dis$delr,each=dis$nrow),dim=dim(cbc$flow_right_face))
   darcy <- list()
-  ## temp fix for Cas' files
-  ## TODO: fix this when either of the components is missing
-  if(!"flow_front_face" %in% names(bud)) bud$flow_front_face <- bud$flow_right_face * 0
-  darcy$right <- bud$flow_right_face
-  darcy$front <- -bud$flow_front_face
-  darcy$lower <- -bud$flow_lower_face/delc/delr
+
+  darcy$right <- cbc$flow_right_face
+  darcy$front <- -cbc$flow_front_face
+  darcy$lower <- -cbc$flow_lower_face/delc/delr
   darcy$left <- darcy$back <- darcy$upper <- darcy$right * 0
   if(dis$ncol > 1) darcy$left[,c(2:dis$ncol),,] <- darcy$right[,c(1:(dis$ncol-1)),,] else darcy$left <- darcy$right * 0
   if(dis$nrow > 1) darcy$back[c(2:dis$nrow),,,] <- darcy$front[c(1:(dis$nrow-1)),,,] else darcy$back <- darcy$front * 0
@@ -917,40 +924,54 @@ rmf_convert_bud_to_darcy <- function(bud,
   darcy$front <- darcy$front/delr/thck
   darcy$back <- darcy$back/delr/thck
   
+  # TODO: other fluxes
   for (kper in 1:dis$nper) {
     for (kstp in 1:dis$nstp[kper]) {
-      if ('recharge' %in% names(bud)) {
-        if(attributes(bud$recharge[[kper]][[kstp]])$itype == 4) darcy$upper[,,1,(c(0,cumsum(dis$nstp))[kper]+kstp)] <- -bud$recharge[[kper]][[kstp]]/delc[,,1,1]/delr[,,1,1]
-        # to do: add functionality for different recharge itype, with recharge in different layers
+      step <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper -1 ] + kstp)
+      if ('recharge' %in% names(cbc)) {
+         # TODO check if sum is correct
+         darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
       }
-      if('drains' %in% names(bud)) {
-        bud$drains[[kper]][[kstp]] <- cbind(bud$drains[[kper]][[kstp]],convert_id_to_ijk(bud$drains[[kper]][[kstp]]$icell, dis = dis, type = 'modflow'))
-        for(i in 1:nrow(bud$drains[[kper]][[kstp]])) {
-          darcy$upper[bud$drains[[kper]][[kstp]][i,'i'],bud$drains[[kper]][[kstp]][i,'j'],bud$drains[[kper]][[kstp]][i,'k'],(c(0,cumsum(dis$nstp))[kper]+kstp)] <- darcy$upper[bud$drains[[kper]][[kstp]][i,'i'],bud$drains[[kper]][[kstp]][i,'j'],bud$drains[[kper]][[kstp]][i,'k'],(c(0,cumsum(dis$nstp))[kper]+kstp)] - bud$drains[[kper]][[kstp]][i,'value']/delc[bud$drains[[kper]][[kstp]][i,'i']]/delr[bud$drains[[kper]][[kstp]][i,'j']]
-        }    
+      if('drains' %in% names(cbc)) {
+        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
       }
-      if('river_leakage' %in% names(bud)) {
-        bud$river_leakage[[kper]][[kstp]] <- cbind(bud$river_leakage[[kper]][[kstp]],convert_id_to_ijk(bud$river_leakage[[kper]][[kstp]]$icell, dis = dis, type = 'modflow'))
-        for(i in 1:nrow(bud$river_leakage[[kper]][[kstp]])) {
-          darcy$upper[bud$river_leakage[[kper]][[kstp]][i,'i'],bud$river_leakage[[kper]][[kstp]][i,'j'],bud$river_leakage[[kper]][[kstp]][i,'k'],(c(0,cumsum(dis$nstp))[kper]+kstp)] <- darcy$upper[bud$river_leakage[[kper]][[kstp]][i,'i'],bud$river_leakage[[kper]][[kstp]][i,'j'],bud$river_leakage[[kper]][[kstp]][i,'k'],(c(0,cumsum(dis$nstp))[kper]+kstp)] - bud$river_leakage[[kper]][[kstp]][i,'value']/delc[bud$river_leakage[[kper]][[kstp]][i,'i']]/delr[bud$river_leakage[[kper]][[kstp]][i,'j']]
-        }   
+      if('river_leakage' %in% names(cbc)) {
+        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
       }
     }
   }
-  darcy$qx <- (darcy$right + darcy$left) / 2
-  darcy$qy <- (darcy$front + darcy$back) / 2
-  darcy$qz <- (darcy$lower + darcy$upper) / 2
+  
+  if(is.null(porosity)) {
+    porosity <- 1
+  } else {
+    porosity <- rmf_create_array(porosity, dim = dim(cbc[[flow]]))
+  }
+  
+  darcy$qx <- (darcy$right + darcy$left) / (2 * porosity)
+  darcy$qy <- (darcy$front + darcy$back) / (2 * porosity)
+  darcy$qz <- (darcy$lower + darcy$upper) / (2 * porosity)
   darcy$q <- sqrt((darcy$qx)^2 + (darcy$qy)^2 + (darcy$qz)^2)
-  for(i in 1:length(darcy)) attributes(darcy[[i]]) <- list(dim=attr(darcy[[i]],'dim'),class=attr(darcy[[i]],'class'))
+  # drop unnecessary attributes
+  #darcy <- lapply(darcy, function(i) rmf_create_array(array(i, dim = dim(cbc[[flow]]))))
   return(darcy)
 }
 
-#' @describeIn rmf_convert_bud_to_darcy Deprecated function name
+#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
 #' @export
 convert_bud_to_darcy <- function(...) {
-  .Deprecated(new = "rmf_convert_bud_to_darcy", old = "convert_bud_to_darcy")
-  rmf_convert_bud_to_darcy(...)
+  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "convert_bud_to_darcy")
+  rmf_convert_cbc_to_darcy(...)
 }
+
+#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
+#' @export
+rmf_convert_bud_to_darcy <- function(...) {
+  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "rmf_convert_bud_to_darcy")
+  rmf_convert_cbc_to_darcy(...)
+}
+
 
 #' Convert a dis object to correspond to the saturated volume
 #' 
@@ -1822,7 +1843,6 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
-  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
   if(!missing(l)) {
     if(!is.null(attr(obj,'kstp'))) attr(obj,'kstp') <- attr(obj,'kstp')[l]
     if(!is.null(attr(obj,'kper'))) attr(obj,'kper') <- attr(obj,'kper')[l]
@@ -1830,6 +1850,8 @@ create_rmodflow_array <- function(...) {
     if(!is.null(attr(obj,'totim'))) attr(obj,'totim') <- attr(obj,'totim')[l]
     if(!is.null(attr(obj,'nstp'))) attr(obj,'nstp') <- attr(obj,'nstp')[l]
   }
+  if(is.null(dim(obj))) attributes(obj) <- NULL
+  
   return(obj)
 }
 
@@ -1858,7 +1880,7 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
-  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
+  if(is.null(dim(obj))) attributes(obj) <- NULL
   
   return(obj)
 }
@@ -1886,7 +1908,7 @@ create_rmodflow_array <- function(...) {
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
   attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
-  if(is.null(dim(obj))) attr(obj, 'dimlabels') <- NULL
+  if(is.null(dim(obj))) attributes(obj) <- NULL
   
   return(obj)
 }
@@ -2279,7 +2301,7 @@ rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1,
   if(is.null(porosity)) {
     porosity <- 1
   } else {
-    porosity <- rmf_create_array(porosity, dim = c(dis$nrow, dis$ncol))
+    porosity <- rmf_create_array(porosity, dim = c(dis$nrow, dis$ncol, dis$nlay))
   }
   
   if(is.null(mask)) mask <- hed*0 + 1
