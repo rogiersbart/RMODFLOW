@@ -262,7 +262,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
     if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
       warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
       dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
-      botm <- dis$botm[,,cumsum((dis$laycbd != 0) +1)]
+      botm <- rmfi_ifelse0(dis$nlay + sum(dis$laycbd != 0) > 1, dis$botm[,,cumsum((dis$laycbd != 0) +1)], dis$botm)
       nnlay <- dis$nlay
       dis$center <- botm
       for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
@@ -447,9 +447,11 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
     for(k in 2:ifelse(collapse_cbd, dis$nlay, nnlay)) {
       thck[,,k] <- botm[,,k-1] - botm[,,k]
     }
+    
+    if(only_layers && !collapse_cbd) thck <- thck[,,!cbd]
+    
   }
   
-  if(only_layers && !collapse_cbd) thck <- thck[,,!cbd]
   
   return(thck)
   
@@ -465,7 +467,7 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
                                      include_faces = FALSE) {
-  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates do not take those into account.")
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates only represent numerical layers.")
   cell_coordinates <- NULL
   cell_coordinates$z <- dis$botm*NA
   cell_coordinates$z[,,1] <- (dis$top+dis$botm[,,1])/2
@@ -478,6 +480,7 @@ rmf_cell_coordinates.dis <- function(dis,
     # remove the confining beds
     cbd <- rmfi_confining_beds(dis)
     cell_coordinates$z <- cell_coordinates$z[,,!cbd]
+    dis$botm <- dis$botm[,,!cbd]
   }
   
   cell_coordinates$x <- cell_coordinates$z*0
@@ -487,8 +490,8 @@ rmf_cell_coordinates.dis <- function(dis,
   if(include_faces) {
     dis$delr <- array(rep(dis$delr,each=dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
     dis$delc <- array(rep(dis$delc,dis$ncol),dim=c(dis$nrow,dis$ncol,dis$nlay))
-    cell_coordinates$lower <- dis$botm[,,!cbd]
-    cell_coordinates$upper <- 2 * cell_coordinates$z - dis$botm[,,!cbd]
+    cell_coordinates$lower <- dis$botm
+    cell_coordinates$upper <- 2 * cell_coordinates$z - dis$botm
     cell_coordinates$left <- cell_coordinates$x - dis$delr/2
     cell_coordinates$right <- cell_coordinates$x + dis$delr/2 
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2
@@ -563,17 +566,21 @@ rmf_cell_dimensions.dis <- function(dis,
                                     include_faces = FALSE) {
   cell_dimensions <- list()
   # remove the confining beds
-  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z/upper/lower dimensions do not take those into account.")
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z/upper/lower dimensions only represent numerical layers.")
   nnlay <- dis$nlay + sum(dis$laycbd != 0)
   cbd <- rmfi_confining_beds(dis)
   if (is.null(hed) | ifelse(is.null(hed),FALSE,dim(hed)[4] == 1)) {
     cell_top <- dis$botm
     cell_top[,,1] <- dis$top
-    if(nnlay > 1) cell_top[,,2:nnlay] <- dis$botm[,,c(1:(nnlay-1))]
+    if(nnlay > 1) {
+      cell_top[,,2:nnlay] <- dis$botm[,,c(1:(nnlay-1))]
+      cell_top <- cell_top[,,!cbd]
+      dis$botm <- dis$botm[,,!cbd]
+    }
     if(!is.null(hed)) {
       cell_top[which(cell_top > hed[,,,1])] <- hed[which(cell_top > hed[,,,1])]
     }
-    cell_dimensions$z <- rmf_create_array(cell_top - dis$botm)[,,!cbd]
+    cell_dimensions$z <- rmf_create_array(cell_top - dis$botm)
     cell_dimensions$x <- rmf_create_array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay))
     cell_dimensions$y <- rmf_create_array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
     if(include_volume) cell_dimensions$volume <- rmf_create_array(with(cell_dimensions, x * y * z))
@@ -588,9 +595,13 @@ rmf_cell_dimensions.dis <- function(dis,
   } else {
     cell_top <- rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)))
     cell_top[,,1,] <- dis$top
-    if(nnlay > 1) cell_top[,,2:nnlay,] <- dis$botm[,,c(1:(nnlay-1))]
+    if(nnlay > 1) {
+      cell_top[,,2:nnlay,] <- dis$botm[,,c(1:(nnlay-1))]
+      cell_top <- cell_top[,,!cbd]
+      dis$botm <- dis$botm[,,!cbd]
+    }
     cell_top[which(cell_top > hed[,,,])] <- hed[which(cell_top > hed[,,,])] 
-    cell_dimensions$z <- rmf_create_array(cell_top - dis$botm)[,,!cbd]
+    cell_dimensions$z <- rmf_create_array(cell_top - dis$botm)
     cell_dimensions$x <- rmf_create_array(rep(dis$delc,dis$ncol*dis$nlay),dim=c(dis$nrow,dis$ncol,dis$nlay))
     cell_dimensions$y <- rmf_create_array(rep(dis$delr, dis$nlay, each = dis$nrow),dim=c(dis$nrow,dis$ncol,dis$nlay))
     if(include_volume) cell_dimensions$volume <- rmf_create_array(with(cell_dimensions, x * y * z))
@@ -995,7 +1006,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
   cbd <- rmfi_confining_beds(dis)
   if(nnlay > 1) {
     if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.')
-    dis$thck <- botm <- rmf_calculate_thickness(dis)
+    thck <- botm <- rmf_calculate_thickness(dis)
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
     botm[,,!cbd] <- dis$botm
@@ -1070,8 +1081,8 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       # set thicknesses of cells
       if(any(k > dis$nlay)) stop('k is greater than dis$nlay', call. = FALSE)
       thck <- rmf_calculate_thickness(dis)
-      nnlay <- ifelse(length(dim(dis$botm)) > 2, dim(dis$botm)[3], 1)
-      
+      nnlay <- dis$nlay + sum(dis$laycbd != 0)
+
       #  vectorize this:
       
       # adjust botm for presence of confining beds
@@ -1079,12 +1090,17 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       if(!is.null(loff)) df$loff <- loff
       cbd <- rmfi_confining_beds(dis)
       if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of the z coordinate.')
+      if(nnlay > 1) {
+        thck_nocbd <- thck[,,!cbd]
+      } else {
+        thck_nocbd <- thck
+      }
       
       for(x in 1:nrow(df)) {
         k_adj <- ifelse(df$k[x] == 1, df$k[x], df$k[x] + sum((dis$laycbd != 0)[1:(df$k[x]-1)]))
         cell_thchk <- sum(thck[df$i[x],df$j[x],k_adj:nnlay])
         # calculate z of cell center; normalize with bottom of model (which can never be a confined bed)
-        df$z[x] <- cell_thchk-thck[,,!cbd][df$i[x],df$j[x],df$k[x]]/2 + dis$botm[df$i[x],df$j[x],nnlay]
+        df$z[x] <- cell_thchk-thck_nocbd[df$i[x],df$j[x],df$k[x]]/2 + dis$botm[df$i[x],df$j[x],nnlay]
         if(!is.null(loff)) df$z[x] <- df$z[x] - df$loff[x]*thck[df$i[x],df$j[x],df$k[x]]
         
       }

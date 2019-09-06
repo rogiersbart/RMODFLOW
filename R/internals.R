@@ -61,7 +61,7 @@ rmfi_convert_huf_to_nlay <- function(huf, dis, bas = NULL) {
   if(any(dis$laycbd != 0)) {
     warning('Quasi-3D confining beds detected; adding their thickness to the overlying layer.')
     cbd <- rmfi_confining_beds(dis)
-    dis$botm[,,which(cbd > 0) - 1] <- dis$botm[,,which(cbd > 0)]
+    if((dis$nlay + sum(dis$laycbd != 0)) > 1) dis$botm[,,which(cbd > 0) - 1] <- dis$botm[,,which(cbd > 0)]
     dis$laycbd <- rep(0, dis$nlay)
   }
   dis_coordinates <- rmf_cell_coordinates(dis, include_faces = TRUE)
