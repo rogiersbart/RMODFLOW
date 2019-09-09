@@ -10,8 +10,7 @@
 #' names are modified in order to have more consistency.
 #'
 #' @export
-#' @examples
-#' rmf_install("MODFLOW-2005")
+
 rmf_install <- function(name = "MODFLOW-2005") {
   
   # make sure directory to install MODFLOW-related software exists
