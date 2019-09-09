@@ -1125,8 +1125,8 @@ rmf_plot.rmf_2d_array <- function(array,
         grad <- list(x = rmf_create_array(uvw$u, dim = c(dis$nrow, dis$ncol)),
                      y = rmf_create_array(uvw$v, dim = c(dis$nrow, dis$ncol)))
       }
-      vector_df$u <- -c(t(grad$x))
-      vector_df$v <- -c(t(grad$y))
+      vector_df$u <- -c(t(grad$x*mask^2))
+      vector_df$v <- -c(t(grad$y*mask^2))
       vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
       vecsize <- 0.75*vecint
       if(add) {
@@ -1459,6 +1459,7 @@ rmf_plot.rmf_3d_array <- function(array,
       if(is.null(uvw)) {
         grad <- rmf_gradient(array, dis = dis, mask = mask) 
       } else {
+        if(is.null(uvw$w)) stop('Please supply a w component in the uvm argument', call. = FALSE)
         grad <- list(x = rmf_create_array(uvw$u, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                      y = rmf_create_array(uvw$v, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                      z = rmf_create_array(uvw$w, dim = c(dis$nrow, dis$ncol, dis$nlay)))
@@ -1476,7 +1477,7 @@ rmf_plot.rmf_3d_array <- function(array,
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
         # add gradient values; negative because Darcy flux also has negative sign
-        vector_df$u <- -c(t(grad$y[,j,]))
+        vector_df$u <- -c(t(grad$y[,j,]*mask[,j,]^2))
         vector_df$v <- -c(grad$z[,j,])
         
       } else if(!is.null(i) && is.null(j)) {
@@ -1492,7 +1493,7 @@ rmf_plot.rmf_3d_array <- function(array,
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
         # add gradient values; negative because Darcy flux also has negative sign
-        vector_df$u <- -c(t(grad$x[i,,]))
+        vector_df$u <- -c(t(grad$x[i,,]*mask[i,,]^2))
         vector_df$v <- -c(grad$z[i,,])
       }
         if(crop) vector_df <- na.omit(vector_df)
