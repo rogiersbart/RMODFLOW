@@ -5,22 +5,19 @@
 \alias{create_lpf}
 \title{Create an \code{RMODFLOW} lpf object}
 \usage{
-rmf_create_lpf(dis = rmf_create_dis(), ilpfcb = 0, hdry = -888,
-  nplpf = 0, storagecoefficient = FALSE, constantcv = FALSE,
-  thickstrt = FALSE, nocvcorrection = FALSE, novfc = FALSE,
-  noparcheck = FALSE, laytyp = ifelse(dis$nlay == 1, list(1), list(c(1,
-  rep(0, dis$nlay - 1))))[[1]], layavg = laytyp * 0, chani = rep(1,
-  dis$nlay), layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay),
-  wetfct = 0.1, iwetit = 1, ihdwet = 0, parnam = NULL,
-  partyp = NULL, parval = NULL, nclu = NULL, mltarr = NULL,
-  zonarr = NULL, iz = NULL, hk = rmf_create_array(1e-04, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), hani = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), vka = hk,
-  ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  wetdry = rmf_create_array(-0.01, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)))
+rmf_create_lpf(dis, ilpfcb = 0, hdry = -888,
+  storagecoefficient = FALSE, constantcv = FALSE, thickstrt = FALSE,
+  nocvcorrection = FALSE, novfc = FALSE, noparcheck = FALSE,
+  laytyp = rmfi_ifelse0(dis$nlay == 1, 1, c(1, rep(0, dis$nlay - 1))),
+  layavg = rep(0, dis$nlay), chani = rep(1, dis$nlay),
+  layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay), wetfct = 0.1,
+  iwetit = 1, ihdwet = 0, parameters = NULL,
+  hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  hani = rmfi_ifelse0(all(chani <= 0), hk * 0 + 1, NULL),
+  vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
+  ss = rmfi_ifelse0("TR" \%in\% dis$sstr, hk * 0 + 1e-05, NULL),
+  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && all(laytyp > 0), hk * 0 +
+  0.15, NULL), vkcb = NULL, wetdry = NULL)
 
 create_lpf(...)
 }
@@ -30,8 +27,6 @@ create_lpf(...)
 \item{ilpfcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
 
 \item{hdry}{head assigned to cells that are converted to dry cells; defaults to -888}
-
-\item{nplpf}{number of lpf parameters; defaults to 0}
 
 \item{storagecoefficient}{logical; should STORAGECOEFFICIENT keyword be included?; defaults to FALSE}
 
@@ -61,19 +56,7 @@ create_lpf(...)
 
 \item{ihdwet}{is a flag that determines which equation is used to define the initial head at cells that become wet; defaults to 0}
 
-\item{parnam}{vector of parameter names; names should not be more than 10 characters, are not case sensitive, and should be unique}
-
-\item{partyp}{vector of parameter types; the lpf parameter types are HK, HANI, VK, VANI, SS, SY, or VKCB}
-
-\item{parval}{vector of parameter values}
-
-\item{nclu}{vector with the number of clusters required for each parameter}
-
-\item{mltarr}{matrix of multiplier array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{zonarr}{matrix of zone array names, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{iz}{character matrix of zone number combinations separated by spaces, with dis$nlay rows and lpf$nplpf columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
+\item{parameters}{list of \code{rmf_parameter} as created by \code{\link{rmf_create_parameter}}. See details; defaults to NULL}
 
 \item{hk}{3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.}
 
@@ -85,9 +68,9 @@ create_lpf(...)
 
 \item{sy}{3d array with specific yield; only required when there are transient stress periods; defaults to 0.15. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{vkcb}{3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to 0. If not read for a specific layer, set all values in that layer to NA.}
+\item{vkcb}{3d array with vertical hydraulic conductivity of quasi-three-dimensional confining beds; defaults to NULL. If not read for a specific layer, set all values in that layer to NA.}
 
-\item{wetdry}{3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to -0.01. If not read for a specific layer, set all values in that layer to NA.}
+\item{wetdry}{3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to NULL. If not read for a specific layer, set all values in that layer to NA.}
 }
 \value{
 Object of class lpf
@@ -95,11 +78,15 @@ Object of class lpf
 \description{
 \code{rmf_create_lpf} creates an \code{RMODFLOW} lpf object.
 }
+\details{
+Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters or by using direct array input.
+         When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
+}
 \section{Functions}{
 \itemize{
 \item \code{create_lpf}: Deprecated function name
 }}
 
 \seealso{
-\code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
+\code{\link{rmf_create_parameter}}, \code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 }

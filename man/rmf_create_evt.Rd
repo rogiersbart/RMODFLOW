@@ -4,67 +4,34 @@
 \alias{rmf_create_evt}
 \title{Create an \code{RMODFLOW} evt object.}
 \usage{
-rmf_create_evt(npevt = NULL, nevtop = 1, ievtcb = 0, parnam = NULL,
-  parval = NULL, nclu = NULL, instances = NULL, numinst = NULL,
-  instnam = NULL, mltarr = NULL, zonarr = NULL, iz = NULL,
-  insurf = 1, inevtr = 1, inexdp = 1, inievt = NULL,
-  pname = NULL, iname = NULL, ievtpf = NULL, surf = array(0, dim =
-  c(10, 10, 1)), evtr = array(4e-09, dim = c(10, 10, 1)),
-  exdp = array(2, dim = c(10, 10, 1)), ievt = NULL)
+rmf_create_evt(..., dis, nevtop = 3, ievtcb = 0, surf, exdp,
+  ievt = NULL, ievtpf = -1)
 }
 \arguments{
-\item{npevt}{number of evt parameters; defaults to NULL}
+\item{...}{\code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.}
 
-\item{nevtop}{evapotranspiration option code; defaults to 1}
+\item{dis}{\code{RMODFLOW} dis object}
+
+\item{nevtop}{evapotranspiration (ET) option code; defaults to 3 (ET is applied to the highest active cell in each vertical column)}
 
 \item{ievtcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
 
-\item{parnam}{vector of length \code{npevt} specifying the parameter names; defaults to NULL}
+\item{surf}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.}
 
-\item{parval}{vector of length \code{npevt} specifying the parameter values; defaults to NULL}
+\item{exdp}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.}
 
-\item{nclu}{vector of length \code{npevt} specifying the number of clusters that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL}
+\item{ievt}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL}
 
-\item{instances}{logical vector of length \code{npevt} indicating which parameters are time-varying; defaults to NULL}
-
-\item{numinst}{vector of length \code{npevt} indicating the number of instances that are included in the time-varying parameter; defaults to NULL}
-
-\item{instnam}{list with \code{npevt} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL}
-
-\item{mltarr}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{zonarr}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{iz}{list with \code{npevt} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL}
-
-\item{insurf}{numeric vector of length \code{dis$nper} specifying the \code{surf} read flag; defaults to 1}
-
-\item{inevtr}{numeric vector of length \code{dis$nper} specifying the \code{evtr} read flag which depends on whether or not parameters are specified; defaults to 1}
-
-\item{inexdp}{numeric vector of length \code{dis$nper} specifying the \code{exdp} read flag; defaults to 1}
-
-\item{inievt}{numeric vector of length \code{dis$nper} specifying the \code{ievt} read flag; defaults to NULL}
-
-\item{pname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL}
-
-\item{iname}{list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inevtr} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL}
-
-\item{ievtpf}{optional list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{inevt} for stress period \code{i} specifying the format code for printing \code{evtr} after it has been defined by parameters, defaults to NULL}
-
-\item{surf}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the elevation of the ET surface; defaults to the 0 for all cells}
-
-\item{evtr}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the maximum ET flux; defaults to 4e-9 for all cells}
-
-\item{exdp}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the ET extinction depths as distances from \code{surf}; defaults to 2 for all cells}
-
-\item{ievt}{numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the layer numbers defining in which layer ET is removed; defaults to NULL}
+\item{ievtpf}{numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{ET} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods}
 }
 \value{
 \code{RMODFLOW} evt object
 }
 \description{
 \code{rmf_create_evt} creates an \code{RMODFLOW} evt object
-'
+}
+\details{
+the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 }
 \seealso{
 \code{\link{rmf_read_evt}}, \code{\link{rmf_write_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}

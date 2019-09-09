@@ -7,7 +7,7 @@
 rmf_create_drn(..., dis, idrncb = 0, noprint = FALSE, aux = NULL)
 }
 \arguments{
-\item{...}{\code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the drains.}
+\item{...}{\code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the drains.}
 
 \item{dis}{dis object}
 

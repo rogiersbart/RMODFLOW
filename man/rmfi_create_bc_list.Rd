@@ -7,7 +7,7 @@
 rmfi_create_bc_list(arg, dis, varnames, aux = NULL)
 }
 \arguments{
-\item{arg}{list of (1) rmf_list and/or rmf_parm list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parm elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input.}
+\item{arg}{list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a \code{data.frame} that will be coerced to a rmf_list; defines the boundary condition input.}
 
 \item{dis}{dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.}
 
@@ -22,9 +22,9 @@ list with the data, possible parameter values, dimensions and the kper data.fram
 Set list input for a MODFLOW boundary condition package
 }
 \details{
-typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function.
+typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 }
 \seealso{
-\code{\link{rmfi_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
+\code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 }
 \keyword{internal}

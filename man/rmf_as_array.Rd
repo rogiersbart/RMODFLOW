@@ -8,9 +8,11 @@
 rmf_as_array(...)
 
 \method{rmf_as_array}{rmf_list}(obj, dis, select = 4, na_value = 0,
-  sparse = TRUE, kper = attr(obj, "kper"))
+  sparse = TRUE, kper = attr(obj, "kper"), fun = sum, ...)
 }
 \arguments{
+\item{...}{additional arguments passed to fun.}
+
 \item{obj}{a \code{rmf_list}}
 
 \item{dis}{a \code{RMODFLOW dis} object}
@@ -22,6 +24,8 @@ rmf_as_array(...)
 \item{sparse}{logical; indicating if the returned array should be 2D or 3D. See details. Defaults to TRUE.}
 
 \item{kper}{sets the kper attribute of the returned array; defaults to the kper attribute of obj}
+
+\item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.}
 }
 \value{
 either a \code{rmf_2d_array} or a \code{rmf_3d_array}

@@ -4,15 +4,19 @@
 \alias{rmf_read_evt}
 \title{Read a MODFLOW evapotranspiration file}
 \usage{
-rmf_read_evt(file = {    
-  cat("Please select evapotranspiration file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+rmf_read_evt(file = {     cat("Please select evt file ...\\n")    
+  file.choose() }, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, mlt = NULL, zon = NULL, ...)
 }
 \arguments{
 \item{file}{filename; typically '*.evt'}
 
 \item{dis}{an \code{RMODFLOW} dis object}
+
+\item{mlt}{a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays}
+
+\item{zon}{a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays}
 
 \item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }

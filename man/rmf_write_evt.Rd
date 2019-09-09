@@ -4,9 +4,11 @@
 \alias{rmf_write_evt}
 \title{Write a MODFLOW evapotranspiration file}
 \usage{
-rmf_write_evt(evt, dis = rmf_read_dis(), file = {    
-  cat("Please select evt file to overwrite or provide new filename ...\\n")
-      file.choose() })
+rmf_write_evt(evt, dis = {    
+  cat("Please select corresponding dis file ...\\n")    
+  rmf_read_dis(file.choose()) }, file = {    
+  cat("Please choose evt file to overwrite or provide new filename ...\\n")
+      file.choose() }, iprn = -1, ...)
 }
 \arguments{
 \item{evt}{an \code{RMODFLOW} evt object}
@@ -14,6 +16,10 @@ rmf_write_evt(evt, dis = rmf_read_dis(), file = {
 \item{dis}{an \code{RMODFLOW} dis object}
 
 \item{file}{filename to write to; typically '*.evt'}
+
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_array}}
 }
 \value{
 \code{NULL}

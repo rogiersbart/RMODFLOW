@@ -5,7 +5,7 @@
 \title{Plot a MODFLOW volumetric budget}
 \usage{
 \method{rmf_plot}{bud}(bud, dis, what = "rates", fluxes = "all",
-  net = FALSE, type = "area")
+  net = FALSE, type = "area", timestep = NULL)
 }
 \arguments{
 \item{bud}{\code{RMODFLOW} bud object}
@@ -19,6 +19,8 @@
 \item{net}{logical; if TRUE, it sums the inflows and outflows of the flux component to plot the net fluxes. If FALSE, it will plot both the inflows and outflows. Only used when \code{what} is "rates", "cumulative" or "total".}
 
 \item{type}{character; plot type. Either "bar" or "area"}
+
+\item{timestep}{integer timestep index to select from a transient budget. A negative value will select the last available timestep. Defaults to NULL.}
 }
 \value{
 ggplot2 object

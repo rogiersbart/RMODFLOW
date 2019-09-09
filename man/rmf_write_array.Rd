@@ -25,7 +25,7 @@ rmf_write_array(array, file, append = FALSE, binary = FALSE,
 
 \item{precision}{character; either \code{'single'} or \code{'double'}. Denotes the precision of the binary file.}
 
-\item{xsection}{logical; does the array represent a cross-section. See 'Details'.}
+\item{xsection}{logical; does the array represent a NLAY x NCOL cross-section. See 'Details'.}
 }
 \value{
 \code{NULL}

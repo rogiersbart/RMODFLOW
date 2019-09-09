@@ -7,7 +7,7 @@
 \usage{
 rmf_write_nam(nam, file = {    
   cat("Please select nam file to overwrite or provide new filename ...\\n")
-      file.choose() })
+      file.choose() }, exclude = NULL)
 
 write_nam(...)
 }
@@ -15,6 +15,8 @@ write_nam(...)
 \item{nam}{an \code{\link{RMODFLOW}} nam object}
 
 \item{file}{filename to write to; typically '*.nam'}
+
+\item{exclude}{character vector with packages names to exclude from the simulation. Defaults to NULL}
 }
 \value{
 \code{NULL}

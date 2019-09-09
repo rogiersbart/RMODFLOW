@@ -5,18 +5,20 @@
 \alias{create_modflow}
 \title{Create an \code{RMODFLOW} modflow object}
 \usage{
-rmf_create(...)
+rmf_create(..., cbc = NULL)
 
 create_modflow(...)
 }
 \arguments{
-\item{...}{RMODFLOW objects to be included in the modflow model; if a nam object is not provided, it as added automatically}
+\item{...}{(list of) \code{RMODFLOW} objects of class \code{rmf_package} to be included in the modflow object. If a nam object is not provided, it is added automatically.}
+
+\item{cbc}{optional integer; sets the flag and unit number for writing cell-by-cell flow data. Overwrites the values set in the objects. Defaults to NULL.}
 }
 \value{
-Object of class modflow
+a \code{modflow} object which is a list containing all MODFLOW packages
 }
 \description{
-\code{rmf_create} creates an \code{RMODFLOW} modflow object.
+\code{rmf_create} creates an \code{RMODFLOW} modflow object from \code{rmf_package} objects
 }
 \section{Functions}{
 \itemize{

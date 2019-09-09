@@ -1350,7 +1350,7 @@ convert_huf_to_grid <- function(...) {
 #' @param dis \code{RMODFLOW} dis object
 #' @param mask masking 3d array for averaging \code{\link{rmf_convert_huf_to_grid}}, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
 #' @param vka character indicating what variable the VKA array in the resulting lpf object represents. Possible values are \code{'VK'} or \code{'VANI'}. If all HGUVANI values are the same, the default vka is set correspondingly. If HGUVANI varies between hgu's, the default vka is \code{'VANI'}.
-#' @param averaging named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the (\code{partyp's}) defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').
+#' @param averaging named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the \code{partyp} defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').
 #' @param pvl optional \code{RMODFLOW} pvl object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
 #' @param ... arguments passed to \code{\link{rmf_create_lpf}}
 #' @return a \code{RMODFLOW} lpf object

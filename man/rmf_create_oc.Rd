@@ -5,25 +5,20 @@
 \alias{create_oc}
 \title{Create an \code{RMODFLOW} oc object}
 \usage{
-rmf_create_oc(dis = create_dis(), ihedfm = NA, chedfm = NA,
-  ihedun = 666, iddnfm = NA, cddnfm = NA, iddnun = NA,
-  cboufm = NA, ibouun = NA, compact_budget = TRUE, aux = FALSE,
+rmf_create_oc(dis, ihedfm = NA, chedfm = NA, ihedun = 666,
+  iddnfm = NA, cddnfm = NA, iddnun = NA, cboufm = NA,
+  ibouun = NA, compact_budget = TRUE, aux = FALSE,
   head_label = TRUE, drawdown_label = TRUE, ibound_label = TRUE,
-  iperoc = rep(1:dis$nper, dis$nstp),
-  itsoc = unlist(apply(data.frame(1, dis$nstp), 1, FUN = function(x)
-  x[1]:x[2])), print_head = rep(FALSE, length(iperoc)),
-  print_drawdown = rep(FALSE, length(iperoc)),
-  print_budget = rep(FALSE, length(iperoc)), save_head = rep(TRUE,
-  length(iperoc)), save_drawdown = rep(FALSE, length(iperoc)),
-  save_ibound = rep(FALSE, length(iperoc)), save_budget = rep(TRUE,
-  length(iperoc)), incode = NULL, ihddfl = NULL, ibudfl = NULL,
+  print_head = FALSE, print_drawdown = FALSE, print_budget = TRUE,
+  save_head = TRUE, save_drawdown = FALSE, save_ibound = FALSE,
+  save_budget = TRUE, incode = NULL, ihddfl = NULL, ibudfl = NULL,
   icbcfl = NULL, hdpr = NULL, ddpr = NULL, hdsv = NULL,
   ddsv = NULL)
 
 create_oc(...)
 }
 \arguments{
-\item{dis}{dis object}
+\item{dis}{\code{RMODFLOW} dis object}
 
 \item{ihedfm}{code for the format in which heads will be printed; defaults to NA (heads are not printed)}
 
@@ -51,21 +46,17 @@ create_oc(...)
 
 \item{ibound_label}{logical; should labels be included in the unformatted ibound file?}
 
-\item{iperoc}{vector of stress period numbers}
+\item{print_head}{logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{itsoc}{vector of time step numbers (within the corresponding stress period)}
-
-\item{print_head}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
-
-\item{print_drawdown}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{print_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
 \item{print_budget}{logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?}
 
-\item{save_head}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_head}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{save_drawdown}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
-\item{save_ibound}{logical vector or logical matrix of dimensions NLAY x length(iperoc); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_ibound}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
 
 \item{save_budget}{logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?}
 
