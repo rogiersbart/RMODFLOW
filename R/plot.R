@@ -1118,7 +1118,7 @@ rmf_plot.rmf_2d_array <- function(array,
         vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
       }
       if(crop) vector_df <- na.omit(vector_df)
-      # add gradient values; negative because Darcy flux also has negative sign
+      # add gradient values; negative because want to show arrow from high to low
       if(is.null(uvw)) {
         grad <- rmf_gradient(array, dis = dis, mask = mask) 
       } else {
@@ -1476,9 +1476,9 @@ rmf_plot.rmf_3d_array <- function(array,
           #warning('Transforming vertical coordinates', call. = FALSE)
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
-        # add gradient values; negative because Darcy flux also has negative sign
+        # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$y[,j,]*mask[,j,]^2))
-        vector_df$v <- -c(grad$z[,j,])
+        vector_df$v <- -c(grad$z[,j,]*mask[,j,]^2)
         
       } else if(!is.null(i) && is.null(j)) {
         vector_df <- data.frame(x=xy$x,y=c(dis$center[i,,]))
@@ -1492,9 +1492,9 @@ rmf_plot.rmf_3d_array <- function(array,
           #warning('Transforming vertical coordinates', call. = FALSE)
           vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
         }
-        # add gradient values; negative because Darcy flux also has negative sign
+        # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$x[i,,]*mask[i,,]^2))
-        vector_df$v <- -c(grad$z[i,,])
+        vector_df$v <- -c(grad$z[i,,]*mask[i,,]^2)
       }
         if(crop) vector_df <- na.omit(vector_df)
         vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
