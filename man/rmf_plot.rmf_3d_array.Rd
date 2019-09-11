@@ -15,9 +15,9 @@
   colour_palette = ifelse(type \%in\% c("contour", "vector"), "black",
   rmfi_rev_rainbow), nlevels = 7, type = "fill", levels = NULL,
   gridlines = FALSE, add = FALSE, crop = TRUE, hed = NULL,
-  l = NULL, binwidth = round(diff(zlim)/20), label = TRUE,
-  prj = NULL, crs = NULL, vecint = 1, uvw = NULL, legend = !add,
-  ...)
+  l = NULL, binwidth = ceiling(diff(zlim)/20), label = TRUE,
+  prj = NULL, crs = NULL, vecint = 1, uvw = NULL,
+  legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE), ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}

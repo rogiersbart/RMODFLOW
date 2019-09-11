@@ -5,7 +5,7 @@
 \title{Plot a MODFLOW volumetric budget}
 \usage{
 \method{rmf_plot}{bud}(bud, dis, what = "rates", fluxes = "all",
-  net = FALSE, type = "area", timestep = NULL)
+  net = FALSE, type = "area", timesteps = NULL)
 }
 \arguments{
 \item{bud}{\code{RMODFLOW} bud object}
@@ -20,7 +20,7 @@
 
 \item{type}{character; plot type. Either "bar" or "area"}
 
-\item{timestep}{integer timestep index to select from a transient budget. A negative value will select the last available timestep. Defaults to NULL.}
+\item{timesteps}{integer timesteps index to select from a transient budget. A single negative value will select the last available timestep. Defaults to NULL.}
 }
 \value{
 ggplot2 object

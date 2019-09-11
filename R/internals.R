@@ -106,9 +106,9 @@ rmfi_create_bc_array <- function(arg, dis) {
   # if arg is nested list, unnest
   if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if matrix or 2d-array, make rmf_2d_array which is always active
-  arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
-                                              {warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.", call. = FALSE); rmf_create_array(i, kper = 1:dis$nper)},
-                                              i) )
+  # arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
+  #                                             {warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.", call. = FALSE); rmf_create_array(i, kper = 1:dis$nper)},
+  #                                             i) )
   
   
   # check for parameters and/or arrays and name them
@@ -232,9 +232,9 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   # if arg is nested list, unnest
   if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
   # if data.frame, make rmf_list which is always active
-  arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
-                                              {warning("Coercing data.frame to rmf_list; list active for all stress-periods", call. = FALSE); rmf_create_list(i, kper = 1:dis$nper)}, 
-                                              i) )
+  # arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
+  #                                             {warning("Coercing data.frame to rmf_list; list active for all stress-periods", call. = FALSE); rmf_create_list(i, kper = 1:dis$nper)}, 
+  #                                             i) )
   
   # check for parameters and/or lists and name them
   parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]

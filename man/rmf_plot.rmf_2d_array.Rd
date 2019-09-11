@@ -12,10 +12,11 @@
   "vector"), "black", rmfi_rev_rainbow),
   zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
   type = "fill", levels = NULL, gridlines = FALSE, add = FALSE,
-  height_exaggeration = 100, binwidth = round(diff(zlim)/20),
+  height_exaggeration = 100, binwidth = ceiling(diff(zlim)/20),
   label = TRUE, prj = NULL, crs = NULL, alpha = 1,
   plot3d = FALSE, height = NULL, crop = TRUE, vecint = 1,
-  uvw = NULL, legend = !add)
+  uvw = NULL, legend = ifelse(type \%in\% c("fill", "factor"), !add,
+  FALSE))
 }
 \arguments{
 \item{array}{an object of class rmf_2d_array}

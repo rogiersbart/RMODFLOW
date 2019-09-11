@@ -3,26 +3,26 @@
 #' \code{rmf_create_oc} creates an \code{RMODFLOW} oc object.
 #' 
 #' @param dis \code{RMODFLOW} dis object
-#' @param ihedfm code for the format in which heads will be printed; defaults to NA (heads are not printed)
-#' @param chedfm code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)
+#' @param ihedfm integer code for the format in which heads will be printed; defaults to 0
+#' @param chedfm character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)
 #' @param ihedun unit number on which heads will be saved; defaults to 666
-#' @param iddnfm code for the format in which drawdowns will be printed; defaults to NA (drawdowns are not printed)
-#' @param cddnfm code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)
-#' @param iddnun unit number on which drawdowns will be saved; defaults to NA (drawdowns are not saved)
-#' @param cboufm code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)
-#' @param ibouun unit number on which ibound will be saved; defaults to NA (ibound is not saved)
+#' @param iddnfm integer code for the format in which drawdowns will be printed; defaults to 0
+#' @param cddnfm character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)
+#' @param iddnun unit number on which drawdowns will be saved; defaults to 667 
+#' @param cboufm character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)
+#' @param ibouun unit number on which ibound will be saved; defaults to 668
 #' @param compact_budget logical; should the COMPACT BUDGET option be used
 #' @param aux logical; should the auxiliary data be included in the budget file
 #' @param head_label logical; should labels be included in the unformatted head file?
 #' @param drawdown_label logical; should labels be included in the unformatted drawdown file?
 #' @param ibound_label logical; should labels be included in the unformatted ibound file?
-#' @param print_head logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param print_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param print_budget logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?
-#' @param save_head logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param save_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param save_ibound logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.
-#' @param save_budget logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?
+#' @param print_head logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed ? If not a matrix, all layers are treated the same.
+#' @param print_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed ? If not a matrix, all layers are treated the same.
+#' @param print_budget logical vector; should budget be printed ?
+#' @param save_head logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved ? If not a matrix, all layers are treated the same.
+#' @param save_drawdown logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved ? If not a matrix, all layers are treated the same.
+#' @param save_ibound logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved ? If not a matrix, all layers are treated the same.
+#' @param save_budget logical vector; should budget be saved ?
 #' @param incode vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #' @param ihddfl vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #' @param ibudfl vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
@@ -32,18 +32,21 @@
 #' @param hdsv matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #' @param ddsv matrix of dimensions \code{sum(dis$nstp), dis$nlay}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)
 #'
+#' @details if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
+#'          The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
+#'          A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less.
 #' @return Object of class oc
 #' @export
 #' @seealso \code{\link{rmf_read_oc}}, \code{\link{rmf_write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 rmf_create_oc <- function(dis,
-                          ihedfm = NA,
+                          ihedfm = 0,
                           chedfm = NA,
                           ihedun = 666,
-                          iddnfm = NA,
+                          iddnfm = 0,
                           cddnfm = NA,
-                          iddnun = NA,
+                          iddnun = 667,
                           cboufm = NA,
-                          ibouun = NA,
+                          ibouun = 668,
                           compact_budget = TRUE,
                           aux = FALSE,
                           head_label = TRUE,
@@ -100,6 +103,13 @@ rmf_create_oc <- function(dis,
       oc$save_ibound <- rmfi_ifelse0(length(save_ibound) == 1, rep(save_ibound, length(oc$iperoc)), save_ibound)
       oc$save_budget <- rmfi_ifelse0(length(save_budget) == 1, rep(save_budget, length(oc$iperoc)), save_budget)
       
+      if(all(oc$save_head == FALSE)) oc$ihedun <- NA
+      if(all(oc$save_drawdown == FALSE)) oc$iddnun <- NA
+      if(all(oc$save_ibound == FALSE)) oc$ibouun <- NA
+      
+      if(all(oc$print_head == FALSE)) oc$ihedfm <- NA
+      if(all(oc$print_drawdown== FALSE)) oc$iddnfm <- NA
+
 
     } else { # numeric codes
       # data set 1

@@ -5,9 +5,9 @@
 \alias{create_oc}
 \title{Create an \code{RMODFLOW} oc object}
 \usage{
-rmf_create_oc(dis, ihedfm = NA, chedfm = NA, ihedun = 666,
-  iddnfm = NA, cddnfm = NA, iddnun = NA, cboufm = NA,
-  ibouun = NA, compact_budget = TRUE, aux = FALSE,
+rmf_create_oc(dis, ihedfm = 0, chedfm = NA, ihedun = 666,
+  iddnfm = 0, cddnfm = NA, iddnun = 667, cboufm = NA,
+  ibouun = 668, compact_budget = TRUE, aux = FALSE,
   head_label = TRUE, drawdown_label = TRUE, ibound_label = TRUE,
   print_head = FALSE, print_drawdown = FALSE, print_budget = TRUE,
   save_head = TRUE, save_drawdown = FALSE, save_ibound = FALSE,
@@ -20,21 +20,21 @@ create_oc(...)
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object}
 
-\item{ihedfm}{code for the format in which heads will be printed; defaults to NA (heads are not printed)}
+\item{ihedfm}{integer code for the format in which heads will be printed; defaults to 0}
 
-\item{chedfm}{code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)}
+\item{chedfm}{character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)}
 
 \item{ihedun}{unit number on which heads will be saved; defaults to 666}
 
-\item{iddnfm}{code for the format in which drawdowns will be printed; defaults to NA (drawdowns are not printed)}
+\item{iddnfm}{integer code for the format in which drawdowns will be printed; defaults to 0}
 
-\item{cddnfm}{code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)}
+\item{cddnfm}{character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)}
 
-\item{iddnun}{unit number on which drawdowns will be saved; defaults to NA (drawdowns are not saved)}
+\item{iddnun}{unit number on which drawdowns will be saved; defaults to 667}
 
-\item{cboufm}{code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)}
+\item{cboufm}{character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)}
 
-\item{ibouun}{unit number on which ibound will be saved; defaults to NA (ibound is not saved)}
+\item{ibouun}{unit number on which ibound will be saved; defaults to 668}
 
 \item{compact_budget}{logical; should the COMPACT BUDGET option be used}
 
@@ -46,19 +46,19 @@ create_oc(...)
 
 \item{ibound_label}{logical; should labels be included in the unformatted ibound file?}
 
-\item{print_head}{logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{print_head}{logical vector of length sum(dis$nstp) or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be printed ? If not a matrix, all layers are treated the same.}
 
-\item{print_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{print_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be printed ? If not a matrix, all layers are treated the same.}
 
-\item{print_budget}{logical vector; should budget be printed for the time step corresponding to iperoc and itsoc?}
+\item{print_budget}{logical vector; should budget be printed ?}
 
-\item{save_head}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_head}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should heads be saved ? If not a matrix, all layers are treated the same.}
 
-\item{save_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_drawdown}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should drawdowns be saved ? If not a matrix, all layers are treated the same.}
 
-\item{save_ibound}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved for the time step corresponding to iperoc and itsoc? If not a matrix, all layers are treated the same.}
+\item{save_ibound}{logical vector or logical matrix of dimensions NLAY x sum(dis$nstp); should ibound be saved ? If not a matrix, all layers are treated the same.}
 
-\item{save_budget}{logical vector; should budget be saved for the time step corresponding to iperoc and itsoc?}
+\item{save_budget}{logical vector; should budget be saved ?}
 
 \item{incode}{vector of length \code{sum(dis$nstp)}; used when OC is specified with numeric codes; defaults to NULL (OC is specified using words)}
 
@@ -81,6 +81,11 @@ Object of class oc
 }
 \description{
 \code{rmf_create_oc} creates an \code{RMODFLOW} oc object.
+}
+\details{
+if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
+         The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
+         A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less.
 }
 \section{Functions}{
 \itemize{

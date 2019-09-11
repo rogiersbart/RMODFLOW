@@ -17,7 +17,7 @@ rmf_plot <- function(...) {
 #' @param fluxes character; either "all" or a character vector with the flux components to plot. Only used when \code{what} is "rates" or "cumulative"
 #' @param net logical; if TRUE, it sums the inflows and outflows of the flux component to plot the net fluxes. If FALSE, it will plot both the inflows and outflows. Only used when \code{what} is "rates", "cumulative" or "total".
 #' @param type character; plot type. Either "bar" or "area"
-#' @param timestep integer timestep index to select from a transient budget. A negative value will select the last available timestep. Defaults to NULL.
+#' @param timesteps integer timesteps index to select from a transient budget. A single negative value will select the last available timestep. Defaults to NULL.
 #' @details any flux components that are zero for the entire simulation are ommited from the plot. This might be the case with constant head cells, since these are always written to the budget even if no constant head cells are specified in the model.
 #'          By default, geom_area is used for plotting (type = "area"). If there is only one stress period and this stress period is steady-state however, this will return unstacked bar plots. If type is "bar", geom_col is used and stacked bar plots are returned. 
 #'          
@@ -30,16 +30,14 @@ rmf_plot.bud <-  function(bud,
                           fluxes = 'all',
                           net = FALSE,
                           type = 'area', 
-                          timestep = NULL) {
-  
-  if(!is.null(timestep) && length(timestep) > 1) stop('Argument timestep should be a single value', call. = FALSE)
+                          timesteps = NULL) {
   
   # nstp
   bud <- lapply(bud, function(i) cbind(i, nstp = c(0,cumsum(dis$nstp)[i$kper-1])+i$kstp))
   
-  if(!is.null(timestep)) {
-    if(timestep < 0) timestep <- nrow(bud[[1]])
-    bud <- lapply(bud, function(i) i[timestep,])
+  if(!is.null(timesteps)) {
+    if(length(timesteps) == 1 && timesteps < 0) timesteps <- nrow(bud[[1]])
+    bud <- lapply(bud, function(i) i[timesteps,])
   }
   
   # create df for plotting
@@ -78,7 +76,7 @@ rmf_plot.bud <-  function(bud,
     gm_line <- ggplot2::geom_path()
     
     # check if ss 
-    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timestep)) {
+    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timesteps) && length(timesteps) == 1) {
       if(type == "area") {
         type <- 'bar'
         df$nstp <- factor(df$nstp)
@@ -130,7 +128,7 @@ rmf_plot.bud <-  function(bud,
     x <- ggplot2::sym('nstp')
     
     # check if ss 
-    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timestep)) {
+    if((dis$nper == 1 && dis$sstr == "SS") || !is.null(timesteps) && length(timesteps) == 1) {
       if(type == "area") {
         type <- 'bar'
         x <- ggplot2::sym('flux')
@@ -918,7 +916,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   gridlines = FALSE,
                                   add = FALSE,
                                   height_exaggeration = 100,
-                                  binwidth=round(diff(zlim)/20),
+                                  binwidth=ceiling(diff(zlim)/20),
                                   label=TRUE,
                                   prj=NULL,
                                   crs=NULL,
@@ -928,7 +926,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   crop = TRUE,
                                   vecint = 1,
                                   uvw = NULL,
-                                  legend = !add) {
+                                  legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE)) {
   
   if(plot3d) {
     xyz <- rmf_cell_coordinates(dis)
@@ -1204,13 +1202,13 @@ rmf_plot.rmf_3d_array <- function(array,
                                   crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
-                                  binwidth = round(diff(zlim)/20),
+                                  binwidth = ceiling(diff(zlim)/20),
                                   label = TRUE,
                                   prj = NULL,
                                   crs = NULL,
                                   vecint = 1,
                                   uvw = NULL,
-                                  legend = !add,
+                                  legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
                                   ...) {
   
   if(is.null(i) & is.null(j) & is.null(k)) {
