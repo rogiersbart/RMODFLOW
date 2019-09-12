@@ -20,11 +20,11 @@
 
 \item{parval}{numeric specifying the value of the parameter which is used to multiply values in the array. Defaults to 1.0}
 
-\item{mltnam}{character vector with the same length as \code{layer}; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present.}
+\item{mltnam}{character vector; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present.}
 
-\item{zonnam}{character vector with the same length as \code{layer}; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present.}
+\item{zonnam}{character vector; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present.}
 
-\item{iz}{list with the same length as \code{layer} where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.}
+\item{iz}{list where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.}
 
 \item{partyp}{character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY}, \code{VKCB} for lpf and \code{SYTP} for huf. Not used when \code{layer} is \code{NULL}.}
 

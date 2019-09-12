@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{rmf_calculate_array}
 \alias{rmf_calculate_array}
-\title{Calculate a \code{rmf_2d_array} from multiplier arrays, zone arrays and/or parameter values}
+\title{Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values}
 \usage{
 rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL,
   parval = 1)
@@ -24,7 +24,7 @@ rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL,
 \code{rmf_2d_array} or \code{rmf_3d_array} with the values calculated from the multiplier and/or zone arrays.
 }
 \description{
-Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array}. Parameter values can be used to multiply the arrays as well.
+Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array} or \code{rmf_3d_array}. Parameter values can be used to multiply the arrays as well.
 }
 \details{
 if mltarr (zonarr) is a list, certain elements are allowed to be set to \code{"NONE"} (\code{"ALL"}) indicating the multiplier (zone) array is not active for this cluster.

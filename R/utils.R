@@ -341,9 +341,9 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   }
 }
 
-#' Calculate a \code{rmf_2d_array} from multiplier arrays, zone arrays and/or parameter values
+#' Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values
 #'
-#' Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array}. Parameter values can be used to multiply the arrays as well.
+#' Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array} or \code{rmf_3d_array}. Parameter values can be used to multiply the arrays as well.
 #' 
 #' @param dis dis object; used to set the dimensions of the array
 #' @param layer optional numeric vector with the layer indices to which \code{mltarr, zonarr and iz} apply. Should have the same length as \code{mltarr, zonarr and iz}. Only used for flow parameter arrays. See details.
@@ -2018,9 +2018,9 @@ rmf_create_parameter <- function(...) {
 #' @param layer integer vector denoting the layer indices represented by the parameter. Specifying layer indicates that this parameter represent flow package information; the partyp argument should be set as well. Multiple instances of the same layer index are allowed.
 #' @param parnam character specifying the name of the parameter
 #' @param parval numeric specifying the value of the parameter which is used to multiply values in the array. Defaults to 1.0
-#' @param mltnam character vector with the same length as \code{layer}; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present. 
-#' @param zonnam character vector with the same length as \code{layer}; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present. 
-#' @param iz list with the same length as \code{layer} where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.
+#' @param mltnam character vector; specifying the names of multiplier arrays that are used to build the parameter. The keyword \code{"NONE"} indicates no multiplier array is present. 
+#' @param zonnam character vector; specifying the names of zone arrays that are used to build the parameter. The keyword \code{"ALL"} indicates no multiplier array is present. 
+#' @param iz list where each element is a numeric vector with the zone numbers for the corresponding zone array. Only read when the corresponding \code{zonnam} is not \code{"ALL"}.
 #' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY}, \code{VKCB} for lpf and \code{SYTP} for huf. Not used when \code{layer} is \code{NULL}.
 #' @param mlt \code{RMODFLOW} mlt object which holds the multiplier arrays specified in \code{mltnam}
 #' @param zon \code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}
