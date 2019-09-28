@@ -87,8 +87,10 @@ rmf_create_upw <- function(dis,
       upw$parameter_values[parnam] <- attrb$parval
       
       upw$parameters[[parnam]] <- parameters[[i]]
-      if(is.null(upw[[tolower(attrb$partyp)]])) upw[[tolower(attrb$partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-      upw[[tolower(attrb$partyp)]][,,unique(attrb$layer)] <- c(parameters[[i]])
+      upw$parameters[[parnam]][which(is.na(upw$parameters[[parnam]]))] <- 0
+      
+      if(is.null(upw[[tolower(attrb$partyp)]])) upw[[tolower(attrb$partyp)]] <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+      upw[[tolower(attrb$partyp)]][,,unique(attrb$layer)] <- upw[[tolower(attrb$partyp)]][,,unique(attrb$layer)] + c(upw$parameters[[parnam]])
       
     }
     
@@ -239,9 +241,10 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       
       upw$parameter_values[parnam] <- parval
       upw$parameters[[parnam]] <- rmf_create_parameter(dis = dis, parnam = parnam, partyp = partyp, parval = parval, layer = ds9$layer, mltnam = ds9$mltarr, zonnam = ds9$zonarr, iz = ds9$iz, mlt = mlt, zon = zon)
+      upw$parameters[[parnam]][which(is.na(upw$parameters[[parnam]]))] <- 0
       
-      if(is.null(upw[[tolower(partyp)]])) upw[[tolower(partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-      upw[[tolower(partyp)]][,,unique(ds9$layer)] <- c(upw$parameters[[parnam]])
+      if(is.null(upw[[tolower(partyp)]])) upw[[tolower(partyp)]] <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+      upw[[tolower(partyp)]][,,unique(ds9$layer)] <- upw[[tolower(partyp)]][,,unique(ds9$layer)] + c(upw$parameters[[parnam]])
       
       if(!(toupper(partyp) %in% types)) types <- append(types, toupper(partyp))
     }

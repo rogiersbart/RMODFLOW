@@ -114,8 +114,10 @@ rmf_create_lpf <- function(dis,
       lpf$parameter_values[parnam] <- attrb$parval
       
       lpf$parameters[[parnam]] <- parameters[[i]]
-      if(is.null(lpf[[tolower(attrb$partyp)]])) lpf[[tolower(attrb$partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-      lpf[[tolower(attrb$partyp)]][,,unique(attrb$layer)] <- c(parameters[[i]])
+      lpf$parameters[[parnam]][which(is.na(lpf$parameters[[parnam]]))] <- 0
+      
+      if(is.null(lpf[[tolower(attrb$partyp)]])) lpf[[tolower(attrb$partyp)]] <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+      lpf[[tolower(attrb$partyp)]][,,unique(attrb$layer)] <- lpf[[tolower(attrb$partyp)]][,,unique(attrb$layer)] + c(lpf$parameters[[parnam]])
       
     }
     
@@ -288,9 +290,10 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
       
       lpf$parameter_values[parnam] <- parval
       lpf$parameters[[parnam]] <- rmf_create_parameter(dis = dis, parnam = parnam, partyp = partyp, parval = parval, layer = ds9$layer, mltnam = ds9$mltarr, zonnam = ds9$zonarr, iz = ds9$iz, mlt = mlt, zon = zon)
+      lpf$parameters[[parnam]][which(is.na(lpf$parameters[[parnam]]))] <- 0
       
-      if(is.null(lpf[[tolower(partyp)]])) lpf[[tolower(partyp)]] <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-      lpf[[tolower(partyp)]][,,unique(ds9$layer)] <- c(lpf$parameters[[parnam]])
+      if(is.null(lpf[[tolower(partyp)]])) lpf[[tolower(partyp)]] <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+      lpf[[tolower(partyp)]][,,unique(ds9$layer)] <- lpf[[tolower(partyp)]][,,unique(ds9$layer)] + c(lpf$parameters[[parnam]])
       
       if(!(toupper(partyp) %in% types)) types <- append(types, toupper(partyp))
     }
