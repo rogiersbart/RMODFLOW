@@ -567,17 +567,17 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       
       if(!is.null(other_desc) && length(other_desc) != 0) {
         warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
-        return(NULL)
+        hed <- NULL
       } else {
         hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
         if(!is.null(timesteps)) {
           hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
         }
         class(hed) <- c('hed', class(hed))
-        return(hed)
       }
     })
     close(con)
+    return(hed)
     
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
@@ -990,7 +990,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       
       if(!is.null(other_desc) && length(other_desc) != 0) {
         warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
-        return(NULL)
+        hed <- NULL
       } else {
         if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
         hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
@@ -998,10 +998,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
         }
         class(hed) <- c('ddn', class(hed))
-        return(hed)
       }
     })
     close(con)
+    return(hed)
     
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
