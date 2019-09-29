@@ -168,8 +168,9 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
     # data set 1
     oc$ihedfm <- oc$chedfm <- oc$ihedun <- oc$iddnfm <- oc$cddnfm <- oc$iddnun <- oc$cboufm <- oc$ibouun <- NA
     oc$compact_budget <- oc$aux <- oc$head_label <- oc$drawdown_label <- oc$ibound_label <- FALSE
-    while(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] != 'PERIOD') {
-      data_set_1 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+    data_set_1 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+    while(data_set_1[1] != 'PERIOD') {
+
       if(grepl('HEAD PRINT FORMAT',oc_lines[1])) {
         oc$ihedfm <- data_set_1[4]
       } else if(grepl('HEAD SAVE FORMAT',oc_lines[1])) {
@@ -194,6 +195,14 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         if(grepl('AUX',oc_lines[1])) oc$aux <- TRUE
       }
       oc_lines <- oc_lines[-1]
+      data_set_1 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+      
+      # skip blank lines
+      while(length(data_set_1) == 0 && length(oc_lines) != 0) {
+        oc_lines <- oc_lines[-1]
+        data_set_1 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+      }  
+      
     }
     
     # data set 2 & 3
@@ -207,10 +216,25 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
     while(length(oc_lines) != 0) {
       data_set_2 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
       oc_lines <- oc_lines[-1]
+      
+      # skip blank lines
+      while(length(data_set_2) == 0) {
+        data_set_2 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+        oc_lines <- oc_lines[-1]
+      }  
+      
       oc$iperoc <- append(oc$iperoc, as.numeric(data_set_2[2]))
       oc$itsoc <- append(oc$itsoc, as.numeric(data_set_2[4]))
       
-      while(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] != 'PERIOD' & length(oc_lines) != 0) {
+      data_set_3 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+      # skip blank lines
+      while(length(data_set_3) == 0) {
+        oc_lines <- oc_lines[-1]
+        data_set_3 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+      }  
+      
+      while(data_set_3[1] != 'PERIOD' & length(oc_lines) != 0) {
+        
         if(grepl('PRINT HEAD', oc_lines[1])) {
           if(length(strsplit(trimws(oc_lines[1]), ' ')[[1]]) > 2) {
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
@@ -265,7 +289,15 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
         } 
         
         oc_lines <- oc_lines[-1]
+        data_set_3 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+        
+        # skip blank lines
+        while(length(data_set_3) == 0 && length(oc_lines) != 0) {
+          oc_lines <- oc_lines[-1]
+          data_set_3 <- rmfi_parse_variables(oc_lines[1], format = 'free')$variables
+        }  
       }
+      
       if(ncol(oc$print_head) != length(oc$iperoc)) oc$print_head <- cbind(oc$print_head, rep(FALSE, dis$nlay))
       if(ncol(oc$print_drawdown) != length(oc$iperoc)) oc$print_drawdown <- cbind(oc$print_drawdown, rep(FALSE, dis$nlay))
       if(length(oc$print_budget) != length(oc$iperoc)) oc$print_budget[length(oc$iperoc)] <- FALSE
@@ -275,8 +307,6 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
       if(length(oc$save_budget) != length(oc$iperoc)) oc$save_budget[length(oc$iperoc)] <- FALSE
       
     }
-    
-    
     
     # collapse if values for all layers are always the same
     if(all(apply(oc$print_head, 2, function(i) length(unique(i)) == 1) == TRUE)) {

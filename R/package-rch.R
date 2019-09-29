@@ -84,7 +84,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <-  rmfi_parse_variables(lines)
+  data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
   if('PARAMETER' %in% data_set_1$variables) {
     np <-  as.numeric(data_set_1$variables[2])
@@ -127,7 +127,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
     # data set 5
     data_set_5 <-  rmfi_parse_variables(lines, n=2, ...)
     inrech <- as.numeric(data_set_5$variables[1])
-    inirch <- as.numeric(data_set_5$variables[2])
+    if(nrchop == 2) inirch <- as.numeric(data_set_5$variables[2])
     lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
@@ -152,10 +152,14 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
         p_name <-  as.character(data_set_7$variables[1])
         if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
           i_name <- data_set_7$variables[2]
-          if(length(data_set_7$variables) > 2) irchpf[i] <- as.numeric(data_set_7$variables[3])
+          if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {
+            irchpf[i] <- as.numeric(data_set_7$variables[3])
+          }
         } else {
           i_name <- NULL
-          if(length(data_set_7$variables) > 1) irchpf[i] <- as.numeric(data_set_7$variables[2])
+          if(length(data_set_7$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[2])))) {
+            irchpf[i] <- as.numeric(data_set_7$variables[2])
+          }
         }
         
         rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)

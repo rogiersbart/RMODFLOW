@@ -179,24 +179,34 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
   rm(data_set_1)
   
   # data set 2
-  upw$laytyp <- as.numeric(rmfi_parse_variables(upw_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  upw_lines <- upw_lines[-1]
+  data_set_2 <- rmfi_parse_variables(upw_lines, nlay = dis$nlay)
+  upw$laytyp <- as.numeric(data_set_2$variables[1:dis$nlay])
+  upw_lines <- data_set_2$remaining_lines
+  rm(data_set_2)
   
   # data set 3
-  upw$layavg <- as.numeric(rmfi_parse_variables(upw_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  upw_lines <- upw_lines[-1]
+  data_set_3 <- rmfi_parse_variables(upw_lines, nlay = dis$nlay)
+  upw$layavg <- as.numeric(data_set_3$variables[1:dis$nlay])
+  upw_lines <- data_set_3$remaining_lines
+  rm(data_set_3)  
   
   # data set 4
-  upw$chani <- as.numeric(rmfi_parse_variables(upw_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  upw_lines <- upw_lines[-1]
+  data_set_4 <- rmfi_parse_variables(upw_lines, nlay = dis$nlay)
+  upw$chani <- as.numeric(data_set_4$variables[1:dis$nlay])
+  upw_lines <- data_set_4$remaining_lines
+  rm(data_set_4) 
   
   # data set 5
-  upw$layvka <- as.numeric(rmfi_parse_variables(upw_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  upw_lines <- upw_lines[-1]
+  data_set_5 <- rmfi_parse_variables(upw_lines, nlay = dis$nlay)
+  upw$layvka <- as.numeric(data_set_5$variables[1:dis$nlay])
+  upw_lines <- data_set_5$remaining_lines
+  rm(data_set_5) 
   
   # data set 6
-  upw$laywet <- as.numeric(rmfi_parse_variables(upw_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  upw_lines <- upw_lines[-1]
+  data_set_6 <- rmfi_parse_variables(upw_lines, nlay = dis$nlay)
+  upw$laywet <- as.numeric(data_set_6$variables[1:dis$nlay])
+  upw_lines <- data_set_6$remaining_lines
+  rm(data_set_6) 
   
   # data set 7-8
   types <- NULL

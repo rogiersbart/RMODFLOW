@@ -117,7 +117,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <-  rmfi_parse_variables(lines)
+  data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
   if('PARAMETER' %in% data_set_1$variables) {
     np <-  as.numeric(data_set_1$variables[2])
@@ -164,7 +164,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     insurf <- as.numeric(data_set_5$variables[1])
     inevtr <- as.numeric(data_set_5$variables[2])
     inexdp <- as.numeric(data_set_5$variables[3])
-    inievt <- as.numeric(data_set_5$variables[4])
+    if(nevtop == 2) inievt <- as.numeric(data_set_5$variables[4])
     lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
@@ -198,10 +198,15 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
         p_name <-  as.character(data_set_8$variables[1])
         if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
           i_name <- data_set_8$variables[2]
-          if(length(data_set_8$variables) > 2) ievtpf[i] <- as.numeric(data_set_8$variables[3])
+          if(length(data_set_8$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[3])))) {
+            ievtpf[i] <- as.numeric(data_set_8$variables[3])
+          }
+          
         } else {
           i_name <- NULL
-          if(length(data_set_8$variables) > 1) ievtpf[i] <- as.numeric(data_set_8$variables[2])
+          if(length(data_set_8$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[2])))) {
+            ievtpf[i] <- as.numeric(data_set_8$variables[2])
+          }
         }
         
         rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
@@ -296,7 +301,8 @@ rmf_write_evt <-  function(evt,
     } 
     
     # inevtr
-    names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-1]]
+    drop_id <- which(colnames(evt$kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
+    names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-drop_id]]
     if(i > 1 && identical(names_act, colnames(evt$kper)[which(evt$kper[i-1,which(!is.na(evt$kper[i-1,]))] != FALSE)[-1]])) {
       inevtr <- -1
     } else {
@@ -315,7 +321,7 @@ rmf_write_evt <-  function(evt,
     
     # inievt
     inievt <- 0
-    if(nevtop == 2) {
+    if(evt$nevtop == 2) {
       inievt_act <- evt$kper$ievt[i]
       if(!is.na(inievt_act)) {
         if(i > 1 && identical(inievt_act, evt$kper$ievt[i-1])) {

@@ -28,7 +28,7 @@ rmf_create_pcg <- function(mxiter = 20,
                            iprpcg = 1,
                            mutpcg = 0,
                            damppcg = 1,
-                           damppcgt = ifelse(damppcg < 0, 1, NA)) {
+                           damppcgt = 1) {
   pcg <- NULL
   
   # data set 0
@@ -48,7 +48,7 @@ rmf_create_pcg <- function(mxiter = 20,
     pcg$iprpcg <- iprpcg
     pcg$mutpcg <- mutpcg
     pcg$damppcg <- damppcg
-    pcg$damppcgt <- damppcgt
+    if(pcg$damppcg < 0) pcg$damppcgt <- damppcgt
   
   class(pcg) <- c('pcg','rmf_package')
   return(pcg)
@@ -85,7 +85,8 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
   pcg$mxiter <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   pcg$iter1 <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   pcg$npcond <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
-  pcg$ihcofadd <-rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4]))
+  ihcofadd <- suppressWarnings(rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4])))
+  pcg$ihcofadd <- ifelse(is.na(ihcofadd), 0, ihcofadd)
   pcg_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -99,7 +100,10 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
   pcg$mutpcg <- rmfi_ifelse0(is.na(data_set_2$variables[6]), 0, as.numeric(data_set_2$variables[6]))
   # pcg$damp <- as.numeric(data_set_2$variables[7]) # modflow 2000 only
   pcg$damppcg <- rmfi_ifelse0(is.na(data_set_2$variables[7]), 0, as.numeric(data_set_2$variables[7]))
-  pcg$damppcgt <- rmfi_ifelse0(is.na(data_set_2$variables[8]), 0, as.numeric(data_set_2$variables[8]))
+  if(pcg$damppcg < 0) {
+    damppcgt <- suppressWarnings(rmfi_ifelse0(is.na(data_set_2$variables[8]), 0, as.numeric(data_set_2$variables[8])))
+    pcg$damppcgt <- ifelse(is.na(damppcgt), 0, damppcgt)
+  }
   rm(data_set_2)
   
   class(pcg) <- c('pcg','rmf_package')
@@ -133,7 +137,7 @@ rmf_write_pcg <- function(pcg,
   rmfi_write_variables(pcg$mxiter, pcg$iter1, pcg$npcond, ifelse(is.na(pcg$ihcofadd),'',pcg$ihcofadd),file=file, ...)
   
   # data set 2
-  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
+  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt) || is.null(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
 }
 
 #' @describeIn rmf_write_pcg Deprecated function name

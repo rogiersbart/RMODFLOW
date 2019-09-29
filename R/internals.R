@@ -692,10 +692,11 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
       } else {
         # FIXED format
         header <- rmfi_parse_variables(remaining_lines[1], n = 3, format = 'fixed')
-        locat <-  as.numeric(header$variables[1])
+        locat <- as.numeric(header$variables[1])
         cnst <- as.numeric(header$variables[2])
         if(cnst == 0) cnst <-  1.0
-        fmtin <-  trimws(as.character(header$variables[3]))
+        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:41], collapse = '')
+        fmtin <- trimws(as.character(fmtin))
         
         # CONSTANT
         if(locat == 0) { 
@@ -1050,17 +1051,17 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
 #' @keywords internal
 rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FALSE, format = 'free', ...) {
   if(format == 'free') {
-    variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]])
+    variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),' |\t|,')[[1]])
     if(!is.null(nlay)) {
       while(length(variables) < nlay) { 
         remaining_lines <- remaining_lines[-1]
-        variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]]))
+        variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),' |\t|,')[[1]]))
       }
     }
     if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
-                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
+                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),'')[[1]][i:(i+9)], collapse=''))))
     variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
@@ -1169,7 +1170,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <-  rmfi_parse_variables(lines)
+  data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
   if('PARAMETER' %in% data_set_1$variables) {
     np_def <-  as.numeric(data_set_1$variables[2])
@@ -1277,7 +1278,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     # data set 5
     data_set_5 <-  rmfi_parse_variables(lines, n=2, ...)
     itmp <- as.numeric(data_set_5$variables[1])
-    np <- as.numeric(data_set_5$variables[2])
+    np <- ifelse(np_def > 0, as.numeric(data_set_5$variables[2]), 0)
     lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
@@ -1578,13 +1579,13 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
           
           # data set 4b
           for (k in 1:nrow(df2)){
-            rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file)
+            rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file, ...)
           }
           rm(df2)
         }
       } else { # non-time-varying
         for (k in 1:nrow(df)){
-          rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file)
+          rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file, ...)
         }
       }  
       rm(df)

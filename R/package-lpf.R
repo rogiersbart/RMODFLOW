@@ -218,24 +218,34 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   rm(data_set_1)
   
   # data set 2
-  lpf$laytyp <- as.numeric(rmfi_parse_variables(lpf_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  lpf_lines <- lpf_lines[-1]
+  data_set_2 <- rmfi_parse_variables(lpf_lines, nlay = dis$nlay)
+  lpf$laytyp <- as.numeric(data_set_2$variables[1:dis$nlay])
+  lpf_lines <- data_set_2$remaining_lines
+  rm(data_set_2)
   
   # data set 3
-  lpf$layavg <- as.numeric(rmfi_parse_variables(lpf_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  lpf_lines <- lpf_lines[-1]
+  data_set_3 <- rmfi_parse_variables(lpf_lines, nlay = dis$nlay)
+  lpf$layavg <- as.numeric(data_set_3$variables[1:dis$nlay])
+  lpf_lines <- data_set_3$remaining_lines
+  rm(data_set_3)
   
   # data set 4
-  lpf$chani <- as.numeric(rmfi_parse_variables(lpf_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  lpf_lines <- lpf_lines[-1]
+  data_set_4 <- rmfi_parse_variables(lpf_lines, nlay = dis$nlay)
+  lpf$chani <- as.numeric(data_set_4$variables[1:dis$nlay])
+  lpf_lines <- data_set_4$remaining_lines
+  rm(data_set_4)
   
   # data set 5
-  lpf$layvka <- as.numeric(rmfi_parse_variables(lpf_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  lpf_lines <- lpf_lines[-1]
+  data_set_5 <- rmfi_parse_variables(lpf_lines, nlay = dis$nlay)
+  lpf$layvka <- as.numeric(data_set_5$variables[1:dis$nlay])
+  lpf_lines <- data_set_5$remaining_lines
+  rm(data_set_5)
   
   # data set 6
-  lpf$laywet <- as.numeric(rmfi_parse_variables(lpf_lines, nlay = dis$nlay)$variables[1:dis$nlay])
-  lpf_lines <- lpf_lines[-1]
+  data_set_6 <- rmfi_parse_variables(lpf_lines, nlay = dis$nlay)
+  lpf$laywet <- as.numeric(data_set_6$variables[1:dis$nlay])
+  lpf_lines <- data_set_6$remaining_lines
+  rm(data_set_6)
   
   # data set 7
   if(any(lpf$laywet != 0)) {

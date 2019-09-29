@@ -118,6 +118,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   colnames(nam) <- c('ftype','nunit','fname', 'options')
   nam$nunit<- as.numeric(nam$nunit)
   nam$fname <- gsub('"', '', nam$fname, fixed = TRUE)
+  nam$ftype <- toupper(nam$ftype)
   
   comment(nam) <- comments
   attr(nam, 'dir') <- dirname(file)

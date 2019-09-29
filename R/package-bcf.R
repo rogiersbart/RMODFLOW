@@ -238,16 +238,17 @@ rmf_write_bcf <- function(bcf,
                           iprn = -1,
                           ...){
   
+  # BCF package does not allow comments at top of file
   # data set 0
-  v <- packageDescription("RMODFLOW")$Version
-  cat(paste('# MODFLOW Block-Centered Flow Package created by RMODFLOW, version',v,'\n'), file = file)
-  cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
+  # v <- packageDescription("RMODFLOW")$Version
+  # cat(paste('# MODFLOW Block-Centered Flow Package created by RMODFLOW, version',v,'\n'), file = file)
+  # cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
   rmfi_write_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file, ...)
   
   # data set 2 - should write 40 characters if format is fixed
-  fmt <- ifelse('format' %in% names(list(...)), get('format'), 'free')
+  fmt <- ifelse('format' %in% names(list(...)), list(...)[['format']], 'free')
   ltype <- paste(bcf$layavg, bcf$laycon, sep='')
   
   if(fmt == 'free') {
