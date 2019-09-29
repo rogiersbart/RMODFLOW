@@ -154,10 +154,10 @@ print.dis <- function(dis) {
   sp <- data.frame(kper = 1:dis$nper, perlen = dis$perlen, nstp = dis$nstp, tsmult = dis$tsmult, sstr = sp_names[dis$sstr])
   names(sp) <- c('Period', 'Length', 'Timesteps', 'Multiplier', 'Type')
   if(dis$nper > 5) {
-    cat('Information for', dis$nper, if(dis$nper > 1) 'stress periods' else 'stress period', '(first 5 shown):', '\n')
+    cat('Information for', dis$nper, if(dis$nper > 1) 'stress-periods' else 'stress-period', '(first 5 shown):', '\n')
     nper <- 5
   } else {
-    cat('Information for', dis$nper, if(dis$nper > 1) 'stress periods:' else 'stress period:', '\n')
+    cat('Information for', dis$nper, if(dis$nper > 1) 'stress-periods:' else 'stress-period:', '\n')
     nper <- dis$nper
   }
   print(sp[1:nper,], row.names = FALSE)
@@ -205,18 +205,25 @@ print.pvl <- function(pvl) {
 #' @export
 print.zon <- function(zon) {
   cat('RMODFLOW Zone File object with:\n')
-  cat(zon$nzn, 'zone array:', '\n')
+  cat(zon$nzn, ifelse(zon$nzn > 1, 'zone arrays', 'zone array'), '\n')
   cat('\n')
   nlay <- ifelse(zon$nzn > 5, 5, zon$nzn)
-  cat(ifelse(zon$nzn > 5, 'Summary of zone arrays (first 5 arrays):', 'Summary of zone arrays:'), '\n')
-  abind::abind(zon$izon, along = 3) %>% apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
-    setNames(zon$zonnam) %>% subset(select = 1:nlay) %>% print()
+  cat(ifelse(zon$nzn > 5, 'Overview of zone arrays (first 5 arrays):', 'Overview of zone arrays:'), '\n')
+  obj <- abind::abind(zon$izon[1:nlay], along = 3) %>% 
+    apply(3, table)
+  for(i in 1:nlay) {
+    w <- max(nchar(obj[[i]]), nchar(names(obj[[i]])))
+    cat('\n')
+    cat(zon$zonnam[i], '\n')
+    cat('IZ:   ', format(as.character(names(obj[[i]])), width = w, justify = 'right'), '\n')
+    cat('Freq: ', format(c(obj[[i]]), width = w, justify = 'right'), '\n')
+  }
 }
 
 #' @export
 print.mlt <- function(mlt) {
   cat('RMODFLOW Multipler File object with:\n')
-  cat(mlt$nml, 'multiplier arrays', '\n')
+  cat(mlt$nml, ifelse(mlt$nml > 1, 'multiplier arrays', 'mutliplier array'), '\n')
   cat('\n')
   nlay <- ifelse(mlt$nml > 5, 5, mlt$nml)
   cat(ifelse(mlt$nml > 5, 'Summary of multiplier arrays (first 5 arrays):', 'Summary of multiplier arrays:'), '\n')
@@ -224,12 +231,126 @@ print.mlt <- function(mlt) {
     setNames(mlt$mltnam) %>% subset(select = 1:nlay) %>% print()
 }
 
-#' #' @export
-#' print.huf
-#' 
-#' #' @export
-#' print.oc
-#' 
+#' @export
+print.huf <- function(huf) {
+  cat('RMODFLOW Hydrogeologic-Unit Flow object with:\n')
+  cat(huf$nhuf, 'hydrogeological units and', huf$nphuf, 'flow parameters', '\n')
+  cat('\n')
+  
+  cat('Cell-by-cell flow terms are', ifelse(huf$ihufcb == 0, 'not writen', paste('written to file number', huf$ihufcb)), '\n')
+  cat('Dry cells are assigned a head value of', huf$hdry, '\n')
+  cat('\n')
+  cat('Heads interpolated to hydrogeological units are', ifelse(huf$iohufheads == 0, 'not written', paste('written to file number', huf$iohufheads)), '\n')
+  cat('Flow interpolated to hydrogeological units are', ifelse(huf$iohufflows == 0, 'not written', paste('written to file number', huf$iohufflows)), '\n')
+  cat('\n')
+  
+  # Layer overview
+  ll <- data.frame('Layer' = 1:length(huf$lthuf), 'Type' = 'Confined', 'Wetting' = 'Inactive', stringsAsFactors = FALSE)
+  ll$Type[which(huf$lthuf != 0)] <- 'Convertible'
+  ll$Wetting[which(huf$laywt != 0)] <- 'Active'
+  cat('Layer overview:', '\n')
+  print(ll, row.names = FALSE)
+  cat('\n')
+  
+  # Wetting
+  if(any(huf$latwt != 0)) {
+   cat('Wetting factor:', huf$wetfct, '\n')
+   cat('Wetting is attempted every', ifelse(huf$iwetit == 1, 'interval', paste(huf$iwetit, 'intervals')), '\n')
+   cat('Initial heads at cells that become wet are defined using equation', ifelse(huf$ihdwet == 0, '3a', '3b'), '(see MODFLOW manual)', '\n')
+  
+   # wetdry
+   wetdry <- huf$wetdry[,,which(huf$laywt != 0)]
+   if(length(dim(wetdry)) == 2) wetdry <- rmf_create_array(wetdry, dim = c(dim(wetdry), 1))
+   if(dim(wetdry)[3] > 5) {
+     cat('Summary of wetdry values (first 5 layers): \n')
+     nlay <- 5
+   } else {
+     cat('Summary of wetdry values: \n')
+     nlay <- dim(wetdry)[3]
+   }
+   names_wetdry <- paste('Layer', 1:dim(wetdry)[3])
+   apply(huf$wetdry, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+     setNames(names_wetdry) %>% subset(select = 1:nlay) %>% print()
+   cat('\n')   
+  }
+  
+  # HGU overview
+  un <- data.frame('Index' = 1:huf$nhuf, 'Unit' = huf$hgunam, 'HANI' = 'Parameter', 'VANI' = 'VK', stringsAsFactors = FALSE)
+  un$HANI <- replace(un$HANI, which(huf$hguhani != 0), huf$hguhani[which(huf$hguhani != 0)])
+  un$VANI <- replace(un$VANI, which(huf$hguvani != 0), huf$hguvani[which(huf$hguvani != 0)])
+  df <- cbind(hgu = vapply(huf$parameters, function(i) attr(i, 'hgunam'), 'txt'), 
+              type = vapply(huf$parameters, function(i) attr(i, 'partyp'), 'txt')) %>%
+    as.data.frame(stringsAsFactors = FALSE)
+  if('VANI' %in% df$type) {
+    df <- subset(df, type == 'VANI')
+    df$unit <- vapply(df$hgu, function(i) which(huf$hgunam == i), 1)
+    un$VANI <- replace(un$VANI, unique(df$unit), 'Parameter')
+  }
+  cat('HGU overview:', '\n')
+  print(un, row.names = FALSE)
+  cat('\n')
+  
+  # Parameters
+  pdf <- data.frame('Name' = vapply(huf$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                    'Type' = vapply(huf$parameters, function(i) attr(i, 'partyp'), 'txt'), 
+                    'Unit' = vapply(huf$parameters, function(i) attr(i, 'hgunam'), 'txt'), 
+                    'Value' = vapply(huf$parameters, function(i) attr(i, 'parval'), 1), 
+                    stringsAsFactors = FALSE)
+  
+  cat('Parameter overview:', '\n')
+  print(pdf, row.names = FALSE)
+  cat('\n')
+  
+  # top
+  if(huf$nhuf > 5) {
+    cat('Summary of top elevations (first 5 units): \n')
+    nlay <- 5
+  } else {
+    cat('Summary of top elevations: \n')
+    nlay <- huf$nhuf
+  }
+  apply(huf$top, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(huf$hgunam) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # thck
+  if(huf$nhuf > 5) {
+    cat('Summary of thicknesses (first 5 units): \n')
+    nlay <- 5
+  } else {
+    cat('Summary of thicknesses: \n')
+    nlay <- huf$nhuf
+  }
+  apply(huf$thck, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(huf$hgunam) %>% subset(select = 1:nlay) %>% print()
+
+}
+
+#' @export
+print.oc <- function(oc) {
+  cat('RMODFLOW Output Control Option file', '\n')
+  cat('\n')
+  
+  # words
+  if(is.null(oc$incode)) {
+    
+    if(!is.na(oc$ihedun)) {
+      cat('Simulated heads are written to a', ifelse(is.na(oc$chedfm), 'binary', paste('formatted', oc$chedfm)), 'file on unit number', oc$ihedun)
+    }
+    if(!is.na(oc$iddnun)) {
+      cat('Simulated drawdowns are written to a', ifelse(is.na(oc$cddnfm), 'binary', paste('formatted', oc$cddnfm)), 'file on unit number', oc$iddnun)
+    }
+    if(!is.na(oc$ibouun)) {
+      cat('The ibound array is written to a', ifelse(is.na(oc$cddnfm), 'binary', paste('formatted', oc$cddnfm)), 'file on unit number', oc$iddnun)
+    }
+    
+    
+  } else { # codes
+    
+  }
+  
+}
+
 #' #' @export
 #' print.wel
 #' 
