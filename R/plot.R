@@ -576,9 +576,13 @@ rmf_plot.hfb <- function(hfb,
   if(!is.null(k)) {
     layer <- k
     data <- subset(hfb$data, k == layer)
+    if(nrow(data) == 0) {
+      warning(paste0('No horizontal-flow barriers in layer ', k, '. Returning NULL.'), call. = FALSE)
+      return(NULL)
+    }
     if(!is.character(variable)) variable <- colnames(data)[variable]
     data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
-    data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=layer, dis = dis, type = 'modflow')
+    data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=1, dis = dis, type = 'modflow')
     
     # coordinate tibble
   

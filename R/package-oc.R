@@ -4,12 +4,12 @@
 #' 
 #' @param dis \code{RMODFLOW} dis object
 #' @param ihedfm integer code for the format in which heads will be printed; defaults to 0
-#' @param chedfm character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)
+#' @param chedfm integer or character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)
 #' @param ihedun unit number on which heads will be saved; defaults to 666
 #' @param iddnfm integer code for the format in which drawdowns will be printed; defaults to 0
-#' @param cddnfm character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)
+#' @param cddnfm integer or character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)
 #' @param iddnun unit number on which drawdowns will be saved; defaults to 667 
-#' @param cboufm character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)
+#' @param cboufm integer or character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)
 #' @param ibouun unit number on which ibound will be saved; defaults to 668
 #' @param compact_budget logical; should the COMPACT BUDGET option be used
 #' @param aux logical; should the auxiliary data be included in the budget file
@@ -34,7 +34,8 @@
 #'
 #' @details if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
 #'          The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
-#'          A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less.
+#'          A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
+#'           RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
 #' @return Object of class oc
 #' @export
 #' @seealso \code{\link{rmf_read_oc}}, \code{\link{rmf_write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
@@ -75,14 +76,38 @@ rmf_create_oc <- function(dis,
     # to provide comments, use ?comment on the resulting oc object
   
     if(is.null(incode)) { # words
+      
+      ifm <-  c('(10G11.4)',
+                '(11G10.3)',
+                '(9G13.6)',
+                '(15F7.1)',
+                '(15F7.2)',
+                '(15F7.3)',
+                '(15F7.4)',
+                '(20F5.0)',
+                '(20F5.1)',
+                '(20F5.2)',
+                '(20F5.3)',
+                '(20F5.4)',
+                '(10G11.4)',
+                '(10F6.0)',
+                '(10F6.1)',
+                '(10F6.2)',
+                '(10F6.3)',
+                '(10F6.4)',
+                '(10F6.5)',
+                '(5G12.5)',
+                '(6G11.4)',
+                '(7G9.2)')
+      
       # data set 1
       oc$ihedfm <- ihedfm
-      oc$chedfm <- chedfm
+      oc$chedfm <- ifelse(is.numeric(chedfm) && !is.na(chedfm), ifm[chedfm+1], chedfm)
       oc$ihedun <- ihedun
       oc$iddnfm <- iddnfm
-      oc$cddnfm <- cddnfm
+      oc$cddnfm <- ifelse(is.numeric(cddnfm) && !is.na(cddnfm), ifm[cddnfm+1], cddnfm)
       oc$iddnun <- iddnun
-      oc$cboufm <- cboufm
+      oc$cboufm <- ifelse(is.numeric(cboufm) && !is.na(cboufm), ifm[cboufm+1], cboufm)
       oc$ibouun <- ibouun
       oc$compact_budget <- compact_budget
       oc$aux <- aux

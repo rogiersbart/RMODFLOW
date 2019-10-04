@@ -22,17 +22,17 @@ create_oc(...)
 
 \item{ihedfm}{integer code for the format in which heads will be printed; defaults to 0}
 
-\item{chedfm}{character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)}
+\item{chedfm}{integer or character code for the format in which heads will be saved; defaults to NA (heads are saved in binary file)}
 
 \item{ihedun}{unit number on which heads will be saved; defaults to 666}
 
 \item{iddnfm}{integer code for the format in which drawdowns will be printed; defaults to 0}
 
-\item{cddnfm}{character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)}
+\item{cddnfm}{integer or character code for the format in which drawdowns will be saved; defaults to NA (drawdowns are saved in binary file)}
 
 \item{iddnun}{unit number on which drawdowns will be saved; defaults to 667}
 
-\item{cboufm}{character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)}
+\item{cboufm}{integer or character code for the format in which ibound will be saved; defaults to NA (ibound is saved in binary file)}
 
 \item{ibouun}{unit number on which ibound will be saved; defaults to 668}
 
@@ -85,7 +85,8 @@ Object of class oc
 \details{
 if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
          The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
-         A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less.
+         A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
+          RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
 }
 \section{Functions}{
 \itemize{

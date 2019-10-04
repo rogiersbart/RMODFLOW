@@ -12,7 +12,7 @@
 rmf_create <- function(..., cbc = NULL) {
   
   modflow <- list(...)
-  if(length(modflow) == 1 && inherits(modflow[[1]], 'list') && !('rmf_package' %in% class(modflow[[1]]))) modflow <- modflow[[1]]
+  if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
   ftype <- vapply(modflow, function(i) class(i)[which(class(i) == 'rmf_package') - 1], 'text')
   names(modflow) <- ftype
   
@@ -56,7 +56,6 @@ rmf_create <- function(..., cbc = NULL) {
   if(('upw' %in% ftype && !('nwt' %in% ftype)) || ('nwt' %in% ftype && !('upw' %in% ftype))) {
     stop('The upw and nwt have to be used together.', call. = FALSE)
   }
-  
   
   class(modflow) <- c('modflow')
   return(modflow)

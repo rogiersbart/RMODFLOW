@@ -191,7 +191,7 @@ By default, an OC object created by RMODFLOW specifies the following:
 
 Remember that the cbc file is always binary.
 
-To alter any of these, use the respective `save_*` or `print_` arguments. These are logical values, either of length 1 meaning they are the same for all time steps, or a single value for every time step.
+To alter any of these, use the respective `save_*` or `print_*` arguments. These are logical values, either of length 1 meaning they are the same for all time steps, or a single value for every time step.
 ```{r}
 rmf_create_oc(dis = dis, print_head = TRUE, 
               save_head = c(rep(FALSE, sum(dis$nstp)/2), rep(TRUE, sum(dis$nstp)/2) )) %>%
@@ -206,18 +206,18 @@ rmf_create_oc(dis = dis,
   str()
 ```
 
-To save ASCII files, set the chedfm, cddnfm or cboufm values to proper FORTRAN formats enclosed in parenthesis containing no more than 20 characters. These FORTRAN formats can be found in the [MODFLOW-2005 manual](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm). Note that ASCII files are typically larger than binary files.
+To save ASCII files, set the chedfm, cddnfm or cboufm values to proper FORTRAN formats enclosed in parenthesis containing no more than 20 characters. These FORTRAN formats can be found in the [MODFLOW-2005 manual](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm). In RMODFLOW, you can alternatively specify integer codes for the save formats, similar to the print formats. RMODFLOW will convert these to the proper FORTRAN format. Note that ASCII files are typically larger than binary files.
 ```{r}
-rmf_create_oc(dis = dis, chedfm = "(10G11.4)") %>% 
+rmf_create_oc(dis = dis, chedfm = 0) %>% 
   str()
 ```
 
-Let's say, we want to save drawdowns in an ASCII file (setting cddnfm to a FORTRAN format) on unit number 50 (default is 667 for drawdown), not save heads, and print volumetric budget to the listing file every other time step:
+Let's say, we want to save drawdowns in an ASCII file (setting cddnfm to a FORTRAN format or positive integer) on unit number 50 (default is 667 for drawdown), not save heads, and print volumetric budget to the listing file every other time step:
 ```{r}
 oc <- rmf_create_oc(dis = dis,
-                    save_drawdown = TRUE, cddnfm = "(15F7.2)", iddnun = 50, 
+                    save_drawdown = TRUE, cddnfm = 0, iddnun = 50, 
                     save_head = FALSE, 
-                    print_head = rep(c(FALSE, TRUE), sum(dis$nstp)/2))
+                    print_budget = rep(c(FALSE, TRUE), sum(dis$nstp)/2))
 str(oc)
 ```
 

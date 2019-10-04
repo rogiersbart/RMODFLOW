@@ -9,7 +9,7 @@
 rmf_create_nam <- function(...) {
   
   fobjects <- list(...)
-  if(length(fobjects) == 1 && inherits(fobjects[[1]], 'list') && !('rmf_package' %in% class(fobjects[[1]]))) fobjects <- fobjects[[1]]
+  if(length(fobjects) == 1 && inherits(fobjects[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(fobjects[[1]]))) fobjects <- unclass(fobjects[[1]])
   
   nam <- data.frame(ftype = c('LIST',rep(NA, length(fobjects))),
                     nunit = c(700, 700 + seq_along(fobjects)),
@@ -68,9 +68,10 @@ rmf_create_nam <- function(...) {
     }
   }
   
-  # set REPLACE option for binary files
-  nam$options[which(toupper(nam$ftype) == 'DATA(BINARY)')] <- 'REPLACE'
-      
+  # set REPLACE option for output files 
+  output <- grep('output', basename(nam$fname))
+  nam$options[output] <- 'REPLACE'
+  
   attr(nam, 'dir') <-  getwd()
   class(nam) <- c('nam','rmf_package','data.frame')
   return(nam)
