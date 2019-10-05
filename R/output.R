@@ -649,6 +649,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
         pertim <- as.numeric(variables[3])
         totim <- as.numeric(variables[4])
         desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
+        fmt <- variables[length(variables)]
         if(! desc %in% headers) {
           stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
         }
@@ -673,6 +674,8 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
         
         # oc words
         if(!is.null(oc$save_head)) {
+          fmt <- oc$chedfm
+          
           if(is.matrix(oc$save_head)) {
             ind <- ifelse(first, 1, ind + 1)
             read <- oc$save_head[ind]
@@ -697,7 +700,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
             }
           }
           
-          # oc codes
+          # oc codes; not possible if output file is ASCII
         } else if(!is.null(oc$hdsv)) {
           ind <- ifelse(first, 1, ind + 1)
           read <- oc$hdsv[ind]
@@ -712,7 +715,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
       
       # read array
-      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE)
+      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE, fmt = fmt)
       
       if(first) {
         hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
@@ -1067,6 +1070,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
         pertim <- as.numeric(variables[3])
         totim <- as.numeric(variables[4])
         desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
+        fmt <- variables[length(variables)]
         if(! desc %in% headers) {
           stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
         }
@@ -1091,6 +1095,8 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
         
         # oc words
         if(!is.null(oc$save_drawdown)) {
+          fmt <- oc$cddnfm
+          
           if(is.matrix(oc$save_drawdown)) {
             ind <- ifelse(first, 1, ind + 1)
             read <- oc$save_drawdown[ind]
@@ -1115,7 +1121,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
             }
           }
           
-          # oc codes
+          # oc codes; not possible if output file is ASCII
         } else if(!is.null(oc$ddsv)) {
           ind <- ifelse(first, 1, ind + 1)
           read <- oc$ddsv[ind]
@@ -1130,7 +1136,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
       
       # read array
-      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE)
+      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE, fmt = fmt)
       
       if(first) {
         hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))

@@ -361,43 +361,58 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
 #' @param format character; FORTRAN format within parentheses as read from a MODFLOW array header
 #'
 #' @return integer vector with the number of characters per value as specified by the FORTRAN format
-#' @note based on \code{\link{read.fortran}}
 #' @keywords internal
 #'
 rmfi_fortran_format <- function(format) {
   
-  # remove parentheses
-  format <- gsub("[()]", '', format)
+  # remove outer parentheses
+  format <- trimws(toupper(format))
+  format <- gsub('^\\(|\\)$','',format)
   
-  # split if multiple formats
+  # remove possible apostrophes
+  format <- gsub('\"|\'|´|`','',format)
+  
+  # split on commas for multiple formats
   format <- strsplit(format, split = ',')[[1]]
   
-  # from read.fortran()
-  format <- toupper(format)
-  template <- "^([0-9]*)([FXAIGED])([0-9]*)\\.?([0-9]*)"
+  # template
+  template <- "^([0-9]*)([[:upper:]]+)([0-9]*)\\.?([0-9]*)"
   
-  # repetitions
-  reps <- as.numeric(sub(template, "\\1", format))
-  reps[is.na(reps)] <- 1L
+  # function to get lengths
+  get_lengths <- function(format) {
+    
+    # optional first multipliers
+    split <- rmfi_remove_empty_strings(strsplit(format, split = '\\(|\\)')[[1]])
+    format <- split[length(split)]
+    split <- split[-length(split)]
+    reps <- prod(as.numeric(split))
+
+    # optional spaces
+    # TODO spaces after format (allowed?)
+    spaces <- strsplit(format, split='X')[[1]]
+    format <- spaces[length(spaces)]
+    spaces <- spaces[-length(spaces)]
+    spaces <- sum(as.numeric(spaces))
+
+    # format: repeats
+    reps2 <- as.numeric(sub(template, "\\1", format))
+    reps2[is.na(reps2)] <- 1L
+    reps <- reps * reps2
+    
+    # format: lengths
+    lengths <- as.numeric(sub(template, "\\3", format))
+    lengths[is.na(lengths)] <- 1L
+    lengths <- sum(lengths, spaces)
+    
+    return(rep(lengths, reps))
+    
+  }
   
-  # types
-  types <- sub(template, "\\2", format)
-  
-  # lengths
-  lengths <- as.numeric(sub(template, "\\3", format))
-  lengths[is.na(lengths) & types == "X"] <- 1L
-  
-  # deal with spaces
-  charskip <- types == "X"
-  lengths[charskip] <- reps[charskip] * lengths[charskip]
-  reps[charskip] <- 1
-  
-  lengths <- rep(lengths, reps)
-  types <- rep(types, reps)
-  types <- match(types, c("F", "X", "A", "I", "G", "E", "D"))
-  lengths[types == 2] <- -lengths[types == 2L]
+  # apply function to every format and append results
+  lengths <- unlist(lapply(format, get_lengths))
   
   return(lengths)
+  
 }
 
 #' Calculate a geometric mean
@@ -497,6 +512,7 @@ rmfi_list_packages <- function(type = 'all') {
 #' @param ncol number of columns in the array
 #' @param nlay number of layers in the array that should be read
 #' @param ndim optional; dimensions of the array to read
+#' @param fmt optional; character with a proper FORTRAN format enclosed in parentheses. Only used when skip_header = TRUE and a fixed-format array needs to be read, i.e. output arrays. 
 #' @param skip_header optional; should the control record be skipped
 #' @param nam a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAL arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
@@ -505,7 +521,7 @@ rmfi_list_packages <- function(type = 'all') {
 #' @param ... ignored
 #' @return A list containing the array and the remaining text of the MODFLOW input file
 #' @keywords internal
-rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
+rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = NULL,
                              skip_header = FALSE, nam = NULL, precision = "single", file = NULL, integer = FALSE, ...) {
   
   # Initialize array object
@@ -516,7 +532,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
   {
     for(k in 1:nlay) 
     { 
-      fortranfmt <-  FALSE
+      fortranfmt <- FALSE
       
       # CONSTANT
       if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'CONSTANT') {
@@ -544,6 +560,10 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           }
           remaining_lines <- remaining_lines[-1] 
         } else {
+          if(!is.null(fmt)) {
+            fortranfmt <-  TRUE
+            lengths <- rmfi_fortran_format(fmt)
+          }
           cnst <-  1.0
         }
         

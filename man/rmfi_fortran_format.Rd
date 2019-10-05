@@ -15,7 +15,4 @@ integer vector with the number of characters per value as specified by the FORTR
 \description{
 Returns character lengths per value from a FORTRAN format
 }
-\note{
-based on \code{\link{read.fortran}}
-}
 \keyword{internal}
