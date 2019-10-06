@@ -1163,7 +1163,7 @@ rmfi_plot_bc <- function(obj,
   
   obj <- subset(obj$data, name %in% active_lists)
   
-  if(nrow(data) == 0) {
+  if(nrow(obj) == 0) {
     id <- class(obj)[which(class(obj) == 'rmf_package') - 1]
     warning(paste0(id, ' object has no active features in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
     return(NULL)
