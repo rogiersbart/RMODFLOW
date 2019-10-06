@@ -288,7 +288,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
       cbc <- lapply(cbc, timestp)
     }
     
-    class(cbc) <- c('cbc','rmf_package')
+    class(cbc) <- 'cbc'
     return(cbc)
     
   } else {
@@ -369,7 +369,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
     #         cbc.lines <- cbc.lines[-1]
     #       }
     #     }
-    #     class(cbc) <- c('cbc','rmf_package')
+    #     class(cbc) <- 'cbc'
     #     return(cbc)
   }
 }

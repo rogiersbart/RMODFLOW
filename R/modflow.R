@@ -13,6 +13,10 @@ rmf_create <- function(..., cbc = NULL) {
   
   modflow <- list(...)
   if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
+  # check if all input are rmf_packages & add all input objects
+  all_rmf <- vapply(modflow, function(i) 'rmf_package' %in% class(i), TRUE)
+  if(prod(all_rmf) == 0) stop('Please make sure all objects are RMODFLOW rmf_package objects representing MODFLOW input', call. = FALSE)
+  
   ftype <- vapply(modflow, function(i) class(i)[which(class(i) == 'rmf_package') - 1], 'text')
   names(modflow) <- ftype
   
@@ -39,7 +43,7 @@ rmf_create <- function(..., cbc = NULL) {
     df <- rmfi_list_packages(type = 'all')
     mf_types <- df$ftype[which(df$rmf %in% ftype)]
     nam_types <- modflow$nam$ftype[which(!(modflow$nam$ftype %in% c('DATA', 'DATA(BINARY)', 'LIST', 'GLOBAL', 'DATAGLO', 'DATAGLO(BINARY)')))]
-    if(!isTRUE(all.equal(sort(mf_types), sort(nam_types)))) stop('Please make sure all packages are listed in the nam file.', call. = FALSE)
+    if(!isTRUE(all.equal(sort(mf_types), sort(nam_types)))) stop('Please make sure the supplied packages are listed in the nam file.', call. = FALSE)
   }
   
   # check for dis, bas, flow package and solver

@@ -4,6 +4,7 @@
 #' 
 #' @param ... RMODFLOW objects to be included in the nam file
 #' @return Object of class nam
+#' @details if a \code{RMODFLOW nam} object is present, it is recreated.
 #' @export
 #' @seealso \code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
 rmf_create_nam <- function(...) {
@@ -11,15 +12,25 @@ rmf_create_nam <- function(...) {
   fobjects <- list(...)
   if(length(fobjects) == 1 && inherits(fobjects[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(fobjects[[1]]))) fobjects <- unclass(fobjects[[1]])
   
+  # data set 1
+  df <- rmfi_list_packages(type = 'all')
+  # check if all input are rmf_packages & add all input objects
+  all_rmf <- vapply(fobjects, function(i) 'rmf_package' %in% class(i), TRUE)
+  if(prod(all_rmf) == 0) stop('Please make sure all objects are RMODFLOW rmf_package objects representing MODFLOW input', call. = FALSE)
+  classes <- vapply(fobjects, function(i) class(i)[which(class(i) == 'rmf_package')-1], 'text')
+  
+  # remove possible NAM object
+  if('nam' %in% classes) {
+    warning('Removing old nam object', call. = FALSE)
+    fobjects <- fobjects[-which(classes == 'nam')]
+    classes <- classes[-which(classes == 'nam')]
+  }
+  
   nam <- data.frame(ftype = c('LIST',rep(NA, length(fobjects))),
                     nunit = c(700, 700 + seq_along(fobjects)),
                     fname = c('output.lst',rep(NA, length(fobjects))),
                     options = rep(NA, 1 + length(fobjects)), stringsAsFactors = FALSE)
   
-  # data set 1
-  df <- rmfi_list_packages(type = 'all')
-  # add all input objects
-  classes <- vapply(fobjects, function(i) class(i)[which(class(i) == 'rmf_package')-1], 'text')
   for(i in seq_along(fobjects)) {
     nam$fname[i+1] <- paste0('input.',classes[i])
     nam$ftype[i+1] <- df$ftype[classes[i] == df$rmf]
@@ -120,6 +131,8 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   nam$nunit<- as.numeric(nam$nunit)
   nam$fname <- gsub('"', '', nam$fname, fixed = TRUE)
   nam$ftype <- toupper(nam$ftype)
+  
+  if("GLOBAL" %in% nam$ftype) warning('nam file is from a MODFLOW-2000 model. RMODFLOW support for MODFLOW-2000 is limited.', call. = FALSE)
   
   comment(nam) <- comments
   attr(nam, 'dir') <- dirname(file)
