@@ -85,8 +85,8 @@ rmf_create_hfb <-  function(...,
   # parameters
   if(length(parameters) > 0) {
     parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
-    acthfb <- vapply(parameters, function(i) if(!is.null(attr(i, 'kper'))) attr(i, 'parnam'), 'text')
-    nacthfb <- length(acthfb)
+    acthfb <- lapply(parameters, function(i) rmfi_ifelse0(!is.null(attr(i, 'kper')), attr(i, 'parnam'), NULL))
+    nacthfb <- length(unlist(acthfb))
     
     # set parameter df
     parameters <- lapply(parameters, function(i) {i$parameter <-  TRUE;
@@ -176,7 +176,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
       rm(data_set_2)
       
       data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, ...)
-      rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_3$list, parnam = parnam, parval = parval)
+      rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_3$list, parnam = parnam, parval = parval)
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
       
@@ -184,10 +184,12 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   }
   
   # data set 4
-  data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, file = file, ...)
-  rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
-  lines <- data_set_4$remaining_lines
-  rm(data_set_4)
+  if(nnp > 0) {
+    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, file = file, ...)
+    rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
+    lines <- data_set_4$remaining_lines
+    rm(data_set_4)
+  }
   
   # data set 5
   data_set_5 <- rmfi_parse_variables(lines)

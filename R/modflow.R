@@ -111,11 +111,11 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
   ftype <- modflow$nam$ftype
   
   if(verbose) print_reading('DIS', file = fname[which(modflow$nam$ftype == 'DIS')])
-  modflow$dis <- rmf_read_dis(file = fname[which(modflow$nam$ftype == 'DIS')], nam = modflow$nam)
+  modflow$dis <- rmf_read_dis(file = fname[which(modflow$nam$ftype == 'DIS')], nam = modflow$nam, precision = precision)
   ftype <- ftype[-which(ftype == 'DIS')]
   
   if(verbose) print_reading('BAS6', file = fname[which(modflow$nam$ftype == 'BAS6')])
-  modflow$bas <- rmf_read_bas(file = fname[which(modflow$nam$ftype == 'BAS6')], dis = modflow$dis, nam = modflow$nam)
+  modflow$bas <- rmf_read_bas(file = fname[which(modflow$nam$ftype == 'BAS6')], dis = modflow$dis, nam = modflow$nam, precision = precision)
   format <- ifelse(modflow$bas$free, 'free', 'fixed')
   ftype <- ftype[-which(ftype == 'BAS6')]
   
@@ -125,7 +125,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       mlt <- list(mltnam = vector(mode = 'character'), functn = vector(mode = 'logical'), rmlt = list(), operators = list(), iprn = vector(mode = 'numeric'))
       for(i in length(mltfiles)) {
         if(verbose) print_reading('MULT', file = fnamefname[which(modflow$nam$ftype == 'MULT')][i])
-        mult <- rmf_read_mlt(file = fname[which(modflow$nam$ftype == 'MULT')][i], dis = modflow$dis, nam = modflow$nam, format = format)
+        mult <- rmf_read_mlt(file = fname[which(modflow$nam$ftype == 'MULT')][i], dis = modflow$dis, nam = modflow$nam, format = format, precision = precision)
         mlt$mltnam <- c(mlt$mltnam, mult$mltnam)
         mlt$functn <- c(mlt$functn, rmfi_ifelse0(is.null(mult$functn), rep(FALSE, mult$nml), mult$functn))
         mlt$rmlt <- c(mlt$rmlt, mult$rmlt)
@@ -137,7 +137,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       
     } else {
       if(verbose) print_reading('MULT', file = fname[which(modflow$nam$ftype == 'MULT')])
-      mlt <- rmf_read_mlt(file = fname[which(modflow$nam$ftype == 'MULT')], dis = modflow$dis, nam = modflow$nam, format = format)
+      mlt <- rmf_read_mlt(file = fname[which(modflow$nam$ftype == 'MULT')], dis = modflow$dis, nam = modflow$nam, format = format, precision = precision)
     }
     modflow$mlt <- mlt
     ftype <- ftype[-which(ftype == 'MULT')]
@@ -149,7 +149,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       zon <- list(zonnam = vector(mode = 'character'), izon = list())
       for(i in length(zonfiles)) {
         if(verbose) print_reading('ZONE', file = fnamefname[which(modflow$nam$ftype == 'ZONE')][i])
-        zones <- rmf_read_zon(file = fname[which(modflow$nam$ftype == 'ZONE')][i], dis = modflow$dis, nam = modflow$nam, format = format)
+        zones <- rmf_read_zon(file = fname[which(modflow$nam$ftype == 'ZONE')][i], dis = modflow$dis, nam = modflow$nam, format = format, precision = precision)
         zon$zonnam <- c(zon$zonnam, zones$zonnam)
         zon$izon <- c(zon$izon, zones$izon)
       }
@@ -157,7 +157,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       zon <- rmf_create_zon(zonnam = zon$zonnam, izon = zon$izon)
     } else {
       if(verbose) print_reading('ZONE', file = fname[which(modflow$nam$ftype == 'ZONE')])
-      zon <- rmf_read_zon(file = fname[which(modflow$nam$ftype == 'ZONE')], dis = modflow$dis, nam = modflow$nam, format = format)
+      zon <- rmf_read_zon(file = fname[which(modflow$nam$ftype == 'ZONE')], dis = modflow$dis, nam = modflow$nam, format = format, precision = precision)
     }
     modflow$zon <- zon
     ftype <- ftype[-which(ftype == 'ZONE')]
@@ -187,7 +187,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       if(df$ftype[i] %in% ftype) {
         if(verbose) print_reading(df$ftype[i], file = fname[which(modflow$nam$ftype == df$ftype[i])])
         funct <- paste0('rmf_read_', df$rmf[i])
-        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon, format = format))
+        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon, format = format, precision = precision))
         ftype <- ftype[-which(ftype == df$ftype[i])]
       }
       i <- i+1
@@ -203,7 +203,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       if(df$ftype[i] %in% ftype) {
         if(verbose) print_reading(df$ftype[i], file = fname[which(modflow$nam$ftype == df$ftype[i])])
         funct <- paste0('rmf_read_', df$rmf[i])
-        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, format = format, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon))
+        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, format = format, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon, precision = precision))
         ftype <- ftype[-which(ftype == df$ftype[i])]
       }
       i <- i+1
@@ -251,7 +251,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       if(df$ftype[i] %in% ftype) {
         if(verbose) print_reading(df$ftype[i], file = fname[which(modflow$nam$ftype == df$ftype[i])])
         funct <- paste0('rmf_read_', df$rmf[i])
-        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, format = format, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon))
+        modflow[[df$rmf[i]]] <- do.call(funct, list(file = fname[which(modflow$nam$ftype == df$ftype[i])], dis = modflow$dis, format = format, nam = modflow$nam, mlt = modflow$mlt, zon = modflow$zon, precision = precision))
         ftype <- ftype[-which(ftype == df$ftype[i])]
       }
       i <- i+1

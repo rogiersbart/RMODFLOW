@@ -113,12 +113,20 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
   # stress periods
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'name')) && attr(k, 'name') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
       if(!is.null(i_name)) {
         if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {
         attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       }
+    }
+    return(k)
+  }
+  
+  # function for setting kper attribute of parameter the same as previous kper
+  previous_kper <- function(k, kper) {
+    if(kper-1 %in% attr(k, 'kper')) {
+      attr(k, 'kper') <- c(attr(k, 'kper'), kper)
     }
     return(k)
   }
@@ -146,28 +154,35 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
       }
       
     } else {
-      for(j in 1:np){
-        # data set 7
-        data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
-        p_name <-  as.character(data_set_7$variables[1])
-        if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
-          i_name <- data_set_7$variables[2]
-          if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {
-            irchpf[i] <- as.numeric(data_set_7$variables[3])
+      # parameters
+      if(inrech > 0) {
+        for(j in 1:inrech){
+          # data set 7
+          data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
+          p_name <-  as.character(data_set_7$variables[1])
+          if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+            i_name <- data_set_7$variables[2]
+            if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {
+              irchpf[i] <- as.numeric(data_set_7$variables[3])
+            }
+          } else {
+            i_name <- NULL
+            if(length(data_set_7$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[2])))) {
+              irchpf[i] <- as.numeric(data_set_7$variables[2])
+            }
           }
-        } else {
-          i_name <- NULL
-          if(length(data_set_7$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[2])))) {
-            irchpf[i] <- as.numeric(data_set_7$variables[2])
-          }
+          
+          rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+          
+          lines <- data_set_7$remaining_lines
+          rm(data_set_7)
+          
         }
         
-        rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
-        
-        lines <- data_set_7$remaining_lines
-        rm(data_set_7)
-        
+      } else if(inrech < 0 && i > 1) {
+        rmf_arrays <- lapply(rmf_arrays, previous_kper, kper = i)
       }
+      
     }
     
     # data set 8

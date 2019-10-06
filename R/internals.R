@@ -934,7 +934,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
     }
     
     parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
-                                                             parval = parval, parnam = parnam, kper = 1:dis$nper)
+                                                             parval = parval, parnam = parnam, kper = 0)
     names(parm_list)[length(parm_list)] <- parnam
     i <- i+1
   }
@@ -1163,6 +1163,12 @@ rmfi_plot_bc <- function(obj,
   
   obj <- subset(obj$data, name %in% active_lists)
   
+  if(nrow(data) == 0) {
+    id <- class(obj)[which(class(obj) == 'rmf_package') - 1]
+    warning(paste0(id, ' object has no active features in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
+    return(NULL)
+  }
+  
   # rmf_plot.rmf_list
   rmf_plot(obj, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
   
@@ -1258,7 +1264,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
           
           # data set 4b
           data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
+          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam, kper = 0)
           
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
@@ -1270,7 +1276,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         # non time-varying
         # data set 4b
         data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
+        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, kper = 0)
         
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)

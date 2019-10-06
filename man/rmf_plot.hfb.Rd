@@ -4,11 +4,11 @@
 \alias{rmf_plot.hfb}
 \title{Plot a RMODFLOW hfb object}
 \usage{
-\method{rmf_plot}{hfb}(hfb, dis, variable = "id", i = NULL, j = NULL,
-  k = NULL, type = "fill", active_only = TRUE,
-  fun = ifelse(variable == "hydchr", sum, mean), prj = NULL,
-  crs = NULL, size = 1, colour = "black", crop = TRUE,
-  add = FALSE, ...)
+\method{rmf_plot}{hfb}(hfb, dis, variable = "id", all_hfb = FALSE,
+  i = NULL, j = NULL, k = NULL, type = "fill",
+  active_only = TRUE, fun = ifelse(variable == "hydchr", sum, mean),
+  prj = NULL, crs = NULL, size = 1, colour = "black",
+  crop = TRUE, add = FALSE, ...)
 }
 \arguments{
 \item{hfb}{an \code{RMODFLOW} hfb object}
@@ -16,6 +16,8 @@
 \item{dis}{a \code{RMODFLOW} dis object}
 
 \item{variable}{single character or numeric indicating which column of \code{hfb$data} to plot. Defaults to 'id', which plots the locations of the cells.}
+
+\item{all_hfb}{logical; should all horizontal-flow barriers be plotted (TRUE) or only the ones that are active in the simulation (FALSE; default)}
 
 \item{i}{row number to plot}
 

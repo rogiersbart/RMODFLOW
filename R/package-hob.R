@@ -42,7 +42,7 @@ rmf_create_hob <- function(locations,
   
   # data set 2
     hob$tomulth <- tomulth
-    # hob$EVH # MODFLOW-2000
+    # hob$evh # MODFLOW-2000
   
   # data set 3-6
   
@@ -139,7 +139,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   # data set 2
   dat <- rmfi_parse_variables(hob_lines, n = 1, ...)
   hob$tomulth <- as.numeric(dat$variables[1])
-  hob$evh <- as.numeric(dat$variables[2])
+  # hob$evh <- as.numeric(dat$variables[2]) # MODFLOW-2000
   hob_lines <- dat$remaining_lines
   rm(dat)
   
@@ -267,7 +267,7 @@ rmf_write_hob <- function(hob,
   rmfi_write_variables(hob$nh, hob$mobs, hob$maxm, hob$iuhobsv, hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
   
   # data set 2
-  # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh),1,hob$evh), file=file) # MODFLOW-2000
+  # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh) || is.null(hob$env),1,hob$evh), file=file) # MODFLOW-2000
   rmfi_write_variables(hob$tomulth, file=file, ...)
   
   # data set 3 - 6

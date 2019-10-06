@@ -435,6 +435,11 @@ rmf_plot.evt <- function(evt,
     
   } 
   
+  if(length(obj) == 0) {
+    warning(paste0('No active ', variable, ' arrays in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
+    return(NULL)
+  }
+  
   rmf_plot(obj, dis = dis, ...)
   
 }
@@ -539,6 +544,7 @@ rmf_plot.hed <- function(hed,
 #' @param hfb an \code{RMODFLOW} hfb object
 #' @param dis a \code{RMODFLOW} dis object
 #' @param variable single character or numeric indicating which column of \code{hfb$data} to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param all_hfb logical; should all horizontal-flow barriers be plotted (TRUE) or only the ones that are active in the simulation (FALSE; default)
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
@@ -553,6 +559,7 @@ rmf_plot.hed <- function(hed,
 rmf_plot.hfb <- function(hfb,
                          dis,
                          variable = 'id',
+                         all_hfb = FALSE,
                          i = NULL,
                          j = NULL,
                          k = NULL,
@@ -572,6 +579,12 @@ rmf_plot.hfb <- function(hfb,
   }
   
   na_value <- ifelse(active_only, NA, 0)
+  
+  if(!all_hfb) hfb$data <- subset(hfb$data, active == TRUE)
+  if(nrow(hfb$data) == 0) {
+    warning('No horizontal-flow barriers active. Returning NULL.', call. = FALSE)
+    return(NULL)
+  }  
   
   if(!is.null(k)) {
     layer <- k
@@ -648,9 +661,17 @@ rmf_plot.hfb <- function(hfb,
     if(!is.null(i)) {
       ind <- i
       data <- subset(hfb$data, i == ind)
+      if(nrow(data) == 0) {
+        warning(paste0('No horizontal-flow barriers in row ', i, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      }
     } else if(!is.null(j)) {
       ind <- j
       data <- subset(hfb$data, j == ind)
+      if(nrow(data) == 0) {
+        warning(paste0('No horizontal-flow barriers in column ', j, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      }
     }
     
     if(!is.character(variable)) variable <- colnames(data)[variable]
@@ -838,6 +859,11 @@ rmf_plot.rch <- function(rch,
     obj <- rch$irch[[kper]]
     
   } 
+  
+  if(length(obj) == 0) {
+    warning(paste0('No active ', variable, ' arrays in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
+    return(NULL)
+  }
   
   rmf_plot(obj, dis = dis, ...)
   
