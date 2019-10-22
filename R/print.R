@@ -592,7 +592,9 @@ print.modflow <- function(modflow, n = 5) {
   packages <- c(rmfi_list_packages()$rmf, 'nam')
   input <- intersect(names(modflow), packages)
   output <- setdiff(names(modflow), packages)
-  
+  ftype <- modflow$nam$ftype[-which(modflow$nam$ftype %in% c('DATA', 'DATA(BINARY)', 'LIST', 'GLOBAL', 'DATAGLO', 'DATAGLO(BINARY)'))]  
+  not_supported <- ftype[-which(ftype %in% rmfi_list_packages()$ftype)]
+
   # TODO add other versions
   v <- ifelse('upw' %in% input && 'nwt' %in% input, 'MODFLOW-NWT', 'MODFLOW-2005')
   
@@ -600,21 +602,30 @@ print.modflow <- function(modflow, n = 5) {
   cat(length(input), 'input objects:', '\n')
   cat(' ', input, '\n')
   cat('\n')
-  cat(length(output), 'output objects:', '\n')
+  cat(length(output), ifelse(length(output) > 0, 'output objects:', 'output objects'), '\n')
   if(length(output) > 0) {
     cat(' ', output, '\n')
+    cat('\n')
+  } else {
+    cat('\n')
+  }
+  if(length(not_supported) > 0) {
+    cat(length(not_supported), 'not-supported', ifelse(length(not_supported) > 1, 'packages', 'package') ,'in nam object:', '\n')
+    cat(' ', not_supported, '\n')
     cat('\n')
   }
   
   ibound <- table(modflow$bas$ibound)
-  
   cat(paste(modflow$dis$nrow, ifelse(modflow$dis$nrow > 1, 'rows,', 'row,'), modflow$dis$ncol, ifelse(modflow$dis$ncol > 1, 'columns', 'column'),
             'and', modflow$dis$nlay, ifelse(modflow$dis$nlay > 1, 'layers', 'layer'), 'totalling', modflow$dis$nrow*modflow$dis$ncol*modflow$dis$nlay, 'cells',
             paste0('(', ifelse('0' %in% names(ibound), ibound['0'], '0'), ' inactive & ', ifelse('-1' %in% names(ibound), ibound['-1'], '0'), ' constant head',')'),'\n'))
   cat('\n')
   
   # TODO add other observations
-  if('hob' %in% input) cat(modflow$hob$nh, 'head observations', '\n')
+  if('hob' %in% input) {
+    cat(modflow$hob$nh, ifelse(modflow$hob$nh > 1, 'head observations', 'head observation'), '\n')
+    cat('\n')
+  }
   
   # Parameters
   parm <- vapply(modflow[input], function(i) !is.null(i[['parameter_values']]), TRUE)
