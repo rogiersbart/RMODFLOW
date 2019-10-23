@@ -74,6 +74,7 @@ print.rmf_package <- function(obj) cat('A undefined RMODFLOW package')
 print.nam <- function(nam) {
   cat('RMODFLOW Name File object with:', '\n')
   cat(nrow(nam), 'files with', length(which(!nam$ftype %in% c('DATA', 'DATA(BINARY)', 'LIST', 'GLOBAL', 'DATAGLO', 'DATAGLO(BINARY)'))), 'packages', '\n')
+  cat('\n')
   print.data.frame(nam)
 }
 
@@ -437,9 +438,27 @@ print.ghb <- function(ghb, n = 15) {
   
 }
 
-#' #' @export
-#' print.pcg
-#' 
+#' @export
+print.pcg <- function(pcg) {
+  
+  cat('RMODFLOW Preconditioned Conjugate-Gradient Package object with:', '\n')
+  cat('A maximum of', pcg$mxiter, 'outer iterations with', pcg$iter1, 'inner iterations using the', '\n')
+  cat(ifelse(pcg$npcond == 1, 'Modified Incomplete Cholesky', 'Polynomial'), 'matrix conditioning method.', '\n')
+  cat('\n')
+  cat('Head change criterion for convergence:', pcg$hclose, '\n')
+  cat('Residual criterion for convergence:', pcg$rclose, '\n')
+  cat('\n')
+  if(pcg$npcond == 1) {
+    cat('The relaxation parameter for the matrix conditioning is', pcg$relax, '\n')
+  } else {
+    cat('The upper bound on the maximum eigenvalue for the matrix conditioning', ifelse(pcg$nbpol == 2, 'is 2.0', 'will be calculated'), '\n')
+  }
+  cat('Maximum head change and residual change are printed to the listing file at every', ifelse(pcg$iprpcg == 0, '999', pcg$iprpcg), 'time steps', '\n')
+  cat('The damping factor', ifelse(pcg$damppcg > 0, 'for steady-state & transient stress periods is', 'for steady-state stress periods is'), abs(pcg$damppcg), '\n')
+  if(pcg$damppcg < 0 && !is.null(pcg$damppcgt)) cat('The damping factor for transient stress periods is', pcg$damppcgt, '\n')
+  
+}
+
 #' #' @export
 #' print.kdep
 #' 
@@ -671,12 +690,50 @@ print.evt <- function(evt, n = 5) {
   
 }
  
-#' #' @export
-#' print.sip
-#' 
-#' #' @export
-#' print.de4
-#' 
+#' @export
+print.sip <- function(sip) {
+  
+  cat('RMODFLOW Strongly Implicit Procedure Package object with:', '\n')
+  cat('A maximum of', sip$mxiter, 'outer iterations', '\n')
+  cat(sip$nparm, 'iteration variables', '\n')
+  cat('\n')
+  cat('An acceleration variable of', sip$accl, '\n')
+  cat('Head change criterion for convergence:', sip$hclose, '\n')
+  cat('The seed for calculating iteration variables', ifelse(sip$ipcalc == 0, paste('is', sip$wseed), 'will be calculated from problem variables'), '\n')
+  cat('Maximum head change for each iteration is printed to the listing file every', ifelse(sip$iprsip == 0, 999, sip$iprsip), '\n')
+
+}
+
+#' @export
+print.de4 <- function(de4) {
+  
+  cat('RMODFLOW Direct Solver Package object with:', '\n')
+  cat('A maximum of', de4$itmx, 'iterations per time step', '\n')
+  cat('A maximum of', ifelse(de4$mxup == 0, 'total cells/2', de4$mxup), 'equations being solved in the upper part of the equations', '\n')
+  cat('A maximum of', ifelse(de4$mxlow == 0, 'total cells/2', de4$mxlow), 'equations being solved in the lower part of the equations', '\n')
+  cat('A maximum band width of the [AL] matrix', ifelse(de4$mxbw == 0, 'equal to the product of the two smallest grid dimensions + 1', paste('of', de4$mxbw, '+ 1')), '\n')
+  cat('\n')
+  if(de4$ifreq == 1) {
+    ifreq <- 'remain constant for all stress periods'
+  } else if(de4$ifreq == 2) {
+    ifreq <- 'depending on stress terms change at the start of each stress period'
+  } else if(de4$ifreq == 3) {
+    ifreq <- 'are nonlinear'
+  }
+  cat('Coefficients in the [A] matrix', ifreq, '\n')
+  if(de4$mutd4 == 0) {
+    mutd4 <- 'The number of iterations in each time step and the maximum head change each iteration are'
+  } else if(de4$mutd4 == 1) {
+    mutd4 <- 'The number of iterations each time step is'
+  } else if(de4$mutd4 == 2) {
+    mutd4 <- 'No convergence information is'
+  }
+  cat(mutd4, 'printed to the listing file every', de4$iprd4, 'time steps', '\n')
+  cat('The multiplier for computed head change each iteration is', de4$accl, '\n')
+  cat('Head change criterion for convergence:', de4$hclose, '\n')
+
+}
+
 #' #' @export
 #' print.nwt
 #' 
