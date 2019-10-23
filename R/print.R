@@ -356,7 +356,7 @@ print.oc <- function(oc, n = 15) {
       cat('\n')
     }
     if(any(c(oc$save_budget))) {
-      cat('The', if(oc$compact_budget) {'compacted'}, 'cell-by-cell flow budget', if(oc$aux){'including auxiliary data'}, 'is saved to the binary files specified in the flow and/or stress-packages', 'at following time steps:', '\n')
+      cat('The', if(oc$compact_budget) {'compacted'}, 'cell-by-cell flow budget', if(oc$aux){'including auxiliary data'}, 'is saved to the binary file(s) specified in the flow and/or stress-packages', 'at following time steps:', '\n')
       vc <- which(oc$save_budget)
       cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
       cat('\n')
@@ -393,7 +393,7 @@ print.oc <- function(oc, n = 15) {
 print.wel <- function(wel, n = 15) {
   
   i_parm <- nrow(subset(wel$data, parameter == TRUE))
-  i_noparm <- nrow(subset(wel$data, parameter = FALSE))
+  i_noparm <- nrow(subset(wel$data, parameter == FALSE))
   
   cat('RMODFLOW Well object with:', '\n')
   if(wel$dimensions$np > 0) cat(wel$dimensions$np, if(!is.null(wel$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'wells', '\n')
@@ -417,7 +417,7 @@ print.wel <- function(wel, n = 15) {
 print.ghb <- function(ghb, n = 15) {
   
   i_parm <- nrow(subset(ghb$data, parameter == TRUE))
-  i_noparm <- nrow(subset(ghb$data, parameter = FALSE))
+  i_noparm <- nrow(subset(ghb$data, parameter == FALSE))
   
   cat('RMODFLOW General-Head Boundary object with:', '\n')
   if(ghb$dimensions$np > 0) cat(ghb$dimensions$np, if(!is.null(ghb$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'general-head boundaries', '\n')
@@ -451,17 +451,58 @@ print.rch <- function(rch, n = 5) {
   
   cat('RMODFLOW Recharge Package object with:', '\n')
   if(rch$dimensions$np > 0) cat(rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
-  cat(i_noparm, 'non-parameter specified-heads', '\n')
-  if(!is.null(rch$aux)) cat('Auxiliary variables defined:', rch$aux, '\n')
+  if(rch$nrchop == 1) {
+    nrchop <- 'the top grid layer'
+  } else if(rch$nrchop == 2) {
+    nrchop <- 'the cells defined by layer variable irch'
+  } else if(rch$nrchop == 3) {
+    nrchop <- 'the highest active cell in each vertical column'
+  }
+  cat('Recharge applied to', nrchop, '\n')
+  cat('\n')
+  cat(rmfi_ifelse0(rch$irchcb == 0, 'RCH fluxes are not saved to a cell-by-cell flow budget file', c('RCH fluxes are saved to the cell-by-cell flow budget file on unit number', rch$irchcb)), '\n')
   cat('\n')
   
+  # recharge
+  if(length(rch$recharge) > n) {
+    cat('Summary of recharge (first', n, 'arrays):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of recharge arrays:', '\n')
+    nlay <- length(rch$recharge)
+  }
+  
+  abind::abind(rch$recharge, along = 3) %>%
+  apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(names(rch$recharge)) %>% subset(select = 1:nlay) %>% print()
+  
+  # irch
+  if(rch$nrchop == 2) {
+    cat('\n')
+    if(length(rch$irch) > n) {
+      cat('Summary of irch (first', n, 'arrays):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of irch arrays:', '\n')
+      nlay <- length(rch$irch)
+    }
+    
+    abind::abind(rch$irch, along = 3) %>%
+      apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names(rch$irch)) %>% subset(select = 1:nlay) %>% print()
+  }
+  
+  cat('\n')
+  cat('Summary of the stress-period', rmfi_ifelse0(nrow(rch$kper) > n, c('information (first', n, 'stress-periods shown):'), 'information:'), '\n')
+  rmfi_ifelse0(nrow(rch$kper) > n, print(rch$kper[1:n, ]), print(rch$kper))
+    
 }
 
 #' @export
 print.chd <- function(chd, n = 15) {
   
   i_parm <- nrow(subset(chd$data, parameter == TRUE))
-  i_noparm <- nrow(subset(chd$data, parameter = FALSE))
+  i_noparm <- nrow(subset(chd$data, parameter == FALSE))
   
   cat('RMODFLOW Time-Varying Specified Head object with:', '\n')
   if(chd$dimensions$np > 0) cat(chd$dimensions$np, if(!is.null(chd$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'specified-heads', '\n')
@@ -488,7 +529,7 @@ print.chd <- function(chd, n = 15) {
 print.hfb <- function(hfb, n = 15) {
 
   i_parm <- nrow(subset(hfb$data, parameter == TRUE))
-  i_noparm <- nrow(subset(hfb$data, parameter = FALSE))
+  i_noparm <- nrow(subset(hfb$data, parameter == FALSE))
   i_parm_active <- nrow(subset(hfb$data, parameter == TRUE & active == TRUE))
   
   cat('RMODFLOW Horizontal-Flow Barrier object with:', '\n')
@@ -506,7 +547,7 @@ print.hfb <- function(hfb, n = 15) {
 print.riv <- function(riv, n = 15) {
   
   i_parm <- nrow(subset(riv$data, parameter == TRUE))
-  i_noparm <- nrow(subset(riv$data, parameter = FALSE))
+  i_noparm <- nrow(subset(riv$data, parameter == FALSE))
   
   cat('RMODFLOW River Package object with:', '\n')
   if(riv$dimensions$np > 0) cat(riv$dimensions$np, if(!is.null(riv$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'river cells', '\n')
@@ -530,7 +571,7 @@ print.riv <- function(riv, n = 15) {
 print.drn <- function(drn, n = 15) {
   
   i_parm <- nrow(subset(drn$data, parameter == TRUE))
-  i_noparm <- nrow(subset(drn$data, parameter = FALSE))
+  i_noparm <- nrow(subset(drn$data, parameter == FALSE))
   
   cat('RMODFLOW Drain Package object with:', '\n')
   if(drn$dimensions$np > 0) cat(drn$dimensions$np, if(!is.null(drn$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'drain cells', '\n')
