@@ -591,9 +591,86 @@ print.drn <- function(drn, n = 15) {
   
 }
 
-#' #' @export
-#' print.evt
-#' 
+#' @export
+print.evt <- function(evt, n = 5) {
+  
+  cat('RMODFLOW Evapotranspiration Package object with:', '\n')
+  if(evt$dimensions$np > 0) cat(evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
+  if(evt$nevtop == 1) {
+    nevtop <- 'the top grid layer'
+  } else if(evt$nevtop == 2) {
+    nevtop <- 'cells defined by layer variable ievt'
+  } 
+  cat('Evapotranspiration calculated for', nevtop, '\n')
+  cat('\n')
+  cat(rmfi_ifelse0(evt$ievtcb == 0, 'EVT fluxes are not saved to a cell-by-cell flow budget file', c('EVT fluxes are saved to the cell-by-cell flow budget file on unit number', evt$ievtcb)), '\n')
+  cat('\n')
+  
+  # evt
+  if(length(evt$evt) > n) {
+    cat('Summary of evapotranspiration (first', n, 'arrays):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of evapotranspiration arrays:', '\n')
+    nlay <- length(evt$evt)
+  }
+  
+  abind::abind(evt$evt, along = 3) %>%
+    apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(names(evt$evt)) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # surf
+  if(length(evt$surf) > n) {
+    cat('Summary of ET surface (first', n, 'arrays):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of ET surface arrays:', '\n')
+    nlay <- length(evt$surf)
+  }
+  
+  abind::abind(evt$surf, along = 3) %>%
+    apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(names(evt$surf)) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # exdp
+  if(length(evt$exdp) > n) {
+    cat('Summary of ET extinction depth (first', n, 'arrays):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of ET extinction depth arrays:', '\n')
+    nlay <- length(evt$exdp)
+  }
+  
+  abind::abind(evt$exdp, along = 3) %>%
+    apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(names(evt$exdp)) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # ievt
+  if(evt$nevtop == 2) {
+    cat('\n')
+    if(length(evt$ievt) > n) {
+      cat('Summary of ievt (first', n, 'arrays):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of ievt arrays:', '\n')
+      nlay <- length(evt$ievt)
+    }
+    
+    abind::abind(evt$ievt, along = 3) %>%
+      apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names(evt$ievt)) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  cat('Summary of the stress-period', rmfi_ifelse0(nrow(evt$kper) > n, c('information (first', n, 'stress-periods shown):'), 'information:'), '\n')
+  rmfi_ifelse0(nrow(evt$kper) > n, print(evt$kper[1:n, ]), print(evt$kper))
+  
+}
+ 
 #' #' @export
 #' print.sip
 #' 
