@@ -196,11 +196,20 @@ print.bas <- function(bas, n = 5) {
 }
 
 #' @export
-print.pvl <- function(pvl) {
+print.pvl <- function(pvl, n = 30) {
   cat('RMODFLOW Parameter Value File object with:', '\n')
-  cat(pvl$np, 'parameter values', '\n')
+  df <- data.frame(parnam = pvl$parnam, parval = pvl$parval)
+  
+  if(pvl$np > n) {
+    cat(pvl$np, 'parameter values', '(first', n, 'shown):', '\n')
+    nlay <- n
+  } else {
+    cat(pvl$np, 'parameter values:', '\n')
+    nlay <- pvl$np
+  }   
+  
   cat('\n')
-  print(data.frame(parnam = pvl$parnam, parval = pvl$parval))
+  print(df[1:nlay, ])
 }
 
 #' @export
@@ -236,22 +245,30 @@ print.mlt <- function(mlt, n = 5) {
 print.huf <- function(huf, n = 5) {
   
   cat('RMODFLOW Hydrogeologic-Unit Flow object with:', '\n')
-  cat(huf$nhuf, 'hydrogeological units and', huf$nphuf, 'flow parameters', '\n')
+  cat(huf$nhuf, ifelse(huf$nhuf > 1, 'hydrogeological units', 'hydrogeological unit'), 'and', huf$nphuf, ifelse(huf$nphuf > 1, 'flow parameters', 'flow parameter'), '\n')
   cat('\n')
   
-  cat('Cell-by-cell flow terms are', ifelse(huf$ihufcb == 0, 'not writen', paste('written to file number', huf$ihufcb)), '\n')
+  cat('Cell-by-cell flow terms are', ifelse(huf$ihufcb == 0, 'not written',
+                                        ifelse(huf$ihufcb > 0, paste('written to file number', huf$ihufcb), 
+                                               '(only flow between constant-head cells) printed to the listing file')), '\n')
   cat('Dry cells are assigned a head value of', huf$hdry, '\n')
   cat('\n')
   cat('Heads interpolated to hydrogeological units are', ifelse(huf$iohufheads == 0, 'not written', paste('written to file number', huf$iohufheads)), '\n')
-  cat('Flow interpolated to hydrogeological units are', ifelse(huf$iohufflows == 0, 'not written', paste('written to file number', huf$iohufflows)), '\n')
+  cat('Flow terms interpolated to hydrogeological units are', ifelse(huf$iohufflows == 0, 'not written', paste('written to file number', huf$iohufflows)), '\n')
   cat('\n')
   
   # Layer overview
   ll <- data.frame('Layer' = 1:length(huf$lthuf), 'Type' = 'Confined', 'Wetting' = 'Inactive', stringsAsFactors = FALSE)
   ll$Type[which(huf$lthuf != 0)] <- 'Convertible'
   ll$Wetting[which(huf$laywt != 0)] <- 'Active'
-  cat('Layer overview:', '\n')
-  print(ll, row.names = FALSE)
+  if(length(huf$lthuf) > n) {
+    cat('Layer overview (first', n, 'layers): ', '\n')
+    nlay <- n
+  } else {
+    cat('Layer overview:', '\n')
+    nlay <- length(huf$lthuf)
+  }
+  print(ll[1:nlay,], row.names = FALSE)
   cat('\n')
   
   # Wetting
@@ -270,8 +287,8 @@ print.huf <- function(huf, n = 5) {
      cat('Summary of wetdry values:', '\n')
      nlay <- dim(wetdry)[3]
    }
-   names_wetdry <- paste('Layer', 1:dim(wetdry)[3])
-   apply(huf$wetdry, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+   names_wetdry <- paste('Layer', which(huf$laywt != 0))
+   apply(wetdry, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
      setNames(names_wetdry) %>% subset(select = 1:nlay) %>% print()
    cat('\n')   
   }
@@ -288,8 +305,14 @@ print.huf <- function(huf, n = 5) {
     df$unit <- vapply(df$hgu, function(i) which(huf$hgunam == i), 1)
     un$VANI <- replace(un$VANI, unique(df$unit), 'Parameter')
   }
-  cat('HGU overview:', '\n')
-  print(un, row.names = FALSE)
+  if(huf$nhuf > n) {
+    cat('HGU overview (first', n, 'hgu\'s): ', '\n')
+    nlay <- n
+  } else {
+    cat('HGU overview:', '\n')
+    nlay <- huf$nhuf
+  }
+  print(un[1:nlay,], row.names = FALSE)
   cat('\n')
   
   # Parameters
@@ -298,9 +321,14 @@ print.huf <- function(huf, n = 5) {
                     'Unit' = vapply(huf$parameters, function(i) attr(i, 'hgunam'), 'txt'), 
                     'Value' = vapply(huf$parameters, function(i) attr(i, 'parval'), 1), 
                     stringsAsFactors = FALSE)
-  
-  cat('Parameter overview:', '\n')
-  print(pdf, row.names = FALSE)
+  if(nrow(pdf) > n) {
+    cat('Parameter overview (first', n, 'parameters): ', '\n')
+    nlay <- n
+  } else {
+    cat('Parameter overview:', '\n')
+    nlay <- nrow(pdf)
+  }
+  print(pdf[1:nlay,], row.names = FALSE)
   cat('\n')
   
   # top
@@ -329,7 +357,7 @@ print.huf <- function(huf, n = 5) {
 }
 
 #' @export
-print.oc <- function(oc, n = 15) {
+print.oc <- function(oc, n = 500) {
   
   cat('RMODFLOW Output Control Option file', '\n')
   cat('\n')
@@ -339,47 +367,54 @@ print.oc <- function(oc, n = 15) {
     
     # save
     if(!is.na(oc$ihedun) && any(c(oc$save_head))) {
-      cat('Simulated heads are written to a', if(oc$head_label) {'labelled'}, ifelse(is.na(oc$chedfm), 'binary', 'formatted'), 'file on unit number', oc$ihedun, 'at following time steps:', '\n')
       vc <- which(oc$save_head)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('Simulated heads are written to a', if(oc$head_label) {'labelled'}, ifelse(is.na(oc$chedfm), 'binary', 'formatted'), 'file on unit number', oc$ihedun, 'at following',
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     if(!is.na(oc$iddnun) && any(c(oc$save_drawdown))) {
-      cat('Simulated drawdowns are written to a', if(oc$drawdown_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following time steps:', '\n')
       vc <- which(oc$save_drawdown)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('Simulated drawdowns are written to a', if(oc$drawdown_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     if(!is.na(oc$ibouun) && any(c(oc$save_ibound))) {
-      cat('The ibound array is written to a', if(oc$ibound_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following time steps:', '\n')
       vc <- which(oc$save_ibound)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('The ibound array is written to a', if(oc$ibound_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     if(any(c(oc$save_budget))) {
-      cat('The', if(oc$compact_budget) {'compacted'}, 'cell-by-cell flow budget', if(oc$aux){'including auxiliary data'}, 'is saved to the binary file(s) specified in the flow and/or stress-packages', 'at following time steps:', '\n')
       vc <- which(oc$save_budget)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('The', if(oc$compact_budget) {'compacted'}, 'cell-by-cell flow budget', if(oc$aux){'including auxiliary data'}, 'is saved to the binary file(s) specified in the flow and/or stress-packages', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     
     # print
     if(!is.na(oc$ihedfm) && any(c(oc$print_head))) {
-      cat('Simulated heads are printed to the listing file', 'at following time steps:', '\n')
       vc <- which(oc$print_head)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('Simulated heads are printed to the listing file', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     if(!is.na(oc$iddnfm) && any(c(oc$print_drawdown))) {
-      cat('Simulated drawdowns are printed to the listing file', 'at following time steps:', '\n')
       vc <- which(oc$print_drawdown)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('Simulated drawdowns are printed to the listing file', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     if(any(c(oc$print_budget))) {
-      cat('The volumetric budget is printed to the listing file', 'at following time steps:', '\n')
       vc <- which(oc$print_budget)
-      cat(' ', rmfi_ifelse0(length(vc) > n, vc[1:n], vc), '\n')
+      cat('The volumetric budget is printed to the listing file', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
       cat('\n')
     }
     
@@ -459,11 +494,216 @@ print.pcg <- function(pcg) {
   
 }
 
-#' #' @export
-#' print.kdep
-#' 
-#' #' @export
-#' print.lpf
+#' @export
+print.kdep <- function(kdep, n = 10) {
+  
+  cat('RMODFLOW Hydraulic-Conductivity Depth-Dependence Capability object with:', '\n')
+  cat(kdep$npkdep, ifelse(kdep$npkdep > 1, 'parameters', 'parameter'), '\n')
+  cat('Parameters represent depth-dependence coefficients used to modify horizontal hydraulic conductivity with depth for the hydrogeologic unit(s) specified in the HUF package', '\n')
+  cat('The reference surface elevation is specified by', ifelse(kdep$ifkdep == 0, 'the TOP array in the dis object', 'the RS array specified below'), '\n')
+  cat('\n')
+  
+  if(kdep$ifkdep > 0) {
+    cat('Summary of the reference surface elevations:', '\n')
+    c(kdep$rs) %>% as.data.frame() %>% setNames('RS') %>% summary() %>% print
+    cat('\n')
+  }
+  
+  # Parameters
+  pdf <- data.frame('Name' = vapply(kdep$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                    'Unit' = vapply(kdep$parameters, function(i) attr(i, 'hgunam'), 'txt'), 
+                    'Value' = vapply(kdep$parameters, function(i) attr(i, 'parval'), 1), 
+                    stringsAsFactors = FALSE)
+  if(nrow(pdf) > n) {
+    cat('Parameter overview (first', n, 'parameters): ', '\n')
+    nlay <- n
+  } else {
+    cat('Parameter overview:', '\n')
+    nlay <- nrow(pdf)
+  }
+  print(pdf[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+}
+
+#' @export
+print.lpf <- function(lpf, n = 5) {
+  
+  cat('RMODFLOW Layer-Property Flow Package object with:', '\n')
+  if(lpf$nplpf > 0) cat(lpf$nplpf, ifelse(lpf$nplpf > 1 , 'flow parameters', 'flow parameter'), '\n')
+  cat('Cell-by-cell flow terms', ifelse(lpf$ilpfcb == 0, 'not written',
+                                        ifelse(lpf$ilpfcb > 0, paste('written to file number', lpf$ilpfcb), 
+                                               '(only flow between constant-head cells) printed to the listing file')), '\n')
+  cat('Dry cells are assigned a head value of', lpf$hdry, '\n')
+  cat('\n')
+  
+  # options
+  if(lpf$storagecoefficient) cat('Ss values are read as storage coefficients rather than specific storage', '\n')
+  if(lpf$constantcv) cat('Vertical conductance for an unconfined cell is computed from the cell thickness rather than the saturated thickness', '\n')
+  if(lpf$thickstrt) cat('Layers with a negative LAYTYP are confined and have their cell thickness for conductance calculations computed from STRT-BOTM rather than TOP-BOTM', '\n')
+  if(lpf$nocvcorrection | lpf$constantcv) cat('Vertical conductance is not corrected when the vertical flow correction is applied', '\n')
+  if(lpf$novfc) cat('The vertical flow correction under dewatered conditions is turned off', '\n')
+  if(lpf$noparcheck) cat('There is no check to see if a variable is defined for all cells when parameters are used', '\n')
+  if(lpf$storagecoefficient + lpf$constantcv + lpf$thickstrt + lpf$nocvcorrection + lpf$novfc + lpf$noparcheck > 0) cat('\n')
+ 
+  # Layer overview
+  ll <- data.frame('Layer' = 1:length(lpf$laytyp), 'Type' = 'Confined', 'Averaging' = 'Harmonic',
+                   'CHANI' = 'HANI', 'VKA' = 'VK',  'Wetting' = 'Inactive', stringsAsFactors = FALSE)
+  ll$Type[which(lpf$laytyp != 0)] <- 'Convertible'
+  if(lpf$thickstrt) {
+    ll$Type[which(lpf$laytyp < 0)] <- 'Confined (thickstrt)'
+    lpf$laytyp[which(lpf$laytyp < 0)] <- 0
+  }
+  avg <- c('Harmonic', 'Logarithmic', 'Arithmetic THCK + Log K')
+  ll$Averaging <- avg[lpf$layavg + 1]
+  ll$CHANI <- replace(ll$CHANI, which(lpf$chani > 0), lpf$chani[which(lpf$chani > 0)])
+  ll$VKA <- replace(ll$VKA, which(lpf$layvka != 0), 'VANI')
+  ll$Wetting[which(lpf$laywt != 0)] <- 'Active'
+  if(length(lpf$laytyp) > n) {
+    cat('Layer overview (first', n, 'layers): ', '\n')
+    nlay <- n
+  } else {
+    cat('Layer overview:', '\n')
+    nlay <- length(lpf$laytyp)
+  }
+  print(ll[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+  # Wetting
+  if(any(lpf$laywet != 0)) {
+    cat('Wetting factor:', lpf$wetfct, '\n')
+    cat('Wetting is attempted every', ifelse(lpf$iwetit == 1, 'interval', paste(lpf$iwetit, 'intervals')), '\n')
+    cat('Initial heads at cells that become wet are defined using equation', ifelse(lpf$ihdwet == 0, '3a', '3b'), '(see MODFLOW manual)', '\n')
+    cat('\n')
+  }
+ 
+  # Parameters
+  if(lpf$nplpf > 0) {
+    pdf <- data.frame('Name' = vapply(lpf$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                      'Type' = vapply(lpf$parameters, function(i) attr(i, 'partyp'), 'txt'), 
+                      'Layer' = vapply(lpf$parameters, function(i) paste(attr(i, 'layer'), collapse = ' '), 'text'), 
+                      'Value' = vapply(lpf$parameters, function(i) attr(i, 'parval'), 1), 
+                      stringsAsFactors = FALSE)
+    if(nrow(pdf) > n) {
+      cat('Parameter overview (first', n, 'parameters): ', '\n')
+      nlay <- n
+    } else {
+      cat('Parameter overview:', '\n')
+      nlay <- nrow(pdf)
+    }
+    print(pdf[1:nlay,], row.names = FALSE)
+    cat('\n')
+  }
+ 
+  # HK
+  if(length(lpf$laytyp) > n) {
+    cat('Summary of HK (first', n, 'layers):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of HK:', '\n')
+    nlay <- length(lpf$laytyp)
+  }
+  apply(lpf$hk, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(paste('Layer', 1:length(lpf$laytyp))) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # HANI
+  if(!is.null(lpf$hani)) {
+    if(length(lpf$laytyp) > n) {
+      cat('Summary of HANI (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of HANI:', '\n')
+      nlay <- length(lpf$laytyp)
+    }
+    apply(lpf$hani, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(lpf$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # VKA
+  if(!is.null(lpf$vka)) {
+    if(length(lpf$laytyp) > n) {
+      cat('Summary of VKA (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of VKA:', '\n')
+      nlay <- length(lpf$laytyp)
+    }
+    apply(lpf$vka, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(lpf$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # SS
+  if(!is.null(lpf$ss)) {
+    if(length(lpf$laytyp) > n) {
+      cat('Summary of SS (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SS:', '\n')
+      nlay <- length(lpf$laytyp)
+    }
+    apply(lpf$ss, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(lpf$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # SY
+  if(!is.null(lpf$sy)) {
+    sy <- lpf$sy[,,which(lpf$laytyp != 0)]
+    if(length(dim(sy)) == 2) sy <- rmf_create_array(sy, dim = c(dim(sy), 1))
+    if(dim(sy)[3] > n) {
+      cat('Summary of SY (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SY:', '\n')
+      nlay <- dim(sy)[3]
+    }
+    names_sy <- paste('Layer', which(lpf$laytyp != 0))
+    apply(sy, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names_sy) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # VKCB
+  if(!is.null(lpf$vkcb)) {
+    if(length(lpf$laytyp) > n) {
+      cat('Summary of VKCB (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of VKCB:', '\n')
+      nlay <- length(lpf$laytyp)
+    }
+    apply(lpf$vkcb, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(lpf$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # WETDRY
+  if(!is.null(lpf$wetdry)) {
+    wetdry <- lpf$wetdry[,,which(lpf$laywt != 0)]
+    if(length(dim(wetdry)) == 2) wetdry <- rmf_create_array(wetdry, dim = c(dim(wetdry), 1))
+    if(dim(wetdry)[3] > n) {
+      cat('Summary of WETDRY (first', n ,'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of WETDRY:', '\n')
+      nlay <- dim(wetdry)[3]
+    }
+    names_wetdry <- paste('Layer', which(lpf$laywet != 0))
+    apply(wetdry, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names_wetdry) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')  
+  }
+  
+  
+}
 
 #' @export
 print.rch <- function(rch, n = 5) {
@@ -541,8 +781,141 @@ print.chd <- function(chd, n = 15) {
   
 }
  
-#' #' @export
-#' print.bcf
+#' @export
+print.bcf <- function(bcf, n = 5) {
+  
+  cat('RMODFLOW Block-Centered Flow Package object with:', '\n')
+  cat('Cell-by-cell flow terms', ifelse(bcf$ibcfcb == 0, 'not written',
+                                        ifelse(bcf$ibcfcb > 0, paste('written to file number', bcf$ibcfcb), 
+                                               '(only flow between constant-head cells) printed to the listing file')), '\n')
+  cat('Dry cells are assigned a head value of', bcf$hdry, '\n')
+  cat('Wetting is', ifelse(bcf$iwdflg == 0, 'inactive', 'active'), '\n')
+  if(bcf$iwdflg != 0) {
+    cat('Wetting factor:', bcf$wetfct, '\n')
+    cat('Wetting is attempted every', ifelse(bcf$iwetit == 1, 'interval', paste(bcf$iwetit, 'intervals')), '\n')
+    cat('Initial heads at cells that become wet are defined using equation', ifelse(bcf$ihdwet == 0, '3a', '3b'), '(see MODFLOW manual)', '\n')
+  }
+  cat('\n')
+  
+  # Layer overview
+  ll <- data.frame('Layer' = 1:length(bcf$layavg), 'Type' = 'Confined', 'Averaging' = 'Harmonic', 'TRPY' = bcf$trpy, stringsAsFactors = FALSE)
+  
+  type <- c('Confined', 'Unconfined', 'Confined/unconfined (constant T)', 'Confined/unconfined (T varies)')
+  ll$Type <- type[bcf$laycon + 1]
+  avg <- c('Harmonic', 'Arithmetic', 'Logarithmic', 'Arithmetic THCK + Log K')
+  ll$Averaging <- avg[bcf$layavg + 1]
+  
+  if(length(bcf$layavg) > n) {
+    cat('Layer overview (first', n, 'layers): ', '\n')
+    nlay <- n
+  } else {
+    cat('Layer overview:', '\n')
+    nlay <- length(bcf$layavg)
+  }
+  print(ll[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+  # HY
+  if(!is.null(bcf$hy)) {
+    hy <- bcf$hy[,,which(bcf$laycon %in% c(1,3))]
+    if(length(dim(hy)) == 2) hy <- rmf_create_array(hy, dim = c(dim(hy), 1))
+    if(dim(hy)[3] > n) {
+      cat('Summary of HY (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of HY:', '\n')
+      nlay <- dim(hy)[3]
+    }
+    names <- paste('Layer', which(bcf$laycon %in% c(1,3)))
+    apply(hy, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+  
+  # TRAN
+  if(!is.null(bcf$tran)) {
+    tran <- bcf$tran[,,which(bcf$laycon %in% c(0,2))]
+    if(length(dim(tran)) == 2) tran <- rmf_create_array(tran, dim = c(dim(tran), 1))
+    if(dim(tran)[3] > n) {
+      cat('Summary of TRAN (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of TRAN:', '\n')
+      nlay <- dim(tran)[3]
+    }
+    names <- paste('Layer', which(bcf$laycon %in% c(0,2)))
+    apply(tran, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+  
+  # VCONT
+  if(!is.null(bcf$vcont) && length(bcf$layavg) > 1) {
+    vcont <- bcf$vcont[,,1:(length(bcf$layavg)-1)]
+    if(length(dim(vcont)) == 2) vcont <- rmf_create_array(vcont, dim = c(dim(vcont), 1))
+    if(dim(vcont)[3] > n) {
+      cat('Summary of VCONT (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of VCONT:', '\n')
+      nlay <- dim(vcont)[3]
+    }
+    names <- paste('Layer', 1:(length(bcf$layavg)-1))
+    apply(vcont, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+  
+  # SF1
+  if(!is.null(bcf$sf1)) {
+    sf1 <- bcf$sf1
+    if(dim(sf1)[3] > n) {
+      cat('Summary of SF1 (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SF1:', '\n')
+      nlay <- dim(sf1)[3]
+    }
+    names <- paste('Layer', 1:length(bcf$layavg))
+    apply(sf1, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+  
+  # SF2
+  if(!is.null(bcf$sf2)) {
+    sf2 <- bcf$sf2[,,which(bcf$laycon %in% c(2,3))]
+    if(length(dim(sf2)) == 2) sf2 <- rmf_create_array(sf2, dim = c(dim(sf2), 1))
+    if(dim(sf2)[3] > n) {
+      cat('Summary of SF2 (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SF2:', '\n')
+      nlay <- dim(sf2)[3]
+    }
+    names <- paste('Layer', which(bcf$laycon %in% c(2,3)))
+    apply(sf2, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+  
+  # WETDRY
+  if(!is.null(bcf$wetdry) && bcf$iwdflg != 0) {
+    wetdry <- bcf$wetdry[,,which(bcf$laycon %in% c(1,3))]
+    if(length(dim(wetdry)) == 2) wetdry <- rmf_create_array(wetdry, dim = c(dim(wetdry), 1))
+    if(dim(wetdry)[3] > n) {
+      cat('Summary of WETDRY (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of WETDRY:', '\n')
+      nlay <- dim(wetdry)[3]
+    }
+    names <- paste('Layer', which(bcf$laycon %in% c(1,3)))
+    apply(wetdry, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+  }
+}
 
 #' @export
 print.hfb <- function(hfb, n = 15) {
@@ -739,10 +1112,32 @@ print.de4 <- function(de4) {
 #' 
 #' #' @export
 #' print.upw
-#' 
-#' #' @export
-#' print.lvda
-#'
+
+#' @export
+print.lvda <- function(lvda, n = 10) {
+  
+  cat('RMODFLOW Model-Layer Variable-Direction Horizontal Anisotropy Capability object with:', '\n')
+  cat(lvda$nplvda, ifelse(lvda$nplvda > 1, 'parameters', 'parameter'), '\n')
+  cat('Parameters represent the angle between the grid axis and the principal direction of horizontal hydraulic conductivity (defined in the HUF package)', '\n')
+  cat('\n')
+  
+  # Parameters
+  pdf <- data.frame('Name' = vapply(lpf$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                    'Layer' = vapply(lpf$parameters, function(i) paste(attr(i, 'layer'), collapse = ' '), 'text'), 
+                    'Value' = vapply(lpf$parameters, function(i) attr(i, 'parval'), 1), 
+                    stringsAsFactors = FALSE)
+  if(nrow(pdf) > n) {
+    cat('Parameter overview (first', n, 'parameters): ', '\n')
+    nlay <- n
+  } else {
+    cat('Parameter overview:', '\n')
+    nlay <- nrow(pdf)
+  }
+  print(pdf[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+}
+
 #' #' @export
 #' print.hob
 #' 
