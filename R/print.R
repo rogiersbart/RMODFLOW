@@ -1337,21 +1337,143 @@ print.lvda <- function(lvda, n = 10) {
 
 #' #' @export
 #' print.hob
-#' 
-#' #' @export
-#' print.hed
-#' 
-#' #' @export
-#' print.ddn
-#' 
-#' #' @export
-#' print.bud
-#' 
-#' #' @export
-#' print.cbc
-#' 
-#' #' @export
-#' print.hpr
+
+#' @export
+print.hed <- function(obj, ...) {
+  
+  cat(paste('RMODFLOW 4d array representing hydraulic head output with', dim(obj)[1], ifelse(dim(obj)[1] > 1, 'rows,', 'row,'),
+            dim(obj)[2], ifelse(dim(obj)[2] > 1, 'columns,', 'column'), dim(obj)[3],
+            ifelse(dim(obj)[3] > 1, 'layers', 'layer'), 'and', dim(obj)[4], 
+            ifelse(dim(obj)[4] > 1, 'timesteps,', 'timestep'), 'representing the', 
+            paste(attr(obj, 'dimlabels')[1:3], collapse = ', '), paste('&', attr(obj, 'dimlabels')[4]),
+            'dimensions.', '\n'))
+
+  print(as.array(obj), ...)
+  
+}
+
+#' @export
+print.ddn <- function(obj, ...) {
+    
+  cat(paste('RMODFLOW 4d array representing drawdown output with', dim(obj)[1], ifelse(dim(obj)[1] > 1, 'rows,', 'row,'),
+            dim(obj)[2], ifelse(dim(obj)[2] > 1, 'columns,', 'column'), dim(obj)[3],
+            ifelse(dim(obj)[3] > 1, 'layers', 'layer'), 'and', dim(obj)[4], 
+            ifelse(dim(obj)[4] > 1, 'timesteps,', 'timestep'), 'representing the', 
+            paste(attr(obj, 'dimlabels')[1:3], collapse = ', '), paste('&', attr(obj, 'dimlabels')[4]),
+            'dimensions.', '\n'))
+
+  print(as.array(obj), ...)
+  
+}
+
+#' @export
+print.bud <- function(bud, n = 10) {
+  
+  cat('RMODFLOW volumetric budget output object with:', '\n')
+  kper <- length(unique(bud$rates$kper))
+  cat('A total of', nrow(bud$rates), ifelse(nrow(bud$rates) > 1, 'time steps', 'time step'), 'for',
+      kper, ifelse(kper > 1, 'stress periods', 'stress period'), '\n')
+  cat((ncol(bud$rates) - 6)/2, 'flow terms:', '\n')
+  
+  fluxes <- names(bud$rates) %>%
+             setdiff(c('kstp', 'kper', 'total_in', 'total_out', 'difference', 'discrepancy')) %>%
+             strsplit("\\_in|\\_out") %>%
+             unlist
+  fluxes <- fluxes[1:(length(fluxes)/2)]
+  cat(' ', fluxes, '\n')
+  cat('\n')
+  
+  if(nrow(bud$rates) > n) {
+    cat('Overview of volumetric rates (first', n, 'time steps):', '\n')
+    nlay <- n
+  } else {
+    cat('Overview of volumetric rates:', '\n')
+    nlay <- nrow(bud$rates)
+  }
+  print(bud$rates[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+  if(nrow(bud$cumulative) > n) {
+    cat('Overview of cumulative volumes (first', n, 'time steps):', '\n')
+    nlay <- n
+  } else {
+    cat('Overview of cumulative volumes:', '\n')
+    nlay <- nrow(bud$cumulative)
+  }
+  print(bud$cumulative[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+  cat('Final cumulative difference:', bud$cumulative$difference[nrow(bud$cumulative)], '\n')
+  cat('Final cumulative percent discrepancy:', bud$cumulative$discrepancy[nrow(bud$cumulative)], '\n')
+  
+}
+
+#' @export
+print.cbc <- function(cbc, n = 5, l = -1) {
+  
+  cat('RMODFLOW cell-by-cell flow budget output object with:', '\n')
+  cat(length(cbc), 'flow terms:', '\n')
+  cat(' ', names(cbc), '\n')
+  nstp <- length(attr(cbc[[1]], 'kstp'))
+  kper <- length(unique(attr(cbc[[1]], 'kper')))
+  cat('Representing', nstp, ifelse(nstp > 1, 'time steps', 'time step'), 'in',
+      kper, ifelse(kper > 1, 'stress periods', 'stress period'), '\n')
+  cat('\n')
+  
+  for(i in 1:length(cbc)) {
+
+    if(inherits(cbc[[i]], 'rmf_4d_array')) {
+      ll <- ifelse(l < 0, tail(attr(cbc[[i]], 'kstp'), 1), l)
+      if(dim(cbc[[i]])[3] > n) {
+        cat('Summary of', names(cbc)[i] ,'(first', n, 'layers) for time step', paste0(ll, ':'), '\n')
+        nlay <- n
+      } else {
+        cat('Summary of', names(cbc)[i], 'for time step', paste0(ll, ':'), '\n')
+        nlay <- dim(cbc[[i]])[3]
+      }
+     apply(cbc[[i]][,,,ll], 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:dim(cbc[[i]])[3])) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+    } else if(inherits(cbc[[i]], 'data.frame')) {
+      ll <- ifelse(l < 0, tail(attr(cbc[[i]], 'kstp'), 1), l)
+      df <- subset(cbc[[i]], kstp == ll)
+      if(nrow(df) > n) {
+        cat('Overview of', names(cbc)[i], '(first', n, 'records) for time step', paste0(ll, ':'), '\n')
+        nlay <- n
+      } else {
+        cat('Overview of', names(cbc)[i], 'for time step', paste0(ll, ':'), '\n')
+        nlay <- nrow(df)
+      }
+      print(df[1:nlay,], row.names = FALSE)
+      cat('\n')
+    }
+  }
+  
+}
+
+#' @export
+print.hpr <- function(hpr, n = 20) {
+ 
+  cat('RMODFLOW head predictions output object with:', '\n')
+  cat(nrow(hpr), 'records', '\n')
+  cat('\n')
+
+  if(nrow(hpr) > n) {
+    cat('Overview of head predictions', '(first', n, 'records):', '\n')
+    nlay <- n
+  } else {
+    cat('Overview of head predictions:', '\n')
+    nlay <- nrow(hpr)
+  }
+  print.data.frame(hpr[1:nlay,], row.names = TRUE)
+  cat('\n')
+  
+  cat('Goodness-of-fit metrics:', '\n')
+  metrics <- suppressWarnings(rmf_performance(hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
+  print(round(unlist(metrics), 2))
+   
+}
 
 #' @export
 print.modflow <- function(modflow, n = 5) {
@@ -1417,7 +1539,7 @@ print.modflow <- function(modflow, n = 5) {
   cat('\n')
   
   # output
-  if('bud' %in% output) cat('Final percent discrepancy:', tail(modflow$bud$rates, 1)$discrepancy, '\n')
+  if('bud' %in% output) cat('Final percent discrepancy:', tail(modflow$bud$cumulative, 1)$discrepancy, '\n')
   if('hpr' %in% output) {
     cat('Goodness-of-fit metrics (head observations):', '\n')
     metrics <- suppressWarnings(rmf_performance(modflow$hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
