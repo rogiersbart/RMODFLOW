@@ -558,7 +558,7 @@ print.lpf <- function(lpf, n = 5) {
   ll$Averaging <- avg[lpf$layavg + 1]
   ll$CHANI <- replace(ll$CHANI, which(lpf$chani > 0), lpf$chani[which(lpf$chani > 0)])
   ll$VKA <- replace(ll$VKA, which(lpf$layvka != 0), 'VANI')
-  ll$Wetting[which(lpf$laywt != 0)] <- 'Active'
+  ll$Wetting[which(lpf$laywet != 0)] <- 'Active'
   if(length(lpf$laytyp) > n) {
     cat('Layer overview (first', n, 'layers): ', '\n')
     nlay <- n
@@ -687,7 +687,7 @@ print.lpf <- function(lpf, n = 5) {
   
   # WETDRY
   if(!is.null(lpf$wetdry)) {
-    wetdry <- lpf$wetdry[,,which(lpf$laywt != 0)]
+    wetdry <- lpf$wetdry[,,which(lpf$laywet != 0)]
     if(length(dim(wetdry)) == 2) wetdry <- rmf_create_array(wetdry, dim = c(dim(wetdry), 1))
     if(dim(wetdry)[3] > n) {
       cat('Summary of WETDRY (first', n ,'layers):', '\n')
@@ -701,7 +701,6 @@ print.lpf <- function(lpf, n = 5) {
       setNames(names_wetdry) %>% subset(select = 1:nlay) %>% print()
     cat('\n')  
   }
-  
   
 }
 
@@ -1107,11 +1106,209 @@ print.de4 <- function(de4) {
 
 }
 
-#' #' @export
-#' print.nwt
-#' 
-#' #' @export
-#' print.upw
+#' @export
+print.nwt <- function(nwt) {
+  
+  cat('RMODFLOW Newton Solver object:', '\n')
+  cat('Maximum head change for closure of the outer iteration loop:', nwt$headtol, '\n')
+  cat('Maximum root-mean squared flux difference for closure of the outer iteration loop:', nwt$fluxtol, '\n')
+  cat('Maximum allowed number of outer iterations:', nwt$maxiterout, '\n')
+  cat('THICKFACT (portion of cell thickness used for smoothly adjusting S & C coefficients to zero):', nwt$thickfact, '\n')
+  cat('\n')
+  cat(ifelse(nwt$linmeth == 1, 'The GMRES', 'The xMD'), 'matrix solver will be used', '\n')
+  cat('Information about solver convergence will', ifelse(nwt$iprnwt == 0, 'not be printed', 'be printed'), 'to the listing file', '\n')
+  cat('Corrections to heads in cells surrounded by dewatered cells will', ifelse(nwt$ibotav == 0, 'not be made', 'be made'), '\n')
+  cat('\n')
+  
+  if(toupper(nwt$options) == 'SPECIFIED') {
+    cat('The following solver options are user-specified:', '\n')
+    cat('\n')
+    cat('If the model fails to converge during a time step,', ifelse(nwt$continue, 'it will continue to solve the next time step', 'model execution will stop'), '\n')
+    cat('DBDTHETA:', nwt$dbdtheta, '\n')
+    cat('DBDKAPPA:', nwt$dbdkappa, '\n')
+    cat('DBDGAMMA:', nwt$dbdgamma, '\n')
+    cat('MOMFACT:', nwt$momfact, '\n')
+    cat('Residual control is', ifelse(nwt$backflag == 0, 'inactive:', 'active:'), '\n')
+    if(nwt$backflag > 0) {
+      cat('MAXBACKITER:', nwt$maxbackiter, '\n')
+      cat('BACKTOL:', nwt$backtol, '\n')
+      cat('BACKREDUCE:', nwt$backreduce, '\n')
+    }
+    cat('\n')
+    
+    cat('Variables for the linear solution using the', ifelse(nwt$linmeth == 1, 'GMRES', 'xMD'), 'solver:', '\n')
+    if(nwt$linmeth == 1) {
+      cat('Maximum number of iterations for the linear solution:', nwt$itinner, '\n')
+      cat('The', ifelse(nwt$ilumethod == 1, 'ILU method with drop tolerance and fill limit', 'ILU(k) method'), 'is used as preconditioner', '\n')
+      cat(ifelse(nwt$ilumethod == 1, 'Fill limit:', 'Level of fill:'), nwt$levfill, '\n')
+      cat('Tolerance for convergence of the linear solver:', nwt$stoptol, '\n')
+      cat('Number of iterations between restarts of the GMRES solver:', nwt$msdr, '\n')
+    } else if(nwt$linmeth == 2) {
+      acc <- c('conjugate gradient', 'ORTHOMIN', 'Bi-CGSTAB')
+      norder <- c('original', 'RCM', 'Minimum Degree')
+      cat('The', acc[nwt$iacl + 1], 'acceleration method is used', '\n')
+      cat('The', norder[nwt$norder + 1], 'ordering method is used', '\n')
+      cat('Level of fill for the incomplete LU factorization:', nwt$level, '\n')
+      cat('Number of orthogonalization if ORTHOMIN acceleration is used:', nwt$north, '\n')
+      cat('Reduced system preconditioning is', ifelse(nwt$iredsys == 0, 'not applied', 'applied'), '\n')
+      cat('Residual reduction-convergence criteria (if used):', nwt$rrctols, '\n')
+      cat('Drop tolerance in the preconditioning is', ifelse(nwt$idroptol == 0, 'not used', 'used'), '\n')
+      cat('Drop tolerance for preconditioning (if used):', nwt$epsrn, '\n')
+      cat('Head closure criteria for inner iterations:', nwt$hclosexmd, '\n')
+      cat('Maximum number of inner iterations:', nwt$mxiterxmd, '\n')
+    }
+
+  } else {
+    lvl <- c('SIMPLE' = 'linear', 'MODERATE' = 'moderately nonlinear', 'COMPLEX' = 'highly nonlinear')
+    cat('Default', toupper(nwt$options), 'solver options are used corresponding to', lvl[toupper(nwt$options)], 'models (see MODFLOW-NWT manual for detailed values)', '\n')
+  }
+    
+}
+
+#' @export
+print.upw <- function(upw, n = 5) {
+  
+  cat('RMODFLOW Upstream Weighting Package object with:', '\n')
+  if(upw$npupw > 0) cat(upw$npupw, ifelse(upw$npupw > 1 , 'flow parameters', 'flow parameter'), '\n')
+  cat('Cell-by-cell flow terms', ifelse(upw$iupwcb == 0, 'not written',
+                                        ifelse(upw$iupwcb > 0, paste('written to file number', upw$iupwcb), 
+                                               '(only flow between constant-head cells) printed to the listing file')), '\n')
+  cat('Dry cells are assigned a head value of', upw$hdry, '\n')
+  if(upw$ihdry > 0) cat('When heads are less than 1e-4 above the bottom of a cell, they will be set to', upw$hdry, '\n')
+  cat('\n')
+  
+  # options
+  if(upw$noparcheck) {
+    cat('There is no check to see if a variable is defined for all cells when parameters are used', '\n')
+    cat('\n')
+  }
+
+  # Layer overview
+  ll <- data.frame('Layer' = 1:length(upw$laytyp), 'Type' = 'Confined', 'Averaging' = 'Harmonic',
+                   'CHANI' = 'HANI', 'VKA' = 'VK', stringsAsFactors = FALSE)
+  ll$Type[which(upw$laytyp != 0)] <- 'Convertible'
+  avg <- c('Harmonic', 'Logarithmic', 'Arithmetic THCK + Log K')
+  ll$Averaging <- avg[upw$layavg + 1]
+  ll$CHANI <- replace(ll$CHANI, which(upw$chani > 0), upw$chani[which(upw$chani > 0)])
+  ll$VKA <- replace(ll$VKA, which(upw$layvka != 0), 'VANI')
+  if(length(upw$laytyp) > n) {
+    cat('Layer overview (first', n, 'layers): ', '\n')
+    nlay <- n
+  } else {
+    cat('Layer overview:', '\n')
+    nlay <- length(upw$laytyp)
+  }
+  print(ll[1:nlay,], row.names = FALSE)
+  cat('\n')
+  
+  # Parameters
+  if(upw$npupw > 0) {
+    pdf <- data.frame('Name' = vapply(upw$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                      'Type' = vapply(upw$parameters, function(i) attr(i, 'partyp'), 'txt'), 
+                      'Layer' = vapply(upw$parameters, function(i) paste(attr(i, 'layer'), collapse = ' '), 'text'), 
+                      'Value' = vapply(upw$parameters, function(i) attr(i, 'parval'), 1), 
+                      stringsAsFactors = FALSE)
+    if(nrow(pdf) > n) {
+      cat('Parameter overview (first', n, 'parameters): ', '\n')
+      nlay <- n
+    } else {
+      cat('Parameter overview:', '\n')
+      nlay <- nrow(pdf)
+    }
+    print(pdf[1:nlay,], row.names = FALSE)
+    cat('\n')
+  }
+  
+  # HK
+  if(length(upw$laytyp) > n) {
+    cat('Summary of HK (first', n, 'layers):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of HK:', '\n')
+    nlay <- length(upw$laytyp)
+  }
+  apply(upw$hk, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(paste('Layer', 1:length(upw$laytyp))) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
+  # HANI
+  if(!is.null(upw$hani)) {
+    if(length(upw$laytyp) > n) {
+      cat('Summary of HANI (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of HANI:', '\n')
+      nlay <- length(upw$laytyp)
+    }
+    apply(upw$hani, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(upw$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # VKA
+  if(!is.null(upw$vka)) {
+    if(length(upw$laytyp) > n) {
+      cat('Summary of VKA (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of VKA:', '\n')
+      nlay <- length(upw$laytyp)
+    }
+    apply(upw$vka, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(upw$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # SS
+  if(!is.null(upw$ss)) {
+    if(length(upw$laytyp) > n) {
+      cat('Summary of SS (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SS:', '\n')
+      nlay <- length(upw$laytyp)
+    }
+    apply(upw$ss, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(upw$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # SY
+  if(!is.null(upw$sy)) {
+    sy <- upw$sy[,,which(upw$laytyp != 0)]
+    if(length(dim(sy)) == 2) sy <- rmf_create_array(sy, dim = c(dim(sy), 1))
+    if(dim(sy)[3] > n) {
+      cat('Summary of SY (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of SY:', '\n')
+      nlay <- dim(sy)[3]
+    }
+    names_sy <- paste('Layer', which(upw$laytyp != 0))
+    apply(sy, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(names_sy) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+  
+  # VKCB
+  if(!is.null(upw$vkcb)) {
+    if(length(upw$laytyp) > n) {
+      cat('Summary of VKCB (first', n, 'layers):', '\n')
+      nlay <- n
+    } else {
+      cat('Summary of VKCB:', '\n')
+      nlay <- length(upw$laytyp)
+    }
+    apply(upw$vkcb, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+      setNames(paste('Layer', 1:length(upw$laytyp))) %>% subset(select = 1:nlay) %>% print()
+    cat('\n')
+    
+  }
+} 
 
 #' @export
 print.lvda <- function(lvda, n = 10) {
@@ -1122,9 +1319,9 @@ print.lvda <- function(lvda, n = 10) {
   cat('\n')
   
   # Parameters
-  pdf <- data.frame('Name' = vapply(lpf$parameters, function(i) attr(i, 'parnam'), 'txt'),
-                    'Layer' = vapply(lpf$parameters, function(i) paste(attr(i, 'layer'), collapse = ' '), 'text'), 
-                    'Value' = vapply(lpf$parameters, function(i) attr(i, 'parval'), 1), 
+  pdf <- data.frame('Name' = vapply(lvda$parameters, function(i) attr(i, 'parnam'), 'txt'),
+                    'Layer' = vapply(lvda$parameters, function(i) paste(attr(i, 'layer'), collapse = ' '), 'text'), 
+                    'Value' = vapply(lvda$parameters, function(i) attr(i, 'parval'), 1), 
                     stringsAsFactors = FALSE)
   if(nrow(pdf) > n) {
     cat('Parameter overview (first', n, 'parameters): ', '\n')
