@@ -367,24 +367,52 @@ print.oc <- function(oc, n = 500) {
     
     # save
     if(!is.na(oc$ihedun) && any(c(oc$save_head))) {
-      vc <- which(oc$save_head)
-      cat('Simulated heads are written to a', if(oc$head_label) {'labelled'}, ifelse(is.na(oc$chedfm), 'binary', 'formatted'), 'file on unit number', oc$ihedun, 'at following',
-          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
-      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+
+      if(is.matrix(oc$save_head)) {
+        df <- cbind('Time step' = 1:nrow(oc$save_head), setNames(as.data.frame(oc$save_head), paste('Layer', 1:ncol(oc$save_head))))
+        cat('Simulated heads are written to a', if(oc$head_label) {'labelled'}, ifelse(is.na(oc$chedfm), 'binary', 'formatted'), 'file on unit number', oc$ihedun, 'at following',
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$save_head)
+        cat('Simulated heads are written to a', if(oc$head_label) {'labelled'}, ifelse(is.na(oc$chedfm), 'binary', 'formatted'), 'file on unit number', oc$ihedun, 'at following',
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
       cat('\n')
     }
     if(!is.na(oc$iddnun) && any(c(oc$save_drawdown))) {
-      vc <- which(oc$save_drawdown)
-      cat('Simulated drawdowns are written to a', if(oc$drawdown_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
-          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
-      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      if(is.matrix(oc$save_drawdown)) {
+        df <- cbind('Time step' = 1:nrow(oc$save_drawdown), setNames(as.data.frame(oc$save_drawdown), paste('Layer', 1:ncol(oc$save_drawdown))))
+        cat('Simulated drawdowns are written to a', if(oc$drawdown_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$save_drawdown)
+        cat('Simulated drawdowns are written to a', if(oc$drawdown_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
       cat('\n')
     }
     if(!is.na(oc$ibouun) && any(c(oc$save_ibound))) {
-      vc <- which(oc$save_ibound)
-      cat('The ibound array is written to a', if(oc$ibound_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
-          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
-      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      if(is.matrix(oc$save_ibound)) {
+        df <- cbind('Time step' = 1:nrow(oc$save_ibound), setNames(as.data.frame(oc$save_ibound), paste('Layer', 1:ncol(oc$save_ibound))))
+        cat('The ibound array is written to a', if(oc$ibound_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$save_ibound)
+        cat('The ibound array is written to a', if(oc$ibound_label) {'labelled'}, ifelse(is.na(oc$cddnfm), 'binary', 'formatted'), 'file on unit number', oc$iddnun, 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
       cat('\n')
     }
     if(any(c(oc$save_budget))) {
@@ -397,17 +425,35 @@ print.oc <- function(oc, n = 500) {
     
     # print
     if(!is.na(oc$ihedfm) && any(c(oc$print_head))) {
-      vc <- which(oc$print_head)
-      cat('Simulated heads are printed to the listing file', 'at following', 
-          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
-      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      if(is.matrix(oc$print_head)) {
+        df <- cbind('Time step' = 1:nrow(oc$print_head), setNames(as.data.frame(oc$print_head), paste('Layer', 1:ncol(oc$print_head))))
+        cat('Simulated heads are printed to the listing file', 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$print_head)
+        cat('Simulated heads are printed to the listing file', 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
       cat('\n')
     }
     if(!is.na(oc$iddnfm) && any(c(oc$print_drawdown))) {
-      vc <- which(oc$print_drawdown)
-      cat('Simulated drawdowns are printed to the listing file', 'at following', 
-          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
-      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      if(is.matrix(oc$print_drawdown)) {
+        df <- cbind('Time step' = 1:nrow(oc$print_drawdown), setNames(as.data.frame(oc$print_drawdown), paste('Layer', 1:ncol(oc$print_drawdown))))
+        cat('Simulated drawdowns are printed to the listing file', 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$print_drawdown)
+        cat('Simulated drawdowns are printed to the listing file', 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
       cat('\n')
     }
     if(any(c(oc$print_budget))) {
@@ -420,6 +466,92 @@ print.oc <- function(oc, n = 500) {
     
     
   } else { # codes
+    
+    # save
+    if(!is.na(oc$ihedun) && oc$ihedun > 0 && sum(oc$ihddfl) != 0 && any(c(oc$hdsv) != 0, na.rm = TRUE)) {
+      if(sum(oc$incode) > 0) {
+        df <- cbind('Time step' = 1:nrow(oc$hdsv), setNames(as.data.frame(oc$hdsv), paste('Layer', 1:ncol(oc$hdsv))))
+        cat('Simulated heads are written to a binary file on unit number', oc$ihedun, 'at following',
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$hdsv[,1] != 0)
+        cat('Simulated heads are written to a binary file on unit number', oc$ihedun, 'at following',
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
+      cat('\n')
+    }
+    
+    if(!is.na(oc$iddnun) && oc$iddnun > 0 && sum(oc$ihddfl) != 0 && any(c(oc$ddsv) != 0, na.rm = TRUE)) {
+      if(sum(oc$incode) > 0) {
+        df <- cbind('Time step' = 1:nrow(oc$ddsv), setNames(as.data.frame(oc$ddsv), paste('Layer', 1:ncol(oc$ddsv))))
+        cat('Simulated heads are written to a binary file on unit number', oc$iddnun, 'at following',
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$ddsv[,1] != 0)
+        cat('Simulated heads are written to a binary file on unit number', oc$iddnun, 'at following',
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
+      cat('\n')
+    }
+    
+    if(sum(oc$icbcfl) != 0) {
+      vc <- which(oc$icbcfl != 0)
+      cat('The cell-by-cell flow budget is saved to the binary file(s) specified in the flow and/or stress-packages', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      cat('\n')
+    }
+    
+    # print
+    if(sum(oc$ihddfl, na.rm = TRUE) != 0 && any(c(oc$hdpr) != 0, na.rm = TRUE)) {
+      if(sum(oc$incode) > 0) {
+        df <- cbind('Time step' = 1:nrow(oc$hdpr), setNames(as.data.frame(oc$hdpr), paste('Layer', 1:ncol(oc$hdpr))))
+        cat('Simulated heads are printed to the listing file', 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$hdpr[,1] != 0)
+        cat('Simulated heads are printed to the listing file', 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
+      cat('\n')
+    }
+    
+    if(sum(oc$ihddfl) != 0 && any(c(oc$ddpr) != 0, na.rm = TRUE)) {
+      if(sum(oc$incode) > 0) {
+        df <- cbind('Time step' = 1:nrow(oc$ddpr), setNames(as.data.frame(oc$ddpr), paste('Layer', 1:ncol(oc$ddpr))))
+        cat('Simulated drawdowns are printed to the listing file', 'at following', 
+            ifelse(nrow(df) > n, paste('time steps (first', n, 'shown)'), 'time steps'), 'and',  ifelse(ncol(df) > n, paste('layers (first', n, 'shown):'), 'layers:'),  '\n')
+        nr <- ifelse(nrow(df) > n, n, nrow(df))   
+        nc <- ifelse(ncol(df) > n, n, ncol(df))
+        print(df[1:nr, 1:nc], row.names = FALSE)
+      } else {
+        vc <- which(oc$ddpr[,1] != 0)
+        cat('Simulated drawdowns are printed to the listing file', 'at following', 
+            ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+        cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      }
+      cat('\n')
+    }
+    
+    if(sum(oc$ibudfl) != 0) {
+      vc <- which(oc$ibudfl != 0)
+      cat('The volumetric budget is printed to the listing file', 'at following', 
+          ifelse(length(vc) > n, paste('time steps (first', n, 'shown):'), 'time steps:'), '\n')
+      cat(' ', rmfi_ifelse0(length(vc) > n, c(vc[1:n], '...'), vc), '\n')
+      cat('\n')
+    }
     
   }
   
