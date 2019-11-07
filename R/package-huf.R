@@ -612,7 +612,7 @@ rmf_write_kdep <- function(kdep,
 #'
 #' @return a \code{RMODFLOW} lvda object
 #' @export
-#' @details All parameters should have a hgunam attribute and their partyp attribute set to 'LVDA'.
+#' @details All parameters should have a layer attribute and their partyp attribute set to 'LVDA'.
 #'          The LVDA package can only be used in conjunction with the HUF package.
 #' @seealso \code{\link{rmf_read_lvda}}, \code{\link{rmf_write_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}
 
@@ -630,8 +630,8 @@ rmf_create_lvda <- function(parameters) {
   
   # data set 2 & 3
   # error check
-  if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'hgunam')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
-    stop('Please make sure all parameters have a parnam, parval, partyp and hgunam attribute', call. = FALSE)
+  if(any(vapply(parameters, function(i) is.null(attr(i, 'partyp')) || is.null(attr(i, 'layer')) || is.null(attr(i, 'parnam')) || is.null(attr(i, 'parval')), TRUE))) {
+    stop('Please make sure all parameters have a parnam, parval, partyp and layer attribute', call. = FALSE)
   }
   
   lvda$parameters <- list()
