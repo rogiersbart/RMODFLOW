@@ -16,7 +16,7 @@ a \code{RMODFLOW} lvda object
 \code{rmf_create_lvda} creates an \code{RMODFLOW} lvda object.
 }
 \details{
-All parameters should have a hgunam attribute and their partyp attribute set to 'LVDA'.
+All parameters should have a layer attribute and their partyp attribute set to 'LVDA'.
          The LVDA package can only be used in conjunction with the HUF package.
 }
 \seealso{
