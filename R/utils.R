@@ -803,7 +803,7 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
     if(!is.null(prj)) {
       if(length(prj$origin) <= 2) prj$origin = c(prj$origin, 0)
       s <- sqrt(x_grid^2+y_grid^2)
-      angle <- asin(y_grid/s)*180/pi - prj$rotation
+      angle <- asin(y_grid/s)*180/pi + prj$rotation
       x_grid <- cos(angle*pi/180)*s
       y_grid <- sin(angle*pi/180)*s
       x <- prj$origin[1] + x_grid
