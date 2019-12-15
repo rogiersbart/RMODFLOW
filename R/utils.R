@@ -553,7 +553,6 @@ rmf_cell_coordinates.huf <- function(huf,
                                      include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$top - huf$thck/2
-  class(cell_coordinates$z) <- 'rmf_3d_array'
   if(!is.null(dis)) {
     cell_coordinates$x <- cell_coordinates$z*0
     cell_coordinates$y <- cell_coordinates$z*0
@@ -569,6 +568,23 @@ rmf_cell_coordinates.huf <- function(huf,
     cell_coordinates$right <- cell_coordinates$x + dis$delr/2 
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
+  }
+  if(!is.null(prj)) {
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj)
+    cell_coordinates$x[] <- coord_prj$x
+    cell_coordinates$y[] <- coord_prj$y
+    cell_coordinates$z[] <- coord_prj$z
+    
+    if(include_faces) {
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj)
+      cell_coordinates$front[] <- faces_prj_1$x
+      cell_coordinates$right[] <- faces_prj_1$y
+      cell_coordinates$upper[] <- faces_prj_1$z
+      cell_coordinates$back[] <- faces_prj_2$x
+      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$lower[] <- faces_prj_2$z
+    }
   }
   return(cell_coordinates)
 }

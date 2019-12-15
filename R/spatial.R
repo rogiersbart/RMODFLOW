@@ -243,8 +243,14 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, c
   
 }
 
-rmf_as_sf.rmf_3d_array <- function() {
-  
+rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value', as_points = FALSE) {
+  # Too slow
+  # s_2d <- rmf_as_sf(array[,,1], dis = dis, prj = prj, crs = crs, name = name, as_points = as_points)
+  # s_3d <- do.call(rbind, replicate(dim(array)[3], s_2d, simplify = FALSE))
+  # s_3d[[name]] <- c(array)
+  # s_3d$layer <- rep(1:dim(array)[3], each = prod(dim(array)[1:2]))
+  # s_3d <- s_3d[which(mask^2 == 1),]
+  # return(s_3d)
 }
 
 rmf_as_sf.rmf_4d_array <- function() {
@@ -349,8 +355,18 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   return(s)
 }
 
-rmf_as_stars.rmf_3d_array <- function() {
+rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value') {
   
+  array[which(mask^2 != 1)] <- NA
+  
+  # TODO see if there's no native stars function whichs adds a dimension
+  ar <- lapply(1:dim(array)[3], function(i) rmf_as_stars(array[,,i], dis = dis, prj = prj, crs = crs, name = name))
+  ar_3d <- do.call(c, ar) %>% 
+    merge() %>%
+    setNames(name) %>%
+    stars::st_set_dimensions(3, values = 1:dim(array)[3], names = c('layer'))
+  return(ar_3d)
+
 }
 
 rmf_as_stars.rmf_4d_array <- function() {
@@ -360,6 +376,34 @@ rmf_as_stars.rmf_4d_array <- function() {
 rmf_as_stars.rmf_list <- function() {
   
   rmf_as_array() %>% rmf_as_stars()
+  
+}
+
+#' Title
+#'
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_as_raster <- function(...) {
+  UseMethod('rmf_as_raster')
+}
+
+rmf_as_raster.rmf_2d_array <- function() {
+  
+}
+
+rmf_as_raster.rmf_3d_array <- function() {
+  
+}
+
+rmf_as_raster.rmf_4d_array <- function() {
+  
+}
+
+rmf_as_raster.rmf_list <- function() {
   
 }
 
