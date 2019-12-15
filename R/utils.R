@@ -147,6 +147,7 @@ rmf_as_tibble <- function(...) {
 #' @param mask 
 #' @param prj 
 #' @param crs 
+#' @param as_points 
 #'
 #' @return
 #' @export
@@ -156,32 +157,38 @@ rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
                                        mask = array * 0 + 1,
                                        prj = NULL,
-                                       crs = NULL) {
-  xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
-  names(xy) <- c('x','y')
-  mask[which(mask==0)] <- NA
-  ids <- factor(1:(dis$nrow*dis$ncol))
-  xWidth <- rep(dis$delr,dis$nrow)
-  yWidth <- rep(dis$delc,each=dis$ncol)
-  positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-  positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-  positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-  positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-  positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-  positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-  positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-  positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-  positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-  values <- data.frame(id = ids,value = c(t(array*mask^2)))
-  if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
-    positions$x <- new_positions$x
-    positions$y <- new_positions$y
+                                       crs = NULL,
+                                       as_points = FALSE) {
+  if(as_points) {
+    
+  } else {
+    xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
+    names(xy) <- c('x','y')
+    mask[which(mask==0)] <- NA
+    ids <- factor(1:(dis$nrow*dis$ncol))
+    xWidth <- rep(dis$delr,dis$nrow)
+    yWidth <- rep(dis$delc,each=dis$ncol)
+    positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
+    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+    values <- data.frame(id = ids,value = c(t(array*mask^2)))
+    if(!is.null(prj)) {
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
+      positions$x <- new_positions$x
+      positions$y <- new_positions$y
+    }
+    if(!is.null(crs)) {
+      positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
+    }
+    return(tibble::as_tibble(na.omit(merge(values, positions, by=c("id")))))
   }
-  if(!is.null(crs)) {
-    positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
-  }
-  return(tibble::as_tibble(na.omit(merge(values, positions, by=c("id")))))
+
 }
 
 #' Title
@@ -303,6 +310,54 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   }
 }
 
+rmf_as_tibble.rmf_list <- function(obj,
+                                   dis,
+                                   ijk = NULL,
+                                   prj = NULL,
+                                   crs = NULL,
+                                   as_points = TRUE) {
+  
+  if(as_points) {
+    coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
+    if(!is.null(crs)) {
+      if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
+      coords_prj <- rmfi_convert_coordinates(coords, from = prj$projection, to = crs)
+      coords$x <- coords_prj$x
+      coords_y <- coords_prj$y
+    }
+    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis))
+    df <- cbind(df, as.data.frame(obj[,-which(colnames(obj) %in% c('i', 'j', 'k'))]), coords)
+
+  } else {
+    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+    xWidth <- dis$delr[obj$j]
+    yWidth <- dis$delc[obj$i]
+    positions <- data.frame(id = rep(id, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4), z=rep(xy$z, each = 4))
+    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+    values <- cbind(id, as.data.frame(obj[,-which(colnames(obj) %in% c('i', 'j', 'k'))]))
+    if(!is.null(prj)) {
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,z=positions$z,prj=prj)
+      positions$x <- new_positions$x
+      positions$y <- new_positions$y
+      positions$z <- new_positions$z
+    }
+    if(!is.null(crs)) {
+      positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
+    }
+    df <- tibble::as_tibble(na.omit(merge(values, positions, by=c("id"))))
+  }
+  return(tibble::as_tibble(df))
+}
+
+
 #' Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values
 #'
 #' Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array} or \code{rmf_3d_array}. Parameter values can be used to multiply the arrays as well.
@@ -422,12 +477,14 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' Get cell x, y and z coordinates from a dis object
 #' 
 #' @param dis dis object
+#' @param prj projection file object
 #' @param include_faces logical; should face coordinates be included?
 #' @return list with with cell coordinate 3d arrays
 #' @rdname rmf_cell_coordinates
 #' @method rmf_cell_coordinates dis
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
+                                     prj = NULL,
                                      include_faces = FALSE) {
   if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates only represent numerical layers.")
   cell_coordinates <- NULL
@@ -459,6 +516,23 @@ rmf_cell_coordinates.dis <- function(dis,
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
   }
+  if(!is.null(prj)) {
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj)
+    cell_coordinates$x[] <- coord_prj$x
+    cell_coordinates$y[] <- coord_prj$y
+    cell_coordinates$z[] <- coord_prj$z
+    
+    if(include_faces) {
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj)
+      cell_coordinates$front[] <- faces_prj_1$x
+      cell_coordinates$right[] <- faces_prj_1$y
+      cell_coordinates$upper[] <- faces_prj_1$z
+      cell_coordinates$back[] <- faces_prj_2$x
+      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$lower[] <- faces_prj_2$z
+    }
+  }
   return(cell_coordinates)
 }
 
@@ -466,6 +540,7 @@ rmf_cell_coordinates.dis <- function(dis,
 #' 
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
+#' @param prj projection file object
 #' @param include_faces logical; should face coordinates be included?
 #' @return 3d array with cell coordinates
 #'
@@ -474,6 +549,7 @@ rmf_cell_coordinates.dis <- function(dis,
 #' @export
 rmf_cell_coordinates.huf <- function(huf,
                                      dis = NULL,
+                                     prj = NULL,
                                      include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$top - huf$thck/2
