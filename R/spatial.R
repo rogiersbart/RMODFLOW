@@ -304,6 +304,8 @@ rmf_as_stars <- function(...) {
   UseMethod('rmf_as_stars')
 }
 
+
+#' Title
 #'
 #' @param array 
 #' @param dis 
@@ -312,7 +314,10 @@ rmf_as_stars <- function(...) {
 #' @param crs 
 #' @param name 
 #'
-#' @method rmf_as_stars rmf_2d_array
+#' @return
+#' @export
+#'
+#' @examples
 rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value') {
   
   array[which(mask^2 != 1)] <- NA
@@ -326,11 +331,12 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   
   # create stars object
   # d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = org[2] + rev(c(cumsum(dis$delc))), affine = rep(aff, 2))
-  d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = org[2] + rev(c(cumsum(dis$delc))))
+  d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = org[2] + c(0, cumsum(dis$delc)))
   s <- stars::st_as_stars(m, dimensions = d)
   names(s) <- name
   
-  rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
+  # rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
+  rot <- ifelse(is.null(prj), 0, prj$rotation * pi/180)
   gtf <- stars:::get_geotransform(s)
   gtf[3] <- gtf[2]*-sin(rot)
   gtf[2] <- gtf[2]*cos(rot)

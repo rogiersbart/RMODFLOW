@@ -5,7 +5,7 @@
 \title{Title}
 \usage{
 \method{rmf_as_tibble}{rmf_2d_array}(array, dis, mask = array * 0 + 1,
-  prj = NULL, crs = NULL)
+  prj = NULL, crs = NULL, as_points = FALSE)
 }
 \arguments{
 \item{array}{}
@@ -17,6 +17,8 @@
 \item{prj}{}
 
 \item{crs}{}
+
+\item{as_points}{}
 }
 \description{
 Title

@@ -6,9 +6,10 @@
 \alias{rmf_cell_coordinates}
 \title{Get cell x, y and z coordinates from a dis object}
 \usage{
-\method{rmf_cell_coordinates}{dis}(dis, include_faces = FALSE)
+\method{rmf_cell_coordinates}{dis}(dis, prj = NULL,
+  include_faces = FALSE)
 
-\method{rmf_cell_coordinates}{huf}(huf, dis = NULL,
+\method{rmf_cell_coordinates}{huf}(huf, dis = NULL, prj = NULL,
   include_faces = FALSE)
 
 rmf_cell_coordinates(...)
@@ -16,11 +17,15 @@ rmf_cell_coordinates(...)
 \arguments{
 \item{dis}{dis object}
 
+\item{prj}{projection file object}
+
 \item{include_faces}{logical; should face coordinates be included?}
 
 \item{huf}{huf object}
 
 \item{dis}{dis object, corresponding to the huf object}
+
+\item{prj}{projection file object}
 
 \item{include_faces}{logical; should face coordinates be included?}
 }
