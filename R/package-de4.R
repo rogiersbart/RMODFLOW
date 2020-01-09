@@ -16,7 +16,7 @@
 #' @export
 #' @seealso \code{\link{rmf_read_de4}}, \code{\link{rmf_write_de4}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?de4.htm}
 
-rmf_create_de4 = function(itmx = 100,
+rmf_create_de4 <- function(itmx = 100,
                           mxup = 0, 
                           mxlow = 0,
                           mxbw = 0,
@@ -27,26 +27,26 @@ rmf_create_de4 = function(itmx = 100,
                           iprd4 = 1
                           ){
   
-  de4 = list()
+  de4 <- list()
   
   # data set 0
   # to provide comments, use ?comment on resulting de4 object
   
   # data set 1
- de4$itmx = itmx
- de4$mxup = mxup
- de4$mxlow = mxlow
- de4$mxbw = mxbw
+ de4$itmx <- itmx
+ de4$mxup <- mxup
+ de4$mxlow <- mxlow
+ de4$mxbw <- mxbw
   
   # data set 2
- de4$ifreq = ifreq
- de4$mutd4 = mutd4
- de4$accl = accl
- de4$hclose = hclose
- de4$iprd4 = iprd4
+ de4$ifreq <- ifreq
+ de4$mutd4 <- mutd4
+ de4$accl <- accl
+ de4$hclose <- hclose
+ de4$iprd4 <- iprd4
  
  
-  class(de4) = c('de4', 'rmf_package')
+  class(de4) <- c('de4', 'rmf_package')
   return(de4)
   
 }
@@ -56,42 +56,42 @@ rmf_create_de4 = function(itmx = 100,
 #' \code{rmf_read_de4} reads in a MODFLOW direct solver file and returns it as an \code{RMODFLOW} de4 object
 #' 
 #' @param file filename; typically '*_de4'
-#' 
+#' @param ... ignored
 #' @return \code{RMODFLOW} de4 object
 #' @export
 #' @seealso \code{\link{rmf_write_de4}}, \code{\link{rmf_create_de4}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?de4.htm}
 
-rmf_read_de4 = function(file = {cat('Please select direct solver file ...\n'); file.choose()}){
+rmf_read_de4 <- function(file = {cat('Please select direct solver file ...\n'); file.choose()}, ...){
   
-  de4 = list()
-  de4_lines = readr::read_lines(file)
+  de4 <- list()
+  de4_lines <- readr::read_lines(file)
   
   # data set 0
-  data_set_0 = rmfi_parse_comments(de4_lines)
-  comment(de4) = data_set_0$comments
-  de4_lines = data_set_0$remaining_lines
+  data_set_0 <- rmfi_parse_comments(de4_lines)
+  comment(de4) <- data_set_0$comments
+  de4_lines <- data_set_0$remaining_lines
   rm(data_set_0)
   
   # data set 1
-  data_set_1 = rmfi_parse_variables(de4_lines)
-  de4$itmx = data_set_1$variables[1]
-  de4$mxup = data_set_1$variables[2]
-  de4$mxlow = data_set_1$variables[3]
-  de4$mxbw = data_set_1$variables[4]
-  de4_lines = data_set_1$remaining_lines
+  data_set_1 <- rmfi_parse_variables(de4_lines)
+  de4$itmx <- data_set_1$variables[1]
+  de4$mxup <- data_set_1$variables[2]
+  de4$mxlow <- data_set_1$variables[3]
+  de4$mxbw <- data_set_1$variables[4]
+  de4_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
   # data set 2
-  data_set_2 = rmfi_parse_variables(de4_lines)
-  de4$ifreq = data_set_2$variables[1]
-  de4$mutd4 = data_set_2$variables[2]
-  de4$accl = data_set_2$variables[3]
-  de4$hclose = data_set_2$variables[4]
-  de4$iprd4 = data_set_2$variables[5]
-  de4_lines = data_set_2$remaining_lines
+  data_set_2 <- rmfi_parse_variables(de4_lines)
+  de4$ifreq <- data_set_2$variables[1]
+  de4$mutd4 <- data_set_2$variables[2]
+  de4$accl <- data_set_2$variables[3]
+  de4$hclose <- data_set_2$variables[4]
+  de4$iprd4 <- data_set_2$variables[5]
+  de4_lines <- data_set_2$remaining_lines
   rm(data_set_2)
   
-  class(de4) = c('de4', 'rmf_package')
+  class(de4) <- c('de4', 'rmf_package')
   return(de4)
 }
 
@@ -106,7 +106,7 @@ rmf_read_de4 = function(file = {cat('Please select direct solver file ...\n'); f
 #' @export
 #' @seealso \code{\link{rmf_read_de4}}, \code{\link{rmf_create_de4}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?de4.htm}
 
-rmf_write_de4 = function(de4, file={cat('Please choose de4 file to overwrite or provide new filename ...\n'); file.choose()}, ...){
+rmf_write_de4 <- function(de4, file={cat('Please choose de4 file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version

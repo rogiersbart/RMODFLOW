@@ -16,7 +16,7 @@
 #' @param damppcgt damping factor for transient stress periods; optional; only read when damppcg is negative
 #' @return Object of class pcg
 #' @export
-#' @seealso \code{\link{read_pcg}}, \code{\link{write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_read_pcg}}, \code{\link{rmf_write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_create_pcg <- function(mxiter = 20,
                            iter1 = 30,
                            npcond = 1,
@@ -68,7 +68,7 @@ create_pcg <- function(...) {
 #' @param file filename; typically '*.pcg'
 #' @return object of class pcg
 #' @export
-#' @seealso \code{\link{write_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_write_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choose()}, ...) {
   
   pcg_lines <- readr::read_lines(file)
@@ -124,7 +124,7 @@ read_pcg <- function(...) {
 #' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
 #' @return \code{NULL}
 #' @export
-#' @seealso \code{\link{read_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_read_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_write_pcg <- function(pcg,
                           file = {cat('Please select pcg file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   

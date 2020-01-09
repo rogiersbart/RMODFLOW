@@ -272,7 +272,6 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
-
 rmf_write_evt <-  function(evt, 
                            dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                            file={cat('Please choose evt file to overwrite or provide new filename ...\n'); file.choose()}, 

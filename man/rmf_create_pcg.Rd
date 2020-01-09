@@ -48,5 +48,5 @@ Object of class pcg
 }}
 
 \seealso{
-\code{\link{read_pcg}}, \code{\link{write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+\code{\link{rmf_read_pcg}}, \code{\link{rmf_write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 }
