@@ -46,7 +46,7 @@ the header file consists of the following elements:
  
  \code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
   \code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to 
-  set the \desc(ILAY) argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
+  set the \code{ILAY} argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
   \code{xsection} does not affect simulation results (assuming the array dimensions are correct)
 }
 \seealso{

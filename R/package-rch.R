@@ -2,13 +2,13 @@
 #' 
 #' \code{rmf_create_rch} creates an \code{RMODFLOW} rch object
 #' 
-#' @param ... \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the recharge values. See details.
+#' @param ... \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the recharge values. See details.
 #' @param dis \code{RMODFLOW} dis object
 #' @param nrchop recharge option code; defaults to 3 (recharge is applied to the highest active cell in each vertical column)
 #' @param irchcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 
-#' @param irch a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer recharge is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nrchop = 2}. Defaults to NULL
+#' @param irch a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the layer numbers defining in which layer recharge is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nrchop = 2}. Defaults to NULL
 #' @param irchpf numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{RECH} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods
-#' @details the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the irch arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
+#' @details the \code{rmf_2d_arrays} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the irch arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 #' @return \code{RMODFLOW} rch object
 #' @export
 #' @seealso \code{\link{rmf_read_rch}}, \code{\link{rmf_write_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
