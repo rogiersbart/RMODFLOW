@@ -78,6 +78,13 @@ rmf_create_nam <- function(...) {
       }
     }
   }
+  # check if solver output files are necessary
+  if('GMG' %in% nam$ftype) {
+    gmg <- fobjects[[which(nam$ftype=='GMG')-1]]
+    if(gmg$iunitmhc > 0) {
+      nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = gmg$iunitmhc, fname = 'output.mhc', options = NA))  
+    }
+  }
   
   # set REPLACE option for output files 
   output <- grep('output', basename(nam$fname))
