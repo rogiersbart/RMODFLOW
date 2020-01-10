@@ -140,11 +140,11 @@ rmf_as_array.stars <- function(obj,
   if(resample) {
     target <- rmf_as_stars(dis$top, dis = dis, prj = prj)
     ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
-    ar <- t(ar[[1]]) %>%
+    ar <- t(ar[[1]]) %>% c() %>% rev() %>%
       rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
   } else {
     # TODO error out if obj dimensions do not coincide with dis domain
-    ar <- t(obj[[select]]) %>%
+    ar <- t(obj[[select]]) %>% c() %>% rev() %>%
       rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
   }
   
@@ -427,7 +427,7 @@ rmf_as_raster.rmf_list <- function() {
 #' @export
 #'
 #' @examples
-rmf_get_ibound <- function(obj,
+rmf_create_ibound <- function(obj,
                            dis,
                            prj = NULL,
                            op = sf::st_intersects,
@@ -445,4 +445,23 @@ rmf_get_ibound <- function(obj,
   if(!sparse) ibound <- rmf_create_array(ibound, dim = c(dis$nrow, dis$ncol, dis$nlay))
   return(ibound)
 }
+
+
+rmf_create_grid <- function(obj, 
+                            nrow = 10,
+                            ncol = 10,
+                            nlay = 3,
+                            cellsize = NULL,
+                            rotation = 0, 
+                            crs = NULL, 
+                            op = sf::st_intersects) {
+  
+  if(rotation != 0) {
+    
+  } else {
+    gr <- sf::st_make_grid(obj, cellsize = if(!is.null(cellsize)) {cellsize}, n = c(nrow, ncol))
+  }
+  
+}
+
 

@@ -310,54 +310,6 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   }
 }
 
-rmf_as_tibble.rmf_list <- function(obj,
-                                   dis,
-                                   ijk = NULL,
-                                   prj = NULL,
-                                   crs = NULL,
-                                   as_points = TRUE) {
-  
-  if(as_points) {
-    coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
-    if(!is.null(crs)) {
-      if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
-      coords_prj <- rmfi_convert_coordinates(coords, from = prj$projection, to = crs)
-      coords$x <- coords_prj$x
-      coords_y <- coords_prj$y
-    }
-    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis))
-    df <- cbind(df, as.data.frame(obj[,-which(colnames(obj) %in% c('i', 'j', 'k'))]), coords)
-
-  } else {
-    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis)
-    xWidth <- dis$delr[obj$j]
-    yWidth <- dis$delc[obj$i]
-    positions <- data.frame(id = rep(id, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4), z=rep(xy$z, each = 4))
-    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-    values <- cbind(id, as.data.frame(obj[,-which(colnames(obj) %in% c('i', 'j', 'k'))]))
-    if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,z=positions$z,prj=prj)
-      positions$x <- new_positions$x
-      positions$y <- new_positions$y
-      positions$z <- new_positions$z
-    }
-    if(!is.null(crs)) {
-      positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
-    }
-    df <- tibble::as_tibble(na.omit(merge(values, positions, by=c("id"))))
-  }
-  return(tibble::as_tibble(df))
-}
-
-
 #' Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values
 #'
 #' Given a multiplier array and/or zone array with corresponding zone numbers, calculate a \code{rmf_2d_array} or \code{rmf_3d_array}. Parameter values can be used to multiply the arrays as well.
