@@ -1608,22 +1608,202 @@ plot.rmf_4d_array <- function(...) {
 #'
 rmf_plot.rmf_list <- function(obj, 
                               dis, 
+                              bas = NULL,
+                              mask = NULL,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
                               variable = 'id',
+                              geom = 'polygon',
+                              type = 'fill',
+                              levels = NULL,
+                              group = NULL,
                               active_only = FALSE,
                               fun = sum,
+                              add = FALSE,
+                              prj = NULL,
+                              crs = NULL,
+                              colour_palette = rmfi_rev_rainbow,
+                              nlevels = 7,
+                              legend = ifelse(variable == 'id', FALSE, !add), 
+                              crop = TRUE,
+                              gridlines = FALSE,
                               ...) {
   
-  na_value <- ifelse(active_only, NA, 0)
-  
-  if(variable == 'id') {
-    arr <- rmf_as_array(obj, dis = dis, select = 4, sparse = FALSE, na_value = na_value, fun = fun)
-    indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
-    arr[indx] <- 1
-    rmf_plot(arr, dis = dis, type = 'factor', ...)
+  if(geom == 'polygon') {
+    na_value <- ifelse(active_only, NA, 0)
+    
+    # TODO type = 'grid' is not properly plotted for active_only
+    # actually ok since active_only removes the non-active cells from the plot
+    if(variable == 'id') {
+      arr <- rmf_as_array(obj, dis = dis, select = 4, sparse = FALSE, na_value = na_value, fun = fun)
+      indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
+      arr[indx] <- 1
+      rmf_plot(arr, dis = dis, type = ifelse(type == 'grid', type, 'factor'), add = add, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, ...)
+      
+    } else {
+      arr <- rmf_as_array(obj, dis = dis, select = variable, sparse = FALSE, na_value = na_value, fun = fun)
+      rmf_plot(arr, dis = dis, add = add, type = type, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, ...)
+    }
     
   } else {
-    arr <- rmf_as_array(obj, dis = dis, select = variable, sparse = FALSE, na_value = na_value, fun = fun)
-    rmf_plot(arr, dis = dis, ...)
+    
+    # geom point or lines
+    if(is.null(i) & is.null(j) & is.null(k)) {
+      stop('Please provide i, j or k.', call. = FALSE)
+    }
+    
+    # mask (possibly from bas)
+    
+    # subset based on ijk
+    if(!is.null(i)) obj <- subset(obj, obj$i == i)
+    if(!is.null(j)) obj <- subset(obj, obj$j == j)
+    if(!is.null(k)) obj <- subset(obj, obj$k == k)
+    df <- rmf_as_tibble(obj, dis = dis, prj = prj, crs = crs, as_points = TRUE)
+    
+    # set axis labels 
+    lbl <- c('x', 'y')
+    if(is.null(k)) {
+      df_names <- names(df)
+      if(!is.null(i)) {
+        new_names <- replace(df_names, match(c('x', 'y', 'z'), df_names), c('x', 'z', 'y'))
+        lbl <- c('x', 'z')
+      } else if(!is.null(j)) {
+        new_names <- replace(df_names, match(c('x', 'y', 'z'), df_names), c('z', 'x', 'y'))
+        lbl <- c('y', 'z')
+      }
+      df <- setNames(df, new_names)
+    }
+    
+    # set limits
+    # TODO clean up
+    if(!is.null(k)) {
+      # if(crop) {
+      #   x <- cumsum(dis$delr)[range(obj$j)] - dis$delr[range(obj$j)]/2 + c(-dis$delr[min(obj$j)]/2, dis$delr[max(obj$j)]/2)
+      #   y <- rev(cumsum(dis$delc))[range(obj$i)] - dis$delc[range(obj$i)]/2 + c(-dis$delc[min(obj$i)]/2, dis$delc[max(obj$i)]/2)
+      #   xlim <- rmf_convert_grid_to_xyz(x = x, y = 0, dis = dis, prj = prj)
+      #   ylim <- rmf_convert_grid_to_xyz(x = 0, y = y, dis = dis, prj = prj)
+      # } else {
+        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = 0, dis = dis, prj = prj)
+        ylim <- rmf_convert_grid_to_xyz(x = 0, y = c(0, sum(dis$delc)), dis = dis, prj = prj)
+      # }
+      if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
+        ylim <- rmfi_convert_coordinates(ylim, from = prj$projection, to = crs)
+      }
+      xlim <- xlim$x
+      ylim <- ylim$y
+    }
+    if(!is.null(i)) {
+      # if(crop) {
+      #   x <- cumsum(dis$delr)[range(obj$j)] - dis$delr[range(obj$j)]/2 + c(-dis$delr[min(obj$j)]/2, dis$delr[max(obj$j)]/2)
+      #   xlim <- rmf_convert_grid_to_xyz(x = x, y = 0, dis = dis, prj = prj)
+      # 
+      #   top <- dis$botm
+      #   top[,,1] <- dis$top
+      #   if(dis$nlay > 1) top[,,2:dis$nlay] <- dis$botm[,,1:(dis$nlay - 1)]
+      #   ylim <- range(c(top[i,,range(obj$k)], dis$botm[i,,range(obj$k)])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      # } else {
+        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)[i], dis = dis, prj = prj)
+        ylim <- range(c(dis$top[i,], dis$botm[i,,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      # }
+      if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
+      }
+      xlim <- xlim$x
+    }
+    if(!is.null(j)) {
+      # if(crop) {
+      #   x <- rev(cumsum(dis$delc))[range(obj$i)] - dis$delc[range(obj$i)]/2 + c(-dis$delc[min(obj$i)]/2, dis$delc[max(obj$i)]/2)
+      #   xlim <- rmf_convert_grid_to_xyz(x = x, y = 0, dis = dis, prj = prj)
+      # 
+      #   top <- dis$botm
+      #   top[,,1] <- dis$top
+      #   if(dis$nlay > 1) top[,,2:dis$nlay] <- dis$botm[,,1:(dis$nlay - 1)]
+      #   ylim <- range(c(top[,j,range(obj$k)], dis$botm[,j,range(obj$k)])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      # } else {
+        xlim <- rmf_convert_grid_to_xyz(x = (cumsum(dis$delr) - dis$delr/2)[j], y = c(0, sum(dis$delc)), dis = dis, prj = prj)
+        ylim <- range(c(dis$top[,j], dis$botm[,j,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      # }
+
+      if(!is.null(crs)) {
+        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
+      }
+      xlim <- xlim$x
+    }
+    
+    lims <- rmfi_ifelse0(crop, NULL ,ggplot2::lims(x = xlim, y = ylim))
+  
+  
+    # set legend
+    if(is.logical(legend)) {
+      name <- variable
+    } else {
+      name <- legend
+      legend <- TRUE
+    }
+    
+    # set scales
+    if(type == 'factor') {
+      labels <- rmfi_ifelse0(is.null(names(levels)), levels, levels[as.character(sort(na.omit(unique(df[[variable]]))))])
+      df[[variable]] <- rmfi_ifelse0(is.null(levels), factor(df[[variable]]), factor(df[[variable]], labels = labels))
+      plot_scales <- ggplot2::scale_colour_discrete(name, breaks = rmfi_ifelse0(is.null(levels), ggplot2::waiver(), levels(df[[variable]])), na.value = NA)
+    } else if(type == 'fill') {
+      plot_scales <- ggplot2::scale_colour_gradientn(name,colours=colour_palette(nlevels),limits=range(df[[variable]]), na.value = NA)
+    }
+    
+    # plot
+    # grid
+    if(gridlines || is.character(gridlines)) {
+      p_grid <- rmf_plot(obj, dis = dis, i = i, j = j, k = k, type = 'grid', gridlines = gridlines, add = TRUE, prj = prj, crs = crs)
+    } else {
+      p_grid <- NULL
+    }
+    
+    if(add) {
+      if(variable == 'id') {
+        if(geom == 'point') return(list(p_grid, ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), show.legend = legend, ...)))
+        if(geom == 'line') return(list(p_grid, ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group), show.legend = legend, ...)))
+      } else {
+        if(geom == 'point') return(list(p_grid, ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y, colour = !!ggplot2::sym(variable)), show.legend = legend, ...),
+                                        plot_scales))
+        if(geom == 'line') return(list(p_grid, ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group, colour = !!ggplot2::sym(variable)), show.legend = legend, ...),
+                                       plot_scales))
+      }
+    } else {
+      if(variable == 'id') {
+        if(geom == 'point') return(ggplot2::ggplot() +
+                                   p_grid +
+                                   ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), show.legend = legend, ...) +
+                                   ggplot2::xlab(lbl[1]) +
+                                   ggplot2::ylab(lbl[2]) +
+                                   lims)
+        if(geom == 'line') return(ggplot2::ggplot() + 
+                                  p_grid +
+                                  ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group), show.legend = legend, ...) +
+                                  ggplot2::xlab(lbl[1]) +
+                                  ggplot2::ylab(lbl[2]) +
+                                  lims)
+      } else {
+        if(geom == 'point') return(ggplot2::ggplot() +
+                                   p_grid +
+                                   ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
+                                   plot_scales +
+                                   ggplot2::xlab(lbl[1]) +
+                                   ggplot2::ylab(lbl[2]) +
+                                   lims)
+        if(geom == 'line') return(ggplot2::ggplot() + 
+                                  p_grid +
+                                  ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
+                                  plot_scales +
+                                  ggplot2::xlab(lbl[1]) +
+                                  ggplot2::ylab(lbl[2]) +
+                                  lims)
+      }
+    }
   }
   
 }
