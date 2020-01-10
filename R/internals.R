@@ -279,7 +279,8 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   } 
   
   find_mxact <- function(i) {
-    kper_names <- names(kper)[which(kper[i,] == T)[-1]] 
+    nms <- names(kper)[-1]
+    kper_names <- nms[which(kper[i,-1] == T)] 
     sum(unlist(lapply(parameters[kper_names], nrow))) +
       sum(unlist(lapply(lists[kper_names], nrow)))
   }
