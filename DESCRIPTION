@@ -31,7 +31,8 @@ Imports:
     tidyr,
     abind,
     ggquiver,
-    magrittr
+    magrittr,
+    processx
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 6.1.1
