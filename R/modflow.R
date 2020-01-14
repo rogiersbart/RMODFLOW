@@ -548,7 +548,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], file = file, format = fmt))
       }
     }
   }
