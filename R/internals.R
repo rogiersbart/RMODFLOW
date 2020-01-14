@@ -1584,7 +1584,7 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
 #' @param header character; package name. Part of the header comment written to the output file
 #' @param package character; acronym (often 3 letters) used by MODFLOW to name to package
 #' @param partyp character; specifies the parameter type
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file
+#' @param ... arguments passed to \code{rmfi_write_list} when writing a fixed format file
 
 #' @return \code{NULL}
 #' @keywords internal
@@ -1592,8 +1592,7 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
 #' 
 
 rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp, ...) {
-  
-  
+
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste(paste('# MODFLOW', header, 'created by RMODFLOW, version'),v,'\n'), file = file)
@@ -1603,12 +1602,17 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   if(obj$dimensions$np > 0) rmfi_write_variables('PARAMETER', obj$dimensions$np, obj$dimensions$mxl, file=file)
   
   # data set 2
-  rmfi_write_variables(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]], ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file, ...)
+  if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
+    ds2 <- paste0(formatC(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]]), width = 10), collapse='')
+  } else {
+    ds2 <- c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]])
+  }
+  rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
   # parameters
   if(obj$dimensions$np > 0){
     parm_names <- names(obj$parameter_values)
-    tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+    tv_parm <- structure(rep(FALSE,obj$dimensions$np), names = parm_names)
     
     for (i in 1:obj$dimensions$np){
       
@@ -1631,15 +1635,12 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
           rmfi_write_variables(instances[jj], file=file)
           
           # data set 4b
-          for (k in 1:nrow(df2)){
-            rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file, ...)
-          }
+          rmfi_write_list(df2, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
           rm(df2)
         }
       } else { # non-time-varying
-        for (k in 1:nrow(df)){
-          rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file, ...)
-        }
+        rmfi_write_list(df, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
+        
       }  
       rm(df)
     }
@@ -1674,9 +1675,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
     # data set 6
     if(itmp > 0){
       df <- subset(obj$data, name %in% list_names)
-      for(j in 1:nrow(df)){
-        rmfi_write_variables(c(df$k[j], df$i[j], df$j[j], df[j, varnames],  rmfi_ifelse0(!is.null(obj$aux), df[j,obj[['aux']]], '')), file=file, ...)
-      }
+      rmfi_write_list(df, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
       rm(df)
     }
     
@@ -1688,6 +1687,34 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
     }
   }
   
+  
+}
+
+#' Write a RMODFLOW list
+#'
+#' @param df \code{RMODFLOW} list
+#' @param file filename to write to
+#' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk) including optional auxiliary variables
+#' @param aux character vector with the names of the auxiliary variables defined in \code{varnames}
+#' @param format either \code{"free"} (default) or \code{"fixed"}
+#' @param append logical
+#'
+#' @return \code{NULL}
+#' @keywords internal
+rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', append = TRUE) {
+  
+  naux <- length(aux)
+  n <- length(varnames) - naux
+  col_names <- c('k', 'i', 'j', varnames)
+  df <- df[,col_names]
+
+  if(format == 'fixed') {
+    fmt <- paste0(c(rep('%10i', 3), rep('%10g', n), rep('%10g', naux)), collapse = '')
+    dff <- do.call('sprintf', c(df, fmt))
+    readr::write_lines(dff, path = file, append = append)
+  } else {
+    readr::write_delim(df, path = file, delim = ' ', col_names = FALSE, append = append)
+  }
   
 }
 
