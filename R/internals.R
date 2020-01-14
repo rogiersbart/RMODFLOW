@@ -970,17 +970,54 @@ rmfi_parse_comments <- function(remaining_lines) {
 #'@param varnames character vector; names of the variables starting from the 4th column (so after ijk). Length of varnames is used to dimension the dataframe
 #'@param scalevar column name or integer; this column will be scaled
 #'@param file the file that is being read; needed if list is specified through an OPEN/CLOSE statement
+#'@param naux integer; number of auxiliary variables to read (which are always free format). Defaults to 0.
 #'@param format either 'fixed' or 'free'
 #'@param ... ignored
 #'@keywords internal
 
-rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar=4, file,  format = 'free', precision = 'single', ...) {
+rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar=4, file, naux = 0, format = 'free', precision = 'single', ...) {
   
   header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t')[[1]])
   n <- 3 + length(varnames) 
   real_number_bytes <- ifelse(precision == 'single', 4, 8)
   scale <-  1.0
-  df <-  matrix(nrow=nlst, ncol=3+length(varnames))
+  df <- matrix(nrow=nlst, ncol=3+length(varnames))
+  col_names <- c('k','i','j',varnames)
+  
+  # helper function
+  read_list <- function(lines) {
+    # TODO atm aux can only be double
+    if(format == 'fixed') {
+      if(naux > 0) {
+        widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
+        cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
+        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        
+        df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
+        
+        # handle AUX variables which may be free format
+        df[[ncol(df)]] <- gsub(',', ' ', df[[ncol(df)]])
+        cols2 <- do.call(readr::cols_only, as.list(rep('d', naux)))
+        lc <- as.data.frame(readr::read_table2(df[[ncol(df)]], col_names = FALSE, col_types = cols2))
+        df <- cbind(df[-ncol(df)], lc)
+        
+      } else {
+        widths <- readr::fwf_widths(c(rep(10, n)))
+        cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
+        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        
+        df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
+      }
+      
+    } else {
+      lines <- gsub(',', ' ', lines)
+      cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
+      # TODO unsuppress warnings;
+      # reading in subset of columns without knowing all names not possible without warnings in readr
+      df <- as.data.frame(suppressWarnings(readr::read_table2(lines[1:nlst], col_names = FALSE, col_types = cols)))
+    }
+    return(df)
+  }
   
   if(toupper(header[1]) == 'EXTERNAL') {
     if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object', call. = FALSE)
@@ -1000,12 +1037,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
         scale <- as.numeric(header[2])
         ext_lines <- ext_lines[-1]
       }
-      for(nl in 1:nlst) {
-        values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
-        if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- as.numeric(values[1:(3+length(varnames))])
-        ext_lines <- ext_lines[-1]
-      }
+      
+      df <- read_list(ext_lines)
+      
     }
     
   } else if(toupper(header[1]) == 'OPEN/CLOSE') {
@@ -1027,36 +1061,28 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
         scale <- as.numeric(header[2])
         ext_lines <- ext_lines[-1]
       }
-      for(nl in 1:nlst) {
-        values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
-        if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- as.numeric(values[1:(3+length(varnames))])
-        ext_lines <- ext_lines[-1]
-      }
+      
+     df <- read_list(ext_lines)
+       
     }
     
   } else if(toupper(header[1]) == 'SFAC') {
     remaining_lines <- remaining_lines[-1]
     scale <- as.numeric(header[2])
-    for(nl in 1:nlst) {
-      values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
-      if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- as.numeric(values[1:(3+length(varnames))])
-      remaining_lines <- remaining_lines[-1]
-    }
+    
+    df <- read_list(remaining_lines)
+    remaining_lines <- remaining_lines[-c(1:nlst)]
+    
   } else {
-    for(nl in 1:nlst) {
-      values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
-      if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- as.numeric(values[1:(3+length(varnames))])
-      remaining_lines <- remaining_lines[-1]
-    }
+    
+    df <- read_list(remaining_lines)
+    remaining_lines <- remaining_lines[-c(1:nlst)]
   }
   
   df <- data.frame(df, stringsAsFactors = FALSE)
-  colnames(df) <- c('k','i','j',varnames)
+  colnames(df) <- col_names
   if(!is.null(l)) df$l <- l
-  class(df) <- c('rmf_list', 'data.frame')
+  df <- rmf_create_list(df)
   if(scale != 1.0) df[[scalevar]] <- scale*df[[scalevar]]
   
   return(list(list = df, remaining_lines = remaining_lines))
@@ -1223,9 +1249,9 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
       data_set_2$variables <- c(rep("0", n), rmfi_parse_variables(paste0(strsplit(lines[1], '')[[1]][-c(1:10*n)], collapse = ''))$variables)
     }
-    if(any(c(names(option), "AUX", "AUXILIARY") %in% data_set_2$variables[n+1:length(data_set_2$variables)])) {
-      option <- vapply(names(option), function(i) i %in% data_set_2$variables, TRUE)
-      aux <- as.character(data_set_2$variables[grep('^AUX', data_set_2$variables)+1])
+    if(any(c(names(option), "AUX", "AUXILIARY") %in% toupper(data_set_2$variables[n+1:length(data_set_2$variables)]))) {
+      option <- vapply(names(option), function(i) i %in% toupper(data_set_2$variables), TRUE)
+      aux <- as.character(data_set_2$variables[grep('^AUX', toupper(data_set_2$variables))+1])
     }
   }
   lines <-  data_set_2$remaining_lines
@@ -1264,7 +1290,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
           rm(data_set_4a)
           
           # data set 4b
-          data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
+          data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
           rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam, kper = 0)
           
           lines <- data_set_4b$remaining_lines
@@ -1276,7 +1302,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       } else {
         # non time-varying
         # data set 4b
-        data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
+        data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
         rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, kper = 0)
         
         lines <- data_set_4b$remaining_lines
@@ -1310,7 +1336,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     rm(data_set_5)
     
     if(itmp > 0){
-      data_set_6 <- rmfi_parse_list(lines, nlst = itmp, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
+      data_set_6 <- rmfi_parse_list(lines, nlst = itmp, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
       rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_6$list, kper = i)
       # TODO : see if list already exists; then just add kper to attribute
       lines <-  data_set_6$remaining_lines
