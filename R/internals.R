@@ -1584,7 +1584,7 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
 #' @param header character; package name. Part of the header comment written to the output file
 #' @param package character; acronym (often 3 letters) used by MODFLOW to name to package
 #' @param partyp character; specifies the parameter type
-#' @param ... arguments passed to \code{rmfi_write_list} when writing a fixed format file
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @keywords internal
@@ -1698,10 +1698,10 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
 #' @param aux character vector with the names of the auxiliary variables defined in \code{varnames}
 #' @param format either \code{"free"} (default) or \code{"fixed"}
 #' @param append logical
-#'
+#' @param ... ignored
 #' @return \code{NULL}
 #' @keywords internal
-rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', append = TRUE) {
+rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', append = TRUE, ...) {
   
   naux <- length(aux)
   n <- length(varnames) - naux

@@ -72,7 +72,7 @@ rmf_read_drn <-  function(file = {cat('Please select drain file ...\n'); file.ch
 #' @param drn an \code{RMODFLOW} drn object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.drn'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 #' 
 #' @return \code{NULL}
 #' @export

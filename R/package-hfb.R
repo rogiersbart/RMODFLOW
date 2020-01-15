@@ -134,7 +134,7 @@ rmf_create_hfb <-  function(...,
 #'
 #' @param file filename; typically '*.hfb'
 #' @param dis an \code{RMODFLOW} dis object
-#' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
+#' @param ... arguments passed to \code{rmfi_parse_list}.
 #'  
 #' @return \code{RMODFLOW} hfb object
 #' @export
@@ -175,7 +175,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
       lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
-      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, ...)
+      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, naux = 0, format = 'free', ...)
       rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_3$list, parnam = parnam, parval = parval)
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
@@ -185,7 +185,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   
   # data set 4
   if(nnp > 0) {
-    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, file = file, ...)
+    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, naux = 0, file = file, format = 'free', ...)
     rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
     lines <- data_set_4$remaining_lines
     rm(data_set_4)
@@ -222,12 +222,11 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
 #' @param hfb an \code{RMODFLOW} hfb object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.hfb'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... ignored
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_hfb}}, \code{\link{rmf_create_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}
-
 
 rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hfb file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
@@ -266,9 +265,7 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   # data set 4
   df <- subset(hfb$data, parameter == FALSE)
   if(nrow(df) > 0) {
-    for(j in 1:nrow(df)){
-      rmfi_write_variables(df$k[j], df$i[j], df$j[j], df[j, vars], file=file)
-    }
+    rmfi_write_list(df, file = file, varnames = vars)
     rm(df)
   }
   

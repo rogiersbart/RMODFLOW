@@ -80,7 +80,7 @@ create_modflow <- function(...) {
 #'
 #' @param file NAME file; typically '*.nam'
 #' @param output logical; should output also be read. Defaults to FALSE.
-#' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of binary output files if output is read. Defaults to \code{'single'}.
+#' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of binary files. Defaults to \code{'single'}.
 #' @param verbose logical; should information on reading files be printed to the console ? Defaults to TRUE.
 #'
 #' @return a \code{modflow} object which is a list containing all MODFLOW packages and optionally, model output
