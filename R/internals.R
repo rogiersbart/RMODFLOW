@@ -864,7 +864,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
     p_tv <- NULL
     if(length(data_set_3$variables) > 4 && toupper(data_set_3$variables[5]) == 'INSTANCES'){
       p_tv <- TRUE
-      numinst = as.numeric(data_set_3$variables[6])
+      numinst <- as.numeric(data_set_3$variables[6])
       arr <- list()
     } 
     lines <- data_set_3$remaining_lines
@@ -1098,17 +1098,17 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
 #' @keywords internal
 rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FALSE, format = 'free', ...) {
   if(format == 'free') {
-    variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),' |\t|,')[[1]])
+    variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]])
     if(!is.null(nlay)) {
       while(length(variables) < nlay) { 
         remaining_lines <- remaining_lines[-1]
-        variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),' |\t|,')[[1]]))
+        variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]]))
       }
     }
     if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
-                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])),'')[[1]][i:(i+9)], collapse=''))))
+                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
     variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
@@ -1225,7 +1225,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   # data set 1
   data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
-  if('PARAMETER' %in% data_set_1$variables) {
+  if('PARAMETER' %in% toupper(data_set_1$variables)) {
     np_def <-  as.numeric(data_set_1$variables[2])
     lines <-  data_set_1$remaining_lines
   }  else {
@@ -1317,9 +1317,9 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
       if(!is.null(i_name)) {
-        if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {
         attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       }
@@ -1349,8 +1349,8 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       for(j in 1:np){
         # data set 7
         data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
-        p_name <-  as.character(data_set_7$variables[1])
-        i_name <- rmfi_ifelse0(tv[[p_name]], as.character(data_set_7$variables[2]), NULL)
+        p_name <-  toupper(as.character(data_set_7$variables[1]))
+        i_name <- rmfi_ifelse0(tv[[p_name]], toupper(as.character(data_set_7$variables[2])), NULL)
         
         rmf_lists <- lapply(rmf_lists, set_kper, p_name = p_name, i_name = i_name, kper = i)
         

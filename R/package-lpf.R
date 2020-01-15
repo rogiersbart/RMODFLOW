@@ -204,7 +204,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- rmfi_parse_variables(lpf_lines)
+  data_set_1 <- toupper(rmfi_parse_variables(lpf_lines))
   lpf$ilpfcb <- as.numeric(data_set_1$variables[1])
   lpf$hdry <- as.numeric(data_set_1$variables[2])
   lpf$nplpf <- as.numeric(data_set_1$variables[3])
@@ -280,7 +280,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
         ds9$mltarr[j] <- data_set_9$variables[2]
         ds9$zonarr[j] <- data_set_9$variables[3]
         # zero or character entry terminates IZ
-        if(ds9$zonarr[j] == 'ALL') {
+        if(toupper(ds9$zonarr[j]) == 'ALL') {
           ds9$iz[[j]] <- NULL
         } else {
           iz <- suppressWarnings(as.numeric(data_set_9$variables[4:length(data_set_9$variables)]))
@@ -313,7 +313,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   if(!('HK' %in% types)) lpf$hk <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(any(lpf$chani <= 0) && !('HANI' %in% types)) lpf$hani <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(!('VK' %in% lpf$partyp || 'VANI' %in% types))lpf$vka <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(any(dis$sstr == 'TR')) {
+  if(any(toupper(dis$sstr) == 'TR')) {
     if(!('SS' %in% types)) lpf$ss <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
     if(any(lpf$laytyp != 0) && !('SY' %in% types)) lpf$sy <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   }     
@@ -355,7 +355,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     }
     
     # data set 13
-    if('TR' %in% dis$sstr) {
+    if('TR' %in% toupper(dis$sstr)) {
       if('SS' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {
@@ -367,7 +367,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     }
     
     # data set 14
-    if('TR' %in% dis$sstr && lpf$laytyp[k] != 0) {
+    if('TR' %in% toupper(dis$sstr) && lpf$laytyp[k] != 0) {
       if('SY' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {

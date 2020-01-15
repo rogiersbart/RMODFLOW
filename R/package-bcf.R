@@ -159,7 +159,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
   for(i in 1:dis$nlay){
     
     # data set 4
-    if('TR' %in% dis$sstr){
+    if('TR' %in% toupper(dis$sstr)){
       data_set_4 <- rmfi_parse_array(bcf_lines, nrow=dis$nrow, ncol = dis$ncol, nlay=1, file = file, ...)
       bcf$sf1[,,i] <- data_set_4$array
       bcf_lines <- data_set_4$remaining_lines
@@ -191,7 +191,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     }
     
     # data set 8
-    if(('TR' %in% dis$sstr) && bcf$laycon[i] %in% c(2,3)){
+    if(('TR' %in% toupper(dis$sstr)) && bcf$laycon[i] %in% c(2,3)){
       data_set_8 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
       bcf$sf2[,,i] <- data_set_8$array
       bcf_lines <- data_set_8$remaining_lines

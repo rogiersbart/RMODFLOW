@@ -201,13 +201,13 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   acthfb <- vector(mode = 'character', length = nacthfb)
   for(i in 1:nacthfb) {
     data_set_6 <- rmfi_parse_variables(lines)
-    acthfb[i] <- data_set_6$variables[1]
+    acthfb[i] <- toupper(data_set_6$variables[1])
     lines <- data_set_6$remaining_lines
     rm(data_set_6)
   }
   
   # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
+  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (toupper(attr(i, 'parnam')) %in% acthfb), structure(i, kper = 1:dis$nper), i))
   
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))

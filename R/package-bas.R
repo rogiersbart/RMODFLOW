@@ -89,7 +89,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- rmfi_parse_variables(bas_lines, format = 'free')
+  data_set_1 <- toupper(rmfi_parse_variables(bas_lines, format = 'free'))
   bas$xsection <- 'XSECTION' %in% data_set_1$variables
   bas$chtoch <- 'CHTOCH' %in% data_set_1$variables
   bas$free <- 'FREE' %in% data_set_1$variables

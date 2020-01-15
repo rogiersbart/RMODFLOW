@@ -184,11 +184,11 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   # data set 0
   data_set_0 <- rmfi_parse_comments(oc_lines)
   comment(oc) <- data_set_0$comments
-  oc_lines <- data_set_0$remaining_lines
+  oc_lines <- toupper(data_set_0$remaining_lines)
   rm(data_set_0)
   
   # OC using words
-  if(toupper(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1]) %in% c('HEAD','DRAWDOWN','IBOUND','COMPACT','PERIOD')) {
+  if(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] %in% c('HEAD','DRAWDOWN','IBOUND','COMPACT','PERIOD')) {
     
     # data set 1
     oc$ihedfm <- oc$chedfm <- oc$ihedun <- oc$iddnfm <- oc$cddnfm <- oc$iddnun <- oc$cboufm <- oc$ibouun <- NA

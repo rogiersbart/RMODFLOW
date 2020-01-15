@@ -152,7 +152,7 @@ print.dis <- function(dis, n = 5) {
   
   # stress periods
   sp_names <- setNames(c('Steady-state', 'Transient'), c('SS', 'TR'))
-  sp <- data.frame(kper = 1:dis$nper, perlen = dis$perlen, nstp = dis$nstp, tsmult = dis$tsmult, sstr = sp_names[dis$sstr])
+  sp <- data.frame(kper = 1:dis$nper, perlen = dis$perlen, nstp = dis$nstp, tsmult = dis$tsmult, sstr = sp_names[toupper(dis$sstr)])
   names(sp) <- c('Period', 'Length', 'Timesteps', 'Multiplier', 'Type')
   if(dis$nper > n) {
     cat('Information for', dis$nper, if(dis$nper > 1) 'stress-periods' else 'stress-period', '(first', n, 'shown):', '\n')

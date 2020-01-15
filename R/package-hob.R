@@ -134,7 +134,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   hob$iuhobsv <- ifelse(is.na(as.numeric(line.split[4])), 0, as.numeric(line.split[4]))
   hob$hobdry <- ifelse(is.na(as.numeric(line.split[5])), -888, as.numeric(line.split[5]))
   hob$noprint <- F
-  if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
+  if(length(line.split) > 5) if(toupper(line.split[6])=='NOPRINT') hob$noprint <- TRUE
   
   # data set 2
   dat <- rmfi_parse_variables(hob_lines, n = 1, ...)

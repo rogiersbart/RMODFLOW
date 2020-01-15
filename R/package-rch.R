@@ -86,7 +86,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
   # data set 1
   data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
-  if('PARAMETER' %in% data_set_1$variables) {
+  if('PARAMETER' %in% toupper(data_set_1$variables)) {
     np <-  as.numeric(data_set_1$variables[2])
     lines <-  data_set_1$remaining_lines
   }  else {
@@ -113,9 +113,9 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
   # stress periods
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
       if(!is.null(i_name)) {
-        if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {
         attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       }
@@ -159,7 +159,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
         for(j in 1:inrech){
           # data set 7
           data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
-          p_name <-  as.character(data_set_7$variables[1])
+          p_name <-  toupper(as.character(data_set_7$variables[1]))
           if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
             i_name <- data_set_7$variables[2]
             if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {

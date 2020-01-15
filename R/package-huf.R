@@ -266,7 +266,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
     huf$hguhani <- vector(mode='numeric',length=huf$nhuf)   
     huf$hguvani <- vector(mode='numeric',length=huf$nhuf)
     data_set_9 <- rmfi_parse_variables(huf_lines, character = TRUE)
-    if(data_set_9$variables[1] == 'ALL') {
+    if(toupper(data_set_9$variables[1]) == 'ALL') {
       huf$hguhani <- rep(as.numeric(data_set_9$variables[2]),huf$nhuf)
       huf$hguvani <- rep(as.numeric(data_set_9$variables[3]),huf$nhuf)
       huf_lines <- data_set_9$remaining_lines
@@ -527,7 +527,7 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
       ds4$mltarr[j] <- data_set_4$variables[2]
       ds4$zonarr[j] <- data_set_4$variables[3]
       # zero or character entry terminates IZ
-      if(ds4$zonarr[j] == 'ALL') {
+      if(toupper(ds4$zonarr[j]) == 'ALL') {
         ds4$iz[[j]] <- NULL
       } else {
         iz <- suppressWarnings(as.numeric(data_set_4$variables[4:length(data_set_4$variables)]))
@@ -695,7 +695,7 @@ rmf_read_lvda <- function(file,
       ds3$mltarr[j] <- data_set_3$variables[2]
       ds3$zonarr[j] <- data_set_3$variables[3]
       # zero or character entry terminates IZ
-      if(ds3$zonarr[j] == 'ALL') {
+      if(toupper(ds3$zonarr[j]) == 'ALL') {
         ds3$iz[[j]] <- NULL
       } else {
         iz <- suppressWarnings(as.numeric(data_set_3$variables[4:length(data_set_3$variables)]))

@@ -72,7 +72,7 @@ rmf_create_dis <- function(nlay = 3,
     dis$perlen <- perlen
     dis$nstp <- nstp
     dis$tsmult <- tsmult
-    dis$sstr <- sstr
+    dis$sstr <- toupper(sstr)
   
   #comment(dis) <- comments
   class(dis) <- c('dis','rmf_package')
@@ -157,7 +157,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     dis$perlen[i] <- as.numeric(data_set_7$variables[1])
     dis$nstp[i] <- as.numeric(data_set_7$variables[2])
     dis$tsmult[i] <- as.numeric(data_set_7$variables[3])
-    dis$sstr[i] <- data_set_7$variables[4]
+    dis$sstr[i] <- toupper(data_set_7$variables[4])
     dis_lines <- data_set_7$remaining_lines
     rm(data_set_7)
   }
@@ -214,7 +214,7 @@ rmf_write_dis <- function(dis,
   
   # data set 7
   for(i in 1:dis$nper) {
-    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],dis$sstr[i], file=file)  
+    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],toupper(dis$sstr[i]), file=file)  
   }
 }
 

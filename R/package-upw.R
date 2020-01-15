@@ -174,7 +174,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
   upw$hdry <- as.numeric(data_set_1$variables[2])
   upw$npupw <- as.numeric(data_set_1$variables[3])
   upw$ihdry <- as.numeric(data_set_1$variables[4]) != 0
-  upw$noparcheck <- 'NOPARCHECK' %in% data_set_1$variables
+  upw$noparcheck <- 'NOPARCHECK' %in% toupper(data_set_1$variables)
   upw_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -231,7 +231,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
         ds9$mltarr[j] <- data_set_9$variables[2]
         ds9$zonarr[j] <- data_set_9$variables[3]
         # zero or character entry terminates IZ
-        if(ds9$zonarr[j] == 'ALL') {
+        if(toupper(ds9$zonarr[j]) == 'ALL') {
           ds9$iz[[j]] <- NULL
         } else {
           iz <- suppressWarnings(as.numeric(data_set_9$variables[4:length(data_set_9$variables)]))
@@ -264,7 +264,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
   if(!('HK' %in% types)) upw$hk <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(any(upw$chani <= 0) && !('HANI' %in% types)) upw$hani <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(!('VK' %in% upw$partyp || 'VANI' %in% types))upw$vka <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(any(dis$sstr == 'TR')) {
+  if(any(toupper(dis$sstr) == 'TR')) {
     if(!('SS' %in% types)) upw$ss <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
     if(any(upw$laytyp != 0) && !('SY' %in% types)) upw$sy <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   }     
@@ -305,7 +305,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     }
     
     # data set 12
-    if('TR' %in% dis$sstr) {
+    if('TR' %in% toupper(dis$sstr)) {
       if('SS' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
@@ -317,7 +317,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     }
     
     # data set 13
-    if('TR' %in% dis$sstr && upw$laytyp[k] != 0) {
+    if('TR' %in% toupper(dis$sstr) && upw$laytyp[k] != 0) {
       if('SY' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
