@@ -204,16 +204,16 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- toupper(rmfi_parse_variables(lpf_lines))
+  data_set_1 <- rmfi_parse_variables(lpf_lines)
   lpf$ilpfcb <- as.numeric(data_set_1$variables[1])
   lpf$hdry <- as.numeric(data_set_1$variables[2])
   lpf$nplpf <- as.numeric(data_set_1$variables[3])
-  lpf$storagecoefficient <- 'STORAGECOEFFICIENT' %in% data_set_1$variables
-  lpf$constantcv <- 'CONSTANTCV' %in% data_set_1$variables
-  lpf$thickstrt <- 'THICKSTRT' %in% data_set_1$variables
-  lpf$nocvcorrection <- 'NOCVCORRECTION' %in% data_set_1$variables
-  lpf$novfc <- 'NOVFC' %in% data_set_1$variables
-  lpf$noparcheck <- 'NOPARCHECK' %in% data_set_1$variables
+  lpf$storagecoefficient <- 'STORAGECOEFFICIENT' %in% toupper(data_set_1$variables)
+  lpf$constantcv <- 'CONSTANTCV' %in% toupper(data_set_1$variables)
+  lpf$thickstrt <- 'THICKSTRT' %in% toupper(data_set_1$variables)
+  lpf$nocvcorrection <- 'NOCVCORRECTION' %in% toupper(data_set_1$variables)
+  lpf$novfc <- 'NOVFC' %in% toupper(data_set_1$variables)
+  lpf$noparcheck <- 'NOPARCHECK' %in% toupper(data_set_1$variables)
   lpf_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   

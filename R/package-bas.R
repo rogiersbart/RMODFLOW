@@ -89,13 +89,13 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- toupper(rmfi_parse_variables(bas_lines, format = 'free'))
-  bas$xsection <- 'XSECTION' %in% data_set_1$variables
-  bas$chtoch <- 'CHTOCH' %in% data_set_1$variables
-  bas$free <- 'FREE' %in% data_set_1$variables
-  bas$printtime <- 'PRINTTIME' %in% data_set_1$variables
-  bas$showprogress <- 'SHOWPROGRESS' %in% data_set_1$variables
-  bas$stoperror <- 'STOPERROR' %in% data_set_1$variables
+  data_set_1 <- rmfi_parse_variables(bas_lines, format = 'free')
+  bas$xsection <- 'XSECTION' %in% toupper(data_set_1$variables)
+  bas$chtoch <- 'CHTOCH' %in% toupper(data_set_1$variables)
+  bas$free <- 'FREE' %in% toupper(data_set_1$variables)
+  bas$printtime <- 'PRINTTIME' %in% toupper(data_set_1$variables)
+  bas$showprogress <- 'SHOWPROGRESS' %in% toupper(data_set_1$variables)
+  bas$stoperror <- 'STOPERROR' %in% toupper(data_set_1$variables)
   if(bas$stoperror) bas$stoper <- as.numeric(data_set_1$variables[match('stoperror',data_set_1$variables)+1]) else bas$stoper <- as.numeric(NA)
   bas_lines <- data_set_1$remaining_lines
   rm(data_set_1)
