@@ -950,19 +950,24 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
 #' @keywords internal
 rmfi_parse_comments <- function(remaining_lines) {
   v <- paste("RMODFLOW, version",  packageDescription("RMODFLOW")$Version)
+  comments <- NULL
   comment_tag <- substr(remaining_lines, 1, 1)
   comment_id <- which(comment_tag == "#")
-  comments <- gsub('#', '', remaining_lines[comment_id])
   
-  # remove empty comments
-  empty <- which(nchar(trimws(comments)) == 0)
-  if(length(empty) > 0) comments <- comments[-empty]
-  
-  # remove RMODFLOW header
-  header <- grep(v, comments)
-  if(length(header) > 0) comments <- comments[-header]
-  
-  remaining_lines <- remaining_lines[-comment_id]
+  if(length(comment_id) > 0) {
+    comments <- gsub('#', '', remaining_lines[comment_id])
+    
+    # remove empty comments
+    empty <- which(nchar(trimws(comments)) == 0)
+    if(length(empty) > 0) comments <- comments[-empty]
+    
+    # remove RMODFLOW header
+    header <- grep(v, comments)
+    if(length(header) > 0) comments <- comments[-header]
+    
+    remaining_lines <- remaining_lines[-comment_id]
+  }
+
   return(list(comments = comments, remaining_lines = remaining_lines))
 }
 
