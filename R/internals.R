@@ -946,21 +946,23 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
 
 #' Read comments
 #' Internal function used in the read_* functions to read comments
-#' @details prevents copying of RMODFLOW header comment
+#' @details removes empty comments and prevents copying of RMODFLOW header comment
 #' @keywords internal
 rmfi_parse_comments <- function(remaining_lines) {
   v <- paste("RMODFLOW, version",  packageDescription("RMODFLOW")$Version)
-  i <- 0
-  comments <- NULL
-  while(i==0) {
-    if(substr(remaining_lines[1], 1, 1) == '#') {
-      com <- substr(remaining_lines[1], 2, nchar(remaining_lines[1]))
-      if(!identical(trimws(strsplit(com, 'by ')[[1]][2]), trimws(v)) && nchar(trimws(com)) > 0)  comments <- append(comments, com)
-      remaining_lines <- remaining_lines[-1]
-    } else {
-      i <- 1
-    }
-  }
+  comment_tag <- substr(remaining_lines, 1, 1)
+  comment_id <- which(comment_tag == "#")
+  comments <- gsub('#', '', remaining_lines[comment_id])
+  
+  # remove empty comments
+  empty <- which(nchar(trimws(comments)) == 0)
+  if(length(empty) > 0) comments <- comments[-empty]
+  
+  # remove RMODFLOW header
+  header <- grep(v, comments)
+  if(length(header) > 0) comments <- comments[-header]
+  
+  remaining_lines <- remaining_lines[-comment_id]
   return(list(comments = comments, remaining_lines = remaining_lines))
 }
 
