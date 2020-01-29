@@ -1,0 +1,224 @@
+---
+title: "Handling MODFLOW output"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MODFLOW output}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+library(RMODFLOW)
+```
+
+A MODFLOW simulation can create multiple output files representing different variables. Examples are hydraulic heads (hed), drawdowns (ddn), cell-by-cell flow files (cbc), head-prediction files (hpr) and the listing file. The latter holds information on the simulation, execution and solver progress and a volumetric budget if defined by the Output-Control file (OC). This budget (bud) is often useful to look at. 
+
+These files can be written by MODFLOW in a variety of types and formats such as binary or ASCII. The internal structure of those files can also take various forms. RMODFLOW can handle all those formats, even the more obscure ones. In most cases, you'll only need to supply a `dis` object to the `rmf_read_*` function. If the file is binary, you'll need to know if it's single or double precision depending on which MODFLOW executable was used. Most of the time, this would have been single precision. 
+
+## Heads & drawdowns
+To read simulated heads, use `rmf_read_hed()` (or its alias, `rmf_read_head()`). By default, `binary = TRUE` and `precision = 'single'`. If either of those arguments are incorrect, RMODFLOW will throw an error and suggests changing them. You can also supply a bas object to remove no-flow values.
+```{r}
+dis <- rmf_example_file("water-supply-problem.dis") %>%
+  rmf_read_dis()
+
+head <- rmf_example_file("water-supply-problem.fhd") %>% 
+  rmf_read_hed(dis = dis, binary = FALSE)
+
+```
+
+Drawdowns are similar to heads; use `rmf_read_ddn()` or its alias `rmf_read_drawdown()`.
+```{r}
+ddn <- rmf_example_file("water-supply-problem.fdn") %>% 
+  rmf_read_ddn(dis = dis, binary = FALSE)
+```
+
+Heads and drawdowns are objects of class `hed` and `ddn`, respectively. Additionally, they are `rmf_4d_arrays`. Besides the default `rmf_array` attributes, these objects also have additional attributes related to the timing of each time step in the 4th dimensions of the array:
+```{r}
+str(head)
+```
+
+To only read in certain time-steps, use the `timesteps` argument:
+```{r}
+rmf_example_file("water-supply-problem.fhd") %>% 
+  rmf_read_hed(dis = dis, binary = FALSE, timesteps = c(1,16)) %>%
+  str()
+```
+
+RMODFLOW provides S3 plotting methods for `hed` and `ddn` objects which act as wrappers for `rmf_plot.rmf_4d_array()`:
+```{r}
+# read bas to remove no-flow values from plot.
+# Alternatively, this could have been done by supplying a bas object to rmf_read_hed
+bas <- rmf_example_file("water-supply-problem.bas") %>% 
+  rmf_read_bas(dis = dis)
+
+rmf_plot(head, dis = dis, bas = bas, k = 1)
+```
+
+By default, the last time step is plotted. As with `rmf_plot.rmf_4d_array`, you can specify the `l` argument to subset the 4th dimension directly. Alternatively for `hed`, `ddn` and `cbc` objects, you can supply a `kper` and `kstp` argument to the respective `rmf_plot` call:
+```{r}
+rmf_plot(head, dis = dis, bas = bas, k = 1, kper = 1, kstp = 16)
+```
+
+## Cell-by-cell flow budget
+A cbc file is always binary. Reading in such a file can be done by using the `rmf_read_cbc()` function which returns a list with flow components, which are either `rmf_list` objects or `rmf_4d_array` objects.
+```{r}
+cbc <- rmf_example_file("water-supply-problem.cbc") %>%
+  rmf_read_cbc(dis = dis)
+str(cbc)
+```
+
+A `fluxes` argument can be specified to only read in certain fluxes (see `help(rmf_read_cbc)` for details on which fluxes can be read). By default, all fluxes are read. 
+```{r}
+rmf_example_file("water-supply-problem.cbc") %>%
+  rmf_read_cbc(dis = dis, fluxes = c("wells", "flow_right_face")) %>%
+  str()
+```
+
+Similar to heads and drawdowns, RMODFLOW has a `rmf_plot.cbc()` function which acts as a wrapper around either `rmf_plot.rmf_list()` or `rmf_plot.rmf_4d_array()` depending on which flux component to plot as defined by the `flux` argument:
+```{r}
+rmf_plot(cbc, dis = dis, bas = bas, k = 1, flux = "storage")
+rmf_plot(cbc, dis = dis, bas = bas, k = 1, flux = "river_leakage")
+```
+
+In addition to the available fluxes in the cbc object, the `flux` argument can also be `darcy` which will calculate Darcy fluxes using `rmf_convert_cbc_to_darcy()`. This is useful in conjunction with the `type = 'vector'` argument:
+```{r}
+rmf_plot(head, dis = dis, bas = bas, k = 1, l = 16) +
+  rmf_plot(cbc, dis = dis, bas = bas, k = 1, l = 16, flux = "darcy", type = "vector", add = TRUE)
+```
+
+
+## Volumetric budget
+Useful as the cbc object may be, it is not always straightforward to obtain a mass balance (i.e. volumetric budget) from it. This is written to the listing file if specified by the OC file. To read in the volumetric budget from a listing file, use `rmf_read_bud()` which returns a `bud` object which is a list with two data.frames: one holding the volumetric rates and one with the cumulative volumes. **Note: in previous versions of RMODFLOW, `rmf_read_bud` was used to read in the cell-by-cell flow object; this is therefore a breaking change**:
+```{r}
+bud <- rmf_example_file("water-supply-problem.lst") %>%
+  rmf_read_bud()
+str(bud)
+```
+
+Plotting a `bud` object can be done with `rmf_plot.bud()` which by default plots gross volumetric rates for all fluxes:
+```{r}
+rmf_plot(bud, dis = dis)
+```
+
+You can select fluxes with the `fluxes` argument,
+```{r}
+rmf_plot(bud, dis = dis, fluxes = c("wells", "river_leakage"))
+```
+
+plot net fluxes by setting `net = TRUE`
+```{r}
+rmf_plot(bud, dis = dis, net = TRUE)
+```
+
+and select between rates, cumulative, total, difference or discrepancy using the `what` argument.
+```{r}
+rmf_plot(bud, dis = dis, what = "cumulative")
+rmf_plot(bud, dis = dis, what = "discrepancy")
+```
+
+By default, `rmf_plot.bud` uses `ggplot2::geom_area`. You can change this to a bar plot (`ggplot2::geom_col`) by setting `type = 'bar'`:
+```{r}
+rmf_plot(bud, dis = dis, type = "bar")
+```
+
+this is especially useful when plotting only a few time steps:
+```{r}
+rmf_plot(bud, dis = dis, type = "bar", timesteps = c(1, 16))
+```
+
+and is the default if the simulation only has a single time step (e.g. a steady-state simulation):
+```{r}
+dis_ss <- rmf_example_file("example-model.dis") %>%
+  rmf_read_dis()
+bud_ss <- rmf_example_file("example-model.lst") %>%
+  rmf_read_bud()
+
+rmf_plot(bud_ss, dis = dis_ss)
+```
+
+
+## Head-prediction file
+If a HOB file is present with a IUHOBS value larger than zero, a head-prediction file will be saved to disk by the MODFLOW simulation. This file holds the observed hydraulic head values, their simulated equivalents and the observation names. It can be read by RMODFLOW using `rmf_read_hpr()` which returns a data.frame of class `hpr`:
+
+```{r}
+hpr <- rmf_example_file("water-supply-problem.hob_out") %>%
+  rmf_read_hpr()
+str(hpr)
+```
+
+`rmf_read_hpr` adds a residual column which is the difference between simulated and observed values.
+
+To plot a hpr object, you can use `rmf_plot.hpr()` which by default plots a scatter plot:
+```{r}
+rmf_plot(hpr)
+```
+
+A histogram or residual plot can be made by changing the `type` argument:
+```{r}
+rmf_plot(hpr, type = "histogram")
+```
+```{r}
+rmf_plot(hpr, type = "residual") + ggplot2::theme(axis.text.x.bottom = ggplot2::element_text(angle = 90))
+```
+
+Goodness-of-fit statistics can be obtained with the `rmf_performance()` function:
+```{r}
+rmf_performance(hpr)
+```
+
+## Output-Control
+In MODFLOW, the Output-Control file (OC) controls the type and timing of saving output to disk and printing output to the listing file. RMODFLOW can read, write and create an OC object.
+```{r}
+oc <- rmf_example_file("water-supply-problem.oc") %>%
+  rmf_read_oc(dis = dis)
+str(oc)
+```
+
+When creating an OC object, you might be overwhelmed by the amount of input arguments. This is in large part because a MODFLOW OC file can be specified in two ways: either with words or numeric codes. RMODFLOW keeps true to these options but uses words by default.
+
+The OC object controls saving of following variables to disk: head, drawdown, ibound & cell-by-cell-flows. It also controls the printing of following variables to the listing file: head, drawdown & volumetric budget. 
+
+By default, an OC object created by RMODFLOW specifies the following:
+
+- Save heads at every time step
+- Save cell-by-cell flows at every time step
+- Print the volumetric budget to the listing file at every time step
+- The head file is specified as binary
+- Labels are written to the corresponding output files
+- The compact budget option for the cbc file is active
+
+Remember that the cbc file is always binary.
+
+To alter any of these, use the respective `save_*` or `print_*` arguments. These are logical values, either of length 1 meaning they are the same for all time steps, or a single value for every time step.
+```{r}
+rmf_create_oc(dis = dis, print_head = TRUE, 
+              save_head = c(rep(FALSE, sum(dis$nstp)/2), rep(TRUE, sum(dis$nstp)/2) )) %>%
+  str()
+```
+
+To set the unit numbers on which the output is saved, use the ihedun (default 666), iddnun (default 667) & ibouun (default 668) values for heads, drawdowns and ibound output, respectively. The unit number for cell-by-cell flows is set in the flow and boundary condition packages.
+```{r}
+rmf_create_oc(dis = dis,
+              ihedun = 50,
+              save_drawdown = TRUE, iddnun = 60) %>% 
+  str()
+```
+
+To save ASCII files, set the chedfm, cddnfm or cboufm values to proper FORTRAN formats enclosed in parenthesis containing no more than 20 characters. These FORTRAN formats can be found in the [MODFLOW-2005 manual](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm). In RMODFLOW, you can alternatively specify integer codes for the save formats, similar to the print formats. RMODFLOW will convert these to the proper FORTRAN format. Note that ASCII files are typically larger than binary files.
+```{r}
+rmf_create_oc(dis = dis, chedfm = 0) %>% 
+  str()
+```
+
+Let's say, we want to save drawdowns in an ASCII file (setting cddnfm to a FORTRAN format or positive integer) on unit number 50 (default is 667 for drawdown), not save heads, and print volumetric budget to the listing file every other time step:
+```{r}
+oc <- rmf_create_oc(dis = dis,
+                    save_drawdown = TRUE, cddnfm = 0, iddnun = 50, 
+                    save_head = FALSE, 
+                    print_budget = rep(c(FALSE, TRUE), sum(dis$nstp)/2))
+str(oc)
+```
+
+

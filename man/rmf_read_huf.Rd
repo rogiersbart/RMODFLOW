@@ -8,7 +8,7 @@
 rmf_read_huf(file = {     cat("Please select huf file ...\\n")    
   file.choose() }, dis = {    
   cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+  rmf_read_dis(file.choose()) }, mlt = NULL, zon = NULL, ...)
 
 read_huf(...)
 }
@@ -16,6 +16,10 @@ read_huf(...)
 \item{file}{filename; typically '*.huf'}
 
 \item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
+
+\item{mlt}{a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays}
+
+\item{zon}{a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays}
 
 \item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
 }

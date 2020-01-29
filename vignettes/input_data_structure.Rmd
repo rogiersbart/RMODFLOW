@@ -32,13 +32,18 @@ The first type consists of one or more values on a single line that are read by 
 Array-directed input represents continuous variables over the MODFLOW grid such as the model elevation (`dis$top`) or hydraulic conductivity (e.g. `lpf$hk`). MODFLOW output often comes in the form of arrays as well, e.g. simulated heads or drawdowns. In RMODFLOW, MODFLOW arrays are handled by the `rmf_array` classes and corresponding S3 methods. There are three `rmf_array` classes: `rmf_2d_array`, `rmf_3d_array` and `rmf_4d_array`. Arrays that are returned from `rmf_read_*` functions are always of one of these classes. Arrays passed to `rmf_write_*` functions are also of these classes.
 
 ### Creating
-To create a `rmf_array`, use the `rmf_create_array` function. When this function is called on an existing matrix or array, it simply sets the class depending on the dim argument (2D, 3D or 4D). Alternatively, you can supply a dim argument yourself:
+To create a `rmf_array`, use the `rmf_create_array()` function. When this function is called on an existing matrix or array, it simply sets the class depending on the dim argument (2D, 3D or 4D). Alternatively, you can supply a dim argument yourself:
 
 ```{r}
 ar <- matrix(42, nrow = 4, ncol = 5)
 rmf_create_array(ar)
 
 rmf_create_array(42, dim = c(4, 5))
+```
+
+Besides setting the class, `rmf_create_array` also adds a `dimlabel` attribute which holds the names of MODFLOW dimensions the array represents. By default, these are `i, j, k & l` -representing rows, columns, layers and time steps, respectively- for a 4D array, `i, j & k` for a 3D array and `i & j` for a 2D array. These can also be set by supplying a dimlabel argument:
+```{r}
+rmf_create_array(10, dim = c(2, 5), dimlabels = c('rows', 'columns'))
 ```
 
 A `rmf_array` is *at least 2D*, possibly 3D or 4D. When creating, it is implicitely assumed that the first dimension of the `rmf_array` represents rows, the second dimension columns, the optional third dimension layers and the optional fourth dimension time-steps. So if you have a one-layered model, a `rmf_4d_array` would have a third dimension of length one:
@@ -147,7 +152,7 @@ rmf_write_dis(dis = dis, file = "input.dis", external = c("botm", "top"), nam = 
 rmf_write_dis(dis = dis, file = "input.dis", fname = c("botm"), binary = c("botm"))
 ```
 
-Lastly, the `rmf_read_array` and `rmf_write_array` functions can be used to read/write an `rmf_array` from/to separate files. These functions are not called when reading MODFLOW packages, but rather serve as utility functions when a user needs to read/write an array from/to MODFLOW supported files instead of writing an entire MODFLOW package. Because they are intended to be used outside the context of packages, they do not recognize array-control records. They can however read/write a MODFLOW output header such as:
+Lastly, the `rmf_read_array()` and `rmf_write_array()` functions can be used to read/write an `rmf_array` from/to separate files. These functions are not called when reading MODFLOW packages, but rather serve as utility functions when a user needs to read/write an array from/to MODFLOW supported files instead of writing an entire MODFLOW package. Because they are intended to be used outside the context of packages, they do not recognize array-control records. They can however read/write a MODFLOW output header such as:
 
 > KSTP KPER PERTIM TOTIM DESC NCOL NROW ILAY
 
@@ -159,7 +164,7 @@ Where array-directed input represents continuous data over the MODFLOW grid, lis
 In RMODFLOW, MODFLOW lists are handled by the `rmf_list` class and corresponding S3 methods. A `rmf_list` is basically a data.frame. This might be confusing, since a list is a different class in R. We've chosen to follow the naming conventions in MODFLOW however.
 
 ### Creating
-To create a `rmf_list`, use the `rmf_create_list` function on a data.frame-like object which contains at least i, j and k columns. The passed object will be coerced to a data.frame.
+To create a `rmf_list`, use the `rmf_create_list()` function on a data.frame-like object which contains at least i, j and k columns. The passed object will be coerced to a data.frame.
 
 ```{r}
 wells <- tibble::tribble(~i, ~j, ~k, ~q,
@@ -188,7 +193,7 @@ There is no separate `rmfi_write_list` function. Writing a list consist of seque
 
 
 ## Conversion
-RMODFLOW can convert between a `rmf_list` and a `rmf_array` with the `rmf_as_list` and `rmf_as_array` functions.
+RMODFLOW can convert between a `rmf_list` and a `rmf_array` with the `rmf_as_list()` and `rmf_as_array()` functions.
 
 ```{r}
 dis <- rmf_create_dis(nrow = 3, ncol = 2, nlay = 1)

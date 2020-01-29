@@ -4,20 +4,21 @@
 \alias{rmf_create_pvl}
 \title{Create an \code{RMODFLOW} pvl object}
 \usage{
-rmf_create_pvl(np = NULL, parnam = NULL, parval = NULL)
+rmf_create_pvl(parnam, parval)
 }
 \arguments{
-\item{np}{number of parameters; defaults to NULL}
+\item{parnam}{character vector specifying the parameter names; defaults to NULL}
 
-\item{parnam}{character vector of length \code{np} specifying the parameter names; defaults to NULL}
-
-\item{parval}{numeric vector of length \code{np} specifying the parameter values; defaults to NULL+}
+\item{parval}{numeric vector specifying the parameter values; defaults to NULL+}
 }
 \value{
 an \code{RMODFLOW} pvl object
 }
 \description{
 \code{rmf_create_pvl} creates an \code{RMODFLOW} pvl object
+}
+\details{
+parnam & parval should be of the same length
 }
 \seealso{
 \code{\link{rmf_read_pvl}}, \code{\link{rmf_write_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}

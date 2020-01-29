@@ -30,6 +30,6 @@ rmfi_write_bc_list(file, obj, dis, varnames, header, package, partyp, ...)
 Write a MODFLOW boundary condition package which uses list-directed input to a file
 }
 \seealso{
-\code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_read_bc_list}}
+\code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 }
 \keyword{internal}

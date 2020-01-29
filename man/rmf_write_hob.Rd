@@ -7,7 +7,7 @@
 \usage{
 rmf_write_hob(hob, file = {    
   cat("Please select hob file to overwrite or provide new filename ...\\n")
-      file.choose() })
+      file.choose() }, ...)
 
 write_hob(...)
 }
@@ -15,6 +15,8 @@ write_hob(...)
 \item{hob}{an \code{\link{RMODFLOW}} hob object}
 
 \item{file}{filename to write to; typically '*.hob'}
+
+\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

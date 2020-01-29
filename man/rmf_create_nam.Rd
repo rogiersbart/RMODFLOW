@@ -18,6 +18,9 @@ Object of class nam
 \description{
 \code{rmf_create_nam} creates an \code{RMODFLOW} nam object.
 }
+\details{
+if a \code{RMODFLOW nam} object is present, it is recreated.
+}
 \section{Functions}{
 \itemize{
 \item \code{create_nam}: Deprecated function name

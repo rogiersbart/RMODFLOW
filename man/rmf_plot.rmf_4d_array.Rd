@@ -4,11 +4,13 @@
 \alias{rmf_plot.rmf_4d_array}
 \title{Plot a 2D section through a MODFLOW 4D array}
 \usage{
-\method{rmf_plot}{rmf_4d_array}(array, i = NULL, j = NULL, k = NULL,
-  l = NULL, ...)
+\method{rmf_plot}{rmf_4d_array}(array, dis, i = NULL, j = NULL,
+  k = NULL, l = NULL, ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}
+
+\item{dis}{discretization file object}
 
 \item{i}{row number to plot}
 

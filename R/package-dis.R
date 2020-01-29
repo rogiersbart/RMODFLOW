@@ -27,10 +27,10 @@ rmf_create_dis <- function(nlay = 3,
                            itmuni = 1,
                            lenuni = 2,
                            laycbd = rep(0, nlay),
-                           delr = rep(100, ncol),
-                           delc = rep(100, nrow),
+                           delr = 100,
+                           delc = 100,
                            top = matrix(0, nrow = nrow, ncol = ncol),
-                           botm = array(rep(seq(0,-10 * nlay,length = nlay + 1)[2:(nlay + 1)], each = nrow * ncol), dim = c(nrow, ncol, nlay)),
+                           botm = array(rep(seq(0,-10 * (nlay + sum(laycbd != 0)),length = nlay + sum(laycbd != 0) + 1)[2:(nlay + sum(laycbd != 0) + 1)], each = nrow * ncol), dim = c(nrow, ncol, nlay + sum(laycbd != 0))),
                            perlen = rep(1, nper),
                            nstp = rep(1, nper),
                            tsmult = rep(1, nper),
@@ -51,13 +51,15 @@ rmf_create_dis <- function(nlay = 3,
   # data set 2
     dis$laycbd <- laycbd
     if(dis$laycbd[dis$nlay] != 0) {
-      warning("Setting laycbd for the bottom layer to zero.")
+      warning("Setting laycbd for the bottom layer to zero.", call. = FALSE)
       dis$laycbd[dis$nlay] <- 0
     }
   
   # data set 3
+    if(length(delr) == 1) delr <- rep(delr, ncol)
     dis$delr <- delr
   # data set 4
+    if(length(delc) == 1) delc <- rep(delc, nrow)
     dis$delc <- delc
   
   # data set 5
@@ -70,18 +72,11 @@ rmf_create_dis <- function(nlay = 3,
     dis$perlen <- perlen
     dis$nstp <- nstp
     dis$tsmult <- tsmult
-    dis$sstr <- sstr
+    dis$sstr <- toupper(sstr)
   
   #comment(dis) <- comments
   class(dis) <- c('dis','rmf_package')
   return(dis)
-}
-
-#' @describeIn rmf_create_dis Deprecated function name
-#' @export
-create_dis <- function(...) {
-  .Deprecated(new = "rmf_create_dis", old = "create_dis")
-  rmf_create_dis(...)
 }
 
 #' Read a MODFLOW discretization file
@@ -121,7 +116,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   dis_lines <- data_set_2$remaining_lines
   rm(data_set_2)
   if(dis$laycbd[dis$nlay] != 0) {
-    warning("Setting laycbd for the bottom layer to zero.")
+    warning("Setting laycbd for the bottom layer to zero.", call. = FALSE)
     dis$laycbd[dis$nlay] <- 0
   }
   
@@ -155,20 +150,13 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     dis$perlen[i] <- as.numeric(data_set_7$variables[1])
     dis$nstp[i] <- as.numeric(data_set_7$variables[2])
     dis$tsmult[i] <- as.numeric(data_set_7$variables[3])
-    dis$sstr[i] <- data_set_7$variables[4]
+    dis$sstr[i] <- toupper(data_set_7$variables[4])
     dis_lines <- data_set_7$remaining_lines
     rm(data_set_7)
   }
   
   class(dis) <- c('dis','rmf_package')
   return(dis)
-}
-
-#' @describeIn rmf_read_dis Deprecated function name
-#' @export
-read_dis <- function(...) {
-  .Deprecated(new = "rmf_read_dis", old = "read_dis")
-  rmf_read_dis(...)
 }
 
 #' Write a MODFLOW discretization file
@@ -212,13 +200,6 @@ rmf_write_dis <- function(dis,
   
   # data set 7
   for(i in 1:dis$nper) {
-    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],dis$sstr[i], file=file)  
+    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],toupper(dis$sstr[i]), file=file)  
   }
-}
-
-#' @describeIn rmf_write_dis Deprecated function name
-#' @export
-write_dis <- function(...) {
-  .Deprecated(new = "rmf_write_dis", old = "write_dis")
-  rmf_write_dis(...)
 }

@@ -8,29 +8,28 @@
 rmf_read_kdep(file = {     cat("Please select kdep file ...\\n")    
   file.choose() }, dis = {    
   cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, huf = {    
-  cat("Please select corresponding huf file ...\\n")    
-  rmf_read_huf(file.choose(), dis = dis) }, ...)
+  rmf_read_dis(file.choose()) }, ...)
 
 read_kdep(...)
 }
 \arguments{
-\item{file}{Filename; typically *.kdep}
-
-\item{dis}{discretization file object; defaults to that with the same filename but with extension '.dis'}
-
-\item{huf}{hydrogeologic unit file object; defaults to that with the same filename but with extension '.huf'}
+\item{dis}{\code{RMODFLOW} dis object}
 
 \item{...}{arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.}
+
+\item{filename}{filename; typically *.kdep}
 }
 \value{
 object of class kdep
 }
 \description{
-\code{read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{\link{RMODFLOW}} kdep object.
+\code{rmf_read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{RMODFLOW} kdep object.
 }
 \section{Functions}{
 \itemize{
 \item \code{read_kdep}: Deprecated function name
 }}
 
+\seealso{
+\code{\link{rmf_create_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
+}

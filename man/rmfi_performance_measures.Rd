@@ -4,7 +4,14 @@
 \alias{rmfi_performance_measures}
 \title{Model performance measures}
 \usage{
-rmfi_performance_measures(observations, predictions, print = F)
+rmfi_performance_measures(observations, predictions, print = F,
+  measures = c("ssq", "mse", "mae", "me", "r2", "nse", "rmse", "pbias",
+  "kge"), ...)
+}
+\arguments{
+\item{measures}{any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)}
+
+\item{...}{arguments passes to \code{\link{hydroGOF::gof}}}
 }
 \description{
 Model performance measures

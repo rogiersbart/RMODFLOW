@@ -5,7 +5,7 @@
 \alias{convert_huf_to_mask}
 \title{Convert a huf to a mask object}
 \usage{
-rmf_convert_huf_to_mask(huf, dis, bas)
+rmf_convert_huf_to_mask(huf, dis, bas = NULL)
 
 convert_huf_to_mask(...)
 }
@@ -14,7 +14,7 @@ convert_huf_to_mask(...)
 
 \item{dis}{dis object, corresponding to the huf object}
 
-\item{bas}{bas object, corresponding to the huf object}
+\item{bas}{bas object, corresponding to the huf object; defaults to NULL}
 }
 \value{
 mask rmf_3d_array

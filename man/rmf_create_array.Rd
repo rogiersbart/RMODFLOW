@@ -5,7 +5,8 @@
 \alias{create_rmodflow_array}
 \title{Add rmf array class to object based on object dimensions}
 \usage{
-rmf_create_array(obj = NA, dim = NULL, kper = NULL)
+rmf_create_array(obj = NA, dim = NULL, kper = attr(obj, "kper"),
+  dimlabels = attr(obj, "dimlabels"))
 
 create_rmodflow_array(...)
 }
@@ -15,6 +16,8 @@ create_rmodflow_array(...)
 \item{dim}{the dim attribute for the array to be created; by default, dim(obj) is used}
 
 \item{kper}{integer vector specifying the stress periods in which the array is active. Used for defining boundary conditions. Defaults to \code{NULL}}
+
+\item{dimlabels}{character vector specifying the labels of the dimensions; defaults to \code{i, j, k, l} for the first, second, third and fourth dimension, respectively.}
 
 \item{...}{}
 }

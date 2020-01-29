@@ -20,6 +20,8 @@ rmfi_write_array(array, file, cnstnt = 1, iprn = -1, append = TRUE,
 
 \item{nam}{\code{\link{RMODFLOW}} nam object; used when writing external arrays}
 
+\item{xsection}{logical; does the array represent a NLAY x NCOL cross-section. Passed to \code{rmf_write_array}}
+
 \item{...}{ignored}
 }
 \description{

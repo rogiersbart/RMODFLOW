@@ -10,6 +10,7 @@
 #' @param iprnwt flag indicating if information about solver convergence is printed to the listing file
 #' @param ibotav logical; indicating whether corrections are made to groundwater head relative to the cell-bottom altitude if the cell is surrounded by dewatered cells.
 #' @param options character vector; possible values include \code{"SPECIFIED"}, \code{"SIMPLE"}, \code{"MODERATE"} and \code{"COMPLEX"}. See details for more information.
+#' @param continue logical; should the model solve a subsequent time step after it fails to converge ? Defaults to TRUE.
 #' @param dbdtheta coefficient used to reduce the weight applied to the head change between nonlinear iterations
 #' @param dbdkappa coefficient used to increase the weight applied to the ead change between nonlinear iteraions
 #' @param dbdgamma factor used to weight the head change gor iterations \code{n-1} and \code{n}
@@ -53,6 +54,7 @@ rmf_create_nwt <- function(headtol = 0.001,
                            iprnwt = 0,
                            ibotav = 0,
                            options = 'MODERATE',
+                           continue = TRUE,
                            dbdtheta = 0.7,
                            dbdkappa = 0.001,
                            dbdgamma = 0.0,
@@ -92,6 +94,7 @@ rmf_create_nwt <- function(headtol = 0.001,
   nwt$options <- toupper(options)
   
   if(nwt$options == "SPECIFIED") {
+    nwt$continue <- continue
     nwt$dbdtheta <- dbdtheta
     nwt$dbdkappa <- dbdkappa
     nwt$dbdgamma <- dbdgamma
@@ -149,7 +152,7 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <- rmfi_parse_variables(nwt_lines, n = 16, ...)
+  data_set_1 <- rmfi_parse_variables(nwt_lines, n = 17, ...)
   nwt$headtol <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   nwt$fluxtol <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   nwt$maxiterout <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
@@ -160,6 +163,12 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
   nwt$options <- toupper(as.character(data_set_1$variables[8]))
   
   if(nwt$options == "SPECIFIED") {
+    if(toupper(as.character(data_set_1$variables[9])) == 'CONTINUE') {
+      nwt$continue <- TRUE
+      data_set_1$variables <- data_set_1$variables[-9]
+    } else {
+      nwt$continue <- FALSE
+    }
     nwt$dbdtheta <- rmfi_ifelse0(is.na(data_set_1$variables[9]), 0, as.numeric(data_set_1$variables[9]))
     nwt$dbdkappa <- rmfi_ifelse0(is.na(data_set_1$variables[10]), 0, as.numeric(data_set_1$variables[10]))
     nwt$dbdgamma <- rmfi_ifelse0(is.na(data_set_1$variables[11]), 0, as.numeric(data_set_1$variables[11]))
@@ -224,7 +233,7 @@ rmf_write_nwt <- function(nwt,
   
   # data set 1
   rmfi_write_variables(nwt$headtol, nwt$fluxtol, nwt$maxiterout, nwt$thickfact, nwt$linmeth, nwt$iprnwt, nwt$ibotav, toupper(nwt$options), 
-                       rmfi_ifelse0(toupper(nwt$options) == "SPECIFIED", paste(nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, nwt$backflag, nwt$maxbackiter, nwt$backtol, nwt$backreduce), '') , file=file, ...)
+                       rmfi_ifelse0(toupper(nwt$options) == "SPECIFIED", paste(ifelse(nwt$continue, 'CONTINUE', ''), nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, nwt$backflag, nwt$maxbackiter, nwt$backtol, nwt$backreduce), '') , file=file, ...)
   
   # data set 2
   if(toupper(nwt$options) == "SPECIFIED") {

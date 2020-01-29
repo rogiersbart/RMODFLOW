@@ -15,7 +15,7 @@ rmf_install <- function(
   code = "all",
   example = "none"
 ) {
-  
+
   # Codes ----
   
     # TODO enable a choice in console and make that default behaviour

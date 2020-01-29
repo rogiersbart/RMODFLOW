@@ -16,7 +16,7 @@
 #' @param damppcgt damping factor for transient stress periods; optional; only read when damppcg is negative
 #' @return Object of class pcg
 #' @export
-#' @seealso \code{\link{read_pcg}}, \code{\link{write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_read_pcg}}, \code{\link{rmf_write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_create_pcg <- function(mxiter = 20,
                            iter1 = 30,
                            npcond = 1,
@@ -28,7 +28,7 @@ rmf_create_pcg <- function(mxiter = 20,
                            iprpcg = 1,
                            mutpcg = 0,
                            damppcg = 1,
-                           damppcgt = ifelse(damppcg < 0, 1, NA)) {
+                           damppcgt = 1) {
   pcg <- NULL
   
   # data set 0
@@ -48,17 +48,10 @@ rmf_create_pcg <- function(mxiter = 20,
     pcg$iprpcg <- iprpcg
     pcg$mutpcg <- mutpcg
     pcg$damppcg <- damppcg
-    pcg$damppcgt <- damppcgt
+    if(pcg$damppcg < 0) pcg$damppcgt <- damppcgt
   
   class(pcg) <- c('pcg','rmf_package')
   return(pcg)
-}
-
-#' @describeIn rmf_create_pcg Deprecated function name
-#' @export
-create_pcg <- function(...) {
-  .Deprecated(new = "rmf_create_pcg", old = "create_pcg")
-  rmf_create_pcg(...)
 }
 
 #' Read a MODFLOW preconditioned conjugate-gradient package file
@@ -68,7 +61,7 @@ create_pcg <- function(...) {
 #' @param file filename; typically '*.pcg'
 #' @return object of class pcg
 #' @export
-#' @seealso \code{\link{write_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_write_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choose()}, ...) {
   
   pcg_lines <- readr::read_lines(file)
@@ -85,7 +78,8 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
   pcg$mxiter <- rmfi_ifelse0(is.na(data_set_1$variables[1]), 0, as.numeric(data_set_1$variables[1]))
   pcg$iter1 <- rmfi_ifelse0(is.na(data_set_1$variables[2]), 0, as.numeric(data_set_1$variables[2]))
   pcg$npcond <- rmfi_ifelse0(is.na(data_set_1$variables[3]), 0, as.numeric(data_set_1$variables[3]))
-  pcg$ihcofadd <-rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4]))
+  ihcofadd <- suppressWarnings(rmfi_ifelse0(is.na(data_set_1$variables[4]), 0, as.numeric(data_set_1$variables[4])))
+  pcg$ihcofadd <- ifelse(is.na(ihcofadd), 0, ihcofadd)
   pcg_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -99,18 +93,14 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
   pcg$mutpcg <- rmfi_ifelse0(is.na(data_set_2$variables[6]), 0, as.numeric(data_set_2$variables[6]))
   # pcg$damp <- as.numeric(data_set_2$variables[7]) # modflow 2000 only
   pcg$damppcg <- rmfi_ifelse0(is.na(data_set_2$variables[7]), 0, as.numeric(data_set_2$variables[7]))
-  pcg$damppcgt <- rmfi_ifelse0(is.na(data_set_2$variables[8]), 0, as.numeric(data_set_2$variables[8]))
+  if(pcg$damppcg < 0) {
+    damppcgt <- suppressWarnings(rmfi_ifelse0(is.na(data_set_2$variables[8]), 0, as.numeric(data_set_2$variables[8])))
+    pcg$damppcgt <- ifelse(is.na(damppcgt), 0, damppcgt)
+  }
   rm(data_set_2)
   
   class(pcg) <- c('pcg','rmf_package')
   return(pcg)
-}
-
-#' @describeIn rmf_read_pcg Deprecated function name
-#' @export
-read_pcg <- function(...) {
-  .Deprecated(new = "rmf_read_pcg", old = "read_pcg")
-  rmf_read_pcg(...)
 }
 
 #' Write a MODFLOW preconditioned conjugate-gradient package file
@@ -120,7 +110,7 @@ read_pcg <- function(...) {
 #' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
 #' @return \code{NULL}
 #' @export
-#' @seealso \code{\link{read_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+#' @seealso \code{\link{rmf_read_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_write_pcg <- function(pcg,
                           file = {cat('Please select pcg file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   
@@ -133,12 +123,5 @@ rmf_write_pcg <- function(pcg,
   rmfi_write_variables(pcg$mxiter, pcg$iter1, pcg$npcond, ifelse(is.na(pcg$ihcofadd),'',pcg$ihcofadd),file=file, ...)
   
   # data set 2
-  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
-}
-
-#' @describeIn rmf_write_pcg Deprecated function name
-#' @export
-write_pcg <- function(...) {
-  .Deprecated(new = "rmf_write_pcg", old = "write_pcg")
-  rmf_write_pcg(...)
+  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt) || is.null(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
 }

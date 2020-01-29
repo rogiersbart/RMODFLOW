@@ -12,10 +12,12 @@
   c(1:dim(array)[3]), k)][as.logical(mask[rmfi_ifelse0(is.null(i),
   c(1:dim(array)[1]), i), rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j),
   rmfi_ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
-  colour_palette = rmfi_rev_rainbow, nlevels = 7, type = "fill",
-  levels = NULL, gridlines = FALSE, add = FALSE, title = NULL,
-  crop = FALSE, hed = NULL, l = NULL, prj = NULL, crs = NULL,
-  ...)
+  colour_palette = ifelse(type \%in\% c("contour", "vector"), "black",
+  rmfi_rev_rainbow), nlevels = 7, type = "fill", levels = NULL,
+  gridlines = FALSE, add = FALSE, crop = TRUE, hed = NULL,
+  l = NULL, binwidth = ceiling(diff(zlim)/20), label = TRUE,
+  prj = NULL, crs = NULL, vecint = 1, uvw = NULL,
+  legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE), ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}
@@ -34,27 +36,35 @@
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 
-\item{colour_palette}{a colour palette for imaging the array values}
+\item{colour_palette}{a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.}
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 
-\item{type}{plot type: 'fill' (default), 'factor' or 'grid'}
+\item{type}{plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'}
 
-\item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
+\item{levels}{(named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used}
 
 \item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
-\item{title}{plot title}
-
-\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask)}
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE}
 
 \item{hed}{hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used}
 
 \item{l}{time step number for subsetting the hed object}
 
+\item{binwidth}{binwidth for contour plot; defaults to 1/20 of zlim}
+
+\item{label}{logical; should labels be added to contour plot}
+
 \item{prj}{projection file object}
 
 \item{crs}{coordinate reference system for the plot}
+
+\item{vecint}{positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing}
+
+\item{uvw}{optional named list with u, v and w vectors or 3d arrays specifying the vector components in the x, y and z direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}}
+
+\item{legend}{either a logical indicating if the legend is shown or a character indicating the legend title}
 
 \item{...}{parameters provided to plot.rmf_2d_array}
 }
@@ -63,4 +73,8 @@ ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is 
 }
 \description{
 \code{rmf_plot.rmf_3d_array} plots a 2D section through a MODFLOW 3D array.
+}
+\details{
+type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
+         For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 }

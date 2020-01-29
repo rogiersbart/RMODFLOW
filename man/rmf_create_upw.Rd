@@ -4,17 +4,16 @@
 \alias{rmf_create_upw}
 \title{Create an \code{RMODFLOW} upw object}
 \usage{
-rmf_create_upw(dis = rmf_create_dis(), iupwcb = 0, hdry = -888,
-  npupw = 0, iphdry = TRUE, laytyp = ifelse(dis$nlay == 1, list(1),
-  list(c(1, rep(0, dis$nlay - 1))))[[1]], layavg = laytyp * 0,
-  chani = rep(1, dis$nlay), layvka = rep(0, dis$nlay), parnam = NULL,
-  partyp = NULL, parval = NULL, nclu = NULL, mltarr = NULL,
-  zonarr = NULL, iz = NULL, hk = rmf_create_array(1e-04, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), hani = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), vka = hk,
-  ss = rmf_create_array(1e-05, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  sy = rmf_create_array(0.15, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  vkcb = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay)))
+rmf_create_upw(dis, iupwcb = 0, hdry = -888, iphdry = TRUE,
+  noparcheck = FALSE, laytyp = rmfi_ifelse0(dis$nlay == 1, 1, c(1,
+  rep(0, dis$nlay - 1))), layavg = rep(0, dis$nlay), chani = rep(1,
+  dis$nlay), layvka = rep(0, dis$nlay), parameters = NULL,
+  hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  hani = rmfi_ifelse0(all(chani <= 0), hk * 0 + 1, NULL),
+  vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
+  ss = rmfi_ifelse0("TR" \%in\% dis$sstr, hk * 0 + 1e-05, NULL),
+  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && all(laytyp > 0), hk * 0 +
+  0.15, NULL), vkcb = NULL)
 }
 \arguments{
 \item{dis}{RMODFLOW dis object}
@@ -23,9 +22,9 @@ rmf_create_upw(dis = rmf_create_dis(), iupwcb = 0, hdry = -888,
 
 \item{hdry}{head assigned to cells that are converted to dry cells; defaults to -888}
 
-\item{npupw}{number of upw parameters; defaults to 0}
-
 \item{iphdry}{logical; indicating if head will be set to hdry when it's less than 1E-4 above the cell bottom; defaults to TRUE}
+
+\item{noparcheck}{logical; should NOPARCHECK keyword be included?; defaults to FALSE}
 
 \item{laytyp}{vector of flags for each layer, specifying layer type; defaults to all confined (0) except the first layer (1)}
 
@@ -35,19 +34,7 @@ rmf_create_upw(dis = rmf_create_dis(), iupwcb = 0, hdry = -888,
 
 \item{layvka}{vector of flags for each layer, indicating whether vka is the vertical hydraulic conductivity or the ratio of horizontal to vertical; defaults to 0 for each layer}
 
-\item{parnam}{vector of parameter names; names should not be more than 10 characters, are not case sensitive, and should be unique}
-
-\item{partyp}{vector of parameter types; the upw parameter types are HK, HANI, VK, VANI, SS, SY, or VKCB}
-
-\item{parval}{vector of parameter values}
-
-\item{nclu}{vector with the number of clusters required for each parameter}
-
-\item{mltarr}{matrix of multiplier array names, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{zonarr}{matrix of zone array names, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA}
-
-\item{iz}{character matrix of zone number combinations separated by spaces, with dis$nlay rows and upw$npupw columns; cells with non-occurring layer-parameter combinations should be NA; if zonarr is "ALL", iz should be ""}
+\item{parameters}{list of \code{rmf_parameter} as created by \code{\link{rmf_create_parameter}}. See details; defaults to NULL}
 
 \item{hk}{3d array with hydraulic conductivity along rows; defaults to 1. If not read for a specific layer, set all values in that layer to NA.}
 
@@ -67,11 +54,15 @@ Object of class upw
 \description{
 \code{rmf_create_upw} creates an \code{RMODFLOW} upw object.
 }
+\details{
+Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters or by using direct array input.
+         When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
+}
 \note{
 upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
 
 upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
 }
 \seealso{
-\code{\link{rmf_read_upw}}, \code{\link{rmf_write_upw}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
+\code{\link{rmf_create_parameter}}, \code{\link{rmf_read_upw}}, \code{\link{rmf_write_upw}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 }

@@ -2,46 +2,44 @@
 #' 
 #' \code{rmf_create_pvl} creates an \code{RMODFLOW} pvl object
 #' 
-#' @param np number of parameters; defaults to NULL
-#' @param parnam character vector of length \code{np} specifying the parameter names; defaults to NULL
-#' @param parval numeric vector of length \code{np} specifying the parameter values; defaults to NULL+
-#' 
+#' @param parnam character vector specifying the parameter names; defaults to NULL
+#' @param parval numeric vector specifying the parameter values; defaults to NULL+
+#' @details parnam & parval should be of the same length
 #' @return an \code{RMODFLOW} pvl object
 #' @export
 #' @seealso \code{\link{rmf_read_pvl}}, \code{\link{rmf_write_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
 
-rmf_create_pvl = function(np = NULL,
-                          parnam = NULL, 
-                          parval = NULL){
+rmf_create_pvl = function(parnam, 
+                          parval){
   
-  pvl = list()
+  pvl <-  list()
   
   # data set 0
   # to provide comments, use ?comment on resulting pvl object
   
   # data set 1
-  pvl$np = np
+  pvl$np <- length(parnam)
   
   # data set 2
-  pvl$parnam = parnam
-  pvl$parval = parval
+  pvl$parnam <-  parnam
+  pvl$parval <-  parval
   
   class(pvl) = c('pvl', 'rmf_package')
   return(pvl)
-  
   
 }
 
 #' Read a MODFLOW parameter value file
 #' 
-#' \code{read_pvl} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pvl object.
+#' \code{rmf_read_pvl} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pvl object.
 #' 
 #' @param file filename; typically '*.pvl'
 #' @param read_all logical, indicating if \code{np} parameters should be read, or the full parameter table (only relevant if external codes use the pvl file for storing additional parameters).
 #' @return object of class pvl
 #' @export
+#' @seealso \code{\link{rmf_create_pvl}}, \code{\link{rmf_write_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
 rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choose()},
-                         read_all=F) {
+                         read_all = FALSE) {
   
   pvl_lines <- readr::read_lines(file)
   pvl <- list()
@@ -53,7 +51,7 @@ rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choos
   rm(data_set_0)
   
   # data set 1
-  ifelse(read_all, pvl$np <- length(pvl_lines)-1, pvl$np <- as.numeric(pvl_lines[1]))
+  pvl$np <- ifelse(read_all, length(pvl_lines)-1, as.numeric(pvl_lines[1]))
   pvl_lines <- pvl_lines[-1]
   
   # data set 2
@@ -67,19 +65,13 @@ rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choos
   return(pvl)
 }
 
-#' @describeIn rmf_read_pvl Deprecated function name
-#' @export
-read_pvl <- function(...) {
-  .Deprecated(new = "rmf_read_pvl", old = "read_pvl")
-  rmf_read_pvl(...)
-}
-
 #' Write a MODFLOW parameter value file
 #' 
 #' @param pvl an \code{\link{RMODFLOW}} pvl object
 #' @param file filename to write to; typically '*.pvl'
 #' @return \code{NULL}
 #' @export
+#' @seealso \code{\link{rmf_create_pvl}}, \code{\link{rmf_read_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
 rmf_write_pvl <- function(pvl,
                           file = {cat('Please select pvl file to overwrite or provide new filename ...\n'); file.choose()}) {
   
@@ -95,11 +87,4 @@ rmf_write_pvl <- function(pvl,
   for(i in 1:pvl$np) {
     rmfi_write_variables(pvl$parnam[i], pvl$parval[i], file=file)
   }  
-}
-
-#' @describeIn rmf_write_pvl Deprecated function name
-#' @export
-write_pvl <- function(...) {
-  .Deprecated(new = "rmf_write_pvl", old = "write_pvl")
-  rmf_write_pvl(...)
 }

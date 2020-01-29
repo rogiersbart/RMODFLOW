@@ -20,6 +20,3 @@ MODFLOW-CFP. The zip files with windows binaries hosted at the USGS websites
 are downloaded and extracted in \file{C:/WRDAPP/} each time. The main folder
 names are modified in order to have more consistency.
 }
-\examples{
-rmf_install("MODFLOW-2005")
-}

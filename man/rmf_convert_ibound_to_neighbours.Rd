@@ -10,7 +10,7 @@ rmf_convert_ibound_to_neighbours(ibound)
 convert_ibound_to_neighbours(...)
 }
 \arguments{
-\item{ibound}{modflow basic file \code{ibound} array}
+\item{ibound}{3d \code{ibound} array as specified in a MODFLOW BAS object}
 }
 \value{
 list of lower, upper, left, right, front and back logical 3d arrays
