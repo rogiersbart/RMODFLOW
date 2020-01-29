@@ -159,13 +159,6 @@ rmf_create_oc <- function(dis,
   return(oc)
 }
 
-#' @describeIn rmf_create_oc Deprecated function name
-#' @export
-create_oc <- function(...) {
-  .Deprecated(new = "rmf_create_oc", old = "create_oc")
-  rmf_create_oc(...)
-}
-
 #' Read a MODFLOW output control option file
 #' 
 #' \code{read_oc} reads in a MODFLOW output control option file and returns it as an \code{\link{RMODFLOW}} oc object.
@@ -413,13 +406,6 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   return(oc)
 }
 
-#' @describeIn rmf_read_oc Deprecated function name
-#' @export
-read_oc <- function(...) {
-  .Deprecated(new = "rmf_read_oc", old = "read_oc")
-  rmf_read_oc(...)
-}
-
 #' Write a MODFLOW output control option file
 #' 
 #' \code{rmf_write_oc} writes a MODFLOW output control option file based on an \code{\link{RMODFLOW}} oc object.
@@ -527,11 +513,4 @@ rmf_write_oc <- function(oc,
       }
     }
   }
-}
-
-#' @describeIn rmf_write_oc Deprecated function name
-#' @export
-write_oc <- function(...) {
-  .Deprecated(new = "rmf_write_oc", old = "write_oc")
-  rmf_write_oc(...)
 }

@@ -168,13 +168,6 @@ rmf_create_lpf <- function(dis,
   return(lpf)
 }
 
-#' @describeIn rmf_create_lpf Deprecated function name
-#' @export
-create_lpf <- function(...) {
-  .Deprecated(new = "rmf_create_lpf", old = "create_lpf")
-  rmf_create_lpf(...)
-}
-
 #' Read a MODFLOW layer-property flow file
 #' 
 #' \code{read_lpf} reads in a MODFLOW layer property file and returns it as an \code{\link{RMODFLOW}} lpf object.
@@ -403,15 +396,6 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   return(lpf)
 }
 
-#' @describeIn rmf_read_lpf Deprecated function name
-#' @export
-read_lpf <- function(...) {
-  .Deprecated(new = "rmf_read_lpf", old = "read_lpf")
-  rmf_read_lpf(...)
-}
-
-
-
 #' Write a MODFLOW layer-property flow file
 #' 
 #' @param lpf an \code{\link{RMODFLOW}} lpf object
@@ -524,11 +508,4 @@ rmf_write_lpf <- function(lpf,
       rmfi_write_array(lpf$wetdry[,,k], file = file, iprn = iprn, ...)
     }     
   }
-}
-
-#' @describeIn rmf_write_lpf Deprecated function name
-#' @export
-write_lpf <- function(...) {
-  .Deprecated(new = "rmf_write_lpf", old = "write_lpf")
-  rmf_write_lpf(...)
 }

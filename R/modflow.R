@@ -66,14 +66,6 @@ rmf_create <- function(..., cbc = NULL) {
   
 }
 
-#' @describeIn rmf_create Deprecated function name
-#' @export
-create_modflow <- function(...) {
-  .Deprecated(new = "rmf_create", old = "create_modflow")
-  rmf_create(...)
-}
-
-
 #' Read a MODFLOW model
 #'
 #' \code{rmf_read} reads in a MODFLOW model and returns it as a \code{modflow} object

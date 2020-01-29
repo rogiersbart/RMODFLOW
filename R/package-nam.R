@@ -95,13 +95,6 @@ rmf_create_nam <- function(...) {
   return(nam)
 }
 
-#' @describeIn rmf_create_nam Deprecated function name
-#' @export
-create_nam <- function(...) {
-  .Deprecated(new = "rmf_create_nam", old = "create_nam")
-  rmf_create_nam(...)
-}
-
 #' Read a MODFLOW name file
 #' 
 #' \code{rmf_read_nam} reads in a MODFLOW name file and returns it as an \code{\link{RMODFLOW}} nam object.
@@ -147,13 +140,6 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   return(nam)
 }
 
-#' @describeIn rmf_read_nam Deprecated function name
-#' @export
-read_nam <- function(...) {
-  .Deprecated(new = "rmf_read_nam", old = "read_nam")
-  rmf_read_nam(...)
-}
-
 #' Write a MODFLOW name file
 #' 
 #' \code{rmf_write_nam} writes a MODFLOW name file based on an \code{\link{RMODFLOW}} nam object.
@@ -181,11 +167,4 @@ rmf_write_nam <- function(nam,
   
   # data set 1
   write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE, na='', append=T)
-}
-
-#' @describeIn rmf_write_nam Deprecated function name
-#' @export
-write_nam <- function(...) {
-  .Deprecated(new = "rmf_write_nam", old = "write_nam")
-  rmf_write_nam(...)
 }

@@ -98,13 +98,6 @@ rmf_create_hob <- function(locations,
   return(hob)
 }
 
-#' @describeIn rmf_create_hob Deprecated function name
-#' @export
-create_hob <- function(...) {
-  .Deprecated(new = "rmf_create_hob", old = "create_hob")
-  rmf_create_hob(...)
-}
-
 #' Read a MODFLOW head observations file
 #' 
 #' \code{read_hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.
@@ -235,13 +228,6 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   return(hob)
 }
 
-#' @describeIn rmf_read_hob Deprecated function name
-#' @export
-read_hob <- function(...) {
-  .Deprecated(new = "rmf_read_hob", old = "read_hob")
-  rmf_read_hob(...)
-}
-
 #' @describeIn rmf_read_hob Compatible with default ModelMuse file extensions
 #' @export
 rmf_read_ob_hob <- function(...) {
@@ -296,13 +282,6 @@ rmf_write_hob <- function(hob,
   }
 }  
 
-#' @describeIn rmf_write_hob Deprecated function name
-#' @export
-write_hob <- function(...) {
-  .Deprecated(new = "rmf_write_hob", old = "write_hob")
-  rmf_write_hob(...)
-}
-
 #' Read a MODFLOW head predictions file
 #' 
 #' \code{rmf_read_hpr} reads in a MODFLOW head predictions file and returns it as an \code{\link{RMODFLOW}} hpr object.
@@ -316,13 +295,6 @@ rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choos
   hpr$residual <- hpr$simulated - hpr$observed
   class(hpr) <- c('hpr','data.frame')
   return(hpr)
-}
-
-#' @describeIn rmf_read_hpr Deprecated function name
-#' @export
-read_hpr <- function(...) {
-  .Deprecated(new = "rmf_read_hpr", old = "read_hpr")
-  rmf_read_hpr(...)
 }
 
 #' @describeIn rmf_read_hpr Compatible with default ModelMuse file extension

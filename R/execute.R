@@ -97,13 +97,6 @@ rmf_run_modflow <- function(...) {
   UseMethod('rmf_run_modflow')
 }
 
-#' @describeIn rmf_run_modflow Deprecated function name
-#' @export
-run_modflow <- function(...) {
-  .Deprecated(new = "rmf_run_modflow", old = "run_modflow")
-  rmf_run_modflow(...)
-}
-
 #' Run a MODFLOW model optimization, based on the parameter value file
 #' 
 #' \code{run_modflow_opt} runs a MODFLOW optimization.
@@ -186,13 +179,6 @@ rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
   return(opt)
 }
 
-#' @describeIn rmf_run_opt Deprecated function name
-#' @export
-run_opt <- function(...) {
-  .Deprecated(new = "rmf_run_opt", old = "run_opt")
-  rmf_run_opt(...)
-}
-
 #' Run a MODFLOW model response surface mapping
 #' 
 #' \code{run_modflow_rsm} runs a MODFLOW response surface mapping.
@@ -257,13 +243,6 @@ rmf_run_rsm <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
   return(rsm)
 }
 
-#' @describeIn rmf_run_rsm Deprecated function name
-#' @export
-run_rsm <- function(...) {
-  .Deprecated(new = "rmf_run_rsm", old = "run_rsm")
-  rmf_run_rsm(...)
-}
-
 #' Run a MODFLOW model sensitivity analysis, based on the parameter value file
 #' 
 #' \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
@@ -307,13 +286,6 @@ rmf_run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
   sens$parnam <- pvl$parnam
   class(sens) <- 'sen'
   return(sens)
-}
-
-#' @describeIn rmf_run_sen Deprecated function name
-#' @export
-run_sen <- function(...) {
-  .Deprecated(new = "rmf_run_sen", old = "run_sen")
-  rmf_run_sen(...)
 }
 
 #' Find paths to executables

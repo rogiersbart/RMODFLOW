@@ -611,13 +611,6 @@ rmf_cell_coordinates <- function(...) {
   UseMethod('rmf_cell_coordinates')
 }
 
-#' @describeIn rmf_cell_coordinates Deprecated function name
-#' @export
-cell_coordinates <- function(...) {
-  .Deprecated(new = "rmf_cell_coordinates", old = "cell_coordinates")
-  rmf_cell_coordinates(...)
-}
-
 #' Get cell dimensions from a dis object
 #' 
 #' @param dis dis object
@@ -736,13 +729,6 @@ rmf_cell_dimensions <- function(...) {
   UseMethod('rmf_cell_dimensions')
 }
 
-#' @describeIn rmf_cell_dimensions Deprecated function name
-#' @export
-cell_dimensions <- function(...) {
-  .Deprecated(new = "rmf_cell_dimensions", old = "cell_dimensions")
-  rmf_cell_dimensions(...)
-}
-
 #' Get information from a dis object at a certain grid cell
 #' 
 #' @param dis a discretization file object
@@ -820,13 +806,6 @@ rmf_cell_info.huf <- function(huf,
 #' @export
 rmf_cell_info <- function(...) {
   UseMethod('rmf_cell_info')
-}
-
-#' @describeIn rmf_cell_info Deprecated function name
-#' @export
-cell_info <- function(...) {
-  .Deprecated(new = "rmf_cell_info", old = "cell_info")
-  rmf_cell_info(...)
 }
 
 #' Convert a bcf to a lpf object
@@ -1037,21 +1016,6 @@ rmf_convert_cbc_to_darcy <- function(cbc,
   return(darcy)
 }
 
-#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
-#' @export
-convert_bud_to_darcy <- function(...) {
-  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "convert_bud_to_darcy")
-  rmf_convert_cbc_to_darcy(...)
-}
-
-#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
-#' @export
-rmf_convert_bud_to_darcy <- function(...) {
-  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "rmf_convert_bud_to_darcy")
-  rmf_convert_cbc_to_darcy(...)
-}
-
-
 #' Convert a dis object to correspond to the saturated volume
 #' 
 #' @param dis dis object
@@ -1083,13 +1047,6 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
   } 
   dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))
   return(dis)
-}
-
-#' @describeIn rmf_convert_dis_to_saturated_dis Deprecated function name
-#' @export
-convert_dis_to_saturated_dis <- function(...) {
-  .Deprecated(new = "rmf_convert_dis_to_saturated_dis", old = "convert_dis_to_saturated_dis")
-  rmf_convert_dis_to_saturated_dis(...)
 }
 
 #' Convert modflow coordinates to real world coordinates
@@ -1203,13 +1160,6 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
   }
 }                                                                           
 
-#' @describeIn rmf_convert_grid_to_xyz Deprecated function name
-#' @export
-convert_grid_to_xyz <- function(...) {
-  .Deprecated(new = "rmf_convert_grid_to_xyz", old = "convert_grid_to_xyz")
-  rmf_convert_grid_to_xyz(...)
-}
-
 #' Convert a hob object to a time series data frame
 #' 
 #' @param hob hob object
@@ -1223,13 +1173,6 @@ rmf_convert_hob_to_time_series <- function(hob,
   toffset <- lubridate::days(ifelse(hob$irefsp==1,0,cumsum(dis$perlen)[hob$irefsp-1]) + hob$toffset * hob$tomulth)
   time_series <- data.frame(name = hob$obsloc, time = prj$starttime + toffset, head = hob$hobs)
   return(time_series)
-}
-
-#' @describeIn rmf_convert_hob_to_time_series Deprecated function name
-#' @export
-convert_hob_to_time_series <- function(...) {
-  .Deprecated(new = "rmf_convert_hob_to_time_series", old = "convert_hob_to_time_series")
-  rmf_convert_hob_to_time_series(...)
 }
 
 #' Convert a huf to a dis object (for plotting)
@@ -1257,13 +1200,6 @@ rmf_convert_huf_to_dis <- function(huf,
   new_dis$botm <- rmf_create_array(new_dis$botm)
   new_dis$top <- rmf_create_array(new_dis$top)
   return(new_dis)
-}
-
-#' @describeIn rmf_convert_huf_to_dis Deprecated function name
-#' @export
-convert_huf_to_dis <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_dis", old = "convert_huf_to_dis")
-  rmf_convert_huf_to_dis(...)
 }
 
 #' Convert a parameter defined on the HUF grid to the numerical grid
@@ -1404,14 +1340,6 @@ rmf_convert_huf_to_grid <- function(huf,
   }
 }
 
-#' @describeIn rmf_convert_huf_to_grid Deprecated function name
-#' @export
-convert_huf_to_grid <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_grid", old = "convert_huf_to_grid")
-  rmf_convert_huf_to_grid(...)
-}
-
-
 #' Convert a huf to a lpf object
 #'
 #' @param huf \code{RMODFLOW} huf object
@@ -1498,13 +1426,6 @@ rmf_convert_huf_to_mask <- function(huf, dis, bas = NULL) {
   return(mask)
 }
 
-#' @describeIn rmf_convert_huf_to_mask Deprecated function name
-#' @export
-convert_huf_to_mask <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_mask", old = "convert_huf_to_mask")
-  rmf_convert_huf_to_mask(...)
-}
-
 #' Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 #' 
 #' @param ibound 3d \code{ibound} array as specified in a MODFLOW BAS object
@@ -1537,13 +1458,6 @@ rmf_convert_ibound_to_neighbours <- function(ibound) {
   }
   
   return(neighbours)
-}
-
-#' @describeIn rmf_convert_ibound_to_neighbours Deprecated function name
-#' @export
-convert_ibound_to_neighbours <- function(...) {
-  .Deprecated(new = "rmf_convert_ibound_to_neighbours", old = "convert_ibound_to_neighbours")
-  rmf_convert_ibound_to_neighbours(...)
 }
 
 #' Convert id to id
@@ -1588,13 +1502,6 @@ rmf_convert_id_to_ijk <- function(id,
   }  
 }
 
-#' @describeIn rmf_convert_id_to_ijk Deprecated function name
-#' @export
-convert_id_to_ijk <- function(...) {
-  .Deprecated(new = "rmf_convert_id_to_ijk", old = "convert_id_to_ijk")
-  rmf_convert_id_to_ijk(...)
-}
-
 #' Convert ijk to id
 #' 
 #' @param i vector of row numbers
@@ -1618,14 +1525,6 @@ rmf_convert_ijk_to_id <- function(i,
   }
   
 }
-
-#' @describeIn rmf_convert_ijk_to_id Deprecated function name
-#' @export
-convert_ijk_to_id <- function(...) {
-  .Deprecated(new = "rmf_convert_ijk_to_id", old = "convert_ijk_to_id")
-  rmf_convert_ijk_to_id(...)
-}
-
 
 #' Convert a lpf to a upw object
 #'
@@ -1837,13 +1736,6 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
   }
 }
 
-#' @describeIn rmf_convert_xyz_to_grid Deprecated function name
-#' @export
-convert_xyz_to_grid <- function(...) {
-  .Deprecated(new = "rmf_convert_xyz_to_grid", old = "convert_xyz_to_grid")
-  rmf_convert_xyz_to_grid(...)
-}
-
 #' Copy files from specified paths to current working directory
 #'
 #' @param filenames character vector of filenames
@@ -1887,13 +1779,6 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   attr(obj, 'dimlabels') <- dimlabels
   
   return(obj)
-}
-
-#' @describeIn rmf_create_array Deprecated function name
-#' @export
-create_rmodflow_array <- function(...) {
-  .Deprecated(new = "rmf_create_array", old = "create_rmodflow_array")
-  rmf_create_array(...)
 }
 
 #' @export
@@ -2788,13 +2673,6 @@ rmf_export_table <- function(...) {
   UseMethod('rmf_export_table')
 }
 
-#' @describeIn rmf_export_table Deprecated function name
-#' @export
-export_table <- function(...) {
-  .Deprecated(new = "rmf_export_table", old = "export_table")
-  rmf_export_table(...)
-}
-
 #' Generic function to export tables from RMODFLOW arrays
 #' 
 #' @rdname rmf_export_table
@@ -2830,13 +2708,6 @@ rmf_export_table.rmf_4d_array <- function(array,
 #' @export
 rmf_export_vector <- function(...) {
   UseMethod('rmf_export_vector')
-}
-
-#' @describeIn rmf_export_vector Deprecated function name
-#' @export
-export_vector <- function(...) {
-  .Deprecated(new = "rmf_export_vector", old = "export_vector")
-  rmf_export_vector(...)
 }
 
 #' Generic function to export vectors
@@ -2915,14 +2786,6 @@ rmf_performance <- function(...) {
   UseMethod('rmf_performance')
 }
 
-#' @describeIn rmf_performance Deprecated function name
-#' @export
-performance <- function(...) {
-  .Deprecated(new = "rmf_performance", old = "performance")
-  rmf_performance(...)
-}
-
-
 #' Get model performance measures
 #'
 #' @param sim numeric vector with simulated values
@@ -2996,13 +2859,6 @@ rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...
   
   class(grid2d) <- 'gms_2d_grid'
   return(grid2d)
-}
-
-#' @describeIn rmf_read_gms_2d_grid Deprecated function name
-#' @export
-rmf_read_gms_2d_grid <- function(...) {
-  .Deprecated(new = "rmf_read_gms_2d_grid", old = "read_gms_2d_grid")
-  rmf_read_gms_2d_grid(...)
 }
 
 #' Read a MODFLOW array from a separate file. 
@@ -3266,13 +3122,6 @@ rmf_read_prj <- function(file = {cat('Please select prj file ...\n'); file.choos
   return(prj)
 }
 
-#' @describeIn rmf_read_prj Deprecated function name
-#' @export
-read_prj <- function(...) {
-  .Deprecated(new = "rmf_read_prj", old = "read_prj")
-  rmf_read_prj(...)
-}
-
 #' Write an RMODFLOW projection file
 #' 
 #' \code{write.prj} writes a projection file
@@ -3287,11 +3136,3 @@ rmf_write_prj <- function(prj,
   cat(paste0(prj$rotation,'\n'), file=file, append=TRUE)
   if(length(prj) > 3) cat(paste0(format(prj$starttime,format='%Y-%m-%d %H:%M:%S'),'\n'), file=file, append=TRUE)
 }
-
-#' @describeIn rmf_write_prj Deprecated function name
-#' @export
-write_prj <- function(...) {
-  .Deprecated(new = "rmf_write_prj", old = "write_prj")
-  rmf_write_prj(...)
-}
-

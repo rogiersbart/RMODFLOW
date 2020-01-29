@@ -728,13 +728,6 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
   }
 }
 
-#' @describeIn rmf_plot.hpr Deprecated function name
-#' @export
-plot.hpr <- function(...) {
-  .Deprecated(new = "rmf_plot.hpr", old = "plot.hpr")
-  rmf_plot.hpr(...)
-}
-
 #' Plot a 2D section through a MODFLOW 3D array
 #' 
 #' \code{rmf_plot.huf} plots a 2D section through a MODFLOW 3D array.
@@ -813,13 +806,6 @@ rmf_plot.huf <- function(huf,
   } else {
     return(p)
   }
-}
-
-#' @describeIn rmf_plot.huf Deprecated function name
-#' @export
-plot.huf <- function(...) {
-  .Deprecated(new = "rmf_plot.huf", old = "plot.huf")
-  rmf_plot.huf(...)
 }
 
 #' Plot a RMODFLOW rch object
@@ -1173,13 +1159,6 @@ rmf_plot.rmf_2d_array <- function(array,
       stop('Please provide valid plot type.', call. = FALSE)
     }
   }
-}
-
-#' @describeIn rmf_plot.rmf_2d_array Deprecated function name
-#' @export
-plot.rmf_2d_array <- function(...) {
-  .Deprecated(new = "rmf_plot.rmf_2d_array", old = "plot.rmf_2d_array")
-  rmf_plot.rmf_2d_array(...)
 }
 
 #' Plot a 2D section through a MODFLOW 3D array
@@ -1545,13 +1524,6 @@ rmf_plot.rmf_3d_array <- function(array,
   }
 }
 
-#' @describeIn rmf_plot.rmf_3d_array Deprecated function name
-#' @export
-plot.rmf_3d_array <- function(...) {
-  .Deprecated(new = "rmf_plot.rmf_3d_array", old = "plot.rmf_3d_array")
-  rmf_plot.rmf_3d_array(...)
-}
-
 #' Plot a 2D section through a MODFLOW 4D array
 #' 
 #' \code{rmf_plot.rmf_4d_array} plots a 2D section through a MODFLOW 4D array.
@@ -1582,13 +1554,6 @@ rmf_plot.rmf_4d_array <- function(array,
     if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
     rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   }
-}
-
-#' @describeIn rmf_plot.rmf_4d_array Deprecated function name
-#' @export
-plot.rmf_4d_array <- function(...) {
-  .Deprecated(new = "rmf_plot.rmf_4d_array", old = "plot.rmf_4d_array")
-  rmf_plot.rmf_4d_array(...)
 }
 
 #' Plot a RMODFLOW list object
@@ -1829,13 +1794,6 @@ rmf_plot.sen <- function(sen,type='css')
     stop('dss plotting not implemented yet', call. = FALSE)
   }
   
-}
-
-#' @describeIn rmf_plot.sen Deprecated function name
-#' @export
-plot.sen <- function(...) {
-  .Deprecated(new = "rmf_plot.sen", old = "plot.sen")
-  rmf_plot.sen(...)
 }
 
 #' Plot a RMODFLOW wel object

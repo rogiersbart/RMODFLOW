@@ -119,13 +119,6 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
   return(mlt)
 }
 
-#' @describeIn rmf_read_mlt Deprecated function name
-#' @export
-read_mlt <- function(...) {
-  .Deprecated(new = "rmf_read_mlt", old = "read_mlt")
-  rmf_read_mlt(...)
-}
-
 #' Write a MODFLOW multiplier file
 #'
 #' \code{rmf_write_mlt} writes an MODFLOW multiplier file based on a \code{RMODFLOW} mlt object

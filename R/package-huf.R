@@ -343,13 +343,6 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
   return(huf)
 }
 
-#' @describeIn rmf_read_huf Deprecated function name
-#' @export
-read_huf <- function(...) {
-  .Deprecated(new = "rmf_read_huf", old = "read_huf")
-  rmf_read_huf(...)
-}
-
 #' Write a MODFLOW hydrogeologic unit flow file
 #' 
 #' @param huf an \code{\link{RMODFLOW}} huf object
@@ -411,14 +404,6 @@ rmf_write_huf <- function(huf,
   # data set 12
   # Print options, not implemented
 }
-
-#' @describeIn rmf_write_huf Deprecated function name
-#' @export
-write_huf <- function(...) {
-  .Deprecated(new = "rmf_write_huf", old = "write_huf")
-  rmf_write_huf(...)
-}
-
 
 #' Create an \code{RMODFLOW} kdep object
 #' 
@@ -557,13 +542,6 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
   comment(kdep) <- comments
   class(kdep) <- c('kdep','rmf_package')
   return(kdep)
-}
-
-#' @describeIn rmf_read_kdep Deprecated function name
-#' @export
-read_kdep <- function(...) {
-  .Deprecated(new = "rmf_read_kdep", old = "read_kdep")
-  rmf_read_kdep(...)
 }
 
 #' Write a MODFLOW hydraulic conductivity depth-dependence capability file

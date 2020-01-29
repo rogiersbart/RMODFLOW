@@ -785,13 +785,6 @@ rmf_read_head <- function(...) {
   rmf_read_hed(...)
 }
 
-#' @describeIn rmf_read_hed Deprecated function name
-#' @export
-read_hed <- function(...) {
-  .Deprecated(new = "rmf_read_hed", old = "read_hed")
-  rmf_read_hed(...)
-}
-
 #' @describeIn rmf_read_hed Compatible with default ModelMuse file extension
 #' @export
 rmf_read_fhd <- function(...) {

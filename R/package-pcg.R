@@ -54,13 +54,6 @@ rmf_create_pcg <- function(mxiter = 20,
   return(pcg)
 }
 
-#' @describeIn rmf_create_pcg Deprecated function name
-#' @export
-create_pcg <- function(...) {
-  .Deprecated(new = "rmf_create_pcg", old = "create_pcg")
-  rmf_create_pcg(...)
-}
-
 #' Read a MODFLOW preconditioned conjugate-gradient package file
 #' 
 #' \code{read_pcg} reads in a MODFLOW preconditioned conjugate-gradient package file and returns it as an \code{\link{RMODFLOW}} pcg object.
@@ -110,13 +103,6 @@ rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choos
   return(pcg)
 }
 
-#' @describeIn rmf_read_pcg Deprecated function name
-#' @export
-read_pcg <- function(...) {
-  .Deprecated(new = "rmf_read_pcg", old = "read_pcg")
-  rmf_read_pcg(...)
-}
-
 #' Write a MODFLOW preconditioned conjugate-gradient package file
 #' 
 #' @param pcg an \code{\link{RMODFLOW}} pcg object
@@ -138,11 +124,4 @@ rmf_write_pcg <- function(pcg,
   
   # data set 2
   rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt) || is.null(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
-}
-
-#' @describeIn rmf_write_pcg Deprecated function name
-#' @export
-write_pcg <- function(...) {
-  .Deprecated(new = "rmf_write_pcg", old = "write_pcg")
-  rmf_write_pcg(...)
 }

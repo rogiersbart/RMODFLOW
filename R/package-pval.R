@@ -65,13 +65,6 @@ rmf_read_pvl <- function(file = {cat('Please select pvl file ...\n'); file.choos
   return(pvl)
 }
 
-#' @describeIn rmf_read_pvl Deprecated function name
-#' @export
-read_pvl <- function(...) {
-  .Deprecated(new = "rmf_read_pvl", old = "read_pvl")
-  rmf_read_pvl(...)
-}
-
 #' Write a MODFLOW parameter value file
 #' 
 #' @param pvl an \code{\link{RMODFLOW}} pvl object
@@ -94,11 +87,4 @@ rmf_write_pvl <- function(pvl,
   for(i in 1:pvl$np) {
     rmfi_write_variables(pvl$parnam[i], pvl$parval[i], file=file)
   }  
-}
-
-#' @describeIn rmf_write_pvl Deprecated function name
-#' @export
-write_pvl <- function(...) {
-  .Deprecated(new = "rmf_write_pvl", old = "write_pvl")
-  rmf_write_pvl(...)
 }

@@ -58,13 +58,6 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
   return(bas)
 }
 
-#' @describeIn rmf_create_bas Deprecated function name
-#' @export
-create_bas <- function(...) {
-  .Deprecated(new = "rmf_create_bas", old = "create_bas")
-  rmf_create_bas(...)
-}
-
 #' Read a MODFLOW basic file
 #' 
 #' \code{rmf_read_bas} reads in a MODFLOW basic file and returns it as an \code{\link{RMODFLOW}} bas object.
@@ -125,13 +118,6 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   return(bas)
 }
 
-#' @describeIn rmf_read_bas Deprecated function name
-#' @export
-read_bas <- function(...) {
-  .Deprecated(new = "rmf_read_bas", old = "read_bas")
-  rmf_read_bas(...)
-}
-
 #' Write a MODFLOW basic file
 #' 
 #' \code{rmf_write_bas} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} bas object.
@@ -174,11 +160,4 @@ rmf_write_bas <- function(bas,
   # data set 4
   rmfi_write_array(bas$strt, file = file, iprn = iprn, xsection = bas$xsection, ...)
   
-}
-
-#' @describeIn rmf_write_bas Deprecated function name
-#' @export
-write_bas <- function(...) {
-  .Deprecated(new = "rmf_write_bas", old = "write_bas")
-  rmf_write_bas(...)
 }

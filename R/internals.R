@@ -74,13 +74,6 @@ rmfi_convert_huf_to_nlay <- function(huf, dis, bas = NULL) {
   return(nlay)
 }
 
-#' @describeIn rmfi_convert_huf_to_nlay Deprecated function name
-#' @export
-convert_huf_to_nlay <- function(...) {
-  .Deprecated(new = "rmfi_convert_huf_to_nlay", old = "convert_huf_to_nlay")
-  rmfi_convert_huf_to_nlay(...)
-}
-
 #' Set array input for a MODFLOW boundary condition package
 #'
 #' @param arg list of (1) \code{rmf_2d_array's} and/or rmf_parameter array objects or (2) a single nested \code{list} with \code{rmf_2d_array's} and/or rmf_parameter elements or (3) a \code{matrix}; defines the boundary condition input. 
