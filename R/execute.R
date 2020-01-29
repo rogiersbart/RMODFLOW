@@ -309,10 +309,14 @@ rmf_run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
 #' rmf_find("MODFLOW-2005")
 rmf_find <- function(name = "MODFLOW-2005",
                      precision = "single") {
-  if (name == "MODFLOW-2005") {
+  # TODO automatically select 32 bit executables if available, otherwise throw
+  # error on 32 bit systems
+  if (grepl("2005", name)) {
+    if (grepl("dbl", name)) precision <- "double"
+    name <- "MODFLOW-2005"
     executable <- ifelse(precision == "single", "mf2005.exe", "mf2005dbl.exe")
     folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", name, "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -321,10 +325,11 @@ rmf_find <- function(name = "MODFLOW-2005",
       }
     }
     return(paste0(folder, executable))
-  } else if (name == "MODFLOW-OWHM") {
+  } else if (grepl("owhm", name, ignore.case = TRUE)) {
+    name <- "MODFLOW-OWHM"
     executable <- "MF_OWHM.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", name, "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -333,10 +338,11 @@ rmf_find <- function(name = "MODFLOW-2005",
       }
     }
     return(paste0(folder, executable))
-  } else if (name == "MODFLOW-NWT") {
+  } else if (grepl("nwt", name, ignore.case = TRUE)) {
+    name <- "MODFLOW-NWT"
     executable <- "MODFLOW-NWT_64.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", name, "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -345,10 +351,11 @@ rmf_find <- function(name = "MODFLOW-2005",
       }
     }
     return(paste0(folder, executable))
-  } else if (name == "MODFLOW-LGR") {
+  } else if (grepl("lgr", name, ignore.case = TRUE)) {
+    name <- "MODFLOW-LGR"
     executable <- "mflgr.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", name, "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -357,10 +364,11 @@ rmf_find <- function(name = "MODFLOW-2005",
       }
     }
     return(paste0(folder, executable))
-  } else if (name == "MODFLOW-CFP") {
+  } else if (grepl("cfp", name, ignore.case = TRUE)) {
+    name <- "MODFLOW-CFP"
     executable <- "mf2005cfp.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", name, "/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder

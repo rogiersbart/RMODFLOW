@@ -33,7 +33,7 @@ Imports:
     abind,
     ggquiver,
     magrittr,
-    fs
+    fs,
     processx
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
