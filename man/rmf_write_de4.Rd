@@ -6,12 +6,14 @@
 \usage{
 rmf_write_de4(de4, file = {    
   cat("Please choose de4 file to overwrite or provide new filename ...\\n")
-      file.choose() })
+      file.choose() }, ...)
 }
 \arguments{
 \item{de4}{an \code{RMODFLOW} de4 object}
 
 \item{file}{filename to write to; typically '*.de4'}
+
+\item{...}{ignored}
 }
 \value{
 \code{NULL}

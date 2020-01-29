@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_chd} creates an \code{RMODFLOW} chd object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the constant head cells 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the constant head cells 
 #' @param dis dis object
 #' @param noprint logical, should the printing of CHD cells to the listing file be suppressed ? Defaults to \code{FALSE}
 #' @param aux optional character vector specifying the names of the auxiliary variables. These variables should also be included in the \code{rmf_list} objects that are supplied; defaults to \code{NULL}
@@ -54,7 +54,7 @@ rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
-  input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = c(4,5), ...)
+  input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = c(4,5), ...)
   
   obj <- rmf_create_chd(input$rmf_lists, dis = dis, noprint = unname(input$option['NOPRINT']), aux = input$aux)
   comment(obj) <- input$comments
@@ -69,7 +69,7 @@ rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head
 #' @param chd an \code{RMODFLOW} chd object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.chd'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @export

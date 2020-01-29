@@ -7,7 +7,7 @@
 rmf_create_ghb(..., dis, ighbcb = 0, noprint = FALSE, aux = NULL)
 }
 \arguments{
-\item{...}{\code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the general-head boundary cells.}
+\item{...}{\code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the general-head boundary cells.}
 
 \item{dis}{dis object}
 

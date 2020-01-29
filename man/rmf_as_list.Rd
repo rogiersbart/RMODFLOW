@@ -41,6 +41,8 @@ Converts a rmf_2d_array or rmf_3d_array to a rmf_list
 }
 \details{
 \code{\link{rmf_convert_id_to_ijk}} can be used to obtain a ijk data.frame from either MODFLOW cell id's or R cell id's.
+
+will set k to 1
 }
 \seealso{
 \code{\link{rmf_as_array}}

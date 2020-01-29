@@ -5,15 +5,18 @@
 \title{Plot a MODFLOW 2D array}
 \usage{
 \method{rmf_plot}{rmf_2d_array}(array, dis, bas = NULL,
-  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {    
-  warning("Using first ibound layer as mask.", call. = FALSE)    
-  rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1],
-  bas$ibound[, , 1]) }), colour_palette = rmfi_rev_rainbow,
+  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {     if (dis$nlay >
+  1)          warning("Using first ibound layer as mask.", call. = FALSE)  
+    rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1],
+  bas$ibound[, , 1]) }), colour_palette = ifelse(type \%in\% c("contour",
+  "vector"), "black", rmfi_rev_rainbow),
   zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
   type = "fill", levels = NULL, gridlines = FALSE, add = FALSE,
-  height_exaggeration = 100, binwidth = round(diff(zlim)/20),
+  height_exaggeration = 100, binwidth = ceiling(diff(zlim)/20),
   label = TRUE, prj = NULL, crs = NULL, alpha = 1,
-  plot3d = FALSE, height = NULL, title = NULL, crop = FALSE)
+  plot3d = FALSE, height = NULL, crop = TRUE, vecint = 1,
+  uvw = NULL, legend = ifelse(type \%in\% c("fill", "factor"), !add,
+  FALSE))
 }
 \arguments{
 \item{array}{an object of class rmf_2d_array}
@@ -24,15 +27,15 @@
 
 \item{mask}{a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound}
 
-\item{colour_palette}{a colour palette for imaging the array values}
+\item{colour_palette}{a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.}
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 
-\item{type}{plot type: 'fill' (default), 'factor', 'grid' or 'contour'}
+\item{type}{plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'}
 
-\item{levels}{labels that should be used on the factor legend; if NULL the array factor levels are used}
+\item{levels}{(named) character vector with labels for the factor legend. If not named, factor levels are sorted before being labelled. If NULL, the array factor levels are used}
 
 \item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
@@ -54,13 +57,21 @@
 
 \item{height}{2D array for specifying the 3D plot z coordinate}
 
-\item{title}{plot title}
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE}
 
-\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask)}
+\item{vecint}{positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing}
+
+\item{uvw}{optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}}
+
+\item{legend}{either a logical indicating if the legend is shown or a character indicating the legend title}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
 \code{rmf_plot.rmf_2d_array} plots a MODFLOW 2D array.
+}
+\details{
+type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
+         For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 }

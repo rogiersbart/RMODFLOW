@@ -6,12 +6,14 @@
 \usage{
 rmf_write_mlt(mlt, file = {    
   cat("Please choose mlt file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+      file.choose() }, iprn = -1, ...)
 }
 \arguments{
 \item{mlt}{an \code{RMODFLOW} mlt object}
 
 \item{file}{filename to write to; typically '*.mlt'}
+
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 
 \item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }

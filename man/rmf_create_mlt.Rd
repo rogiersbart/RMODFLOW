@@ -4,18 +4,18 @@
 \alias{rmf_create_mlt}
 \title{Create an \code{RMODFLOW} mlt object}
 \usage{
-rmf_create_mlt(nml = 1, mltnam = "MULT", functn = NULL,
-  rmlt = list(rmf_create_array(1, dim = c(10, 10))), operators = NULL,
+rmf_create_mlt(nml = length(mltnam), mltnam = "MULT", functn = NULL,
+  rmlt = rmf_create_array(1, dim = c(10, 10)), operators = NULL,
   iprn = NULL)
 }
 \arguments{
-\item{nml}{number of multiplier arrays to be defined; defaults to 1}
+\item{nml}{number of multiplier arrays to be defined; defaults to the length of mltnam}
 
 \item{mltnam}{character vector of length \code{nml} specifying the names of the multiplier arrays; defaults to 'MULT'}
 
 \item{functn}{optional logical vector of length \code{nml} indicating if the multiplier array will be constructed from other multiplier arrays previously defined; defaults to NULL}
 
-\item{rmlt}{list with \code{nml} elements where each element is a \code{rmf_2d_array} specifying a mutliplier array; defaults to a \code{rmf_2d_array} with 1 for all cells}
+\item{rmlt}{either a single 2d array or a list with \code{nml} 2d arrays specifying the mutliplier arrays; defaults to a \code{rmf_2d_array} with 1 for all cells}
 
 \item{operators}{list with \code{nml} elements where each element is a character vector with the correct function which will be printed for that multiplier array. If no function is to be specifyied for an array, set to NULL; defaults to NULL}
 

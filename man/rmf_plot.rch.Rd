@@ -2,36 +2,25 @@
 % Please edit documentation in R/plot.R
 \name{rmf_plot.rch}
 \alias{rmf_plot.rch}
-\title{Plot a 2D section of an RMODFLOW rch object}
+\title{Plot a RMODFLOW rch object}
 \usage{
-\method{rmf_plot}{rch}(rch, dis, mlt = NULL, zon = NULL,
-  all_parm = F, variable = "recharge", instnum = NULL, l = NULL,
-  sp = NULL, ...)
+\method{rmf_plot}{rch}(rch, dis, kper = NULL, variable = "recharge",
+  ...)
 }
 \arguments{
 \item{rch}{an \code{RMODFLOW} rch object}
 
-\item{dis}{an \code{RMODFLOW} dis object}
+\item{dis}{a \code{RMODFLOW} dis object}
 
-\item{mlt}{optional; an \code{RMODFLOW} mlt object; used for plotting parameter data}
+\item{kper}{integer specifying the stress-period to plot}
 
-\item{zon}{optional; an \code{RMODFLOW} zon object; used for plotting parameter data}
+\item{variable}{character specifying which variable to plot. Possible values are 'recharge' (default) and 'irch' if defined.}
 
-\item{all_parm}{logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE}
-
-\item{variable}{character, what data should be plotted. Possible values are: "identity" (plots the recharge cells' locations), "recharge" (default) "mltnam" (for parameter data), "zonnam" (for parameter data), "iz" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "recharge"}
-
-\item{instnum}{numeric vector of length \code{nprch} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL}
-
-\item{l}{time step number for selecting which stress period to plot; defaults to NULL (last stress period)}
-
-\item{sp}{optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL}
-
-\item{...}{additional arguments passed to \code{rmf_plot.rmf-3d-array}}
+\item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_2d_array}}}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
-\code{rmf_plot.rch} plots a 2D section of an \code{RMODFLOW} rch object using \code{rmf_plot.rmf-3d-array}
+Plot a RMODFLOW rch object
 }

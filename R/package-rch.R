@@ -2,106 +2,56 @@
 #' 
 #' \code{rmf_create_rch} creates an \code{RMODFLOW} rch object
 #' 
-#' @param nprch number of rch parameters; defaults to NULL
-#' @param nrchop recharge option code; defaults to 1
-#' @param irchcb flag and unit number for writing cell-by-cell flow terms; defaults to 0
-#' @param parnam vector of length \code{nprch} specifying the parameter names; defaults to NULL
-#' @param parval vector of length \code{nprch} specifying the parameter values; defaults to NULL
-#' @param nclu vector of length \code{nprch} specifying the number of clusters that are included in a non-time-varying parameter or in each instance of a time-varying parameter; defaults to NULL
-#' @param instances logical vector of length \code{nprch} indicating which parameters are time-varying; defaults to NULL
-#' @param numinst vector of length \code{nprch} indicating the number of instances that are included in the time-varying parameter; defaults to NULL
-#' @param instnam list with \code{nprch} elements where each element \code{i} is a character vector of length \code{numinst} for parameter \code{i} specifying the names of the parameter instances. If not time-varying, set numinst dimension to 1. Defaults to NULL
-#' @param mltarr list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the multiplier array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param zonarr list with \code{nprch} elements where each element \code{i} is a character 2D array with dimensions \code{numinst x nclu} specifying the zone array name of parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param iz list with \code{nprch} elements where each element \code{i} is a numeric 2D array with dimensions \code{numinst x nclu} with each element a single zone number or zone numbers separated by spaces for parameter \code{i}. If the parameter is not time varying, set the numinst dimension to 1. Defaults to NULL
-#' @param inrech numeric vector of length \code{dis$nper} specifying the \code{rech} read flag which depends on whether or not parameters are specified; defaults to 1
-#' @param inirch numeric vector of length \code{dis$nper} specifying the \code{irch} read flag which depends on whether or not parameters are specified; defaults to NULL
-#' @param rech numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the recharge fluxes; defaults to 1e-8 for all cells in the top layer
-#' @param pname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inrech} for stress period \code{i} specifying the names of the parameters being used; defaults to NULL
-#' @param iname list with \code{dis$nper} elements where each element \code{i} is a character vector of length \code{inrech} for stress period \code{i} specifying the names of the parameter instances being used; defaults to NULL
-#' @param irchpf optional list with \code{dis$nper} elements where each element \code{i} is a numeric vector of length \code{inrech} for stress period \code{i} specifying the format code for printing \code{rech} after it has been defined by parameters, defaults to NULL 
-#' @param irch numeric 3D array of dimensions \code{dis$nrow x dis$ncol x dis$nper} specifying the layer numbers defining in which layer recharge is applied; defaults to NULL
-#' 
+#' @param ... \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the recharge values. See details.
+#' @param dis \code{RMODFLOW} dis object
+#' @param nrchop recharge option code; defaults to 3 (recharge is applied to the highest active cell in each vertical column)
+#' @param irchcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 
+#' @param irch a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the layer numbers defining in which layer recharge is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nrchop = 2}. Defaults to NULL
+#' @param irchpf numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{RECH} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods
+#' @details the \code{rmf_2d_arrays} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the irch arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 #' @return \code{RMODFLOW} rch object
 #' @export
 #' @seealso \code{\link{rmf_read_rch}}, \code{\link{rmf_write_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
+rmf_create_rch <- function(...,
+                           dis,
+                           nrchop = 3,
+                           irchcb = 0,
+                           irch = NULL,
+                           irchpf = -1
+) {
+  
+  arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
+  
+  # create rch object
+  obj <- list()
+  
+  obj$dimensions <- arg$dimensions
+  obj$nrchop <- nrchop
+  obj$irchcb <- irchcb
+  obj$recharge <- arg$data
+  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  obj$kper <- arg$kper
+  
+  # irch
+  if(nrchop == 2) {
+    if(is.null(irch)) stop('Please supply a irch argument when nrchop = 2', call. = FALSE)
+    if(!inherits(irch, 'list')) irch <- list(irch)
+    obj$irch <- irch
+    names(obj$irch) <- paste('irch', length(irch), sep = '_')
+    obj$kper$irch <- NA_character_
+    for(i in 1:length(irch)) {
+      obj$kper$irch[c(1:dis$nper) %in% attr(irch[[i]],'kper')] <- names(obj$irch)[i]
+    }
 
-rmf_create_rch = function(nprch = NULL,
-                          nrchop = 1,
-                          irchcb = 0,
-                          parnam = NULL, 
-                          parval = NULL, 
-                          nclu = NULL, 
-                          instances = NULL,
-                          numinst = NULL,
-                          instnam = NULL,
-                          mltarr = NULL, 
-                          zonarr = NULL,
-                          iz = NULL,
-                          inrech = 1,
-                          inirch = NULL,
-                          rech = array(1e-8, dim=c(10, 10, 1)), 
-                          pname = NULL, 
-                          iname = NULL,
-                          irchpf = NULL,
-                          irch = NULL
-){
-  
-  rch = list()
-  
-  # data set 0
-  # to provide comments, use ?comment on resulting rch object
-  
-  # data set 1
-  if(!is.null(nprch)) rch$nprch = nprch
-  
-  # data set 2
-  rch$nrchop = nrchop
-  rch$irchcb = irchcb
-  
-  
-  if(!is.null(rch$nprch) && rch$nprch > 0){
-    
-    # data set 3
-    rch$parnam = parnam
-    rch$partyp = rep('RCH', rch$nprch)
-    rch$parval = parval
-    rch$nclu = nclu
-    if(!is.null(instances) && T %in% instances) rch$instances = instances
-    if(!is.null(rch$instances)) rch$numinst = numinst      
-    
-    
-    # data set 4a
-    if(!is.null(rch$instances) && T %in% rch$instances) rch$instnam = instnam
-    
-    # data set 4b
-    rch$mltarr = mltarr
-    rch$zonarr = zonarr
-    rch$iz = iz
-    
-  }
-  
-  
-  # data set 5
-  rch$inrech = inrech
-  if(rch$nrchop==2) rch$inirch = inirch
-  
-  # data set 6
-  if ((is.null(rch$nprch) || (!is.null(rch$nprch) && rch$nprch == 0)) && any(rch$inrech >= 0)) rch$rech = rech
-  
-  # data set 7
-  if ((!is.null(rch$nprch) && rch$nprch > 0) && any(rch$inrech > 0)){
-    rch$pname = pname
-    if (!is.null(rch$instances) && T %in% rch$instances) rch$iname = iname
-    if (!is.null(irchpf) && (is.null(rch$instances) || (!is.null(rch$instances) && !(T %in% rch$instances))) ) rch$irchpf = irchpf
+    # check if multiple irch arrays are active
+    irch_err <- unlist(lapply(irch, function(i) attr(i, 'kper')))
+    if(any(duplicated(irch_err))) stop(paste('There can be only 1 active irch array per stress period. Stress period(s)', sort(unique(irch_err[duplicated(irch_err)])), 'have multiple active arrays.'), call. = FALSE)
   } 
+  obj$irchpf <- irchpf
   
-  # data set 8
-  if(rch$nrchop == 2 && any(rch$inirch >= 0)) rch$irch = irch
-  
-  class(rch) = c('rch', 'rmf_package')
-  return(rch)
+  class(obj) <- c('rch', 'rmf_package')
+  return(obj)
   
 }
 
@@ -111,180 +61,146 @@ rmf_create_rch = function(nprch = NULL,
 #'
 #' @param file filename; typically '*.rch'
 #' @param dis an \code{RMODFLOW} dis object
+#' @param mlt a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays
+#' @param zon a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays
 #' @param ... arguments passed to \code{rmfi_parse_array}. Can be ignored when input arrays are free-format and INTERNAL or CONSTANT.
 #' @return \code{RMODFLOW} rch object
 #' @export
 #' @seealso \code{\link{rmf_write_rch}}, \code{\link{rmf_create_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
-rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose()},
-                        dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
-                        ... ){
+rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choose()},
+                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                          mlt = NULL,
+                          zon = NULL,
+                          ... ){
   
-  rch = list()
-  rch_lines = readr::read_lines(file)
+  lines <- readr::read_lines(file)
+  rmf_arrays <- list()
   
   # data set 0
-  data_set_0 = rmfi_parse_comments(rch_lines)
-  comment(rch) = data_set_0$comments
-  rch_lines = data_set_0$remaining_lines
+  data_set_0 <-  rmfi_parse_comments(lines)
+  comments <-  data_set_0$comments
+  lines <-  data_set_0$remaining_lines
   rm(data_set_0)
   
   # data set 1
-  data_set_1 = rmfi_parse_variables(rch_lines)
-  if('PARAMETER' %in% data_set_1$variables) {
-    rch$nprch = as.numeric(data_set_1$variables[2])
-    rch_lines = data_set_1$remaining_lines
-  }  
+  data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
+  
+  if('PARAMETER' %in% toupper(data_set_1$variables)) {
+    np <-  as.numeric(data_set_1$variables[2])
+    lines <-  data_set_1$remaining_lines
+  }  else {
+    np <- 0
+  }
   rm(data_set_1)
   
   # data set 2
-  data_set_2 = rmfi_parse_variables(rch_lines)
-  rch$nrchop = as.numeric(data_set_2$variables[1])
-  rch$irchcb = as.numeric(data_set_2$variables[2])
-  rch_lines = data_set_2$remaining_lines
+  data_set_2 <-  rmfi_parse_variables(lines, n=2, ...)
+  nrchop <- as.numeric(data_set_2$variables[1])
+  irchcb <- as.numeric(data_set_2$variables[2])
+  lines <-  data_set_2$remaining_lines
   rm(data_set_2)
+  irch <- rmfi_ifelse0(nrchop == 2, list(), NULL)
   
-  # parameters
-  if(!is.null(rch$nprch) && rch$nprch > 0){
-    
-    rch$iz = rch$zonarr = rch$mltarr = list()
-    
-    i=1
-    while(i <= rch$nprch){
-      # data set 3
-      data_set_3 = rmfi_parse_variables(rch_lines)
-      rch$parnam[i] =  as.character(data_set_3$variables[1])
-      rch$partyp[i] = 'RCH'
-      rch$parval[i] = as.numeric(data_set_3$variables[3])
-      rch$nclu[i] = as.numeric(data_set_3$variables[4])
-      if(length(data_set_3$variables) > 4){
-        rch$instances[i]=T
-        rch$numinst[i] = as.numeric(data_set_3$variables[6])
-      } 
-      rch_lines = data_set_3$remaining_lines
-      rm(data_set_3)
-      
-      
-      
-      # time-varying parameters
-      if(!is.null(rch$instances) && rch$instances[i]){
-        rch$iz[[i]] = rch$zonarr[[i]] = rch$mltarr[[i]] = array(dim=c(rch$numinst[i],rch$nclu[i]))
-        rch$instnam[[i]] = vector(mode='character', length=rch$numinst[i])
-        
-        j=1
-        while(j <= rch$numinst[i]){
-          # data set 4a
-          data_set_4a = rmfi_parse_variables(rch_lines)
-          rch$instnam[[i]][j] =  as.character(data_set_4a$variables)
-          rch_lines = data_set_4a$remaining_lines
-          rm(data_set_4a)
-          
-          k=1
-          while(k <= rch$nclu[i]){
-            
-            # data set 4b
-            data_set_4b = rmfi_parse_variables(rch_lines)
-            rch$mltarr[[i]][j,k] = as.character(data_set_4b$variables[1])
-            rch$zonarr[[i]][j,k] = as.character(data_set_4b$variables[2])
-            if(length(data_set_4b$variables) > 2) rch$iz[[i]][j,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
-            
-            k=k+1
-            rch_lines = data_set_4b$remaining_lines
-            rm(data_set_4b)
-          }
-          j = j+1
-        } 
-        
-      } else {
-        # non time-varying
-        rch$iz[[i]] = rch$zonarr[[i]] = rch$mltarr[[i]] = array(dim=c(1,rch$nclu[i]))
-        
-        k=1
-        while(k <= rch$nclu[i]){
-          # data set 4b
-          
-          data_set_4b = rmfi_parse_variables(rch_lines)
-          rch$mltarr[[i]][1,k] = as.character(data_set_4b$variables[1])
-          rch$zonarr[[i]][1,k] = as.character(data_set_4b$variables[2])
-          if(length(data_set_4b$variables) > 2) rch$iz[[i]][1,k] = paste(data_set_4b$variables[-c(1:2)], collapse=' ')
-          
-          
-          k=k+1
-          rch_lines = data_set_4b$remaining_lines
-          rm(data_set_4b)
-        }
-        
-      }
-      
-      i = i+1
-    }
-    if(all(is.na(unlist(rch$iz)))) rch$iz = NULL
+  # parameters: data set 3 & 4
+  if(np > 0) {
+    data_set_3 <- rmfi_parse_array_parameters(lines, dis = dis, np = np, mlt = mlt, zon = zon)
+    rmf_arrays <- data_set_3$parameters
+    lines <- data_set_3$remaining_lines
+    rm(data_set_3)
   }
   
   # stress periods
-  
-  if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch))) rch$rech = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
-  if(!is.null(rch$nprch) && rch$nprch > 0){
-    rch$pname = list()
-    if(!is.null(rch$instances) && T %in% rch$instances) rch$iname = list()
-    rch$irchpf = list()
+  # function for setting kper attribute for parameters
+  set_kper <- function(k, kper, p_name, i_name) {
+    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
+      if(!is.null(i_name)) {
+        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+      } else {
+        attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+      }
+    }
+    return(k)
   }
-  if(rch$nrchop==2){
-    rch$inirch = vector(mode='numeric', length=dis$nper)
-    rch$irch = rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nper))
+  
+  # function for setting kper attribute of parameter the same as previous kper
+  previous_kper <- function(k, kper) {
+    if(kper-1 %in% attr(k, 'kper')) {
+      attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+    }
+    return(k)
   }
   
   for(i in 1:dis$nper){
     # data set 5
-    data_set_5 = rmfi_parse_variables(rch_lines)
-    rch$inrech[i] = as.numeric(data_set_5$variables[1])
-    if(length(data_set_5$variables) > 1) rch$inirch[i] = as.numeric(data_set_5$variables[2])
-    rch_lines = data_set_5$remaining_lines
+    data_set_5 <-  rmfi_parse_variables(lines, n=2, ...)
+    inrech <- as.numeric(data_set_5$variables[1])
+    if(nrchop == 2) inirch <- as.numeric(data_set_5$variables[2])
+    lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
-    # data set 6
-    if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch)) && rch$inrech[i] >= 0) {
-      data_set_6 = rmfi_parse_array(rch_lines, nrow = dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
-      rch$rech[,,i] = data_set_6$array
-      rch_lines = data_set_6$remaining_lines
-      rm(data_set_6)
+    # data set 6-7
+    irchpf <- NULL
+    
+    if(np == 0) {
+      
+      if(inrech >= 0) {
+        data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        rmf_arrays[[length(rmf_arrays) + 1]] <- structure(data_set_6$array, kper = i)
+        lines <- data_set_6$remaining_lines
+        rm(data_set_6)
+      } else if(inrech < 0 && i > 1) {
+        attr(rmf_arrays[[length(rmf_arrays)]], 'kper') <- c(attr(rmf_arrays[[length(rmf_arrays)]], 'kper'), i)
+      }
+      
+    } else {
+      # parameters
+      if(inrech > 0) {
+        for(j in 1:inrech){
+          # data set 7
+          data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
+          p_name <-  toupper(as.character(data_set_7$variables[1]))
+          if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+            i_name <- data_set_7$variables[2]
+            if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {
+              irchpf[i] <- as.numeric(data_set_7$variables[3])
+            }
+          } else {
+            i_name <- NULL
+            if(length(data_set_7$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[2])))) {
+              irchpf[i] <- as.numeric(data_set_7$variables[2])
+            }
+          }
+          
+          rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+          
+          lines <- data_set_7$remaining_lines
+          rm(data_set_7)
+          
+        }
+        
+      } else if(inrech < 0 && i > 1) {
+        rmf_arrays <- lapply(rmf_arrays, previous_kper, kper = i)
+      }
+      
     }
     
-    if((!is.null(rch$nprch) && rch$nprch[i] > 0) && rch$inrech[i] > 0){
-      rch$iname[[i]] = rch$pname[[i]] = vector(length=rch$inrech[i])
-      rch$irchpf[[i]] = vector(mode='numeric', length=rch$inrech[i])
-      
-      for(j in 1:rch$inrech[i]){
-        # data set 7
-        data_set_7 = rmfi_parse_variables(rch_lines)
-        rch$pname[[i]][j] = as.character(data_set_7$variables[1])
-        if((length(data_set_7$variables) > 1) && (!is.null(rch$instances) && rch$instances[which(rch$parnam == rch$pname[[i]][j])])){
-          rch$iname[[i]][j] = as.character(data_set_7$variables[2])
-        } 
-        if((length(data_set_7$variables) > 1) && (is.null(rch$instances) || (!is.null(rch$instances) && !rch$instances[which(rch$parnam == rch$pname[[i]][j])]))){
-          rch$irchpf[[i]][j] = as.numeric(data_set_7$variables[2])
-        } 
-        rch_lines = data_set_7$remaining_lines
-        rm(data_set_7)
+    # data set 8
+    if(nrchop == 2) {
+      if(inirch >= 0) {
+        data_set_8 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        irch[[length(irch) + 1]] <- structure(data_set_8$array, kper = i)
+        lines <- data_set_8$remaining_lines
+        rm(data_set_8)
+      } else if(inirch < 0 && i > 1) {
+        attr(irch[[length(irch)]], 'kper') <- c(attr(irch[[length(irch)]], 'kper'), i)
       }
     }
-    if(is.logical(unlist(rch$iname)) && !any(unlist(rch$iname))) rch$iname = NULL
-    if(is.logical(unlist(rch$irchpf)) && !any(unlist(rch$irchpf))) rch$irchpf = NULL
-    
-    
-    if(rch$nrchop == 2 && (!is.null(rch$inirch) && rch$inirch[i] >= 0)){
-      # data set 8
-      data_set_8 = rmfi_parse_array(rch_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
-      rch$irch[,,i] = data_set_8$array
-      rch_lines = data_set_8$remaining_lines
-      rm(data_set_8)
-    } 
-    
   }
   
-  class(rch) = c('rch', 'rmf_package')
+  rch <- rmf_create_rch(rmf_arrays, dis = dis, nrchop = nrchop, irchcb = irchcb, irch = irch, irchpf = rmfi_ifelse0(is.null(irchpf), -1, irchpf))
+  comment(rch) <- comments
   return(rch)
-  
 }
 
 #' Write a MODFLOW recharge file
@@ -294,79 +210,87 @@ rmf_read_rch = function(file = {cat('Please select rch file ...\n'); file.choose
 #' @param rch an \code{RMODFLOW} rch object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.rch'
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_array}
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_rch}}, \code{\link{rmf_create_rch}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm}
 
-
-rmf_write_rch = function(rch, dis=rmf_read_dis(), file = {cat('Please select rch file to overwrite or provide new filename ...\n'); file.choose()}) {
+rmf_write_rch <-  function(rch,
+                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
+                           file={cat('Please choose rch file to overwrite or provide new filename ...\n'); file.choose()},
+                           iprn = -1,
+                           ...){
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
-  cat(paste('# MODFLOW Recharge Package created by RMODFLOW, version',v,'\n'), file = file)
+  cat(paste(paste('# MODFLOW Recharge Package created by RMODFLOW, version'),v,'\n'), file = file)
   cat(paste('#', comment(rch)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(!is.null(rch$nprch) && rch$nprch > 0 ) rmfi_write_variables('PARAMETER', rch$nprch, file=file)
+  if(rch$dimensions$np > 0) rmfi_write_variables('PARAMETER', rch$dimensions$np, file=file)
   
   # data set 2
-  rmfi_write_variables(rch$nrchop, rch$irchcb, file=file)
+  rmfi_write_variables(rch$nrchop, rch$irchcb, file=file, ...)
   
   # parameters
-  if(!is.null(rch$nprch) && rch$nprch > 0){
-    for (i in 1:rch$nprch){
-      # data set 3
-      rmfi_write_variables(rch$parnam[i], rch$partyp[i], rch$parval[i], rch$nclu[i], ifelse(rch$instances[i], 'INSTANCES', ' '), ifelse(rch$instances[i], rch$numinst[i], ' '), file=file)
-      
-      # time-varying
-      if(!is.null(rch$instances) && rch$instances[i]){
-        for (j in 1:rch$numinst[i]){
-          # data set 4a
-          if(rch$instances[i]) rmfi_write_variables(rch$instnam[[i]][j], file=file)
-          
-          # data set 4b
-          for (k in 1:rch$nclu[i]){
-            rmfi_write_variables(rch$mltarr[[i]][j, k], rch$zonarr[[i]][j,k], ifelse(!is.null(rch$iz) && rch$zonarr[[i]][j,k]!='ALL', rch$iz[[i]][j,k], ''), file=file)
-            
-          }
-        }
-      } else { # non-time-varying
-        # data set 4b
-        for (k in 1:rch$nclu[i]){
-          rmfi_write_variables(rch$mltarr[[i]][1, k], rch$zonarr[[i]][1,k], ifelse(!is.null(rch$iz) && rch$zonarr[[i]][1,k]!='ALL', rch$iz[[i]][1,k], ''), file=file)
-          
-        }
-      }
-      
-    }
+  partyp <- 'RCH'
+  if(rch$dimensions$np > 0) {
+    parm_names <- names(rch$parameter_values)
+    tv_parm <- rep(FALSE, rch$dimensions$np)
+    if(!is.null(rch$dimensions$instances)) tv_parm <- rch$dimensions$instances > 0
+    rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', ...)
   }
-  
   
   # stress periods
   for (i in 1:dis$nper){
     
     # data set 5
-    rmfi_write_variables(rch$inrech[i], rch$inirch[i], file=file)
+    # inrech
+    names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-1]]
+    if(i > 1 && identical(names_act, colnames(rch$kper)[which(rch$kper[i-1,which(!is.na(rch$kper[i-1,]))] != FALSE)[-1]])) {
+      inrech <- -1
+    } else {
+      inrech <- length(names_act)
+    }
+    # inirch
+    inirch <- 0
+    if(rch$nrchop == 2) {
+      irch_act <-  rch$kper$irch[i]
+      if(!is.na(irch_act)) {
+        if(i > 1 && identical(irch_act, rch$kper$irch[i-1])) {
+          inirch <- -1
+        } else {
+          inirch <- length(irch_act)
+        }
+      } 
+    }
+    
+    if(rch$dimensions$np > 0) {
+      parm_names_active <- parm_names[parm_names %in% names_act]
+      np <- length(parm_names_active)
+    } else {
+      np <- 0
+    }
+    
+    rmfi_write_variables(inrech, ifelse(rch$nrchop == 2, inirch, ''), file=file, ...)
     
     # data set 6
-    if(((!is.null(rch$nprch) && rch$nprch==0) || is.null(rch$nprch)) && rch$inrech[i] >= 0) rmfi_write_array(rch$rech[,,i], file=file)
+    if(np == 0 && inrech >= 0) rmfi_write_array(rch$recharge[[names_act]], file = file, iprn = iprn, ...)
     
     # data set 7
-    if((!is.null(rch$nprch) && rch$nprch > 0) && rch$inrech[i] > 0){
-      for (j in 1:rch$inrech[i]){
-        
-        rmfi_write_variables(rch$pname[[i]][j], ifelse(!is.null(rch$instances) && rch$instances[which(rch$parnam==rch$pname[[i]][j])], rch$iname[[i]][j], ''), ifelse((is.null(rch$instances) || (!is.null(rch$instances) && !(rch$instances[which(rch$parnam==rch$pname[[i]][j])]))) && !is.null(rch$irchpf), rch$irchpf[[i]][j], ' '), file=file) 
-        
+    if(np > 0){
+      for(j in 1:np){
+        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], rch$kper[i,parm_names_active[j]], ''), ifelse(length(rch$irchpf) == 1, rch$irchpf, rch$irchpf[j]), file=file)
       }
     }
     
     # data set 8
-    if(rch$nrchop==2 && (!is.null(rch$inirch) && rch$inirch[i] >= 0)){
-      rmfi_write_array(rch$irch[,,i], file=file)
+    if(rch$nrchop == 2 && inirch >= 0) {
+      rmfi_write_array(rch$irch[[irch_act]], file = file, iprn = iprn, ...)
     }
-    
   }
   
-  
 }
+

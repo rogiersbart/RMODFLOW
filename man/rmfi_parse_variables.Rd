@@ -5,13 +5,15 @@
 \title{Read modflow variables
 If all are numbers, returns numeric, otherwise returns character vector}
 \usage{
-rmfi_parse_variables(remaining_lines, n, nlay = NULL, format = "free",
-  ...)
+rmfi_parse_variables(remaining_lines, n, nlay = NULL,
+  character = FALSE, format = "free", ...)
 }
 \arguments{
 \item{n}{integer; number of variables to be returned. Only used when format is \code{'fixed'}.}
 
 \item{nlay}{integer; number of layers for which values are to be read. Only used when format is \code{'free'} and a 1D(NLAY) variable is read which may be specified on multiple lines.}
+
+\item{character}{logical; should a character vector be returned. Prevents conversion from character names to numeric. Defaults to FALSE. Useful if only characters are present on the line.}
 
 \item{format}{character, either \code{'free'} or \code{'fixed'}. When 'fixed', reads 10-character fields and converts to numeric. Empty fields are set to zero.}
 

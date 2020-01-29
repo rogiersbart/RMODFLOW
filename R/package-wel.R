@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_wel} creates an \code{RMODFLOW} wel object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the wells. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the wells. 
 #' @param dis dis object
 #' @param iwelcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 (cell-by-cell flow terms will not be written)
 #' @param noprint logical, should the printing of WEL cells to the listing file be suppressed ? Defaults to \code{FALSE}
@@ -57,7 +57,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   
-  input <- rmfi_read_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
+  input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
   
   obj <- rmf_create_wel(input$rmf_lists, dis = dis, iwelcb = input$icb, noprint = unname(input$option['NOPRINT']), aux = input$aux)
   comment(obj) <- input$comments
@@ -71,7 +71,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
 #' @param wel an \code{RMODFLOW} wel object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.wel'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @export

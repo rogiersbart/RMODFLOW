@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_hfb} creates an \code{RMODFLOW} hfb object
 #' 
-#' @param ... \code{rmf_list} (possibly of class \code{rmf_parm}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parm}) elements; defines the horizontal-flow barriers. 
+#' @param ... \code{rmf_list} (possibly of class \code{rmf_parameter}) objects or a single \code{list} with \code{rmf_list} objects (possibly of class \code{rmf_parameter}) elements; defines the horizontal-flow barriers. 
 #' @param dis dis object
 #' @param noprint logical, should the printing of HFB cells to the listing file be suppressed ? Defaults to \code{FALSE}
 #' 
@@ -29,7 +29,7 @@ rmf_create_hfb <-  function(...,
       dis <- arg[dis_present][[1]]
       arg <- arg[!dis_present]
     } else {
-      stop('Please provide a dis argument')
+      stop('Please provide a dis argument', call. = FALSE)
     }
   }
   
@@ -45,11 +45,11 @@ rmf_create_hfb <-  function(...,
     if(is.null(attr(rmf_list, 'kper'))) {
       warning('Missing kper argument for hfb input list. Assuming this list is not active', call. = FALSE)
     } else if(!identical(as.numeric(attr(rmf_list, 'kper')), as.numeric(1:dis$nper))) {
-      stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.')
+      stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.', call. = FALSE)
     }
     
-    if(inherits(rmf_list, 'rmf_parm') && !is.null(attr(rmf_list, 'instnam'))) {
-      stop('Time-varying parameters are not supported for the hfb package.')
+    if(inherits(rmf_list, 'rmf_parameter') && !is.null(attr(rmf_list, 'instnam'))) {
+      stop('Time-varying parameters are not supported for the hfb package.', call. = FALSE)
     }
     
     if('direction' %in% colnames(rmf_list)) {
@@ -66,9 +66,9 @@ rmf_create_hfb <-  function(...,
   arg <- lapply(arg, set_hfb)
   
   # check for parameters and/or lists and name them
-  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
-  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   
   np <- 0
@@ -85,8 +85,8 @@ rmf_create_hfb <-  function(...,
   # parameters
   if(length(parameters) > 0) {
     parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
-    acthfb <- vapply(parameters, function(i) if(!is.null(attr(i, 'kper'))) attr(i, 'parnam'), 'text')
-    nacthfb <- length(acthfb)
+    acthfb <- lapply(parameters, function(i) rmfi_ifelse0(!is.null(attr(i, 'kper')), attr(i, 'parnam'), NULL))
+    nacthfb <- length(unlist(acthfb))
     
     # set parameter df
     parameters <- lapply(parameters, function(i) {i$parameter <-  TRUE;
@@ -134,7 +134,7 @@ rmf_create_hfb <-  function(...,
 #'
 #' @param file filename; typically '*.hfb'
 #' @param dis an \code{RMODFLOW} dis object
-#' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
+#' @param ... arguments passed to \code{rmfi_parse_list}.
 #'  
 #' @return \code{RMODFLOW} hfb object
 #' @export
@@ -175,8 +175,8 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
       lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
-      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, ...)
-      rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_3$list, parnam = parnam, parval = parval)
+      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, naux = 0, format = 'free', ...)
+      rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_3$list, parnam = parnam, parval = parval)
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
       
@@ -184,10 +184,12 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   }
   
   # data set 4
-  data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, file = file, ...)
-  rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
-  lines <- data_set_4$remaining_lines
-  rm(data_set_4)
+  if(nnp > 0) {
+    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, naux = 0, file = file, format = 'free', ...)
+    rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
+    lines <- data_set_4$remaining_lines
+    rm(data_set_4)
+  }
   
   # data set 5
   data_set_5 <- rmfi_parse_variables(lines)
@@ -199,13 +201,13 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   acthfb <- vector(mode = 'character', length = nacthfb)
   for(i in 1:nacthfb) {
     data_set_6 <- rmfi_parse_variables(lines)
-    acthfb[i] <- data_set_6$variables[1]
+    acthfb[i] <- toupper(data_set_6$variables[1])
     lines <- data_set_6$remaining_lines
     rm(data_set_6)
   }
   
   # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parm') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
+  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (toupper(attr(i, 'parnam')) %in% acthfb), structure(i, kper = 1:dis$nper), i))
   
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))
@@ -220,12 +222,11 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
 #' @param hfb an \code{RMODFLOW} hfb object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.hfb'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... ignored
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_hfb}}, \code{\link{rmf_create_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}
-
 
 rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hfb file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
@@ -264,9 +265,7 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   # data set 4
   df <- subset(hfb$data, parameter == FALSE)
   if(nrow(df) > 0) {
-    for(j in 1:nrow(df)){
-      rmfi_write_variables(df$k[j], df$i[j], df$j[j], df[j, vars], file=file)
-    }
+    rmfi_write_list(df, file = file, varnames = vars)
     rm(df)
   }
   

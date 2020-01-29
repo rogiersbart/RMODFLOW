@@ -7,7 +7,7 @@
 \title{Read a MODFLOW head observations file}
 \usage{
 rmf_read_hob(file = {     cat("Please select hob file ...\\n")    
-  file.choose() })
+  file.choose() }, ...)
 
 read_hob(...)
 

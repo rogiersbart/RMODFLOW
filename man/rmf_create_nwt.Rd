@@ -6,12 +6,13 @@
 \usage{
 rmf_create_nwt(headtol = 0.001, fluxtol = 500, maxiterout = 100,
   thickfact = 1e-05, linmeth = 2, iprnwt = 0, ibotav = 0,
-  options = "MODERATE", dbdtheta = 0.7, dbdkappa = 0.001,
-  dbdgamma = 0, momfact = 0.1, backflag = 0, maxbackiter = 30,
-  backtol = 2, backreduce = 0.99, maxitinner = 50, ilumethod = 2,
-  levfill = 1, stoptol = 1e-10, msdr = 10, iacl = 2, norder = 1,
-  level = 1, north = 2, iredsys = 0, rrctols = 0, idroptol = 1,
-  epsrn = 0.001, hclosexmd = 1e-04, mxiterxmd = 50)
+  options = "MODERATE", continue = TRUE, dbdtheta = 0.7,
+  dbdkappa = 0.001, dbdgamma = 0, momfact = 0.1, backflag = 0,
+  maxbackiter = 30, backtol = 2, backreduce = 0.99,
+  maxitinner = 50, ilumethod = 2, levfill = 1, stoptol = 1e-10,
+  msdr = 10, iacl = 2, norder = 1, level = 1, north = 2,
+  iredsys = 0, rrctols = 0, idroptol = 1, epsrn = 0.001,
+  hclosexmd = 1e-04, mxiterxmd = 50)
 }
 \arguments{
 \item{headtol}{maximum head change between outer iterations for reaching convergence}
@@ -29,6 +30,8 @@ rmf_create_nwt(headtol = 0.001, fluxtol = 500, maxiterout = 100,
 \item{ibotav}{logical; indicating whether corrections are made to groundwater head relative to the cell-bottom altitude if the cell is surrounded by dewatered cells.}
 
 \item{options}{character vector; possible values include \code{"SPECIFIED"}, \code{"SIMPLE"}, \code{"MODERATE"} and \code{"COMPLEX"}. See details for more information.}
+
+\item{continue}{logical; should the model solve a subsequent time step after it fails to converge ? Defaults to TRUE.}
 
 \item{dbdtheta}{coefficient used to reduce the weight applied to the head change between nonlinear iterations}
 

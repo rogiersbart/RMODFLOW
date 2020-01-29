@@ -7,8 +7,7 @@
 \usage{
 rmf_create_pcg(mxiter = 20, iter1 = 30, npcond = 1, ihcofadd = 0,
   hclose = 0.001, rclose = 0.001, relax = 1, nbpol = 1,
-  iprpcg = 1, mutpcg = 0, damppcg = 1, damppcgt = ifelse(damppcg <
-  0, 1, NA))
+  iprpcg = 1, mutpcg = 0, damppcg = 1, damppcgt = 1)
 
 create_pcg(...)
 }
@@ -49,5 +48,5 @@ Object of class pcg
 }}
 
 \seealso{
-\code{\link{read_pcg}}, \code{\link{write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+\code{\link{rmf_read_pcg}}, \code{\link{rmf_write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 }

@@ -42,7 +42,7 @@ rmf_create_hob <- function(locations,
   
   # data set 2
     hob$tomulth <- tomulth
-    # hob$EVH # MODFLOW-2000
+    # hob$evh # MODFLOW-2000
   
   # data set 3-6
   
@@ -98,13 +98,6 @@ rmf_create_hob <- function(locations,
   return(hob)
 }
 
-#' @describeIn rmf_create_hob Deprecated function name
-#' @export
-create_hob <- function(...) {
-  .Deprecated(new = "rmf_create_hob", old = "create_hob")
-  rmf_create_hob(...)
-}
-
 #' Read a MODFLOW head observations file
 #' 
 #' \code{read_hob} reads in a MODFLOW head observations file and returns it as an \code{\link{RMODFLOW}} hob object.
@@ -113,7 +106,7 @@ create_hob <- function(...) {
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class hob
 #' @export
-rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}) {
+rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}, ...) {
   
   hob_lines <- readr::read_lines(file)
   hob <- list()
@@ -131,15 +124,15 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   hob$nh <- as.numeric(line.split[1])
   hob$mobs <- as.numeric(line.split[2])
   hob$maxm <- as.numeric(line.split[3])
-  hob$iuhobsv <- as.numeric(line.split[4])
-  hob$hobdry <- as.numeric(line.split[5])
+  hob$iuhobsv <- ifelse(is.na(as.numeric(line.split[4])), 0, as.numeric(line.split[4]))
+  hob$hobdry <- ifelse(is.na(as.numeric(line.split[5])), -888, as.numeric(line.split[5]))
   hob$noprint <- F
-  if(length(line.split) > 5) if(line.split[6]=='NOPRINT') hob$noprint <- TRUE
+  if(length(line.split) > 5) if(toupper(line.split[6])=='NOPRINT') hob$noprint <- TRUE
   
   # data set 2
   dat <- rmfi_parse_variables(hob_lines, n = 1, ...)
   hob$tomulth <- as.numeric(dat$variables[1])
-  hob$evh <- as.numeric(dat$variables[2])
+  # hob$evh <- as.numeric(dat$variables[2]) # MODFLOW-2000
   hob_lines <- dat$remaining_lines
   rm(dat)
   
@@ -235,13 +228,6 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   return(hob)
 }
 
-#' @describeIn rmf_read_hob Deprecated function name
-#' @export
-read_hob <- function(...) {
-  .Deprecated(new = "rmf_read_hob", old = "read_hob")
-  rmf_read_hob(...)
-}
-
 #' @describeIn rmf_read_hob Compatible with default ModelMuse file extensions
 #' @export
 rmf_read_ob_hob <- function(...) {
@@ -252,10 +238,11 @@ rmf_read_ob_hob <- function(...) {
 #' 
 #' @param hob an \code{\link{RMODFLOW}} hob object
 #' @param file filename to write to; typically '*.hob'
+#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
 #' @return \code{NULL}
 #' @export
 rmf_write_hob <- function(hob,
-                          file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}) {
+                          file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
@@ -266,8 +253,8 @@ rmf_write_hob <- function(hob,
   rmfi_write_variables(hob$nh, hob$mobs, hob$maxm, hob$iuhobsv, hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
   
   # data set 2
-  # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh),1,hob$evh), file=file) # MODFLOW-2000
-  rmfi_write_variables(hob$tomulth, file=file)
+  # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh) || is.null(hob$env),1,hob$evh), file=file) # MODFLOW-2000
+  rmfi_write_variables(hob$tomulth, file=file, ...)
   
   # data set 3 - 6
   i <- 1
@@ -295,13 +282,6 @@ rmf_write_hob <- function(hob,
   }
 }  
 
-#' @describeIn rmf_write_hob Deprecated function name
-#' @export
-write_hob <- function(...) {
-  .Deprecated(new = "rmf_write_hob", old = "write_hob")
-  rmf_write_hob(...)
-}
-
 #' Read a MODFLOW head predictions file
 #' 
 #' \code{rmf_read_hpr} reads in a MODFLOW head predictions file and returns it as an \code{\link{RMODFLOW}} hpr object.
@@ -311,16 +291,10 @@ write_hob <- function(...) {
 #' @export
 rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choose()}) {
   hpr <- read.table(file,header=T)
-  colnames(hpr) = c('simulated_equivalent', 'observed_value', 'observation_name')
+  colnames(hpr) <- c('simulated', 'observed', 'name')
+  hpr$residual <- hpr$simulated - hpr$observed
   class(hpr) <- c('hpr','data.frame')
   return(hpr)
-}
-
-#' @describeIn rmf_read_hpr Deprecated function name
-#' @export
-read_hpr <- function(...) {
-  .Deprecated(new = "rmf_read_hpr", old = "read_hpr")
-  rmf_read_hpr(...)
 }
 
 #' @describeIn rmf_read_hpr Compatible with default ModelMuse file extension

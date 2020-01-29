@@ -1,3 +1,19 @@
+#' Create sequence of confining bed indicators
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @return vector of length \code{dis$nlay + confining beds} indicating indicating if the index represents a confining bed
+#' @details When confining beds are present, \code{dis$botm} has \code{dis$nlay + number of confining beds} layers. 
+#'          This functions returns a logical vector indicating which of those layers is a confining bed. This is useful 
+#'          when handling calculations with \code{dis$botm}, e.g. calculating thicknesses.
+#' @keywords internal
+#'
+rmfi_confining_beds <- function(dis) {
+  nnlay <- dis$nlay + sum(dis$laycbd != 0)
+  cbd <- rep(0, nnlay)
+  cbd[cumsum(dis$laycbd+1)[dis$laycbd != 0]] <- 1
+  return(cbd)
+}
+
 #' Convert data frame coordinates to another coordinate reference system
 #' 
 #' @param dat data frame with x and y coordinates
@@ -10,7 +26,7 @@
 rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
   nrs <- which(!is.na(dat[[names_from[1]]]+dat[[names_from[2]]]))
   # dat_names <- names(dat)
-  if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming')
+  if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming', call. = FALSE)
   converted_coords <- sf::st_transform(sf::st_sfc(sf::st_multipoint(cbind(dat[,names_from[1]], dat[,names_from[2]])[nrs, ]), crs = sf::st_crs(from)), crs = sf::st_crs(to))
   converted_coords <- data.frame(sf::st_coordinates(converted_coords))[,c('X','Y')]
   
@@ -32,17 +48,166 @@ rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names
   return(dat)
 }
 
+#' Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
+#' 
+#' @param huf huf object
+#' @param dis dis object, corresponding to the huf object
+#' @param bas bas object, corresponding to the huf object; defaults to NULL
+#' @return nlay rmf_3d_array
+#' @keywords internal
+rmfi_convert_huf_to_nlay <- function(huf, dis, bas = NULL) {
+  nlay <- huf$top * 0
+  huf_coordinates <- rmf_cell_coordinates(huf, dis = dis, include_faces = TRUE)
+  if(any(dis$laycbd != 0)) {
+    warning('Quasi-3D confining beds detected; adding their thickness to the overlying layer.')
+    cbd <- rmfi_confining_beds(dis)
+    if((dis$nlay + sum(dis$laycbd != 0)) > 1) dis$botm[,,which(cbd > 0) - 1] <- dis$botm[,,which(cbd > 0)]
+    dis$laycbd <- rep(0, dis$nlay)
+  }
+  dis_coordinates <- rmf_cell_coordinates(dis, include_faces = TRUE)
+  ibound <- rmfi_ifelse0(is.null(bas), dis$botm*0 + 1, abs(bas$ibound))
+  for(i in 1:huf$nhuf) {
+    for(j in 1:dis$nlay) {
+      nlay[,,i] <- nlay[,,i] + (!(dis_coordinates$upper[,,j] < huf_coordinates$lower[,,i] | dis_coordinates$lower[,,j] > huf_coordinates$upper[,,i])) * ibound[,,j]
+    }
+  }
+  return(nlay)
+}
+
+#' Set array input for a MODFLOW boundary condition package
+#'
+#' @param arg list of (1) \code{rmf_2d_array's} and/or rmf_parameter array objects or (2) a single nested \code{list} with \code{rmf_2d_array's} and/or rmf_parameter elements or (3) a \code{matrix}; defines the boundary condition input. 
+#' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_arrays} for the \code{rmf_create_*} function. When matrix elements are present, they are coerced to rmf_2d_arrays which are active for all stress-periods with a warning.
+#' @return list with the parameters, input arrays and the kper argument
+#' @keywords internal
+#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}, \code{\link{rmfi_parse_array_parameters}}, \code{\link{rmfi_write_array_parameters}}
+
+rmfi_create_bc_array <- function(arg, dis) {
+  
+  # find dis
+  if(missing(dis)) {
+    dis_present <- vapply(arg, function(i) 'dis' %in% class(i), TRUE)
+    if(any(dis_present)) {
+      dis <- arg[dis_present][[1]]
+      arg <- arg[!dis_present]
+    } else {
+      stop('Please provide a dis argument', call. = FALSE)
+    }
+  }
+  
+  # if arg is nested list, unnest
+  if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
+  # if matrix or 2d-array, make rmf_2d_array which is always active
+  # arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'matrix') && !(inherits(i, 'rmf_2d_array')), 
+  #                                             {warning("Coercing matrix to rmf_2d_array; array active for all stress-periods.", call. = FALSE); rmf_create_array(i, kper = 1:dis$nper)},
+  #                                             i) )
+  
+  
+  # check for parameters and/or arrays and name them
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
+  if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
+  
+  arrays <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
+  if(length(arrays) > 0) {
+    names(arrays) <- vapply(seq_along(arrays), function(i) rmfi_ifelse0(is.null(attr(arrays[[i]], 'parnam')), paste('array', i, sep = '_'), attr(arrays[[i]], 'parnam')), 'text')
+  }
+  
+  if(any(vapply(c(parameters, arrays), function(i) is.null(attr(i, 'kper')), TRUE))) {
+    stop('Please make sure all rmf_2d_array and rmf_parameter objects have a kper attribute', call. = FALSE)
+  }
+  
+  # stress period data frame
+  kper <- cbind(data.frame(kper = 1:dis$nper),
+                matrix(FALSE, dis$nper, length(unique(c(names(parameters), names(arrays)))), dimnames = list(NULL, unique(c(names(parameters), names(arrays))))))
+  
+  if(length(parameters) > 0) {
+    for(i in 1:length(parameters)) {
+      if(is.null(attr(parameters[[i]], 'instnam'))) {
+        kper[attr(parameters[[i]], 'parnam')] <-  c(1:dis$nper) %in% attr(parameters[[i]],'kper')
+      } else {
+        kper[c(1:dis$nper) %in% attr(parameters[[i]],'kper'), attr(parameters[[i]], 'parnam')] <-  attr(parameters[[i]],'instnam')
+      }
+    }
+  }
+  
+  if(length(arrays) > 0) {
+    for(i in 1:length(arrays)) {
+      kper[names(arrays)[i]] <- c(1:dis$nper) %in% attr(arrays[[i]],'kper')
+    }
+  }
+  
+  # dimensions
+  np <- 0
+  parameter_values <- NULL
+  instances <- NULL
+  
+  if(length(parameters) > 0) {
+    np <- length(unique(names(parameters)))
+  }
+  
+  # parameters
+  if(length(parameters) > 0) {
+    
+    instances <- c(table(names(parameters)))
+    instances[] <- vapply(seq_along(instances), function(i) rmfi_ifelse0(instances[i] < 2 && is.null(attr(parameters[[names(instances[i])]], 'instnam')), 0, instances[i]), 1)
+    if(all(instances == 0)) instances <- NULL
+    
+    parameter_values <- vapply(parameters, function(i) attr(i, 'parval'), 1.0)
+    if(!is.null(instances)) {
+      parameter_values <- parameter_values[!duplicated(names(parameter_values))]
+      
+      # if parameter is time-varying, list all instances
+      inst <- parameters[instances]
+      p_names <- vapply(inst, function(i) attr(i, 'parnam'), 'text')
+      unq_names <- unique(p_names)
+      names(inst) <- vapply(inst, function(i) attr(i, 'instnam'), 'text')
+      
+      p_inst <- lapply(seq_along(unq_names), function(i) inst[which(p_names == unq_names[i])])
+      names(p_inst) <- unq_names
+      parameters <- c(parameters[!instances], p_inst)
+    }
+  }
+  
+  # check for wrong combinations of parameters and arrays in stress period
+  # if parameters are defined: only parameters can be used for a stress period and there must be at least 1 parameter active
+  #
+  if(length(parameters) > 0) {
+    if(length(arrays) > 0) {
+      warning('Parameter and non-parameter recharge arrays present. Only parameter arrays will be used.', call. = FALSE)
+      kper[,which(colnames(kper) %in% names(arrays))] <- FALSE
+    }
+    
+    parm_df <- subset(kper, select = names(parameters))
+    parm_err <- any(vapply(1:dis$nper, function(i) all(is.na(parm_df[i,]) | parm_df[i,] == FALSE), TRUE))
+    if(parm_err) stop('If parameter arrays are provided, please make sure at least 1 parameter array is active during each stress period.', call. = FALSE)
+  }
+  # multiple non-parameter arrays can not be active for the same stress period
+  if(length(arrays) > 0) {
+    select <- rmfi_ifelse0(length(parameters > 0), names(kper) != names(parameters), names(kper))
+    nparm_df <- subset(kper, select = select[-1])
+    nparm_err <- vapply(1:dis$nper, function(i) sum(is.na(nparm_df[i,]) | nparm_df[i,] == TRUE) > 1, TRUE)
+    if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'), call. = FALSE)
+  }
+  
+  
+  # combine
+  data <- c(parameters, arrays)
+  dimensions <- list(np = np, instances = instances)
+  return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  
+}
 
 #' Set list input for a MODFLOW boundary condition package
 #'
-#' @param arg list of (1) rmf_list and/or rmf_parm list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parm elements or (3) a single \code{data.frame} element that will be coerced to a rmf_list; defines the boundary condition input. 
+#' @param arg list of (1) rmf_list and/or rmf_parameter list objects or (2) a single nested \code{list} with rmf_list and/or rmf_parameter elements or (3) a \code{data.frame} that will be coerced to a rmf_list; defines the boundary condition input. 
 #' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
 #' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk)
 #' @param aux optional character vector with the names of the auxiliary variables
-#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function.
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
-#' @seealso \code{\link{rmfi_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_read_bc_list}}
+#' @seealso \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 
 rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
@@ -57,22 +222,20 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     }
   }
   
-  if(length(arg) == 1) {
-    if(inherits(arg[[1]], 'list')) {
-      arg <-  arg[[1]]
-      
-    } else if(inherits(arg[[1]], 'data.frame') && !(inherits(arg[[1]], 'rmf_list'))) { # make rmf_list
-      arg <-  lapply(arg, function(i) rmf_create_list(i, kper = 1:dis$nper))
-    }
-  }
+  # if arg is nested list, unnest
+  if(length(arg) == 1 && inherits(arg[[1]], 'list')) arg <- arg[[1]] 
+  # if data.frame, make rmf_list which is always active
+  # arg <- lapply(arg, function(i) rmfi_ifelse0(inherits(i, 'data.frame') && !(inherits(i, 'rmf_list')), 
+  #                                             {warning("Coercing data.frame to rmf_list; list active for all stress-periods", call. = FALSE); rmf_create_list(i, kper = 1:dis$nper)}, 
+  #                                             i) )
   
   # check for parameters and/or lists and name them
-  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parm'), TRUE)]
+  parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
-  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parm'), TRUE)]
+  lists <- arg[vapply(arg, function(i) !inherits(i, 'rmf_parameter'), TRUE)]
   if(length(lists) > 0) names(lists) <- paste('list', 1:length(lists), sep = '_')
   if(any(vapply(c(parameters, lists), function(i) is.null(attr(i, 'kper')), TRUE))) {
-    stop('Please make sure all rmf_list and rmf_parm objects have a kper attribute', call. = FALSE)
+    stop('Please make sure all rmf_list and rmf_parameter objects have a kper attribute', call. = FALSE)
   }
   
   
@@ -109,7 +272,8 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   } 
   
   find_mxact <- function(i) {
-    kper_names <- names(kper)[which(kper[i,] == T)[-1]] 
+    nms <- names(kper)[-1]
+    kper_names <- nms[which(kper[i,-1] == T)] 
     sum(unlist(lapply(parameters[kper_names], nrow))) +
       sum(unlist(lapply(lists[kper_names], nrow)))
   }
@@ -129,7 +293,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     #check aux
     if(!is.null(aux)) {
       all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
-      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list')
+      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
     set_parm <- function(i) {
@@ -160,7 +324,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     #check aux
     if(!is.null(aux)) {
       all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
-      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list')
+      if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
     # itmp
@@ -183,6 +347,65 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   dimensions <- list(np = np, mxl = mxl, instances = instances, mxact = mxact, itmp = itmp)
   
   return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  
+}
+
+#' Returns character lengths per value from a FORTRAN format
+#'
+#' @param format character; FORTRAN format within parentheses as read from a MODFLOW array header
+#'
+#' @return integer vector with the number of characters per value as specified by the FORTRAN format
+#' @keywords internal
+#'
+rmfi_fortran_format <- function(format) {
+  
+  # remove outer parentheses
+  format <- trimws(toupper(format))
+  format <- gsub('^\\(|\\)$','',format)
+  
+  # remove possible apostrophes
+  format <- gsub('\"|\'|´|`','',format)
+  
+  # split on commas for multiple formats
+  format <- strsplit(format, split = ',')[[1]]
+  
+  # template
+  template <- "^([0-9]*)([[:upper:]]+)([0-9]*)\\.?([0-9]*)"
+  
+  # function to get lengths
+  get_lengths <- function(format) {
+    
+    # optional first multipliers
+    split <- rmfi_remove_empty_strings(strsplit(format, split = '\\(|\\)')[[1]])
+    format <- split[length(split)]
+    split <- split[-length(split)]
+    reps <- prod(as.numeric(split))
+
+    # optional spaces
+    # TODO spaces after format (allowed?)
+    spaces <- strsplit(format, split='X')[[1]]
+    format <- spaces[length(spaces)]
+    spaces <- spaces[-length(spaces)]
+    spaces <- sum(as.numeric(spaces))
+
+    # format: repeats
+    reps2 <- as.numeric(sub(template, "\\1", format))
+    reps2[is.na(reps2)] <- 1L
+    reps <- reps * reps2
+    
+    # format: lengths
+    lengths <- as.numeric(sub(template, "\\3", format))
+    lengths[is.na(lengths)] <- 1L
+    lengths <- sum(lengths, spaces)
+    
+    return(rep(lengths, reps))
+    
+  }
+  
+  # apply function to every format and append results
+  lengths <- unlist(lapply(format, get_lengths))
+  
+  return(lengths)
   
 }
 
@@ -219,12 +442,71 @@ rmfi_ifelse0 <- function(test, yes, no) {
   }
 }
 
+#' List supported MODFLOW packages
+#'
+#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc'}
+#'
+#' @return data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} abbreviations for the requested packages
+#' @keywords internal
+#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data
+#' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
+rmfi_list_packages <- function(type = 'all') {
+  
+  # update these two vectors everytime a new package is supported
+  # NAM file is not in here but is supported
+  pack_names <- c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF','RCH','CHD','BCF6','HFB6','RIV','DRN','EVT','SIP','DE4','NWT','UPW','LVDA','GMG')
+  rmf_names  <- c('hob','pvl', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda','gmg')
+  
+  df <- data.frame(ftype = pack_names, rmf = rmf_names, stringsAsFactors = FALSE)
+  
+  # Below is an exhaustive overview of all packages in MODFLOW-2005 & variants
+  # basic
+  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pvl', 'lgr')
+  
+  # flow packages
+  flow <- c('bcf', 'lpf', 'huf', 'swi', 'hfb', 'uzf', 'upw', 'kdep', 'lvda')
+  
+  # boundary conditions
+  boundary <- c('chd', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'bfh', 'rip')
+  
+  # solver
+  solver <- c('de4', 'gmg', 'lmg', 'pcg', 'pcgn', 'sip', 'nwt')
+  
+  # output control
+  oc <- c('gage', 'hyd', 'lmt', 'mnwi', 'oc')
+  
+  # subsidence
+  sub <- c('ibs', 'sub', 'swt') 
+  
+  # observation
+  obs <- c('chob', 'drob', 'gbob', 'hob', 'rvob', 'stob')
+  
+  # Surface-water routing
+  swr <- c('swr', 'sswrlstrd', 'sswr_rdtabdata', 'sswr_rddro')
+  
+  # Conduit flow process
+  cfp <- c('cfp', 'crch', 'coc')
+  
+  # Farm process
+  farm <- c('fmp')
+  
+  # cbc (uzf and swi need to be set separately)
+  cbc <- c('bcf', 'lpf', 'huf', 'upw', 'uzf', 'swi', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'ibs', 'sub', 'swt', 'swr', 'rip')
+  
+  # subset
+  if(type != 'all') df <- subset(df, rmf %in% get(type))
+  
+  return(df)
+  
+}
+
 #' Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function
 #' @param remaining_lines lines to read the array from
 #' @param nrow number of rows in the array
 #' @param ncol number of columns in the array
 #' @param nlay number of layers in the array that should be read
 #' @param ndim optional; dimensions of the array to read
+#' @param fmt optional; character with a proper FORTRAN format enclosed in parentheses. Only used when skip_header = TRUE and a fixed-format array needs to be read, i.e. output arrays. 
 #' @param skip_header optional; should the control record be skipped
 #' @param nam a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAL arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
@@ -233,18 +515,19 @@ rmfi_ifelse0 <- function(test, yes, no) {
 #' @param ... ignored
 #' @return A list containing the array and the remaining text of the MODFLOW input file
 #' @keywords internal
-rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
+rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = NULL,
                              skip_header = FALSE, nam = NULL, precision = "single", file = NULL, integer = FALSE, ...) {
   
   # Initialize array object
   array <- array(dim=c(nrow,ncol,nlay))
-  fortranfmt <-  FALSE
   
   # Read array according to format type if there is anything to be read
   if(prod(dim(array))!=0)
   {
     for(k in 1:nlay) 
     { 
+      fortranfmt <- FALSE
+      
       # CONSTANT
       if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'CONSTANT') {
         if(nlay==1) {
@@ -266,21 +549,31 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           # format
           fmtin <- rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3]
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           remaining_lines <- remaining_lines[-1] 
         } else {
+          if(!is.null(fmt)) {
+            fortranfmt <-  TRUE
+            lengths <- rmfi_fortran_format(fmt)
+          }
           cnst <-  1.0
         }
-        if(fortranfmt) remaining_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[1])
-        nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
-        nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-        if(fortranfmt && nLines > 1) remaining_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[2:nLines])
-        array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
-        remaining_lines <- remaining_lines[-c(1:nLines)]
+        
+        if(fortranfmt) {
+          remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+          nPerLine <- length(lengths)
+          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+          if(nLines > 1) remaining_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(remaining_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          
+        } else {
+          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
+          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+        }
+         remaining_lines <- remaining_lines[-c(1:nLines)]
       }
       # EXTERNAL
       else if(toupper(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1]) == 'EXTERNAL')
@@ -291,17 +584,14 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         fmtin <-  as.character(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[4])
         binary <- ifelse(toupper(fmtin) == "(BINARY)", TRUE, FALSE)
         
-        if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays')
+        if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays', call. = FALSE)
         fname <-  nam$fname[which(nam$nunit == nunit)]
         direct <-  attr(nam, 'dir')
         absfile = paste(direct, fname, sep = '/')
         
         if(!binary) {
-          
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           
@@ -309,16 +599,23 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
           external_lines <-  readr::read_lines(absfile)
           if(!is.null(attr(nam, as.character(nunit)))) external_lines <- external_lines[-c(1:attr(nam, as.character(nunit)))]
           
-          if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-          if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          if(fortranfmt) {
+            external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+            nPerLine <- length(lengths)
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+            
+          } else {
+            nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          }
           
         } else {
           con <- file(absfile,open='rb')
           type <- ifelse(integer, 'integer', 'numeric')
-          if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally')
+          if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally', call. = FALSE)
           real_number_bytes <- ifelse(precision == 'single', 4, 8)
           size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
           try({ 
@@ -369,18 +666,23 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-            fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-            fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-            fmtin <- paste0(".{",fmtin,'}')
+            lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
           external_lines <-  readr::read_lines(absfile)
           
-          if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-          nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-          nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-          if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-          array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          if(fortranfmt) {
+            external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+            nPerLine <- length(lengths)
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+            
+          } else {
+            nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+            nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+            array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+          }
           
         } else {
           con <- file(asbfile,open='rb')
@@ -403,49 +705,63 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
         
       } else {
         # FIXED format
-        locat <-  as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[1])
-        cnst <- as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[2])
+        header <- rmfi_parse_variables(remaining_lines[1], n = 3, format = 'fixed')
+        locat <- as.numeric(header$variables[1])
+        cnst <- as.numeric(header$variables[2])
         if(cnst == 0) cnst <-  1.0
-        fmtin <-  as.character(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' ')[[1]])[3])
+        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:41], collapse = '')
+        fmtin <- trimws(as.character(fmtin))
         
         # CONSTANT
         if(locat == 0) { 
           array[,,k] <- cnst
           nLines <- 1
         } else {
-          if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays')
+          if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
           fname <-  nam$fname[which(nam$nunit == locat)]
           direct <-  attr(nam, 'dir')
-          absfile = paste(direct, fname, sep='/')
+          absfile <-  paste(direct, fname, sep='/')
           
           # ASCII
           if(locat > 0) {
             if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
-              fmtin <- strsplit(fmtin, split='g|G|i|I|f|F|e|E|ES|es|EN|en')[[1]]
-              fmtin <- as.numeric(strsplit(fmtin[length(fmtin)], split='\\.|)')[[1]][1])
-              fmtin <- paste0(".{",fmtin,'}')
+              lengths <- rmfi_fortran_format(fmtin)
               fortranfmt <-  TRUE
             }
             if(locat == nam$nunit[which(basename(nam$fname) == basename(file))]) { # read from current file
               
               remaining_lines <- remaining_lines[-1] 
-              if(fortranfmt) remaining_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[1])
-              nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
-              nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-              if(fortranfmt && nLines > 1) remaining_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',remaining_lines[2:nLines])
-              array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
-              
+              if(fortranfmt) {
+                remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+                nPerLine <- length(lengths)
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                if(nLines > 1) remaining_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(remaining_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+                
+              } else {
+                nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(remaining_lines[1],' |\t|,')[[1]])))
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(remaining_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              }
+
             } else { # read from external file
               external_lines <-  readr::read_lines(absfile)
               # remove lines of previous arrays
               if(!is.null(attr(nam, as.character(locat)))) external_lines <- external_lines[-c(1:attr(nam, as.character(locat)))]
               
-              if(fortranfmt) external_lines[1] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[1])
-              nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
-              nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
-              if(fortranfmt && nLines > 1) external_lines[2:nLines] <- gsub(paste0('(',fmtin,'?)'),'\\1\\ ',external_lines[2:nLines])
-              array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              if(fortranfmt) {
+                external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
+                nPerLine <- length(lengths)
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                if(nLines > 1) external_lines[2:nLines] <- vapply(2:(nLines), function(i) paste(substring(external_lines[i], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' '), 'text')
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+                
+              } else {
+                nPerLine <- length(as.numeric(rmfi_remove_empty_strings(strsplit(external_lines[1],' |\t|,')[[1]])))
+                nLines <- (ncol %/% nPerLine + ifelse((ncol %% nPerLine)==0, 0, 1))*nrow
+                array[,,k] <- cnst*matrix(as.numeric(rmfi_remove_empty_strings(strsplit(paste(external_lines[1:nLines],collapse='\n'),' |,| ,|, |\t|\n| \n|\n ')[[1]])),nrow=nrow,ncol=ncol,byrow=TRUE)
+              }
             }
             
           } else if(locat < 0) { # read binary from external file
@@ -453,7 +769,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
             real_number_bytes <- ifelse(precision == 'single', 4, 8)
             type <- ifelse(integer, 'integer', 'numeric')
             size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
-            if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally')
+            if(type=='integer') warning('Reading integer binary EXTERNAL array might not work optimally', call. = FALSE)
             
             try({          
               if(!is.null(attr(nam, as.character(locat)))) {
@@ -497,41 +813,154 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL,
       if(ncol==1 || nrow==1) {
         array <- c(array(array,dim=nrow*ncol*nlay))
       } else {
-        array <- as.matrix(array[,,1])
-        class(array) <- 'rmf_2d_array'   
+        array <- rmf_create_array(array[,,1])
       }
+    } else {
+      array <- rmf_create_array(array)
     }
-    if(nlay > 1) class(array) <- 'rmf_3d_array'
   } else if(ndim == 1) {
     array <- c(array(array,dim=nrow*ncol*nlay))
   } else if(ndim == 2) {
-    array <- matrix(array[,,1], nrow = nrow, ncol = ncol)
-    class(array) <- 'rmf_2d_array'     
+    array <- rmf_create_array(array[,,1], dim = c(nrow, ncol))
   } else if(ndim == 3) {
-    class(array) <- 'rmf_3d_array'
+    array <- rmf_create_array(array, dim = c(nrow, ncol, nlay))
   }
   
   # Return output of reading function 
   return(list(array=array,remaining_lines=remaining_lines))
 }
 
+#' Read MODFLOW array parameters for boundary-condition packages
+#'
+#' @param lines lines to read the parameter arrays from
+#' @param dis \code{RMODFLOW} dis object
+#' @param np numeric; number of parameters to read
+#' @param mlt a \code{RMODFLOW} mlt object. Only needed when reading parameter arrays defined by multiplier arrays
+#' @param zon a \code{RMODFLOW} zon object. Only needed when reading parameter arrays defined by zone arrays
+#'
+#' @return A list containing the parameter arrays and the remaining text of the MODFLOW input file
+#' @keywords internal
+#' @seealso \code{\link{rmfi_write_array_parameters}}
+#' 
+rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) {
+  
+  parm_list <- list()
+  
+  i <- 1
+  while(i <= np){
+    
+    # data set 3
+    data_set_3 <- rmfi_parse_variables(lines, character = TRUE)
+    parnam <-   as.character(data_set_3$variables[1])
+    parval <-  as.numeric(data_set_3$variables[3])
+    nclu <- as.numeric(data_set_3$variables[4])
+    p_tv <- NULL
+    if(length(data_set_3$variables) > 4 && toupper(data_set_3$variables[5]) == 'INSTANCES'){
+      p_tv <- TRUE
+      numinst <- as.numeric(data_set_3$variables[6])
+      arr <- list()
+    } 
+    lines <- data_set_3$remaining_lines
+    rm(data_set_3)
+    
+    mltarr <- zonarr <- vector(mode = 'character', length = nclu)
+    iz <- as.list(rep(0, nclu))
+    
+    # time-varying parameters
+    if(!is.null(p_tv) && p_tv){
+      
+      # loop over instances
+      for(j in 1:numinst){
+        
+        # data set 4a
+        data_set_4a <- rmfi_parse_variables(lines, character = TRUE)
+        instnam <- as.character(data_set_4a$variables)
+        lines <-  data_set_4a$remaining_lines
+        rm(data_set_4a)
+        
+        # loop over clusters
+        for(k in 1:nclu) {
+          # data set 4b
+          data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
+          mltarr[k] <- toupper(data_set_4b$variables[1])
+          zonarr[k] <- toupper(data_set_4b$variables[2])
+          
+          if(toupper(data_set_4b$variables[1]) != 'NONE') {
+            if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+            
+          }
+          if(toupper(data_set_4b$variables[2]) != 'ALL') {
+            if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+            
+            # zero or character entry terminates IZ
+            iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
+            iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1] - 1, which(iz_vector == 0)[1] - 1, na.rm = TRUE)]
+          
+          }
+          lines <- data_set_4b$remaining_lines
+          rm(data_set_4b)
+        }
+      } 
+      
+    } else {
+      # non time-varying
+      # loop over clusters
+      for(k in 1:nclu) {
+        # data set 4b
+        data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
+        mltarr[k] <- toupper(data_set_4b$variables[1])
+        zonarr[k] <- toupper(data_set_4b$variables[2])
+        
+        if(toupper(data_set_4b$variables[1]) != 'NONE') {
+          if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
+          
+        }
+        if(toupper(data_set_4b$variables[2]) != 'ALL') {
+          if(is.null(zon)) stop('Please provide a zon object', call. = FALSE)
+          
+          # zero or character entry terminates IZ
+          iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
+          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+        }
+        lines <- data_set_4b$remaining_lines
+        rm(data_set_4b)
+      }
+    }
+    
+    parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
+                                                             parval = parval, parnam = parnam, kper = 0)
+    names(parm_list)[length(parm_list)] <- parnam
+    i <- i+1
+  }
+
+  
+  return(list(parameters = parm_list, remaining_lines = lines))
+}
+
 #' Read comments
 #' Internal function used in the read_* functions to read comments
-#' @details prevents copying of RMODFLOW header comment
+#' @details removes empty comments and prevents copying of RMODFLOW header comment
 #' @keywords internal
 rmfi_parse_comments <- function(remaining_lines) {
   v <- paste("RMODFLOW, version",  packageDescription("RMODFLOW")$Version)
-  i <- 0
   comments <- NULL
-  while(i==0) {
-    if(substr(remaining_lines[1], 1, 1) == '#') {
-      com <- substr(remaining_lines[1], 2, nchar(remaining_lines[1]))
-      if(!identical(trimws(strsplit(com, 'by ')[[1]][2]), trimws(v)) && nchar(trimws(com)) > 0)  comments <- append(comments, com)
-      remaining_lines <- remaining_lines[-1]
-    } else {
-      i <- 1
-    }
+  comment_tag <- substr(remaining_lines, 1, 1)
+  comment_id <- which(comment_tag == "#")
+  
+  if(length(comment_id) > 0) {
+    comments <- gsub('#', '', remaining_lines[comment_id])
+    
+    # remove empty comments
+    empty <- which(nchar(trimws(comments)) == 0)
+    if(length(empty) > 0) comments <- comments[-empty]
+    
+    # remove RMODFLOW header
+    header <- grep(v, comments)
+    if(length(header) > 0) comments <- comments[-header]
+    
+    remaining_lines <- remaining_lines[-comment_id]
   }
+
   return(list(comments = comments, remaining_lines = remaining_lines))
 }
 
@@ -541,29 +970,66 @@ rmfi_parse_comments <- function(remaining_lines) {
 #'@param varnames character vector; names of the variables starting from the 4th column (so after ijk). Length of varnames is used to dimension the dataframe
 #'@param scalevar column name or integer; this column will be scaled
 #'@param file the file that is being read; needed if list is specified through an OPEN/CLOSE statement
+#'@param naux integer; number of auxiliary variables to read (which are always free format). Defaults to 0.
 #'@param format either 'fixed' or 'free'
 #'@param ... ignored
 #'@keywords internal
 
-rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar=4, file,  format = 'free', precision = 'single', ...) {
+rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar=4, file, naux = 0, format = 'free', precision = 'single', ...) {
   
   header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t')[[1]])
   n <- 3 + length(varnames) 
   real_number_bytes <- ifelse(precision == 'single', 4, 8)
   scale <-  1.0
-  df <-  matrix(nrow=nlst, ncol=3+length(varnames))
+  df <- matrix(nrow=nlst, ncol=3+length(varnames))
+  col_names <- c('k','i','j',varnames)
+  
+  # helper function
+  read_list <- function(lines) {
+    # TODO atm aux can only be double
+    if(format == 'fixed') {
+      if(naux > 0) {
+        widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
+        cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
+        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        
+        df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
+        
+        # handle AUX variables which may be free format
+        df[[ncol(df)]] <- gsub(',', ' ', df[[ncol(df)]])
+        cols2 <- do.call(readr::cols_only, as.list(rep('d', naux)))
+        lc <- as.data.frame(readr::read_table2(df[[ncol(df)]], col_names = FALSE, col_types = cols2))
+        df <- cbind(df[-ncol(df)], lc)
+        
+      } else {
+        widths <- readr::fwf_widths(c(rep(10, n)))
+        cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
+        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        
+        df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
+      }
+      
+    } else {
+      lines <- gsub(',', ' ', lines)
+      cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
+      # TODO unsuppress warnings;
+      # reading in subset of columns without knowing all names not possible without warnings in readr
+      df <- as.data.frame(suppressWarnings(readr::read_table2(lines[1:nlst], col_names = FALSE, col_types = cols)))
+    }
+    return(df)
+  }
   
   if(toupper(header[1]) == 'EXTERNAL') {
-    if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object')
+    if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object', call. = FALSE)
     remaining_lines <-  remaining_lines[-1]
     extfile <- paste(attr(nam, 'dir'), nam$fname[which(nam$nunit==as.numeric(header[2]))], sep='/')
     binary <-  ifelse(toupper(nam$ftype[which(nam$nunit==as.numeric(header[2]))]) == 'DATA(BINARY)', TRUE, FALSE)
     
     if(binary) {
       con <- file(extfile, open='rb')
-      aa = readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
+      aa <-  readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
       close(con)
-      df = matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
+      df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
       ext_lines <- readr::read_lines(extfile)
       header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(ext_lines[1]),' |\t')[[1]])
@@ -571,12 +1037,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
         scale <- as.numeric(header[2])
         ext_lines <- ext_lines[-1]
       }
-      for(nl in 1:nlst) {
-        values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
-        if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values[1:(3+length(varnames))]
-        ext_lines <- ext_lines[-1]
-      }
+      
+      df <- read_list(ext_lines)
+      
     }
     
   } else if(toupper(header[1]) == 'OPEN/CLOSE') {
@@ -586,9 +1049,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     
     if(binary) {
       con <- file(extfile, open='rb')
-      aa = readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
+      aa <-  readBin(con, what = 'numeric', n =nlst*(3+length(varnames)), size = real_number_bytes)
       close(con)
-      df = matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
+      df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
       
       ext_lines <- readr::read_lines(extfile)
@@ -598,37 +1061,29 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
         scale <- as.numeric(header[2])
         ext_lines <- ext_lines[-1]
       }
-      for(nl in 1:nlst) {
-        values <-  rmfi_parse_variables(remaining_lines = ext_lines, n = n, format = format)$variables
-        if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-        df[nl,] <- values[1:(3+length(varnames))]
-        ext_lines <- ext_lines[-1]
-      }
+      
+     df <- read_list(ext_lines)
+       
     }
     
   } else if(toupper(header[1]) == 'SFAC') {
     remaining_lines <- remaining_lines[-1]
     scale <- as.numeric(header[2])
-    for(nl in 1:nlst) {
-      values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
-      if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values[1:(3+length(varnames))]
-      remaining_lines <- remaining_lines[-1]
-    }
+    
+    df <- read_list(remaining_lines)
+    remaining_lines <- remaining_lines[-c(1:nlst)]
+    
   } else {
-    for(nl in 1:nlst) {
-      values <-  rmfi_parse_variables(remaining_lines = remaining_lines, n = n, format = format)$variables
-      if(format=='fixed') values[which(is.na(values[1:(3+length(varnames))]))] <- 0
-      df[nl,] <- values[1:(3+length(varnames))]
-      remaining_lines <- remaining_lines[-1]
-    }
+    
+    df <- read_list(remaining_lines)
+    remaining_lines <- remaining_lines[-c(1:nlst)]
   }
   
-  df <- data.frame(df)
-  colnames(df) <- c('k','i','j',varnames)
+  df <- data.frame(df, stringsAsFactors = FALSE)
+  colnames(df) <- col_names
   if(!is.null(l)) df$l <- l
-  class(df) <- c('rmf_list', 'data.frame')
-  if(scale != 1.0) df[scalevar] <- scale*df[scalevar]
+  df <- rmf_create_list(df)
+  if(scale != 1.0) df[[scalevar]] <- scale*df[[scalevar]]
   
   return(list(list = df, remaining_lines = remaining_lines))
   
@@ -637,10 +1092,11 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
 #' If all are numbers, returns numeric, otherwise returns character vector
 #' @param n integer; number of variables to be returned. Only used when format is \code{'fixed'}.  
 #' @param nlay integer; number of layers for which values are to be read. Only used when format is \code{'free'} and a 1D(NLAY) variable is read which may be specified on multiple lines.
+#' @param character logical; should a character vector be returned. Prevents conversion from character names to numeric. Defaults to FALSE. Useful if only characters are present on the line.
 #' @param format character, either \code{'free'} or \code{'fixed'}. When 'fixed', reads 10-character fields and converts to numeric. Empty fields are set to zero.
 #' @param ... ignored
 #' @keywords internal
-rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free', ...) {
+rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FALSE, format = 'free', ...) {
   if(format == 'free') {
     variables <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]])
     if(!is.null(nlay)) {
@@ -649,14 +1105,14 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free
         variables <- append(variables, rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),' |\t|,')[[1]]))
       }
     }
-    if(!any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
+    if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
                                 function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
-    variables <- lapply(strsplit(variables, " |t"), rmfi_remove_empty_strings)
+    variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
-    if(!any(is.na(suppressWarnings(as.numeric(variables))))) {
+    if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) {
       variables <- as.numeric(variables)
       if(length(variables) < n) variables <- c(variables, rep(0, n - length(variables))) # append 0's if values are missing
     }
@@ -665,22 +1121,84 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, format = 'free
 }
 
 #' Model performance measures
+#' @param measures any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
+#' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' @keywords internal
-rmfi_performance_measures <- function(observations, predictions,print=F) {
-  mse <- hydroGOF::mse(observations, predictions)
-  mae <- hydroGOF::mae(observations, predictions)
-  me <- hydroGOF::me(observations, predictions)
-  r2 <- cor(observations, predictions)^2
-  nseff <- hydroGOF::NSE(observations, predictions)
-  if(print)
-  {
-    cat(paste('MSE: ', round(mse,2), ' (Mean Squared Error)\n'))
-    cat(paste('MAE: ', round(mae,2), ' (Mean Absolute Error)\n'))
-    cat(paste('ME: ', round(me,2), ' (Mean Error)\n'))
-    cat(paste('R^2: ', round(r2,2), ' (R squared)\n'))
-    cat(paste('NSeff: ',round(nseff,2), ' (Nash-Sutcliffe efficiency)\n'))  
+rmfi_performance_measures <- function(observations, predictions,print=F,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+  gof <- hydroGOF::gof(predictions, observations, ...)
+  name <- c('Mean error', 'Mean absolute error', 'Mean square error', 'Root mean square error', 'Normalized root mean square error',
+            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standars deviations', 'Nash-Sutcliffe efficiency', 
+            'Modified Nash-Sutcliffe efficiency', 'Relative Nash-Sutcliffe efficiency','Index of agreement', 'Modified index of agreement', 
+            'Relative index of agreement', 'Coefficient of persistance', 'Pearson product-moment correlation coefficient', 'Coefficient of determination',
+            'R2 multiplied with slope of linear regressions between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
+  gof <- data.frame(measure = rownames(gof), value = c(gof), name = name)
+  gof <- rbind(gof, data.frame(measure = 'SSQ', value = sum((predictions - observations)^2), name ='Sum of squared errors'))
+  measures <- tolower(measures)
+  if("pbias" %in% measures) measures <- replace(measures, which(measures == 'pbias'), 'pbias %')
+  if("nrmse" %in% measures) measures <- replace(measures, which(measures == 'nmrse'), 'nrmse %')
+  
+  indx <- which(tolower(gof$measure) %in% measures)
+  gof <- gof[indx, ]
+  
+  if(print){
+    for(i in 1:nrow(gof)) {
+      cat(paste(paste0(gof$measure[i], ': '), round(gof$value[i],2), paste0(' (',gof$name[i],')\n')))
+    }
   }
-  return(data.frame(mse=mse, mae=mae, me=me, r2=r2, nseff=nseff))
+  
+  measures <- tolower(gof$measure)
+  if("pbias %" %in% measures) measures <- replace(measures, which(measures == 'pbias %'), 'pbias')
+  if("nrmse %" %in% measures) measures <- replace(measures, which(measures == 'nmrse %'), 'nrmse')
+  gof <- setNames(data.frame(as.list(gof$value)), measures)
+  return(gof)
+}
+
+#' Plot a RMODFLOW list-directed boundary condition object
+#'
+#' @param obj a \code{RMODFLOW} list-directed boundary condition object, i.e. riv, chd, wel, drn, ghb, and derivatives
+#' @param dis a \code{RMODFLOW} dis object
+#' @param kper integer specifying the stress-period to plot
+#' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
+#' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#'
+#' @return ggplot2 object or layer
+#' @keywords internal
+#'
+rmfi_plot_bc <- function(obj,
+                         dis,
+                         kper = NULL,
+                         variable = 'id',
+                         i = NULL,
+                         j = NULL,
+                         k = NULL,
+                         active_only = FALSE,
+                         fun = sum,
+                         ...) {
+  
+  if(is.null(kper)) {
+    if(dis$nper > 1) warning('Setting kper to last stress-period', call. = FALSE)
+    kper <- dis$nper
+  }
+  
+  active_lists <- colnames(obj$kper)[-1]
+  active_lists <- active_lists[which(obj$kper[kper,-1] == TRUE)] 
+  
+  obj <- subset(obj$data, name %in% active_lists)
+  
+  if(nrow(obj) == 0) {
+    id <- class(obj)[which(class(obj) == 'rmf_package') - 1]
+    warning(paste0(id, ' object has no active features in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
+    return(NULL)
+  }
+  
+  # rmf_plot.rmf_list
+  rmf_plot(obj, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
+  
 }
 
 #' Read input for a MODFLOW boundary condition package which uses list-directed input
@@ -694,7 +1212,7 @@ rmfi_performance_measures <- function(observations, predictions,print=F) {
 #' @return list with (optional) comments, icb, option, aux and rmf_lists
 #' @keywords internal
 #' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_write_bc_list}}
-rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
+rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   rmf_lists <- list()
   
@@ -705,9 +1223,9 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   rm(data_set_0)
   
   # data set 1
-  data_set_1 <-  rmfi_parse_variables(lines)
+  data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
-  if('PARAMETER' %in% data_set_1$variables) {
+  if('PARAMETER' %in% toupper(data_set_1$variables)) {
     np_def <-  as.numeric(data_set_1$variables[2])
     lines <-  data_set_1$remaining_lines
   }  else {
@@ -716,7 +1234,7 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   rm(data_set_1)
   
   # data set 2
-  if(identical(c('shead', 'ehead'), varnames)) { # exception for CHD
+  if(identical(c('shead', 'ehead'), tolower(varnames))) { # exception for CHD
     n <- 1 
     data_set_2 <-  rmfi_parse_variables(lines, n=n, ...)
     icb <- NULL
@@ -731,9 +1249,9 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
       data_set_2$variables <- c(rep("0", n), rmfi_parse_variables(paste0(strsplit(lines[1], '')[[1]][-c(1:10*n)], collapse = ''))$variables)
     }
-    if(any(c(names(option), "AUX", "AUXILIARY") %in% data_set_2$variables[n+1:length(data_set_2$variables)])) {
-      option <- vapply(names(option), function(i) i %in% data_set_2$variables, TRUE)
-      aux <- as.character(data_set_2$variables[grep('^AUX', data_set_2$variables)+1])
+    if(any(c(names(option), "AUX", "AUXILIARY") %in% toupper(data_set_2$variables[n+1:length(data_set_2$variables)]))) {
+      option <- vapply(names(option), function(i) i %in% toupper(data_set_2$variables), TRUE)
+      aux <- as.character(data_set_2$variables[grep('^AUX', toupper(data_set_2$variables))+1])
     }
   }
   lines <-  data_set_2$remaining_lines
@@ -741,18 +1259,20 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # parameters
   if(np_def > 0){
-    
+    tv <- list()
     i <- 1
     while(i <= np_def){
       # data set 3
-      data_set_3 <-  rmfi_parse_variables(lines)
-      p_name <-   as.character(data_set_3$variables[1])
+      data_set_3 <-  rmfi_parse_variables(lines, character = TRUE)
+      p_name <-  as.character(data_set_3$variables[1])
       p_val <-  as.numeric(data_set_3$variables[3])
       p_nlst <- as.numeric(data_set_3$variables[4])
       p_tv <- NULL
-      if(length(data_set_3$variables) > 4){
+      tv[[p_name]] <- FALSE
+      if(length(data_set_3$variables) > 4 && toupper(data_set_3$variables[5]) == 'INSTANCES'){
         p_tv <- TRUE
-        p_numinst = as.numeric(data_set_3$variables[6])
+        p_numinst <-  as.numeric(data_set_3$variables[6])
+        tv[[p_name]] <- TRUE
       } 
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
@@ -764,14 +1284,14 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
         j=1
         while(j <= p_numinst){
           # data set 4a
-          data_set_4a <- rmfi_parse_variables(lines)
+          data_set_4a <- rmfi_parse_variables(lines, character = TRUE)
           instnam <- as.character(data_set_4a$variables)
           lines <-  data_set_4a$remaining_lines
           rm(data_set_4a)
           
           # data set 4b
-          data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam)
+          data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
+          rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, instnam = instnam, kper = 0)
           
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
@@ -782,8 +1302,8 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       } else {
         # non time-varying
         # data set 4b
-        data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
-        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_list_parameter(data_set_4b$list, parnam = p_name, parval = p_val)
+        data_set_4b <- rmfi_parse_list(lines, nlst = p_nlst, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
+        rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_4b$list, parnam = p_name, parval = p_val, kper = 0)
         
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -797,9 +1317,9 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
   
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
       if(!is.null(i_name)) {
-        if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {
         attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       }
@@ -811,14 +1331,14 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     # data set 5
     data_set_5 <-  rmfi_parse_variables(lines, n=2, ...)
     itmp <- as.numeric(data_set_5$variables[1])
-    np <- as.numeric(data_set_5$variables[2])
+    np <- ifelse(np_def > 0, as.numeric(data_set_5$variables[2]), 0)
     lines <- data_set_5$remaining_lines
     rm(data_set_5)
     
     if(itmp > 0){
-      data_set_6 <- rmfi_parse_list(lines, nlst = itmp, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), scalevar = scalevar, file = file, ...)
+      data_set_6 <- rmfi_parse_list(lines, nlst = itmp, varnames = rmfi_ifelse0(is.null(aux), varnames, c(varnames, aux)), naux = length(aux), scalevar = scalevar, file = file, ...)
       rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_6$list, kper = i)
-      # to do : see if list already exists; then just add kper to attribute
+      # TODO : see if list already exists; then just add kper to attribute
       lines <-  data_set_6$remaining_lines
       rm(data_set_6)
     } else if(i > 1 && itmp < 0) {
@@ -828,9 +1348,9 @@ rmfi_read_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
     if(np > 0){
       for(j in 1:np){
         # data set 7
-        data_set_7 <-  rmfi_parse_variables(lines)
-        p_name <-  as.character(data_set_7$variables[1])
-        i_name <- rmfi_ifelse0(length(data_set_7$variables) > 1, as.character(data_set_7$variables[2]), NULL)
+        data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
+        p_name <-  toupper(as.character(data_set_7$variables[1]))
+        i_name <- rmfi_ifelse0(tv[[p_name]], toupper(as.character(data_set_7$variables[2])), NULL)
         
         rmf_lists <- lapply(rmf_lists, set_kper, p_name = p_name, i_name = i_name, kper = i)
         
@@ -891,6 +1411,7 @@ rmfi_weighted_harmean <- function(x, w, ...) {
 #' @param binary character vector with names corresponding to the dataset; used to write external or open/close arrays
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of binary files
 #' @param nam \code{\link{RMODFLOW}} nam object; used when writing external arrays
+#' @param xsection logical; does the array represent a NLAY x NCOL cross-section. Passed to \code{rmf_write_array}
 #' @param ... ignored
 rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, external = NULL, fname = NULL, binary = NULL, precision = 'single', nam = NULL, xsection = FALSE, ...) {
   
@@ -900,19 +1421,19 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   binary <- rmfi_ifelse0(is.null(binary), FALSE, arrname %in% binary)
   
   if(is.null(names(cnstnt))) {
-    if(length(cnstnt) > 1)  stop('Please supply a single value or a named vector for cnstnt')
+    if(length(cnstnt) > 1)  stop('Please supply a single value or a named vector for cnstnt', call. = FALSE)
   } else {
     cnstnt <- ifelse(is.na(cnstnt[arrname]), 1, cnstnt[arrname])
   }
   
   if(is.null(names(iprn))) {
-    if(length(iprn) > 1)  stop('Please supply a single value or a named vector for iprn')
+    if(length(iprn) > 1)  stop('Please supply a single value or a named vector for iprn', call. = FALSE)
   } else {
     iprn <- ifelse(is.na(iprn[arrname]), -1, iprn[arrname])
   }
   
   if(external) { # external
-    if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays')
+    if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays', call. = FALSE)
     extfile <-  paste(dirname(file), paste(arrname, 'ext', sep='.'), sep='/')
     
     # set unit number in nam file
@@ -936,8 +1457,8 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     }
     
     rmf_write_array(array = array, file = extfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
-    warning(paste('Remember to add the external file to the nam file.\nftype =', ifelse(binary,"DATA(BINARY)","DATA"),
-                  '\nnunit =', nunit, '\nfname =', extfile))
+    warning(paste('Please remember to add the external file to the nam file.\nftype =', ifelse(binary,"DATA(BINARY)","DATA"),
+                  '\nnunit =', nunit, '\nfname =', extfile), call. = FALSE)
     #return(data.frame(ftype = ifelse(binary[arrname], 'DATA(BINARY)', 'DATA'), nunit=nunit, fname=extfile, options=NA))
     
   } else if(fname) { # open/close
@@ -999,6 +1520,60 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   }
 }
 
+#' Write MODFLOW array parameters for boundary-condition packages
+#'
+#' @param obj \code{RMODFLOW} object to write
+#' @param arrays list of arrays to write
+#' @param file filename to write to
+#' @param type character; type of array parameter. Allowed values are \code{'bc'} for boundary-condition arrays and \code{'flow'} for flow package arrays
+#' @param ... additional arguments passed to \code{rmfi_write_array} 
+#'
+#' @return NULL
+#' @keywords internal
+#' @seealso \code{\link{rmfi_parse_array_parameters}}
+#' 
+rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
+  
+  parm_names <- names(obj$parameter_values)
+  tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+  
+  for (i in 1:obj$dimensions$np){
+    
+    p_name <- parm_names[i]
+    arr <- arrays[[p_name]]
+    
+    tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
+    nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
+    
+    # headers
+    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nclu, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
+    
+    # time-varying
+    if(tv_parm[i]){
+      instances <- names(arr)
+      for (jj in 1:length(instances)){
+        
+        arr2 <- arr[[instances[jj]]]
+        
+        # instnam
+        rmfi_write_variables(instances[jj], file=file)
+        
+        # clusters
+        for (k in 1:nclu){
+          rmfi_write_variables(toupper(attr(arr2, 'mlt')[k]), toupper(attr(arr2, 'zon')[k]), ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
+        }
+        rm(arr2)
+      }
+    } else { # non-time-varying
+      for (k in 1:nclu){
+        rmfi_write_variables(toupper(attr(arr, 'mlt')[k]), toupper(attr(arr, 'zon')[k]), ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
+      }  
+      rm(arr)
+    }
+  }
+  
+}
+
 #'
 #' Write a MODFLOW boundary condition package which uses list-directed input to a file
 #'
@@ -1009,16 +1584,15 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
 #' @param header character; package name. Part of the header comment written to the output file
 #' @param package character; acronym (often 3 letters) used by MODFLOW to name to package
 #' @param partyp character; specifies the parameter type
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @keywords internal
-#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_read_bc_list}}
+#' @seealso \code{\link{rmfi_create_bc_list}}, \code{\link{rmfi_parse_bc_list}}
 #' 
 
 rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp, ...) {
-  
-  
+
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste(paste('# MODFLOW', header, 'created by RMODFLOW, version'),v,'\n'), file = file)
@@ -1028,12 +1602,17 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   if(obj$dimensions$np > 0) rmfi_write_variables('PARAMETER', obj$dimensions$np, obj$dimensions$mxl, file=file)
   
   # data set 2
-  rmfi_write_variables(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]], ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file, ...)
+  if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
+    ds2 <- paste0(formatC(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]]), width = 10), collapse='')
+  } else {
+    ds2 <- c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]])
+  }
+  rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
   # parameters
   if(obj$dimensions$np > 0){
     parm_names <- names(obj$parameter_values)
-    tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+    tv_parm <- structure(rep(FALSE,obj$dimensions$np), names = parm_names)
     
     for (i in 1:obj$dimensions$np){
       
@@ -1056,15 +1635,12 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
           rmfi_write_variables(instances[jj], file=file)
           
           # data set 4b
-          for (k in 1:nrow(df2)){
-            rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file)
-          }
+          rmfi_write_list(df2, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
           rm(df2)
         }
       } else { # non-time-varying
-        for (k in 1:nrow(df)){
-          rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, varnames], rmfi_ifelse0(!is.null(obj$aux), df[k,obj[['aux']]], ''), file=file)
-        }
+        rmfi_write_list(df, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
+        
       }  
       rm(df)
     }
@@ -1099,9 +1675,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
     # data set 6
     if(itmp > 0){
       df <- subset(obj$data, name %in% list_names)
-      for(j in 1:nrow(df)){
-        rmfi_write_variables(c(df$k[j], df$i[j], df$j[j], df[j, varnames],  rmfi_ifelse0(!is.null(obj$aux), df[j,obj[['aux']]], '')), file=file, ...)
-      }
+      rmfi_write_list(df, file = file, varnames = c(varnames, obj[['aux']]), aux = obj[['aux']], ...)
       rm(df)
     }
     
@@ -1113,6 +1687,34 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
     }
   }
   
+  
+}
+
+#' Write a RMODFLOW list
+#'
+#' @param df \code{RMODFLOW} list
+#' @param file filename to write to
+#' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk) including optional auxiliary variables
+#' @param aux character vector with the names of the auxiliary variables defined in \code{varnames}
+#' @param format either \code{"free"} (default) or \code{"fixed"}
+#' @param append logical
+#' @param ... ignored
+#' @return \code{NULL}
+#' @keywords internal
+rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', append = TRUE, ...) {
+  
+  naux <- length(aux)
+  n <- length(varnames) - naux
+  col_names <- c('k', 'i', 'j', varnames)
+  df <- df[,col_names]
+
+  if(format == 'fixed') {
+    fmt <- paste0(c(rep('%10i', 3), rep('%10g', n), rep('%10g', naux)), collapse = '')
+    dff <- do.call('sprintf', c(df, fmt))
+    readr::write_lines(dff, path = file, append = append)
+  } else {
+    readr::write_delim(df, path = file, delim = ' ', col_names = FALSE, append = append)
+  }
   
 }
 

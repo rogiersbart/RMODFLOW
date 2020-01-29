@@ -27,3 +27,6 @@ Write a MODFLOW parameter value file
 \item \code{write_pvl}: Deprecated function name
 }}
 
+\seealso{
+\code{\link{rmf_create_pvl}}, \code{\link{rmf_read_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
+}

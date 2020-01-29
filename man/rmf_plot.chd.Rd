@@ -2,31 +2,36 @@
 % Please edit documentation in R/plot.R
 \name{rmf_plot.chd}
 \alias{rmf_plot.chd}
-\title{Plot a 2D section of an RMODFLOW chd object}
+\title{Plot a RMODFLOW chd object}
 \usage{
-\method{rmf_plot}{chd}(chd, dis, all_parm = F, variable = "identity",
-  instnum = NULL, l = NULL, sp = NULL, ...)
+\method{rmf_plot}{chd}(chd, dis, kper = NULL, variable = "id",
+  i = NULL, j = NULL, k = NULL, active_only = TRUE, fun = mean,
+  ...)
 }
 \arguments{
 \item{chd}{an \code{RMODFLOW} chd object}
 
-\item{dis}{an \code{RMODFLOW} dis object}
+\item{dis}{a \code{RMODFLOW} dis object}
 
-\item{all_parm}{logical, should all parameters defined by plotted (i.e. indepedent of stress periods); defaults to FALSE}
+\item{kper}{integer specifying the stress-period to plot}
 
-\item{variable}{character, what data should be plotted. Possible values are: "identity" (default; plots the constant-head cells' locations), "layer", "row", "column", "shead", "ehead", "shdfact" (for parameter data), "ehdfact" (for parameter data), "parnam" (for parameter data), "instnam" (for time-varying parameter data) and "parval" (for parameter data); defaults to "identity"}
+\item{variable}{single character or numeric indicating which column of \code{chd$data} to plot. Defaults to 'id', which plots the locations of the cells.}
 
-\item{instnum}{numeric vector of length \code{npchd} holding the instance numbers for each time-varying parameter which need to be plotted. Only one instance per parameter is allowed. If a certain parameter \code{i} is not time-varying, specify instnum[i] as '1'; defaults to NULL}
+\item{i}{row number to plot}
 
-\item{l}{time step number for selecting which stress period to plot; defaults to NULL (last stress period)}
+\item{j}{column number to plot}
 
-\item{sp}{optional stress period number to plot; will override the stress period calculated from \code{l}; defaults to NULL}
+\item{k}{layer number to plot}
 
-\item{...}{additional arguments passed to \code{rmf_plot.rmf-3d-array}}
+\item{active_only}{logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.}
+
+\item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.}
+
+\item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
-\code{rmf_plot.chd} plots a 2D section of an \code{RMODFLOW} chd object using \code{rmf_plot.rmf-3d-array}
+Plot a RMODFLOW chd object
 }

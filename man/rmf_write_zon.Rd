@@ -6,12 +6,14 @@
 \usage{
 rmf_write_zon(zon, file = {    
   cat("Please choose zon file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+      file.choose() }, iprn = -1, ...)
 }
 \arguments{
 \item{zon}{an \code{RMODFLOW} zon object}
 
 \item{file}{filename to write to; typically '*.zon'}
+
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 
 \item{...}{arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.}
 }

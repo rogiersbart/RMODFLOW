@@ -4,12 +4,17 @@
 \alias{rmf_plot.hpr}
 \title{Plot a MODFLOW head predictions file}
 \usage{
-\method{rmf_plot}{hpr}(hpr, type = "scatter")
+\method{rmf_plot}{hpr}(hpr, type = "scatter", hobdry = -888,
+  bins = NULL)
 }
 \arguments{
 \item{hpr}{head predictions file object}
 
-\item{type}{plot type: 'scatter' or 'residual'}
+\item{type}{plot type: 'scatter', 'residual' or 'histogram'}
+
+\item{hobdry}{value used to flag dry cells; defaults to -888}
+
+\item{bins}{number of bins to use in the histrogram plot; defaults to the Freedman-Diaconis rule}
 }
 \description{
 Plot a MODFLOW head predictions file
