@@ -1282,18 +1282,12 @@ rmf_read_budget <- function(...) {
 #' @return object of class hpr
 #' @export
 rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choose()}) {
-  hpr <- read.table(file,header=T)
+  # TODO use readr
+  hpr <- read.table(file, header = TRUE, stringsAsFactors = FALSE)
   colnames(hpr) <- c('simulated', 'observed', 'name')
   hpr$residual <- hpr$simulated - hpr$observed
   class(hpr) <- c('hpr','data.frame')
   return(hpr)
-}
-
-#' @describeIn rmf_read_hpr Deprecated function name
-#' @export
-read_hpr <- function(...) {
-  .Deprecated(new = "rmf_read_hpr", old = "read_hpr")
-  rmf_read_hpr(...)
 }
 
 #' @describeIn rmf_read_hpr Compatible with default ModelMuse file extension
