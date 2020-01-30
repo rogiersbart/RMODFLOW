@@ -169,35 +169,7 @@ rmf_optimize <- function(
       control$parscale[which(trans[include])] <- log(control$parscale[which(trans[include])])
     }
   }
-<<<<<<< HEAD
-  optim_modflow <- function(par_include)
-  {
-    pvl$parval <- par
-    pvl$parval[which(include)] <- par_include
-    if(!is.null(trans)) pvl$parval[which(trans=='log')] <- exp(pvl$parval[which(trans=='log')])
-    rmf_write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    rmf_execute(paste0(dir,'/',file),code)
-    rmse <- rmf_performance(rmf_read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)])))$rmse
-    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'parval=',paste(format(pvl$parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
-    return(rmse)
-  }
-  if(method %in% c('Nelder-Mead','BFGS','CG','SANN','Brent'))
-  {
-    opt <- optim(par[which(include)],optim_modflow, method=method, control=control, ...)
-    #     if(!is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, control=control, ...)
-    #     if(is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, ...)
-  } else if(method=='L-BGFS-B')
-  {
-    opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower[which(include)], upper=upper[which(include)], control=control, ...)
-  } else {
-    stop(paste('Method',method,'is not supported. Please provide one of the optim methods.'))
-  }
-  par2 <- opt$par
-  opt$par <- par
-  opt$par[which(include)] <- par2
-  if(!is.null(trans)) opt$par[which(trans=='log')] <- exp(opt$par[which(trans=='log')])
-=======
-  
+
   # if par only has values for include = TRUE
   if(length(par) != length(pvl$parval)) {
     par2 <- par
@@ -234,7 +206,6 @@ rmf_optimize <- function(
   
   # optimize; L-BGFS-B only
   opt <- optim(par[which(include)], optim_modflow, method = 'L-BFGS-B', lower = lower[which(include)], upper = upper[which(include)], control = control, ...)
->>>>>>> install-execute
   opt$included <- include
   return(opt)
 }
