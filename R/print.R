@@ -359,7 +359,8 @@ print.huf <- function(huf, n = 5) {
 #' @export
 print.oc <- function(oc, n = 500) {
   
-  cat('RMODFLOW Output Control Option file', '\n')
+  cat('RMODFLOW Output Control Option file using:', '\n')
+  cat(ifelse(is.null(oc$incode), 'words', 'numeric codes'), 'to specify output', '\n')
   cat('\n')
   
   # words
@@ -1668,7 +1669,7 @@ print.modflow <- function(modflow, n = 5) {
     cat('\n')
   }
   if(length(not_supported) > 0) {
-    cat(length(not_supported), 'not-supported', ifelse(length(not_supported) > 1, 'packages', 'package') ,'in nam object:', '\n')
+    cat(length(not_supported), ifelse(length(not_supported) > 1, 'packages', 'package') ,'not yet supported:', '\n')
     cat(' ', not_supported, '\n')
     cat('\n')
   }

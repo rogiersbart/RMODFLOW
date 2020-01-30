@@ -1952,24 +1952,6 @@ t.rmf_2d_array <- function(obj) {
   return(obj)
 }
 
-#' @export
-as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
-#' @export
-as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
-#' @export
-as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
 #'
 #' Create a MODFLOW parameter
 #'

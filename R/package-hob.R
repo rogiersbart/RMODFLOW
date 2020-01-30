@@ -290,7 +290,8 @@ rmf_write_hob <- function(hob,
 #' @return object of class hpr
 #' @export
 rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choose()}) {
-  hpr <- read.table(file,header=T)
+  # TODO use readr
+  hpr <- read.table(file, header = TRUE, stringsAsFactors = FALSE)
   colnames(hpr) <- c('simulated', 'observed', 'name')
   hpr$residual <- hpr$simulated - hpr$observed
   class(hpr) <- c('hpr','data.frame')

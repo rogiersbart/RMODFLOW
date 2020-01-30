@@ -15,7 +15,7 @@
 #' @return Object of class bas
 #' @export
 #' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
-rmf_create_bas <- function(dis = rmf_create_dis(),
+rmf_create_bas <- function(dis,
                            xsection = FALSE,
                            chtoch = FALSE,
                            free = TRUE,

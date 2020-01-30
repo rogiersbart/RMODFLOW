@@ -148,6 +148,9 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   lines <-  readr::read_lines(file)
   scalevar <- 6
   
+  arg <- list(...)
+  arg$format <- 'free'
+  
   rmf_lists <- list()
   
   # data set 0
@@ -175,7 +178,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
       lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
-      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, naux = 0, format = 'free', ...)
+      data_set_3 <- do.call(rmfi_parse_list, c(list(remaining_lines = lines, nlst = nlst, varnames = vars, scalevar = scalevar, naux = 0, file = file), arg))
       rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_3$list, parnam = parnam, parval = parval)
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
@@ -185,7 +188,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   
   # data set 4
   if(nnp > 0) {
-    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, naux = 0, file = file, format = 'free', ...)
+    data_set_4 <- do.call(rmfi_parse_list, c(list(remaining_lines = lines, nlst = nnp, varnames = vars, scalevar = scalevar, naux = 0, file = file), arg))
     rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
     lines <- data_set_4$remaining_lines
     rm(data_set_4)

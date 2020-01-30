@@ -1563,7 +1563,7 @@ rmf_plot.rmf_4d_array <- function(array,
 #' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
-#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
+#' @param ... additional arguments passed to either \code{\link{rmf_plot.rmf_3d_array}} if \code{geom = 'polygon'}, \code{ggplot2::geom_point} if \code{geom = 'point'} or \code{ggplot2::geom_path} if \code{geom = 'line'}
 #' 
 #' @return ggplot2 object or layer
 #' @method rmf_plot rmf_list
@@ -1601,7 +1601,7 @@ rmf_plot.rmf_list <- function(obj,
     # TODO type = 'grid' is not properly plotted for active_only
     # actually ok since active_only removes the non-active cells from the plot
     if(variable == 'id') {
-      arr <- rmf_as_array(obj, dis = dis, select = 4, sparse = FALSE, na_value = na_value, fun = fun)
+      arr <- rmf_as_array(obj, dis = dis, select = 3, sparse = FALSE, na_value = na_value, fun = fun)
       indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
       arr[indx] <- 1
       rmf_plot(arr, dis = dis, type = ifelse(type == 'grid', type, 'factor'), add = add, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, ...)
