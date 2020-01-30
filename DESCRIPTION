@@ -19,8 +19,6 @@ Imports:
     animation,
     tools,
     lubridate,
-    xml2,
-    rvest,
     sf,
     tibble,
     dplyr,
