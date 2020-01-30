@@ -1,246 +1,134 @@
 #' Install external software
 #'
-#' @param name Character.
+#' @param name character; name of the code to download. If \code{'all'}, all codes will be downloaded. Defaults to \code{'MODFLOW-2005'}
+#' @param dir path to directory in which to install the software. Defaults to the "exe" folder in the \code{RMODFLOW} package directory (or creates it silently if not present)
+#' @param verbose logical; should information about downloading and installing be printed to the console? Defaults to TRUE
+#' @param prompt logical; in case the code is already installed in \code{dir}, should the user be asked to overwrite? If FALSE, the code is overwritten with a warning
 #' 
 #' @details Currently supported software: All MODFLOW variants documented at
 #' \url{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}, except for
 #' MODFLOW-2000.I.e. MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR and
 #' MODFLOW-CFP. The zip files with windows binaries hosted at the USGS websites
-#' are downloaded and extracted in \file{C:/WRDAPP/} each time. The main folder
+#' are downloaded and extracted in \code{dir} each time. The main folder
 #' names are modified in order to have more consistency.
-#'
+#' 
+#' The latest version is downloaded and installed. If a \code{name} folder is already present in \code{dir},
+#' a terminal prompt will ask if you want to overwrite unless \code{prompt} is FALSE in which case the code is overwritten with a warning.
 #' @export
 
-rmf_install <- function(name = "MODFLOW-2005") {
+rmf_install <- function(name = c("MODFLOW-2005", "MODFLOW-NWT", "MODFLOW-OWHM", "MODFLOW-LGR", "MODFLOW-CFP", "all"),
+                        dir = NULL,
+                        verbose = TRUE,
+                        prompt = verbose) {
   
-  # make sure directory to install MODFLOW-related software exists
+  # TODO install examples
   
-    if (!dir.exists("C:/WRDAPP")) dir.create("C:/WRDAPP")
+  os <- Sys.info()['sysname']
+  if(!grepl('MODFLOW', name[1]) && name[1] != 'all') name <- paste0('MODFLOW-', name[1])
+  name <- match.arg(name)
   
-  # do the installation
+  if(is.null(dir)) { # use exe folder in RMODFLOW
+    dir <- system.file('exe', package = 'RMODFLOW')
+    if(!dir.exists(dir)) { # create if not present
+      dir.create(file.path(system.file(package = 'RMODFLOW'), 'exe'))
+      dir <- system.file('exe', package = 'RMODFLOW')
+    } 
+  } else if(!dir.exists(dir)) {
+    stop(dir, ' is not a valid directory', call. = FALSE)
+  }
   
-    if (name == "MODFLOW-2005") {
-      
-      # get the link to the latest version
-      
-        x <- xml2::read_html("https://water.usgs.gov/ogw/modflow/MODFLOW.html") %>% 
-          rvest::html_nodes("a") %>% 
-          rvest::html_attr("href") %>% 
-          subset(grepl(".zip", .) & !grepl("u", .) & grepl("MODFLOW-2005", .))
-        version <- substr(x[1], 15, 21)
-        folder <- substr(basename(x[1]), 1, nchar(basename(x))-4)
-        message("Found MODFLOW-2005 version ", version, " at:\nhttps://water.usgs.gov/ogw/modflow/MODFLOW.html")
-        x <- paste0("https://water.usgs.gov/ogw/modflow/", x[1])
-        
-      # install, if already installed ask what to do
-        
-        if (!dir.exists("C:/WRDAPP/MODFLOW-2005")) {
-          temp <- tempfile()
-          message("Downloading file ...")
-          download.file(x, temp, quiet = TRUE)
-          message("Installing ...")
-          unzip(temp, exdir = "C:/WRDAPP")
-          unlink(temp, force = TRUE)
-          file.rename(paste0("C:/WRDAPP/", folder), "C:/WRDAPP/MODFLOW-2005")
-          cat(paste0(version, "\n"), file = "C:/WRDAPP/MODFLOW-2005/version.txt")
-          message("You have succesfully installed MODFLOW-2005 at:\nC:/WRDAPP/MODFLOW-2005/")
-        } else {
-          installed_version <- readLines("C:/WRDAPP/MODFLOW-2005/version.txt")
-          compare_versions <- compareVersion(version, installed_version)
-          if (compare_versions == 0) {
-            message("You have already installed this version at:\nC:/WRDAPP/MODFLOW-2005/")
-            install <- readline("Do you want to reinstall? (y/n) ")
-          } else if (compare_versions == 1) {
-            message("You have installed version ", installed_version, " at:\nC:/WRDAPP/MODFLOW-2005/")
-            install <- readline("Do you want to overwrite it? (y/n) ")
-          } else {
-            message("It seems like you have a later version (", installed_version, ") than the one found online. I strongly suggest you to check https://water.usgs.gov/ogw/modflow/MODFLOW.html and make changes manually if required.")
-            install <- readline("Do you want to overwrite it? (y/n) ")
-          }
-          if (install == "y") {
-            unlink("C:/WRDAPP/MODFLOW-2005", recursive = TRUE, force = TRUE)
-            rmf_install("MODFLOW-2005")
-          }
-        }
-        
-    } else if (name == "MODFLOW-OWHM") {
-      
-      # get the link to the latest version
-      
-        x <- xml2::read_html("https://water.usgs.gov/ogw/modflow-owhm/") %>% 
-          rvest::html_nodes("a") %>% 
-          rvest::html_attr("href") %>% 
-          subset(grepl(".zip", .) & grepl("MF_OWHM", .))
-        version <- gsub("_", "\\.", substr(x, 10, 12))
-        folder <- substr(basename(x), 1, nchar(basename(x))-4)
-        message("Found MODFLOW-OWHM version ", version, " at:\nhttps://water.usgs.gov/ogw/modflow-owhm/")
-        x <- paste0("https://water.usgs.gov/ogw/modflow-owhm/", x)
-        
-      # install, if already installed ask what to do
-      
-        if (!dir.exists("C:/WRDAPP/MODFLOW-OWHM")) {
-          temp <- tempfile()
-          message("Downloading file ...")
-          download.file(x, temp, quiet = TRUE)
-          message("Installing ...")
-          unzip(temp, exdir = "C:/WRDAPP")
-          unlink(temp, force = TRUE)
-          file.rename(paste0("C:/WRDAPP/", folder), "C:/WRDAPP/MODFLOW-OWHM")
-          cat(paste0(version, "\n"), file = "C:/WRDAPP/MODFLOW-OWHM/version.txt")
-          message("You have succesfully installed MODFLOW-OWHM at:\nC:/WRDAPP/MODFLOW-OWHM/")
-        } else {
-          installed_version <- readLines("C:/WRDAPP/MODFLOW-OWHM/version.txt")
-          compare_versions <- compareVersion(version, installed_version)
-          if (compare_versions == 0) {
-            message("You have already installed this version at:\nC:/WRDAPP/MODFLOW-OWHM/")
-            install <- readline("Do you want to reinstall? (y/n) ")
-          } else if (compare_versions == 1) {
-            message("You have installed version ", installed_version, " at:\nC:/WRDAPP/MODFLOW-OWHM/")
-            install <- readline("Do you want to overwrite it? (y/n) ")
-          } else {
-            message("It seems like you have a later version (", installed_version, ") than the one found online. I strongly suggest you to check https://water.usgs.gov/ogw/modflow-owhm/ and make changes manually if required.")
-            install <- readline("Do you want to overwrite it? (y/n) ")
-          }
-          if (install == "y") {
-            unlink("C:/WRDAPP/MODFLOW-OWHM", recursive = TRUE, force = TRUE)
-            rmf_install("MODFLOW-OWHM")
-          }
-        }
-      
-    } else if (name == "MODFLOW-NWT") {
-      
-      # get the link to the latest version
-      
-      x <- xml2::read_html("https://water.usgs.gov/ogw/modflow-nwt/") %>% 
-        rvest::html_nodes("a") %>% 
-        rvest::html_attr("href") %>% 
-        subset(grepl(".zip", .) & grepl("MODFLOW-NWT", .))
-      version <- gsub("_", "\\.", substr(x, 13, 17))
-      folder <- substr(basename(x), 1, nchar(basename(x))-4)
-      message("Found MODFLOW-NWT version ", version, " at:\nhttps://water.usgs.gov/ogw/modflow-nwt/")
-      x <- paste0("https://water.usgs.gov/ogw/modflow-nwt/", x)
-      
-      # install, if already installed ask what to do
-      
-      if (!dir.exists("C:/WRDAPP/MODFLOW-NWT")) {
-        temp <- tempfile()
-        message("Downloading file ...")
-        download.file(x, temp, quiet = TRUE)
-        message("Installing ...")
-        unzip(temp, exdir = "C:/WRDAPP")
-        unlink(temp, force = TRUE)
-        file.rename(paste0("C:/WRDAPP/", folder), "C:/WRDAPP/MODFLOW-NWT")
-        cat(paste0(version, "\n"), file = "C:/WRDAPP/MODFLOW-NWT/version.txt")
-        message("You have succesfully installed MODFLOW-NWT at:\nC:/WRDAPP/MODFLOW-NWT/")
+  # installer function
+  
+  install_mf <- function(name, dir) {
+    
+    if(verbose) message('Downloading and installing ', name, ' ...')
+    
+    # set url
+    if(name == "MODFLOW-2005") {
+      if(os == 'Windows') {
+        x <- "https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12.zip"
       } else {
-        installed_version <- readLines("C:/WRDAPP/MODFLOW-NWT/version.txt")
-        compare_versions <- compareVersion(version, installed_version)
-        if (compare_versions == 0) {
-          message("You have already installed this version at:\nC:/WRDAPP/MODFLOW-NWT/")
-          install <- readline("Do you want to reinstall? (y/n) ")
-        } else if (compare_versions == 1) {
-          message("You have installed version ", installed_version, " at:\nC:/WRDAPP/MODFLOW-NWT/")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        } else {
-          message("It seems like you have a later version (", installed_version, ") than the one found online. I strongly suggest you to check https://water.usgs.gov/ogw/modflow-nwt/ and make changes manually if required.")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        }
-        if (install == "y") {
-          unlink("C:/WRDAPP/MODFLOW-NWT", recursive = TRUE, force = TRUE)
-          rmf_install("MODFLOW-NWT")
-        }
+        x <- "https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12u.zip"
+        warning('Please make sure to compile ', name, ' before running the executable', call. = FALSE)
       }
-      
-    } else if (name == "MODFLOW-LGR") {
-      
-      # get the link to the latest version
-      
-      x <- xml2::read_html("https://water.usgs.gov/ogw/modflow-lgr/") %>% 
-        rvest::html_nodes("a") %>% 
-        rvest::html_attr("href") %>% 
-        subset(grepl(".zip", .) & grepl("mflgr", .))
-      version <- gsub("_", "\\.", substr(x, 14, 18))
-      message("Found MODFLOW-LGR version ", version, " at:\nhttps://water.usgs.gov/ogw/modflow-lgr/")
-      x <- paste0("https://water.usgs.gov/ogw/modflow-lgr/", x)
-      
-      # install, if already installed ask what to do
-      
-      if (!dir.exists("C:/WRDAPP/MODFLOW-LGR")) {
-        temp <- tempfile()
-        message("Downloading file ...")
-        download.file(x, temp, quiet = TRUE)
-        message("Installing ...")
-        unzip(temp, exdir = "C:/WRDAPP")
-        folder <- unzip(temp, list = TRUE)$Name[1] %>% # folder name is different from zip file name!
-          substr(1, nchar(.) - 1)
-        unlink(temp, force = TRUE)
-        file.rename(paste0("C:/WRDAPP/", folder), "C:/WRDAPP/MODFLOW-LGR")
-        cat(paste0(version, "\n"), file = "C:/WRDAPP/MODFLOW-LGR/version.txt")
-        message("You have succesfully installed MODFLOW-LGR at:\nC:/WRDAPP/MODFLOW-LGR/")
+      folder <- gsub('\\.zip', '', basename(x))
+    } else if(name == 'MODFLOW-NWT') {
+      if(os == 'Windows') {
+        x <- "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip"
       } else {
-        installed_version <- readLines("C:/WRDAPP/MODFLOW-LGR/version.txt")
-        compare_versions <- compareVersion(version, installed_version)
-        if (compare_versions == 0) {
-          message("You have already installed this version at:\nC:/WRDAPP/MODFLOW-LGR/")
-          install <- readline("Do you want to reinstall? (y/n) ")
-        } else if (compare_versions == 1) {
-          message("You have installed version ", installed_version, " at:\nC:/WRDAPP/MODFLOW-LGR/")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        } else {
-          message("It seems like you have a later version (", installed_version, ") than the one found online. I strongly suggest you to check https://water.usgs.gov/ogw/modflow-lgr/ and make changes manually if required.")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        }
-        if (install == "y") {
-          unlink("C:/WRDAPP/MODFLOW-LGR", recursive = TRUE, force = TRUE)
-          rmf_install("MODFLOW-LGR")
-        }
+        stop(name, ' is not available for your operating system.', call. = FALSE)
       }
-      
-    } else if (name == "MODFLOW-CFP") {
-      
-      # get the link to the latest version
-      
-      x <- xml2::read_html("https://water.usgs.gov/ogw/cfp/cfp.htm") %>% 
-        rvest::html_nodes("a") %>% 
-        rvest::html_attr("href") %>% 
-        subset(grepl(".zip", .) & grepl("CFP", .) & !grepl("ogw", .))
-      version <- gsub("_", "\\.", substr(x, 5, 10))
-      message("Found MODFLOW-CFP version ", version, " at:\nhttps://water.usgs.gov/ogw/cfp/cfp.htm")
-      x <- paste0("https://water.usgs.gov/ogw/cfp/", x)
-      folder <- "C:/WRDAPP/MODFLOW-CFP"
-      
-      # install, if already installed ask what to do
-      
-      if (!dir.exists(folder)) {
-        temp <- tempfile()
-        message("Downloading file ...")
-        download.file(x, temp, quiet = TRUE)
-        message("Installing ...")
-        dir.create(folder)
-        unzip(temp, exdir = folder)
-        unlink(temp, force = TRUE)
-        cat(paste0(version, "\n"), file = "C:/WRDAPP/MODFLOW-CFP/version.txt")
-        message("You have succesfully installed MODFLOW-CFP at:\n", folder, "/")
+      folder <- gsub('\\.zip', '', basename(x))
+    } else if(name == 'MODFLOW-OWHM') {
+      if(os == 'Windows') {
+        x <- "https://ca.water.usgs.gov/modeling-software/one-water-hydrologic-model/MF_OWHM_v1_0_win.zip"
       } else {
-        installed_version <- readLines("C:/WRDAPP/MODFLOW-CFP/version.txt")
-        compare_versions <- compareVersion(version, installed_version)
-        if (compare_versions == 0) {
-          message("You have already installed this version at:\nC:/WRDAPP/MODFLOW-CFP/")
-          install <- readline("Do you want to reinstall? (y/n) ")
-        } else if (compare_versions == 1) {
-          message("You have installed version ", installed_version, " at:\nC:/WRDAPP/MODFLOW-CFP/")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        } else {
-          message("It seems like you have a later version (", installed_version, ") than the one found online. I strongly suggest you to check https://water.usgs.gov/ogw/cfp/cfp.htm and make changes manually if required.")
-          install <- readline("Do you want to overwrite it? (y/n) ")
-        }
-        if (install == "y") {
-          unlink("C:/WRDAPP/MODFLOW-CFP", recursive = TRUE, force = TRUE)
-          rmf_install("MODFLOW-CFP")
-        }
+        x <- "https://ca.water.usgs.gov/modeling-software/one-water-hydrologic-model/MF_OWHM_v1_0.zip"
+        warning('Donwloaded pre-compiled binary of ', name, ' might not work on all unix systems. If so, try re-compiling the code', 
+                call. = FALSE)
       }
-      
-    } else {
-      stop("Installing software other than MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or MODFLOW-CFP is currently not supported.")
+      folder <- gsub('_win|\\.zip', '', basename(x))
+    } else if(name == 'MODFLOW-LGR') {
+      if(os == 'Windows') {
+        x <- "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+      } else {
+        stop(name, ' is not available for your operating system.', call. = FALSE)
+      }
+      folder <- 'mflgr.2_0'
+    } else if(name == 'MODFLOW-CFP') {
+      if(os == 'Windows') {
+        x <- "https://water.usgs.gov/water-resources/software/CFP/CFPv1.8.00-rel20110223.zip"
+      } else {
+        stop(name, ' is not available for your operating system.', call. = FALSE)
+      }
+      folder <- NULL # CFP download does not contain top-level folder or bin folder
     }
+    
+    mf_dir <- file.path(dir, name)
+    
+    # install, if already installed ask what to do
+    if(dir.exists(mf_dir)) {
+      if(prompt) {
+        message("You have already installed ", name, " in ", mf_dir)
+        install <- readline("Do you want to reinstall? (y/n) ")
+      } else {
+        warning("Overwriting existing ", name, ' version in ', mf_dir, call. = FALSE)
+        install <- 'y'
+      }
+
+    } else {
+      install <- 'y'
+    }
+    
+    if(install == 'y') {
+      if(dir.exists(mf_dir)) unlink(mf_dir, recursive = TRUE, force = TRUE)
+      temp <- tempfile()
+      if(verbose) message("Downloading file ...")
+      download.file(x, temp, quiet = !verbose)
+      if(verbose) message("Installing ...")
+      unzip(temp, exdir = ifelse(name == 'MODFLOW-CFP', mf_dir, dir))
+      unlink(temp, force = TRUE)
+      if(name == 'MODFLOW-CFP') { # CFP download does not contain top-level folder or bin folder
+        succes <- dir.exists(mf_dir)
+        if(!succes) mf_dir <- dir
+        dir.create(file.path(mf_dir, 'bin'))
+        succes <- succes*file.rename(file.path(mf_dir, 'mf2005cfp.exe'), file.path(mf_dir, 'bin', 'mf2005cfp.exe'))
+      } else {
+        succes <- file.rename(file.path(dir, folder), mf_dir)
+        if(!succes) mf_dir <- file.path(dir, folder)  
+      }
+      if(verbose) message("You have succesfully installed ", name, " at:\n", mf_dir)
+    } else {
+      if(verbose) message('Aborting install of ', name)
+    }
+    
+  }
+  
+  # call install_mf
+  if(name == 'all') {
+    name <- eval(formals(rmf_install)$name)
+    for(i in name[-which(name == 'all')]) install_mf(i, dir)
+  } else {
+    install_mf(name, dir)
+  }
 }

@@ -1,43 +1,62 @@
 #' Run a MODFLOW model
 #' 
-#' \code{run_modflow} runs a MODFLOW model.
+#' \code{rmf_execute} runs a MODFLOW model.
 #' 
 #' @param file path to name file; typically '*.nam'
-#' @param executable name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname
-#' @param version MODFLOW version to use; 2005 (default) is currently the only option
+#' @param executable name of the MODFLOW executable to use; if not provided, the executable corresponding to \code{version} is searched in the \code{RMODFLOW} package directory (if installed by \code{\link{rmf_install}})
+#' @param version MODFLOW version to use if \code{executable} is missing; defaults to MODFLOW-2005
 #' @param par vector of parameter value file parameter values to run the model with
 #' @param verbose logical; should the terminal output be printed to the R console? Defaults to TRUE
 #' @param convergence logical; should convergence be checked? If TRUE (default), a logical is returned
 #' @param cvg_message character denoting the message in the terminal output used to check for convergence
-#' @return if convergence = TRUE, a logical depending on whether the model converged. Otherwise NULL.
-#' @rdname rmf_run_modflow
-#' @method rmf_run_modflow character
+#'
+#' @details if \code{executable} is not provided, the executable corresponding to \code{version} is searched in the \code{RMODFLOW} package directory. If no executable is found, an error is returned.
+#'          Executables can be installed in the \code{RMODFLOW} package directory using \code{\link{rmf_install}}
+#' @return if convergence = TRUE, a logical depending on whether the model converged. Otherwise nothing is returned.
 #' @export
-rmf_run_modflow.character <- function(file,
-                                      executable = NULL,
-                                      version = 2005,
-                                      par = NULL,
-                                      verbose = TRUE,
-                                      convergence = TRUE,
-                                      cvg_message = 'Normal termination') {
+#' @seealso \code{\link{rmf_install}}
+rmf_execute <- function(file = {cat('Please select nam file ...\n'); file.choose()},
+                        executable = NULL,
+                        version = c("MODFLOW-2005", "MODFLOW-NWT", "MODFLOW-OWHM", "MODFLOW-LGR", "MODFLOW-CFP"),
+                        par = NULL,
+                        verbose = TRUE,
+                        convergence = TRUE,
+                        cvg_message = 'Normal termination') {
   
   # select appropriate executable
     if(is.null(executable)) {
-      if(version == '2005' | version == 2005) {
-        executable <- system.file(paste0('bin/MODFLOW-2005_v.1.11.00_',Sys.info()['sysname'],'_',Sys.info()['machine'],'.exe'),package='RMODFLOW')
-      }
+      if(!grepl('MODFLOW', version[1])) version <- paste0('MODFLOW-', version[1])
+      version <- match.arg(version)
+      exe_name <- switch(version,
+                         'MODFLOW-2005' = 'mf2005.exe',
+                         'MODFLOW-NWT' = 'MODFLOW-NWT.exe',
+                         'MODFLOW-OWHM' = 'MF_OWHM.exe',
+                         'MODFLOW-LGR' = 'mflgr.exe',
+                         'MODFLOW-CFP' = 'mf2005cfp.exe')
+      
+      executable <- system.file("exe", version, "bin", exe_name, package = 'RMODFLOW')
+      if(!file.exists(executable)) stop(version, ' executable not found. Either specify the executable argument or try calling rmf_install to install in the RMODFLOW package directory.', call. = FALSE)
     }
   
-  # get directory and filename
+  # get directory
     dir <- dirname(file)
-    file <- basename(file)
-    
+
   # set initial parameters if provided  
     if(!is.null(par)) {
-      nam <- rmf_read_nam(paste0(dir,'/',file))
-      pvl <- rmf_read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-      pvl$parval <- par
-      write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
+      nam <- rmf_read_nam(file)
+      if('PVAL' %in% nam$ftype) {
+        pvl <- rmf_read_pvl(file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+        
+        # copy and write original pvl
+        rmf_write_pvl(pvl, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
+        
+        pvl$parval <- par
+        rmf_write_pvl(pvl, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+        
+      } else {
+        warning('Model does not have PVL input file. Ignoring par argument', call. = FALSE)
+      }
+    
     }
     
   # run modflow
@@ -48,328 +67,179 @@ rmf_run_modflow.character <- function(file,
     }
 }
 
-#' Run a MODFLOW model
+#' Run a MODFLOW model optimization, based on the parameter value file and the head predictions output file
 #' 
-#' \code{run_modflow} runs a MODFLOW model.
-#' 
-#' @param modflow modflow object
-#' @param executable name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname
-#' @param version MODFLOW version to use; 2005 (default) is currently the only option
-#' @param par vector of parameter value file parameter values to run the model with
-#' 
-#' @rdname rmf_run_modflow
-#' @method rmf_run_modflow modflow
-#' @export
-rmf_run_modflow.modflow <- function(modflow,
-                                    executable = NULL,
-                                    version = 2005,
-                                    par = NULL) {
-  
-  # temporary directory
-  old <- setwd(tempdir())
-  on.exit(setwd(old), add = TRUE)
-  
-  # write all files
-  rmf_write_nam(modflow$nam, file = 'input.nam')
-  for(i in 1:nrow(modflow$nam)) {
-    if(modflow$nam$ftype[i] %in% c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF')) {
-      object_class <- c('hob','pvl','dis','zon','mlt','bas','huf','oc','wel','ghb','pcg','kdep','lpf')[which(c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF') == modflow$nam$ftype[i])]
-      if(object_class %in% 'lpf') {
-        get(paste0('rmf_write_',object_class))(modflow[[object_class]], file = modflow$nam$fname[i], dis = modflow$dis)
-      } else {
-        get(paste0('rmf_write_',object_class))(modflow[[object_class]], file = modflow$nam$fname[i])  
-      }
-    }
-  }
-  
-  # run modflow
-  rmf_run_modflow('input.nam', version = version, executable = executable, par = par)
-  
-  # read all output
-  
-}
-
-#' Generic function to run a modflow model
-#' 
-#' @rdname rmf_run_modflow
-#' @export
-rmf_run_modflow <- function(...) {
-  UseMethod('rmf_run_modflow')
-}
-
-#' Run a MODFLOW model optimization, based on the parameter value file
-#' 
-#' \code{run_modflow_opt} runs a MODFLOW optimization.
+#' \code{rmf_optimize} runs a MODFLOW optimization.
 #' 
 #' @param file path to name file; typically '*.nam'
-#' @param executable name of the MODFLOW executable to use
-#' @param par initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided
+#' @param executable name of the MODFLOW executable to use; if not provided, the executable corresponding to \code{version} is searched in the \code{RMODFLOW} package directory (if installed by \code{\link{rmf_install}})
+#' @param version MODFLOW version to use if \code{executable} is missing; defaults to MODFLOW-2005
+#' @param par initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided (default)
 #' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
-#' @param trans vector of transformations; currently only 'log' is supported
-#' @param method optimization method: 'Nelder-Mead','BFGS','CG','SANN','Brent','L-BGFS-B','spso2011','spso2007','ipso','fips','wfips','canonical' or 'DEoptim'
 #' @param lower lower parameter bounds
 #' @param upper upper parameter bounds
 #' @param control list of control arguments
-#' @param ... further arguments provided to \code{optim}, \code{hydroPSO} or \code{DEoptim}
+#' @param logtrans logical vector indicating which parameters should be logtransformed
+#' @param verbose logical; should the terminal output be printed to the R console? Defaults to TRUE
+#' @param cost character denoting which statistic should be used to compute the cost. Possible values are those returned by \code{\link{rmf_performance}}. Defaults to 'ssq'
+#' @param out_file optional file path to write cost value, convergence and parameter values to for each iteration
+#' @param cvg_message character denoting the message in the terminal output used to check for convergence
+#' @param ... further arguments provided to \code{optim}
+#'
+#' @details Only works with models using MODFLOW parameters and having a head predictions output file as defined in the HOB object
+#'          The only method currently available is "L-BFGS-B". See \code{\link{optim}}
 #' @return \code{optim} results with the full list of parameters
 #' @export
-rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NULL, method='Nelder-Mead', lower=-Inf, upper=Inf, control=list(), ...)
-{
+#' @seealso \code{\link{optim}}, \code{\link{rmf_execute}}, \code{\link{rmf_create_pvl}} & \code{\link{rmf_create_hob}} 
+rmf_optimize <- function(file = {cat('Please select nam file ...\n'); file.choose()},
+                         executable = NULL,
+                         version = c("MODFLOW-2005", "MODFLOW-NWT", "MODFLOW-OWHM", "MODFLOW-LGR", "MODFLOW-CFP"),
+                         par = NULL,
+                         include = NULL,
+                         logtrans = NULL,
+                         lower = 0,
+                         upper = Inf,
+                         verbose = TRUE,
+                         cost = 'ssq',
+                         out_file = NULL,
+                         control = list(),
+                         cvg_message = 'Normal termination',
+                         ...) {
+  
   dir <- dirname(file)
-  file <- basename(file)
-  nam <- rmf_read_nam(paste0(dir,'/',file))
-  pvl <- rmf_read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-  hob <- rmf_read_hob(paste0(dir,'/',nam$fname[which(nam$ftype=='HOB')]))
+
+  nam <- rmf_read_nam(file)
+  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) stop('rmf_optimize only works with models having PVL and HOB input', call. = FALSE)
+  pvl <- rmf_read_pvl(file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
+  hob <- rmf_read_hob(file.path(dir, nam$fname[which(nam$ftype=='HOB')]))
+  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
+    stop('rmf_optimize only works with models having a head predictions output file. This can be created by setting the iuhobsv argument of the HOB file to a non-zero value', call. = FALSE)
+  }
+  
+  # copy and write original pvl
+  rmf_write_pvl(pvl, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
+  
   if(is.null(par)) par <- pvl$parval
   if(is.null(include)) include <- rep(TRUE,length(par))
-  if(length(par)!=length(pvl$parval)) 
-  {
+  
+  if(is.infinite(lower)) lower <- rep(lower,pvl$np)
+  if(is.infinite(upper)) upper <- rep(upper,pvl$np)
+  if(!is.null(logtrans)) {
+    par[which(logtrans)] <- log(par[which(logtrans)])
+    lower[which(logtrans)] <- log(lower[which(logtrans)])
+    upper[which(logtrans)] <- log(upper[which(logtrans)])
+    if('parscale' %in% names(control)) {
+      control$parscale[which(trans[include])] <- log(control$parscale[which(trans[include])])
+    }
+  }
+  
+  # if par only has values for include = TRUE
+  if(length(par) != length(pvl$parval)) {
     par2 <- par
     par <- pvl$parval
     par[which(include)] <- par2
   }
-  if(is.infinite(lower)) lower <- rep(lower,pvl$np)
-  if(is.infinite(upper)) upper <- rep(upper,pvl$np)
-  if(!is.null(trans))
-  {
-    par[which(trans=='log')] <- log(par[which(trans=='log')])
-    lower[which(trans=='log')] <- log(lower[which(trans=='log')])
-    upper[which(trans=='log')] <- log(upper[which(trans=='log')])
-    if('parscale' %in% names(control))
-    {
-      control$parscale[which(trans[include]=='log')] <- log(control$parscale[which(trans[include]=='log')])
-    }
-  }
-  optim_modflow <- function(par_include)
-  {
+  
+  optim_modflow <- function(par_include) {
+    # adjust values
     pvl$parval <- par
     pvl$parval[which(include)] <- par_include
-    if(!is.null(trans)) pvl$parval[which(trans=='log')] <- exp(pvl$parval[which(trans=='log')])
-    rmf_write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    rmf_run_modflow(paste0(dir,'/',file),executable)
-    rmse <- rmf_performance(rmf_read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)])))$rmse
-    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'parval=',paste(format(pvl$parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
-    return(rmse)
+    if(!is.null(logtrans)) pvl$parval[which(logtrans)] <- exp(pvl$parval[which(logtrans)])
+    
+    # write values
+    rmf_write_pvl(pvl, file = file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
+    
+    # run modflow
+    cvg <- rmf_execute(file = file, executable = executable, version = version, verbose = verbose, cvg_message = cvg_message, convergence = TRUE)
+    
+    # get cost
+    if(cvg) {
+      hpr <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit==hob$iuhobsv)]))
+      cost_value <- rmf_performance(hpr)[cost]
+    } else { # return large cost when not converging
+      cost_value <- ifelse(!is.null(control$fnscale) && control$fnscale < 0, -1e100, 1e100) # maximization/minimization
+    }
+    
+    # print 
+    if(verbose) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(cvg), 'parval =', paste(format(pvl$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'))
+    if(!is.null(out_file)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(cvg), 'parval =', paste(format(pvl$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = out_file, append = TRUE)
+    
+    return(cost_value)
   }
-  if(method %in% c('Nelder-Mead','BFGS','CG','SANN','Brent'))
-  {
-    opt <- optim(par[which(include)],optim_modflow, method=method, control=control, ...)
-    #     if(!is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, control=control, ...)
-    #     if(is.null(control)) opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower, upper=upper, ...)
-  } else if(method=='L-BGFS-B')
-  {
-    opt <- optim(par[which(include)],optim_modflow, method=method, lower=lower[which(include)], upper=upper[which(include)], control=control, ...)
-  } else if(method %in% c('spso2011','spso2007','ipso','fips','wfips','canonical'))
-  {
-    opt <- hydroPSO::hydroPSO(par[which(include)],optim_modflow, method=method,lower=lower[which(include)],upper=upper[which(include)],control=control, ...)
-  } else if(method=='DEoptim')
-  {
-    opt <- DEoptim::DEoptim(optim_modflow,lower=lower[which(include)],upper=upper[which(include)], control=control, ...)
-  } else {
-    stop(paste('Method',method,'is not supported. Please provide one of the optim, hydroPSO or DEoptim methods.'))
-  }
-  if(method!='DEoptim') # make this part compatible with DEoptim as well!
-  {
-    par2 <- opt$par
-    opt$par <- par
-    opt$par[which(include)] <- par2
-    if(!is.null(trans)) opt$par[which(trans=='log')] <- exp(opt$par[which(trans=='log')])
-  }
+  
+  # optimize; L-BGFS-B only
+  opt <- optim(par[which(include)], optim_modflow, method = 'L-BFGS-B', lower = lower[which(include)], upper = upper[which(include)], control = control, ...)
   opt$included <- include
   return(opt)
 }
 
-#' Run a MODFLOW model response surface mapping
+#' Run a MODFLOW model sensitivity analysis, based on the parameter value file and the head predictions output file
 #' 
-#' \code{run_modflow_rsm} runs a MODFLOW response surface mapping.
-#' 
-#' @param file path to name file; typically '*.nam'
-#' @param executable name of the MODFLOW executable to use
-#' @param par central parameter values (for all or only included parameters); current parameter value file values are used if par is not provided
-#' @param include logical vector indicating which parameters in the parameter value file to include in the mapping
-#' @param trans vector of transformations; currently only 'log' is supported
-#' @param lower lower parameter bounds
-#' @param upper upper parameter bounds
-#' @param n number of intervals sampled for each parameter
-#' @return an rsm object with the full list of parameters and the response value
-#' @export
-rmf_run_rsm <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NULL, lower, upper, n)
-{
-  dir <- dirname(file)
-  file <- basename(file)
-  nam <- rmf_read_nam(paste0(dir,'/',file))
-  pvl <- rmf_read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-  hob <- rmf_read_hob(paste0(dir,'/',nam$fname[which(nam$ftype=='HOB')]))
-  if(is.null(par)) par <- pvl$parval
-  if(is.null(include)) include <- rep(TRUE,length(par))
-  if(length(par)!=length(pvl$parval)) 
-  {
-    par2 <- par
-    par <- pvl$parval
-    par[which(include)] <- par2
-  }
-  if(!is.null(trans))
-  {
-    par[which(trans=='log')] <- log(par[which(trans=='log')])
-    lower[which(trans=='log')] <- log(lower[which(trans=='log')])
-    upper[which(trans=='log')] <- log(upper[which(trans=='log')])
-  }
-  
-  # create parameter sets to run
-  parameter_values <- list()
-  for(i in 1:sum(include)) parameter_values[[i]] <- seq(lower[include][i],upper[include][i],length=n)
-  rsm <- expand.grid(parameter_values)
-  rsm$rmse <- NA
-  
-  # run parameter sets and get RMSE
-  rsm_modflow <- function(par_include)
-  {
-    pvl$parval <- par
-    pvl$parval[which(include)] <- as.numeric(par_include)
-    if(!is.null(trans)) pvl$parval[which(trans=='log')] <- exp(pvl$parval[which(trans=='log')])
-    rmf_write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    rmf_run_modflow(paste0(dir,'/',file),executable)
-    rmse <- rmf_performance(rmf_read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)])))$rmse
-    cat(paste('\n RMSE=',format(rmse,scientific=TRUE,digits=4),'parval=',paste(format(pvl$parval[include],scientific=TRUE,digits=4),collapse=' '),'\n')) # file=report, append=T
-    return(rmse)
-  }
-  for(i in 1:nrow(rsm))
-  {
-    rsm$rmse[i] <- rsm_modflow(rsm[i,1:sum(include)])
-  }
-  names(rsm) <- c(paste0(trans,pvl$parnam)[include],'rmse')
-  # add attributes later
-  class(rsm) <- c('rsm','data.frame')
-  return(rsm)
-}
-
-#' Run a MODFLOW model sensitivity analysis, based on the parameter value file
-#' 
-#' \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
+#' \code{rmf_analyze} performs a MODFLOW model sensitivity analysis.
 #' 
 #' @param file path to name file; typically '*.nam'
 #' @param executable name of the MODFLOW executable to use
-#' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided
+#' @param version MODFLOW version to use if \code{executable} is missing; defaults to MODFLOW-2005
+#' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided (default)
 #' @param include logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis
-#' @return sensitivity analysis results
+#' @param ... optional arguments passed to \code{rmf_execute}
+#' @details Only works with models using MODFLOW parameters and having a head predictions output file as defined in the HOB object
+#' @return object of class \code{sen} which is a list with dimensionless scaled sensitivities (dss) and composite scaled sensitivies (css)
 #' @export
-rmf_run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
-{
+#' @seealso \code{\link{rmf_execute}}, \code{\link{rmf_create_pvl}} & \code{\link{rmf_create_hob}} 
+rmf_analyze <- function(file = {cat('Please select nam file ...\n'); file.choose()},
+                        executable = NULL,
+                        version = c("MODFLOW-2005", "MODFLOW-NWT", "MODFLOW-OWHM", "MODFLOW-LGR", "MODFLOW-CFP"),
+                        par = NULL,
+                        include = NULL,
+                        ...) {
   dir <- dirname(file)
-  file <- basename(file)
-  nam <- rmf_read_nam(paste0(dir,'/',file))
-  pvl <- rmf_read_pvl(paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-  hob <- rmf_read_hob(paste0(dir,'/',nam$fname[which(nam$ftype=='HOB')]))
+  nam <- rmf_read_nam(file)
+  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) stop('rmf_analyze only works with models having PVL and HOB input', call. = FALSE)
+  pvl <- rmf_read_pvl(file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
+  hob <- rmf_read_hob(file.path(dir, nam$fname[which(nam$ftype=='HOB')]))
+  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
+    stop('rmf_analyze only works with models having a head predictions output file. This can be created by setting the iuhobsv argument of the HOB file to a non-zero value', call. = FALSE)
+  }
+  pvl_org <- pvl
+  
   if(is.null(par)) par <- pvl$parval
   if(is.null(include)) include <- rep(TRUE,length(par))
-  if(length(par)!=length(pvl$parval)) 
-  {
+  
+  # if par only has values for include = TRUE
+  if(length(par) != length(pvl$parval)) {
     par2 <- par
     par <- pvl$parval
     par[which(include)] <- par2
   } 
-  rmf_run_modflow(file = paste0(dir,'/',file), executable = executable,par)
-  hpr_orig <- rmf_read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
+  
+  # copy and write original pvl
+  rmf_write_pvl(pvl_org, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
+  
+  # initial run
+  rmf_execute(file = file, executable = executable, par = par, version = version, convergence = FALSE, ...)
+  hpr_orig <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit == hob$iuhobsv)]))
+  
   sens <- list()
-  sens$dss <- matrix(NA,nrow=length(hob$obsnam),ncol=length(pvl$parval))
+  sens$dss <- matrix(NA, nrow = length(hob$obsnam), ncol = length(pvl$parval))
   sens$css <- pvl$parval*NA
-  for(i in which(include))
-  {
+  
+  # dss & css
+  for(i in which(include)) {
     pvl$parval <- par
     pvl$parval[i] <- pvl$parval[i]*1.01
-    rmf_write_pvl(pvl, file=paste0(dir,'/',nam$fname[which(nam$ftype=='PVAL')]))
-    rmf_run_modflow(file = paste0(dir,'/',file), executable = executable)
-    hpr <- rmf_read_hpr(paste0(dir,'/',nam$fname[which(nam$nunit==hob$iuhobsv)]))
-    sens$dss[,i] <- (hpr$simulated_equivalent-hpr_orig$simulated_equivalent)/(0.01)
+    rmf_write_pvl(pvl, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+    rmf_execute(file = file, executable = executable, par = NULL, version = version, convergence = FALSE, ...)
+    hpr <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit == hob$iuhobsv)]))
+    sens$dss[,i] <- (hpr$simulated - hpr_orig$simulated)/(0.01)
     sens$css[i] <- sqrt(sum(sens$dss[,i]^2)/hob$nh)
   }
+  
+  #  write original pvl and run
+  rmf_write_pvl(pvl_org, file = file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
+  rmf_execute(file = file, executable = executable, par = NULL, version = version, convergence = FALSE, ...)
+  
   sens$parnam <- pvl$parnam
   class(sens) <- 'sen'
   return(sens)
-}
-
-#' Find paths to executables
-#' 
-#' \code{rmf_find} finds the path to external software executables.
-#' 
-#' The function first looks for the executable in the current working
-#' directory. If not there, it looks in \file{C:/WRDAPP/}, where the
-#' software might have been installed by \code{\link{rmf_install}}. If the
-#' executable cannot be found, the system path variable is used in an attempt
-#' to locate it. If it still cannot be located, you should first install the
-#' software or add the folder with the executable to the system path.
-#'
-#' @param name Character. Name of the software. Currently supported values are \code{"MODFLOW-2005"}, \code{"MODFLOW-OWHM"}, \code{"MODFLOW-NWT"}, \code{"MODFLOW-LGR"} and \code{"MODFLOW-CFP"}.
-#' @param precision Character. Can be \code{"single"} or \code{"double"}. Only relevant for MODFLOW-2005.
-#'
-#' @return Path to the executable.
-#' @export
-#'
-#' @examples
-#' rmf_find("MODFLOW-2005")
-rmf_find <- function(name = "MODFLOW-2005",
-                     precision = "single") {
-  if (name == "MODFLOW-2005") {
-    executable <- ifelse(precision == "single", "mf2005.exe", "mf2005dbl.exe")
-    folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
-    if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
-        folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        stop("Path to ", name, " executable not found.")
-      }
-    }
-    return(paste0(folder, executable))
-  } else if (name == "MODFLOW-OWHM") {
-    executable <- "MF_OWHM.exe"
-    folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
-    if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
-        folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        stop("Path to ", name, " executable not found.")
-      }
-    }
-    return(paste0(folder, executable))
-  } else if (name == "MODFLOW-NWT") {
-    executable <- "MODFLOW-NWT_64.exe"
-    folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
-    if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
-        folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        stop("Path to ", name, " executable not found.")
-      }
-    }
-    return(paste0(folder, executable))
-  } else if (name == "MODFLOW-LGR") {
-    executable <- "mflgr.exe"
-    folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/bin/")
-    if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
-        folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        stop("Path to ", name, " executable not found.")
-      }
-    }
-    return(paste0(folder, executable))
-  } else if (name == "MODFLOW-CFP") {
-    executable <- "mf2005cfp.exe"
-    folder <- ""
-    rmf_install_bin_folder <- paste0("C:/WRDAPP/", name, "/")
-    if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
-        folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        stop("Path to ", name, " executable not found.")
-      }
-    }
-    return(paste0(folder, executable))
-  } else {
-    stop("Finding paths to the executables of software other than MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or MODFLOW-CFP is currently not supported.")
-  }
 }
