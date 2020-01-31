@@ -116,27 +116,32 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   lines <- data_set_0$remaining_lines
   rm(data_set_0)
   
-  indices <- rep(T,length(lines))
+  indices <- rep(TRUE,length(lines))
   for(i in 1:length(lines)) {
     if(length(rmfi_remove_empty_strings(strsplit(lines[i],' |\t')[[1]])) == 0 || strsplit(rmfi_remove_empty_strings(strsplit(lines[i],' |\t')[[1]])[1], "")[[1]][1] == "#") {
       comments <-  c(comments, gsub('#', '', lines[i]))
-      indices[i] <-  FALSE
+      indices[i] <- FALSE
     } else {
       lines[i] <- rmfi_remove_comments_end_of_line(lines[i])
     }
   }
+  
   nam_lines <- lines[indices]
   nam_lines <- lapply(strsplit(nam_lines, ' |\t'), rmfi_remove_empty_strings)
   nam_lines <- lapply(nam_lines, function(i) rmfi_ifelse0(length(unlist(i))< 4, c(unlist(i),NA), unlist(i)))
   
-  nam <-  data.frame(do.call(rbind, nam_lines), stringsAsFactors = F)
+  nam <- data.frame(do.call(rbind, nam_lines), stringsAsFactors = FALSE)
   colnames(nam) <- c('ftype','nunit','fname', 'options')
   nam$nunit<- as.numeric(nam$nunit)
-  nam$fname <- gsub('"', '', nam$fname, fixed = TRUE)
+  nam$fname <- gsub('\"|\'', '', nam$fname)
   nam$ftype <- toupper(nam$ftype)
   
+  spaces_in_fname <- !toupper(nam[[4]]) %in% c('OLD', 'REPLACE', 'UNKNOWN', NA)
+  if(any(spaces_in_fname)) warning('nam$option should either be OLD, REPLACE or UNKNOWN. This warning might be generated due to whitespaces in fname which are not allowed ',
+                                   '(records ', paste(which(spaces_in_fname), collapse = ', '), ')', call. = FALSE)
+
   if("GLOBAL" %in% nam$ftype) warning('nam file is from a MODFLOW-2000 model. RMODFLOW support for MODFLOW-2000 is limited.', call. = FALSE)
-  if(any(c(5, 6, 96:99) %in% nam$nunit)) warning('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
+  if(any(c(5, 6, 96:99) %in% nam$nunit)) warning('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW.', call. = FALSE)
 
   comment(nam) <- comments
   attr(nam, 'dir') <- dirname(file)
@@ -166,11 +171,18 @@ rmf_write_nam <- function(nam,
   if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified', call. = FALSE)
   if(any(c(5, 6, 96:99) %in% nam$nunit)) stop('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
   
+  # check for spaces in fname
+  if(any(grepl(' |\t', nam$fname))) stop('Whitespaces are not allowed in fname', call. = FALSE)
+  spaces_in_fname <- !toupper(nam$option) %in% c('OLD', 'REPLACE', 'UNKNOWN', NA)
+  if(any(spaces_in_fname)) stop('nam$option should either be OLD, REPLACE or UNKNOWN. This error might be generated due to whitespaces in fname which are not allowed ',
+                                   '(records ', paste(which(spaces_in_fname), collapse = ', '), ')', call. = FALSE)
+  
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Name File created by RMODFLOW, version',v,'\n'), file=file)
   cat(paste('#', comment(nam)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE, na='', append=T)
+  # write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE, na='', append=TRUE)
+  readr::write_tsv(nam, path = file, append = TRUE, col_names = FALSE, quote_escape = FALSE, na = '')
 }
