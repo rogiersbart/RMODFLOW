@@ -54,7 +54,7 @@ rmf_create_lpf <- function(dis,
                            hani = rmfi_ifelse0(all(chani <= 0), hk*0 + 1, NULL),
                            vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
                            ss = rmfi_ifelse0('TR' %in% dis$sstr, hk*0 + 1e-5, NULL),
-                           sy = rmfi_ifelse0('TR' %in% dis$sstr && all(laytyp > 0), hk*0 + 0.15, NULL),
+                           sy = rmfi_ifelse0('TR' %in% dis$sstr && any(laytyp > 0), hk*0 + 0.15, NULL),
                            vkcb = NULL,
                            wetdry = NULL) {
     

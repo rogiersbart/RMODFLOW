@@ -383,6 +383,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
 #' @param huf huf object; optional. Provide only if huf heads are being read. See details.
 #' @param oc oc object; optional. See details.
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
+#' @param hdry numeric value as set by the flow package (bcf, lpf, huf or upw). If supplied, cells with this value are dry and their values are set to NA. Defaults to NULL (unless huf is supplied)
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
 #' @param timesteps optional integer vector specifying which time steps to read. If -1 is specified, only the last time step is read. Defaults to NULL. See details.
@@ -404,6 +405,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
                          huf = NULL,
                          oc = NULL,
                          bas = NULL,
+                         hdry = huf$hdry,
                          binary = TRUE,
                          precision = 'single',
                          timesteps = NULL) {
@@ -432,7 +434,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
                'GEOSTATIC STRESS',
                'CHANGE IN G-STRS')
   other_desc <- NULL
-  
+
   if(binary) { # Binary
     
     real_number_bytes <- ifelse(precision == 'single', 4, 8)
@@ -564,6 +566,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
       
       if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+      if(!is.null(hdry)) hed[which(hed == hdry)] <- NA
       
       if(!is.null(other_desc) && length(other_desc) != 0) {
         warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
@@ -582,7 +585,11 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
     label <- TRUE
-    variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+    header_fmt <- '(1X,2I5,2E15.6,A17,3I6,A17)'
+    header_fmt <- rmfi_fortran_format(header_fmt)
+    
+    variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
+    # variables <- rmfi_remove_empty_strings(strsplit(variables,' ')[[1]])
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
     if(! desc %in% headers) {
       if(variables[2] != dis$ncol) { # weak test to check if there's a label
@@ -605,14 +612,14 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           hed.lines <-  hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
           dis$nlay <-  huf$nhuf
         } else {
-          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
+          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = FALSE)]
           hed.lines <-  NULL
         }
       } else {
         if(any(grepl('HEAD', hed.lines))) {
           hed.lines <-  hed.lines[grep('HEAD', hed.lines)[1]:length(hed.lines)]
         } else {
-          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
+          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = FALSE)]
           hed.lines <-  NULL
         }
       }
@@ -643,7 +650,8 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     while(length(hed.lines) != 0) {
       
       if(label) {
-        variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+        # variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+        variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
         kstp <- as.numeric(variables[1])
         kper <- as.numeric(variables[2])
         pertim <- as.numeric(variables[3])
@@ -764,6 +772,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     }
     
     if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+    if(!is.null(hdry)) hed[which(hed == hdry)] <- NA
     
     if(!is.null(other_desc) && length(other_desc) != 0) {
       warning(paste('HEAD or HEAD IN HGU not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
@@ -805,6 +814,7 @@ rmf_read_bhd <- function(...) {
 #' @param dis dis object
 #' @param oc oc object; optional. See details.
 #' @param bas bas object; optional. If supplied, is used to set the hnoflo values to NA.
+#' @param hdry numeric value as set by the flow package (bcf, lpf, huf or upw). If supplied, cells with this value are dry and their values are set to NA. Defaults to NULL
 #' @param binary logical; is the file binary?
 #' @param precision either \code{'single'} or \code{'double'}. Specifies the precision of the binary file.
 #' @param timesteps optional integer vector specifying which time steps to read. If -1 is specified, only the last time step is read. Defaults to NULL. See details.
@@ -824,6 +834,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                          oc = NULL,
                          bas = NULL,
+                         hdry = NULL,
                          binary = TRUE,
                          precision = 'single',
                          timesteps = NULL) {
@@ -989,6 +1000,8 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
         hed <- NULL
       } else {
         if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+        if(!is.null(hdry)) hed[which(hed == hdry)] <- NA
+
         hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
         if(!is.null(timesteps)) {
           hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))
@@ -1002,7 +1015,11 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
     label <- TRUE
-    variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+    header_fmt <- '(1X,2I5,2E15.6,A17,3I6,A17)'
+    header_fmt <- rmfi_fortran_format(header_fmt)
+    
+    variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
+    # variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
     if(! desc %in% headers) {
       if(variables[2] != dis$ncol) { # weak test to check if there's a label
@@ -1057,7 +1074,8 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
     while(length(hed.lines) != 0) {
       
       if(label) {
-        variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+        # variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
+        variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
         kstp <- as.numeric(variables[1])
         kper <- as.numeric(variables[2])
         pertim <- as.numeric(variables[3])
@@ -1168,6 +1186,8 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       return(NULL)
     } else {
       if(!is.null(bas)) hed[which(hed == bas$hnoflo)] <-  NA
+      if(!is.null(hdry)) hed[which(hed == hdry)] <- NA
+      
       hed <- rmf_create_array(hed, dimlabels = rmfi_ifelse0(xsection, c('k', 'j', 'i', 'l'), c('i', 'j', 'k', 'l')))
       if(!is.null(timesteps)) {
         hed <- rmf_create_array(hed[,,,timesteps], dim = c(dim(hed)[1:3], length(timesteps)))

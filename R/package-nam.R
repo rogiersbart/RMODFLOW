@@ -135,7 +135,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
   nam$ftype <- toupper(nam$ftype)
   
   if("GLOBAL" %in% nam$ftype) warning('nam file is from a MODFLOW-2000 model. RMODFLOW support for MODFLOW-2000 is limited.', call. = FALSE)
-  if(c(5, 6, 96:99) %in% nam$nunit) warning('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
+  if(any(c(5, 6, 96:99) %in% nam$nunit)) warning('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
 
   comment(nam) <- comments
   attr(nam, 'dir') <- dirname(file)
@@ -162,7 +162,7 @@ rmf_write_nam <- function(nam,
     nam <- nam[-which(nam$ftype %in% ftype), ]
   }
   if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified', call. = FALSE)
-  if(c(5, 6, 96:99) %in% nam$nunit) stop('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
+  if(any(c(5, 6, 96:99) %in% nam$nunit)) stop('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version

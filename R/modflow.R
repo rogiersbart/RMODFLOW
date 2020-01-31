@@ -5,11 +5,11 @@
 #'
 #' @param ... (list of) \code{RMODFLOW} objects of class \code{rmf_package} to be included in the modflow object. If a nam object is not provided, it is added automatically.
 #' @param cbc optional integer; sets the flag and unit number for writing cell-by-cell flow data. Overwrites the values set in the objects. Defaults to NULL.
-#'
+#' @param recreate_nam logical; if a nam object is supplied, should it be recreated from scratch ? Defaults to FALSE
 #' @return a \code{modflow} object which is a list containing all MODFLOW packages
 #' @export
 #' @seealso \code{\link{rmf_read}}, \code{\link{rmf_write}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html}
-rmf_create <- function(..., cbc = NULL) {
+rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE) {
   
   modflow <- list(...)
   if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
@@ -36,10 +36,12 @@ rmf_create <- function(..., cbc = NULL) {
     modflow <- lapply(modflow, set_cbc)
   }
   
-  # find nam object; if not present, create one. If present, check if all packages are also in nam
+  # find nam object; if not present or recreate_nam = TRUE, create one. If present, check if all packages are also in nam
   if(!('nam' %in% ftype)) {
     modflow$nam <- rmf_create_nam(modflow)
-  } else {
+  } else if(recreate_nam) {
+    modflow$nam <- rmf_create_nam(modflow[-which(names(modflow) == 'nam')])
+  } else {  
     df <- rmfi_list_packages(type = 'all')
     mf_types <- df$ftype[which(df$rmf %in% ftype)]
     nam_types <- modflow$nam$ftype[which(!(modflow$nam$ftype %in% c('DATA', 'DATA(BINARY)', 'LIST', 'GLOBAL', 'DATAGLO', 'DATAGLO(BINARY)')))]
@@ -325,6 +327,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
     }
 
     if('OC' %in% modflow$nam$ftype) {
+      hdry <- modflow[[which(names(modflow) %in% c('huf', 'lpf', 'bcf', 'upw'))]]$hdry
       
       # heads
       if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0))) {
@@ -332,10 +335,10 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
         
         # huf heads
         if(!is.null(modflow$huf) && modflow$huf$iohufheads != 0) {
-          modflow$head <- rmf_read_head(file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], dis = modflow$dis, bas = modflow$bas, huf = modflow$huf, oc = modflow$oc,
+          modflow$head <- rmf_read_head(file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], dis = modflow$dis, bas = modflow$bas, huf = modflow$huf, hdry = hdry, oc = modflow$oc,
                                         binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$ihedun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)
         } else {
-          modflow$head <- rmf_read_head(file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], dis = modflow$dis, bas = modflow$bas, oc = modflow$oc,
+          modflow$head <- rmf_read_head(file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], dis = modflow$dis, bas = modflow$bas, hdry = hdry, oc = modflow$oc,
                                         binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$ihedun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)
         }
       }
@@ -343,7 +346,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       # drawdown
       if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0))) {
         if(verbose) print_reading('Drawdown', file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], output = TRUE)
-        modflow$drawdown <- rmf_read_drawdown(file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], dis = modflow$dis, bas = modflow$bas, oc = modflow$oc,
+        modflow$drawdown <- rmf_read_drawdown(file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], dis = modflow$dis, bas = modflow$bas, hdry = hdry, oc = modflow$oc,
                                               binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$iddnun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)
       }
       

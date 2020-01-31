@@ -366,6 +366,9 @@ rmfi_fortran_format <- function(format) {
   # remove possible apostrophes
   format <- gsub('\"|\'|´|`','',format)
   
+  # remove kP format
+  format <- gsub('[0-9]*P', '', format)
+  
   # split on commas for multiple formats
   format <- strsplit(format, split = ',')[[1]]
   
@@ -986,12 +989,16 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
   
   # helper function
   read_list <- function(lines) {
+    # if lines is of length 1, readr will assume it's a file connection and error out
+    lines <- lines[1:nlst]
+    if(nlst == 1) lines <- c(lines, '')
+    
     # TODO atm aux can only be double
     if(format == 'fixed') {
       if(naux > 0) {
         widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
-        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
         
@@ -1004,7 +1011,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       } else {
         widths <- readr::fwf_widths(c(rep(10, n)))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
-        df <- as.data.frame(readr::read_fwf(lines[1:nlst], widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
       }
@@ -1014,9 +1021,9 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
       # TODO unsuppress warnings;
       # reading in subset of columns without knowing all names not possible without warnings in readr
-      df <- as.data.frame(suppressWarnings(readr::read_table2(lines[1:nlst], col_names = FALSE, col_types = cols)))
+      df <- as.data.frame(suppressWarnings(readr::read_table2(lines, col_names = FALSE, col_types = cols)))
     }
-    return(df)
+    return(df[1:nlst,])
   }
   
   if(toupper(header[1]) == 'EXTERNAL') {
