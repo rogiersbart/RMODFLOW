@@ -128,6 +128,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
 #' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
+#' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_create_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas6.htm}
 rmf_write_bas <- function(bas,
                           file = {cat('Please select bas file to overwrite or provide new filename ...\n'); file.choose()},
                           iprn=-1, 

@@ -590,7 +590,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = 
         if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays', call. = FALSE)
         fname <-  nam$fname[which(nam$nunit == nunit)]
         direct <-  attr(nam, 'dir')
-        absfile = paste(direct, fname, sep = '/')
+        absfile <- file.path(direct, fname)
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
@@ -665,7 +665,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = 
         binary <- ifelse(toupper(fmtin) == "(BINARY)", TRUE, FALSE)
         
         direct <-  dirname(file)
-        absfile = paste(direct, fname, sep = '/')
+        absfile <- file.path(direct, fname)
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
@@ -722,9 +722,9 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = 
         } else {
           if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
-          fname <-  nam$fname[which(nam$nunit == locat)]
-          direct <-  attr(nam, 'dir')
-          absfile <-  paste(direct, fname, sep='/')
+          fname <- nam$fname[which(nam$nunit == locat)]
+          direct <- attr(nam, 'dir')
+          absfile <- file.path(direct, fname)
           
           # ASCII
           if(locat > 0) {
@@ -1029,7 +1029,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
   if(toupper(header[1]) == 'EXTERNAL') {
     if(is.null(nam)) stop('List is read on an EXTERNAL file. Please supply the nam object', call. = FALSE)
     remaining_lines <-  remaining_lines[-1]
-    extfile <- paste(attr(nam, 'dir'), nam$fname[which(nam$nunit==as.numeric(header[2]))], sep='/')
+    extfile <- file.path(attr(nam, 'dir'), nam$fname[which(nam$nunit==as.numeric(header[2]))])
     binary <-  ifelse(toupper(nam$ftype[which(nam$nunit==as.numeric(header[2]))]) == 'DATA(BINARY)', TRUE, FALSE)
     
     if(binary) {
@@ -1051,7 +1051,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
     
   } else if(toupper(header[1]) == 'OPEN/CLOSE') {
     remaining_lines <-  remaining_lines[-1]
-    extfile <- paste(file, as.character(header[2]), sep='/')
+    extfile <- file.path(file, as.character(header[2]))
     binary <- rmfi_ifelse0(!is.na(header[3]) && toupper(header[3]) == "(BINARY)", TRUE, FALSE)
     
     if(binary) {
@@ -1441,7 +1441,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   
   if(external) { # external
     if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays', call. = FALSE)
-    extfile <-  paste(dirname(file), paste(arrname, 'ext', sep='.'), sep='/')
+    extfile <-  file.path(dirname(file), paste(arrname, 'ext', sep='.'))
     
     # set unit number in nam file
     found <-  F
@@ -1474,7 +1474,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
       for(i in 1:dim(array)[3]) {
         fname_i <- paste(paste(arrname, i, sep = '_'), 'in', sep = '.')
         direct <-  dirname(file)
-        absfile <-  paste(direct, fname_i, sep = '/')
+        absfile <-  file.path(direct, fname_i)
         
         cat(paste('OPEN/CLOSE', fname_i, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
         rmf_write_array(array = array[,,i], file = absfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
@@ -1483,7 +1483,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     } else {
       fname_i <- paste(arrname, 'in', sep = '.')
       direct <-  dirname(file)
-      absfile <-  paste(direct, fname_i, sep = '/')
+      absfile <-  file.path(direct, fname_i)
       cat(paste('OPEN/CLOSE', fname_i, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
       rmf_write_array(array = array, file = absfile, append = FALSE, binary = binary, header = ifelse(binary, ifelse(is.integer(array), FALSE,TRUE), FALSE), desc = 'HEAD', precision = precision, xsection = xsection)
       

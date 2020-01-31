@@ -104,6 +104,7 @@ rmf_create_nam <- function(...) {
 #' @param file filename; typically '*.nam'
 #' @return object of class nam
 #' @export
+#' @seealso \code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
 rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choose()}) {
   
   nam <- list()
@@ -152,6 +153,7 @@ rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choos
 #' @param exclude character vector with packages names to exclude from the simulation. Defaults to NULL
 #' @return \code{NULL}
 #' @export
+#' @seealso \code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
 rmf_write_nam <- function(nam,
                           file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()},
                           exclude = NULL) {

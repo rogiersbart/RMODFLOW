@@ -101,7 +101,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
   if(verbose) print_reading('NAM', file = file)
   modflow$nam <- rmf_read_nam(file = file)
   dir_nam <- dirname(file)
-  fname <- paste(dir_nam, modflow$nam$fname, sep = '/')
+  fname <- file.path(dir_nam, modflow$nam$fname)
   ftype <- modflow$nam$ftype
   
   if(verbose) print_reading('DIS', file = fname[which(modflow$nam$ftype == 'DIS')])
@@ -467,33 +467,33 @@ rmf_write <- function(modflow,
   rmf_write_nam(nam = modflow$nam, file = file)
   
   # dis
-  if(verbose) print_writing('DIS', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')], sep = '/'))
-  rmf_write_dis(dis = modflow$dis, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')], sep = '/'))
+  if(verbose) print_writing('DIS', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
+  rmf_write_dis(dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
   
   # bas
-  if(verbose) print_writing('BAS6', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')], sep = '/'))
-  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')], sep = '/'))
+  if(verbose) print_writing('BAS6', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
+  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
   
   # mlt & zon
   if('mlt' %in% ftype) {
-    if(verbose) print_writing('MULT', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')], sep = '/'))
-    rmf_write_mlt(mlt = modflow$mlt, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')], sep = '/'))
+    if(verbose) print_writing('MULT', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
+    rmf_write_mlt(mlt = modflow$mlt, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
   }
   if('zon' %in% ftype) {
-    if(verbose) print_writing('ZONE', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')], sep = '/'))
-    rmf_write_zon(zon = modflow$zon, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')], sep = '/'))
+    if(verbose) print_writing('ZONE', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
+    rmf_write_zon(zon = modflow$zon, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
   } 
   
   # pvl
   if('pvl' %in% ftype) {
-    if(verbose) print_writing('PVAL', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')], sep = '/'))
-    rmf_write_pvl(pvl = modflow$pvl, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')], sep = '/'))
+    if(verbose) print_writing('PVAL', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')]))
+    rmf_write_pvl(pvl = modflow$pvl, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')]))
   }
     
   # lgr
   # if('lgr' %in% ftype) {
-  #   if(verbose) print_writing('LGR', file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'LGR')], sep = '/'))
-  #   rmf_write_lgr(lgr = modflow$lgr, file = paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'LGR')], sep = '/'))
+  #   if(verbose) print_writing('LGR', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'LGR')]))
+  #   rmf_write_lgr(lgr = modflow$lgr, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'LGR')]))
   # }
     
   # flow packages
@@ -502,7 +502,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
@@ -515,7 +515,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
@@ -528,7 +528,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], file = file, format = fmt))
       }
@@ -541,7 +541,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], file = file, format = fmt))
       }
@@ -554,7 +554,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
@@ -567,7 +567,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], file = file, format = fmt))
       }
@@ -580,7 +580,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
@@ -593,7 +593,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
@@ -606,7 +606,7 @@ rmf_write <- function(modflow,
     for(i in 1:length(df$rmf)) {
       if(df$rmf[i] %in% ftype) {
         fnctn <- paste0('rmf_write_', df$rmf[i])
-        file <- paste(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])], sep = '/')
+        file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
         do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
       }
