@@ -1466,6 +1466,18 @@ print.lvda <- function(lvda, n = 10) {
   print(pdf[1:nlay,], row.names = FALSE)
   cat('\n')
   
+  # LVDA
+  if(dim(lvda$lvda)[3] > n) {
+    cat('Summary of LVDA (first', n, 'layers):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of LVDA:', '\n')
+    nlay <- dim(lvda$lvda)[3]
+  }
+  apply(lvda$lvda, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(paste('Layer', 1:dim(lvda$lvda)[3])) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
 }
 
 #' @export

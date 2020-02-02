@@ -1206,12 +1206,12 @@ rmf_convert_huf_to_dis <- function(huf,
 #' 
 #' @param huf huf object
 #' @param dis dis object
-#' @param parameters either a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.
+#' @param parameters a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.
 #' @param values vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.
 #' @param grid target grid; either \code{'dis'} (default) or \code{'huf'}. When \code{'huf'}, no averaging is performed
 #' @param mask masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
-#' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric
-#' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
+#' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
+#' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP' and 'KDEP'}. Only used with \code{parameters}. 
 #' @param pvl optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied
 #' @return rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'} 
 #' @details Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.

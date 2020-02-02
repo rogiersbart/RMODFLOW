@@ -129,7 +129,7 @@ rmf_create_lpf <- function(dis,
     # to prevent false positive since last layer can not have a confining bed
     if('VKCB' %in% names(layer_check)) layer_check[['VKCB']] <- append(layer_check[['VKCB']], dis$nlay)
     
-    layer_check <- structure(vapply(seq_along(layer_check), function(i) isTRUE(all.equal(sort(layer_check[[i]]), 1:dis$nlay)), TRUE), names = names(layer_check))
+    layer_check <- structure(vapply(seq_along(layer_check), function(i) !anyNA(match(1:dis$nlay, sort(layer_check[[i]]))), TRUE), names = names(layer_check))
     if(any(!layer_check)) stop(paste('Parameters are used to define ', names(layer_check)[!layer_check],', but not all layers are defined through parameters.'), call. = FALSE)
     
   } 
