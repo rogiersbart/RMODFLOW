@@ -301,7 +301,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
       i$parameter <- TRUE
       i$name <- attr(i, 'parnam')
       i <- i[c("i","j","k",varnames,if(!is.null(aux)){aux},"parameter","name")]
-      colnames(i)[4:(3+length(varnames))] <-  varnames;
+      colnames(i)[4:(3+length(varnames))] <-  varnames
       if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux
       return(structure(i, instnam = instnam))
     }
@@ -1260,6 +1260,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       option <- vapply(names(option), function(i) i %in% toupper(data_set_2$variables), TRUE)
       aux <- as.character(data_set_2$variables[grep('^AUX', toupper(data_set_2$variables))+1])
     }
+    if(length(aux) == 0) aux <- NULL
   }
   lines <-  data_set_2$remaining_lines
   rm(data_set_2)
@@ -1318,6 +1319,7 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       
       i <-  i+1
     }
+    rmf_lists <- lapply(rmf_lists, function(i) {attr(i, 'kper') <- NULL; return(i)})
   }
   
   # stress periods
@@ -1356,8 +1358,8 @@ rmfi_parse_bc_list <- function(lines, dis, varnames, option, scalevar, ...) {
       for(j in 1:np){
         # data set 7
         data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
-        p_name <-  toupper(as.character(data_set_7$variables[1]))
-        i_name <- rmfi_ifelse0(tv[[p_name]], toupper(as.character(data_set_7$variables[2])), NULL)
+        p_name <-  as.character(data_set_7$variables[1])
+        i_name <- rmfi_ifelse0(tv[[p_name]], as.character(data_set_7$variables[2]), NULL)
         
         rmf_lists <- lapply(rmf_lists, set_kper, p_name = p_name, i_name = i_name, kper = i)
         
