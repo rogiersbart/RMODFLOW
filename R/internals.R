@@ -885,8 +885,8 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
         for(k in 1:nclu) {
           # data set 4b
           data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
-          mltarr[k] <- toupper(data_set_4b$variables[1])
-          zonarr[k] <- toupper(data_set_4b$variables[2])
+          mltarr[k] <- data_set_4b$variables[1]
+          zonarr[k] <- data_set_4b$variables[2]
           
           if(toupper(data_set_4b$variables[1]) != 'NONE') {
             if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
@@ -911,8 +911,8 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
       for(k in 1:nclu) {
         # data set 4b
         data_set_4b <- rmfi_parse_variables(lines, character = TRUE)
-        mltarr[k] <- toupper(data_set_4b$variables[1])
-        zonarr[k] <- toupper(data_set_4b$variables[2])
+        mltarr[k] <- data_set_4b$variables[1]
+        zonarr[k] <- data_set_4b$variables[2]
         
         if(toupper(data_set_4b$variables[1]) != 'NONE') {
           if(is.null(mlt)) stop('Please provide a mlt object', call. = FALSE)
@@ -935,7 +935,8 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
     names(parm_list)[length(parm_list)] <- parnam
     i <- i+1
   }
-
+  
+  parm_list <- lapply(parm_list, function(i) {attr(i, 'kper') <- NULL; return(i)})
   
   return(list(parameters = parm_list, remaining_lines = lines))
 }
