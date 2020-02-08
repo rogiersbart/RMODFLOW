@@ -2354,10 +2354,11 @@ rmf_time_steps = function(dis = NULL,
 #' @param file filename to write to
 #' @param append logical; should the array be appended to the file
 #' @param binary logical; should the array be written to a binary file
-#' @param header logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.
+#' @param header logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.
 #' @param dis optional \code{RMODFLOW} dis object. Used when \code{KPER}, \code{PERTIM} and \code{TOTIM} in the header should be exact.
 #' @param desc character of maximum 16 characters. Used to set the \code{desc} element in the header. Default to \code{'HEAD'}
 #' @param precision character; either \code{'single'} or \code{'double'}. Denotes the precision of the binary file.
+#' @param integer logical; does the binary array contain integer values? Defaults to FALSE
 #' @param xsection logical; does the array represent a NLAY x NCOL cross-section. See 'Details'.
 #' 
 #' @details the header file consists of the following elements:
@@ -2379,15 +2380,20 @@ rmf_time_steps = function(dis = NULL,
 #' @export
 #' @seealso \code{\link{rmf_read_array}}
 
-rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header = ifelse(binary, TRUE, FALSE), dis=NULL, desc = 'HEAD', precision = 'single', xsection = FALSE) {
+rmf_write_array <- function(array, file, append = FALSE, binary = FALSE, header = binary, dis=NULL, desc = 'HEAD', precision = 'single', integer = FALSE, xsection = FALSE) {
   
   if(binary) { # binary
-    if(header && is.integer(array)) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE", call. = FALSE)
-    write_binary = function() {
+    if(!integer) {
+      array[] <- as.numeric(array)
+    } else {
+      if(!is.integer(array)) stop('Array does not contain integers. Please set integer = FALSE or write as ASCII', call. = FALSE)
+    }
+    if(header && integer) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE", call. = FALSE)
+    write_binary <- function() {
       real_number_bytes <- ifelse(precision == 'single', 4, 8)
-      size <- ifelse(is.integer(array), NA_integer_, real_number_bytes)
-      ncell = prod(dim(array))
-      desc = format(toupper(desc), width = 16, justify='right')
+      size <- ifelse(integer, NA_integer_, real_number_bytes)
+      ncell <- prod(dim(array))
+      desc <- format(toupper(desc), width = 16, justify='right')
       
       if(is.null(dim(array))) {    # scalar
         if(header) {
@@ -2444,10 +2450,10 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
                 totim <- sum(1:l)
                 pertim <- l
               } else {
-                kper <-  findInterval(l, cumsum(dis$nstp), left.open = T) + 1
-                kstp <-  rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
-                totim <-  rmf_time_steps(dis)$cumsum[l]
-                pertim <-  totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
+                kper <- findInterval(l, cumsum(dis$nstp), left.open = T) + 1
+                kstp <- rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
+                totim <- rmf_time_steps(dis)$cumsum[l]
+                pertim <- totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
               }
               
               writeBin(as.integer(kstp), con=con) # KSTP
@@ -2465,9 +2471,9 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
       }
     }
     if(append) {
-      con <-  file(file, open='ab')
+      con <- file(file, open='ab')
     } else {
-      con <-  file(file, open='wb')
+      con <- file(file, open='wb')
     }
     
     try(write_binary())
@@ -2479,7 +2485,7 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
     if(length(dim(array))==3) {    # 3D
       for(k in 1:dim(array)[3]) {
         if(header) rmfi_write_variables(1, 1, 1, 1, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection,-1,k), paste0('(',ncol(array),'F)'), file=file)
-        write.table(array[,,k], file=file, col.names = F, row.names = F, append = TRUE)
+        write.table(array[,,k], file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
       }
     } else if(length(dim(array))==4) {    # 4D
       if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.', call. = FALSE)
@@ -2493,19 +2499,19 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
               totim <- sum(1:l)
               pertim <- l
             } else {
-              kper <-  findInterval(l, cumsum(dis$nstp), left.open = T) + 1
+              kper <-  findInterval(l, cumsum(dis$nstp), left.open = TRUE) + 1
               kstp <-  rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
               totim <-  rmf_time_steps(dis)$cumsum[l]
               pertim <-  totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
             }
             rmfi_write_variables(kper, kstp, totim, pertim, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection,-1,k), paste0('(',ncol(array),'F)'), file=file)
           }
-          write.table(array[,,k,l], file=file, col.names = F, row.names = F, append = TRUE)
+          write.table(array[,,k,l], file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
         }
       }
     } else {
       if(header) rmfi_write_variables(1, 1, 1, 1, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection, -1,1), paste0('(',ncol(array),'F)'), file=file)
-      write.table(array, file=file, col.names = F, row.names = F, append = TRUE)
+      write.table(array, file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
     }
     
   }
@@ -2604,8 +2610,9 @@ rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...
 #' @param nlay number of layers in the array that should be read (3th dimension); defaults to 1
 #' @param nstp number of timesteps in the array that should be read (4th dimension); defaults to 1
 #' @param binary logical; is the array read from a binary file.
+#' @param kper integer vector specifying the stress periods in which the array is active. Defaults to \code{NULL}
 #' @param integer logical; does the array hold integer values. Only used for binary files. Might not work optimally.
-#' @param header logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.
+#' @param header logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of the binary file.
 #'
 #' @details \code{nrow}, \code{ncol}, \code{nlay}, \code{nstp} have to be specified if header is FALSE. They are used to dimension the array.
@@ -2622,19 +2629,22 @@ rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...
 #' @export
 #' @seealso \code{\link{rmf_write_array}}
 
-rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary = F, integer = F, header = ifelse(binary, TRUE, FALSE), precision = 'single') {
+rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary = FALSE, kper = NULL, integer = FALSE, header = binary, precision = 'single') {
   
   if(!header) {
     if(is.null(nrow) || is.null(ncol) || is.null(nlay) || is.null(nstp)) {
       stop('Either provide nrow, ncol, nlay and nstp or set header to TRUE', call. = FALSE)
     }
   }
-  
+  stp_nr <- 0
+  kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
+  kper_inp <- kper
   if(binary) { # Binary
     
-    read_binary = function() {
+    read_binary <- function() {
       real_number_bytes <- ifelse(precision == 'single', 4, 8)
       type <- ifelse(integer, 'integer', 'numeric')
+
       if(header) {
         
         kstp <- readBin(con,what='integer',n=1)
@@ -2642,8 +2652,6 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
         pertim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
         totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
         desc <- readChar(con,nchars=16)
-        
-        stp_nr <- 0
         
         while(length(desc != 0)) {
           
@@ -2653,7 +2661,6 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
           
           if(stp_nr == 0) { # initialize 3d array
             arr <- aperm(array(readBin(con,what=type,n = ncol * nrow, size = ifelse(integer, NA_integer_, real_number_bytes)),dim=c(ncol, nrow, 1)), c(2, 1, 3))
-            kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
           } else { # read (abind drops attributes)
             arr <- abind::abind(arr, 
                                 aperm(array(readBin(con,what=type,n = ncol * nrow, size = ifelse(integer, NA_integer_, real_number_bytes)),dim=c(ncol, nrow)), c(2, 1)),
@@ -2693,14 +2700,13 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
       return(arr)
     }
     con <- file(file,open='rb')
-    arr = try(read_binary())
+    arr <- try(read_binary())
     close(con)
     
   } else { # ASCII
     lines <- readr::read_lines(file)
     
     if(header) {
-      stp_nr <- 0
       
       while(length(lines) != 0) {
         variables <- rmfi_remove_empty_strings(strsplit(lines[1],' ')[[1]])
@@ -2719,7 +2725,6 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
         
         if(stp_nr == 0) { # initialize 3d array
           arr <- array(data_set$array, dim = c(dim(data_set$array), 1))
-          kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
         } else { # read (abind drops attributes)
           arr <- abind::abind(arr, data_set$array, along = 3)
         }
@@ -2772,16 +2777,13 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
     arr <- c(array(arr,dim=nrow*ncol*nlay*nstp))
   } else if(nrow !=1 && ncol !=1 && nlay == 1 && nstp == 1) {
     arr <- arr[,,1,1]
-    class(arr) <- 'rmf_2d_array'   
   } else if(nstp != 1) {
-    class(arr) <- 'rmf_4d_array'
   } else {
     arr <- arr[,,,1]
-    class(arr) <- 'rmf_3d_array'
   }
   
   if(header) {
-    
+    # class(arr) <- append(class(arr), 'hed')
     attr(arr, 'dimnames') <- NULL
     attr(arr, 'kstp') <- kstp_attr
     attr(arr, 'kper') <- kper_attr
@@ -2806,6 +2808,7 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
     }
   }
   
+  arr <- rmf_create_array(arr, kper = kper_inp)
   return(arr)
   
 }
