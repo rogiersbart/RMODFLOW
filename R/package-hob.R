@@ -5,96 +5,144 @@
 #' @param locations data.frame with the name, x and y coordinates, and top and bottom of the monitoring well filter
 #' @param time_series data.frame with the name of the monitoring well filter and the observation time and head
 #' @param dis RMODFLOW dis object
-#' @param hydraulic_conductivity 3d array with hydraulic conductivity values, for calculating the weights for a multilayer observation
-#' @param prj RMODFLOW prj object; provide if coordinates in locations are real world coordinates
-#' @param iuhobsv file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)
+#' @param hydraulic_conductivity 3d array with hydraulic conductivity values, for calculating the weights for a multilayer observations
+#' @param prj RMODFLOW prj object; provide if coordinates in \code{locations} are real world coordinates
+#' @param iuhobsv file unit (> 0) for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 665
 #' @param hobdry value of the simulated equivalent for a dry cell used in the observation output file
 #' @param noprint logical; if TRUE, the input and output are not printed in the listing file
-#' @param TOMULT time offset multiplier, to convert the time unit in time_series to the MODFLOW time unit
+#' @param tomult time offset multiplier, to convert the time unit in \code{time_series} to the MODFLOW time unit
+#' @param itt integer flag, either a single value or a value for every observation well as defined in \code{locations}. Identifies whether hydraulic heads (1; default) or changes in hydraulic heads (2) are used as observations. See details.
 #' @param unique_obsnam logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.
-#' @return RMODFLOW hob object
+#' @details Regardless of the value of \code{itt}, observed heads should be specified in \code{time_series}. MODFLOW will calculate the changes in hydraulic head internally.
+#' The \code{locations} data.frame must have columns named \code{name, x, y, top, bottom}.
+#' The \code{time_series} data.frame must have columns named \code{name, time, head}.
+#' @return Object of class hob
 #' @export
-#' @seealso \code{\link{read.hob}} and \code{\link{write.hob}}
+#' @seealso \code{\link{rmf_read_hob}}, \code{\link{rmf_write_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 rmf_create_hob <- function(locations,
                            time_series,
                            dis,
                            hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-                           iuhobsv = 0,
+                           prj = NULL,
+                           iuhobsv = 665,
                            hobdry = -888,
                            noprint = FALSE,
                            tomulth = 1,
                            itt = 1,
-                           unique_obsnam = FALSE,
-                           prj = NULL) {
+                           unique_obsnam = FALSE) {
       
-  hob <- NULL
-  
+  # error checks in locations & time_series
+  if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations data.frame must have columns x, y, name, top and bottom', call. = FALSE)
+  if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
+
+  # set locations tops and bottoms
+  locations_top <- cbind(locations[,c('x','y','top')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  locations_bottom <- cbind(locations[,c('x','y','bottom')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  if(any(is.na(locations_top)) || any(is.na(locations_bottom))) {
+    na_id <- unique(c(which(is.na(locations_top), arr.ind = TRUE)[, 1], which(is.na(locations_bottom), arr.ind = TRUE)[, 1]))
+    locations_top <- locations_top[-na_id, ]
+    locations_bottom <- locations_bottom[-na_id, ]
+    na_names <- locations$name[na_id]
+    locations <- locations[-na_id, ]
+    time_series <- subset(time_series, !(name %in% na_names))
+    warning('Removing observations outside the grid domain: ', paste(na_names, collapse = ' '), call. = FALSE)
+    if(nrow(locations_top) == 0 || nrow(locations_bottom) == 0 || nrow(locations) == 0) stop('No observations inside grid domain', call. = FALSE)
+  }
+  locations_top$k <- ifelse(locations_top$loff == 0.5, locations_top$k + 1, locations_top$k)
+  locations_bottom$k <- ifelse(locations_bottom$loff == -0.5, locations_bottom$k - 1, locations_bottom$k)  
+
+  # hob
+  hob <- list()
+  hob$dimensions <- list()
   # data set 0
-    # comments should be provided with ?comment
+  # comments should be provided with ?comment
   
   # data set 1
-    hob$nh <- nrow(time_series)
-    hob$mobs <- NA # set later
-    hob$maxm <- NA # set later
-    hob$iuhobsv <- iuhobsv
-    hob$hobdry <- hobdry
-    hob$noprint <- noprint
+  hob$dimensions$nh <- nrow(time_series)
+  hob$dimensions$mobs <- NA # set later
+  hob$dimensions$maxm <- NA # set later
+  hob$iuhobsv <- iuhobsv
+  hob$hobdry <- hobdry
+  hob$noprint <- noprint
   
   # data set 2
-    hob$tomulth <- tomulth
-    # hob$evh # MODFLOW-2000
+  hob$tomulth <- tomulth
+  # hob$evh # MODFLOW-2000
   
   # data set 3-6
+  df <- list()
+  df$obsnam <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$itt <- rep(NA, hob$dimensions$nh)
+  df$mlay <- df$pr <- list()
   
-    hob$obsnam <- hob$toffset <- hob$hobs <- hob$mlay <- hob$pr <- hob$irefsp <- list()
-    locations_top <- cbind(locations[,c('x','y','top')], convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = 'ijk'), convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = 'off')[, c('roff', 'coff')])
-    locations_bottom <- cbind(locations[,c('x','y','bottom')], convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = 'ijk'), convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = 'off'))
-    if(locations_bottom$loff == -0.5) locations_bottom$k <- locations_bottom$k - 1
-  
-    for(i in 1:nrow(locations)) {
-      
-      hob$row[i] <- locations_top$i[i]
-      hob$column[i] <- locations_top$j[i]
-      first_greater_than <- function(x, y) which(y > x)[1]
-      if(sum(time_series$name == locations$name[i]) > 1) hob$irefsp[[i]] <- -sum(time_series$name == locations$name[i])
-      if(sum(time_series$name == locations$name[i]) == 1) hob$irefsp[[i]] <- first_greater_than(time_series$time[which(time_series$name == locations$name[i])],cumsum(dis$perlen))
-      hob$roff[i] <- locations_top$roff[i]
-      hob$coff[i] <- locations_top$coff[i]
-      if(locations_top$k[i] == locations_bottom$k[i]) {
-        hob$layer[i] <- locations_top$k[i]
+  for(i in 1:nrow(locations)) {
+    # locations
+    ts_id <- which(time_series$name == locations$name[i])
+    df$row[ts_id] <- locations_top$i[i]
+    df$column[ts_id] <- locations_top$j[i]
+    first_greater_than <- function(x, y) which(y > x)[1]
+    if(length(ts_id) > 1) df$irefsp[ts_id] <- -length(ts_id)
+    if(length(ts_id) == 1) df$irefsp[ts_id] <- first_greater_than(time_series$time[ts_id], cumsum(dis$perlen))
+    df$nrefsp[ts_id] <- abs(df$irefsp[ts_id])
+    df$roff[ts_id] <- locations_top$roff[i]
+    df$coff[ts_id] <- locations_top$coff[i]
+    if(locations_top$k[i] == locations_bottom$k[i]) {
+      df$layer[ts_id] <- locations_top$k[i]
+      m_lay <- 1
+    } else {
+      m_lay <- - (locations_bottom$k[i] - locations_top$k[i] + 1)
+      df$layer[ts_id] <- m_lay
+    }
+    
+    # multiple layers
+    # TODO set proper pr
+    df$mlay[ts_id] <- df$pr[ts_id] <- NA
+    if(m_lay < 0) {
+      df$mlay[ts_id] <- lapply(df$mlay[ts_id], function(x) x <- locations_top$k[i]:locations_bottom$k[i]) 
+      length_in_cell <- rep(NA, abs(df$layer[i]))
+      for(j in 1:abs(df$layer[ts_id[1]])) {
+        m_val <- df$mlay[[ts_id[1]]][j]
+        layer_tops <- rmf_cell_coordinates(dis, include_faces = TRUE)$upper
+        length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i], m_val]) - max(locations$bottom[i], dis$botm[locations_top$i[i],locations_top$j[i], m_val])
+      }
+      df$pr[ts_id] <- lapply(df$pr[ts_id], function(x) x <- hydraulic_conductivity[locations_top$i[i],locations_top$j[i],df$mlay[[ts_id[1]]]] * length_in_cell) 
+      df$pr[ts_id] <- lapply(df$pr[ts_id], function(x) x <- df$pr[[ts_id[1]]]/sum(df$pr[[ts_id[1]]]))
+    } 
+    
+    # time series
+    if(df$irefsp[ts_id[1]] > 0) {
+      df$toffset[ts_id] <- time_series$time[ts_id] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[df$irefsp[ts_id]]
+      df$hobs[ts_id] <- time_series$head[ts_id]
+      df$obsnam[ts_id] <- locations$name[i]
+      df$itt[ts_id] <- 1
+    } else {
+      df$itt[ts_id] <- ifelse(length(itt)==1,itt,itt[i])
+      if(unique_obsnam) {
+        df$obsnam[ts_id] <- paste(locations$name[i], c(1:abs(df$nrefsp[ts_id[1]])), sep = '_')
       } else {
-        hob$layer[i] <- - (locations_bottom$k[i] - locations_top$k[i] + 1)
-      }
-      hob$mlay[[i]] <- hob$pr[[i]] <- NA
-      if(hob$layer[i] < 0) {
-        hob$mlay[[i]] <- locations_top$k[i]:locations_bottom$k[i]
-        length_in_cell <- rep(NA, abs(hob$layer[[i]]))
-        for(j in 1:abs(hob$layer[[i]])) {
-          layer_tops <- cell_coordinates(dis, include_faces = TRUE)$upper
-          length_in_cell[j] <- min(locations$top[i], layer_tops[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]]) - max(locations$bottom[i], dis$botm[locations_top$i[i],locations_top$j[i],hob$mlay[[i]][j]])
-        }
-        hob$pr[[i]] <- hydraulic_conductivity[locations_top$i[i],locations_top$j[i],hob$mlay[[i]]] * length_in_cell
-        hob$pr[[i]] <- hob$pr[[i]]/sum(hob$pr[[i]])
-      }
-      if(hob$irefsp[[i]] > 0) {
-        hob$toffset[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[hob$irefsp[[i]]]
-        hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
-        hob$obsnam[[i]] <- locations$name[i]
-      } else {
-        hob$itt[i] <- ifelse(length(itt)==1,itt,itt[i])
-        if(unique_obsnam) {
-          hob$obsnam[[i]] <- paste(locations$name[i], c(1:abs(hob$irefsp[[i]])), sep = '_')
-        } else {
-          hob$obsnam[[i]] <- rep(locations$name[i], abs(hob$irefsp[[i]]))
-        }        
-        hob$irefsp[[i]] <- apply(array(time_series$time[which(time_series$name == locations$name[i])],dim=c(length(time_series$time[which(time_series$name == locations$name[i])]))),1,first_greater_than,cumsum(dis$perlen))
-        hob$toffset[[i]] <- time_series$time[which(time_series$name == locations$name[i])] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[hob$irefsp[[i]]]
-        hob$hobs[[i]] <- time_series$head[which(time_series$name == locations$name[i])]
-      }
+        df$obsnam[ts_id] <- rep(as.character(locations$name[i]), abs(df$nrefsp[ts_id[1]]))
+      }    
+      df$irefsp[ts_id] <- apply(array(time_series$time[ts_id],dim=c(length(time_series$time[ts_id]))),1,first_greater_than,cumsum(dis$perlen))
+      df$toffset[ts_id] <- time_series$time[ts_id] - c(0,cumsum(dis$perlen)[1:(dis$nper-1)])[df$irefsp[ts_id]]
+      df$hobs[ts_id] <- time_series$head[ts_id]
+    }
   }
-  hob$mobs <- 0
-  for(i in which(hob$layer < 0)) hob$mobs <- hob$mobs + length(hob$irefsp[[i]])
-  hob$maxm <- abs(min(hob$layer[which(hob$layer <= 1)]))
+  hob$dimensions$mobs <- 0
+  if(any(df$layer < 0)) hob$dimensions$mobs <- length(which(df$layer < 0))
+  hob$dimensions$maxm <- abs(min(df$layer[which(df$layer <= 1)]))
+  
+  if(hob$dimensions$mobs == 0) {
+    df$mlay <- df$layer
+    df$pr <- rep(1, hob$dimensions$nh)
+  } else {
+    s_lay <- which(df$layer > 0)
+    df$mlay[s_lay] <- df$layer[s_lay]
+    df$pr[s_lay] <- 1
+  }
+  
+  # Data
+  hob$data <- data.frame(obsnam = df$obsnam, layer = I(df$mlay), pr = I(df$pr), row = df$row, column = df$column, nrefsp = df$nrefsp, irefsp = df$irefsp,
+                         itt = df$itt, toffset = df$toffset, roff = df$roff, coff = df$coff, hobs = df$hobs, stringsAsFactors = FALSE)
+  class(hob) <- c('hob','rmf_package')
   return(hob)
 }
 
@@ -106,123 +154,150 @@ rmf_create_hob <- function(locations,
 #' @param ... arguments passed to \code{rmfi_parse_variables}. Can be ignored when input is 'free' format.
 #' @return object of class hob
 #' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_write_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}, ...) {
   
   hob_lines <- readr::read_lines(file)
   hob <- list()
+  hob$dimensions <- list()
   
   # data set 0
-  data_set_0 <- RMODFLOW:::rmfi_parse_comments(hob_lines)
+  data_set_0 <- rmfi_parse_comments(hob_lines)
   comment(hob) <- data_set_0$comments
   hob_lines <- data_set_0$remaining_lines
   rm(data_set_0)
   
   # data set 1
-  dat <- rmfi_parse_variables(hob_lines)
-  line.split <- dat$variables
-  hob_lines <- dat$remaining_lines
-  hob$nh <- as.numeric(line.split[1])
-  hob$mobs <- as.numeric(line.split[2])
-  hob$maxm <- as.numeric(line.split[3])
-  hob$iuhobsv <- ifelse(is.na(as.numeric(line.split[4])), 0, as.numeric(line.split[4]))
-  hob$hobdry <- ifelse(is.na(as.numeric(line.split[5])), -888, as.numeric(line.split[5]))
-  hob$noprint <- F
-  if(length(line.split) > 5) if(toupper(line.split[6])=='NOPRINT') hob$noprint <- TRUE
+  data_set_1 <- rmfi_parse_variables(hob_lines)
+  hob$dimensions$nh <- as.numeric(data_set_1$variables[1])
+  hob$dimensions$mobs <- as.numeric(data_set_1$variables[2])
+  hob$dimensions$maxm <- as.numeric(data_set_1$variables[3])
+  hob$iuhobsv <- ifelse(is.na(as.numeric(data_set_1$variables[4])), 0, as.numeric(data_set_1$variables[4]))
+  hob$hobdry <- ifelse(is.na(as.numeric(data_set_1$variables[5])), -888, as.numeric(data_set_1$variables[5]))
+  hob$noprint <- FALSE
+  if(length(data_set_1$variables) > 5) if(toupper(data_set_1$variables[6])=='NOPRINT') hob$noprint <- TRUE
+  hob_lines <- data_set_1$remaining_lines
+  rm(data_set_1)
   
   # data set 2
-  dat <- rmfi_parse_variables(hob_lines, n = 1, ...)
-  hob$tomulth <- as.numeric(dat$variables[1])
+  data_set_2 <- rmfi_parse_variables(hob_lines, n = 1, ...)
+  hob$tomulth <- as.numeric(data_set_2$variables[1])
   # hob$evh <- as.numeric(dat$variables[2]) # MODFLOW-2000
-  hob_lines <- dat$remaining_lines
-  rm(dat)
+  hob_lines <- data_set_2$remaining_lines
+  rm(data_set_2)
   
   # data set 3 - 6
-  hob$obsnam <- hob$obsloc <- hob$layer <- hob$row <- hob$column <- hob$irefsp <- hob$toffset <- hob$roff <- hob$coff <- hob$hobs <- hob$statistic <- hob$statflag <- hob$plotsymbol <- hob$stath <- hob$statdd <- rep(NA, hob$nh)
-  hob$mlay <- hob$pr <- list()
+  df <- list()
+  df$obsnam <- df$obsloc <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$statistic <- df$statflag <- df$plotsymbol <- df$stath <- df$statdd <- df$itt <- rep(NA, hob$dimensions$nh)
+  df$mlay <- df$pr <- list()
   obsnam <- obsloc <- layer <- row <- column <- irefsp <- toffset <- roff <- coff <- hobs <- statistic <- statflag <- plotsymbol <- stath <- statdd <- NA
   mlay <- pr <- NA
   nr <- 1
-  while(nr <= hob$nh) {
+  
+  while(nr <= hob$dimensions$nh) {
     
-    dat <- rmfi_parse_variables(hob_lines)
-    line.split <- dat$variables
-    hob_lines <- dat$remaining_lines
-    obsnam <- line.split[1]
+    # data set 3
+    data_set_3 <- rmfi_parse_variables(hob_lines)
+    obsnam <- as.character(data_set_3$variables[1])
     obsloc <- obsnam
-    layer <- as.numeric(line.split[2])
-    row <- as.numeric(line.split[3])
-    column <- as.numeric(line.split[4])
-    irefsp <- as.numeric(line.split[5])
-    toffset <- as.numeric(line.split[6])
-    roff <- as.numeric(line.split[7])
-    coff <- as.numeric(line.split[8])
-    hobs <- as.numeric(line.split[9])
-    statistic <- as.numeric(line.split[10])
-    statflag <- as.numeric(line.split[11])
-    plotsymbol <- as.numeric(line.split[12])
+    layer <- as.numeric(data_set_3$variables[2])
+    row <- as.numeric(data_set_3$variables[3])
+    column <- as.numeric(data_set_3$variables[4])
+    irefsp <- as.numeric(data_set_3$variables[5])
+    toffset <- as.numeric(data_set_3$variables[6])
+    roff <- as.numeric(data_set_3$variables[7])
+    coff <- as.numeric(data_set_3$variables[8])
+    hobs <- as.numeric(data_set_3$variables[9])
+    statistic <- as.numeric(data_set_3$variables[10])
+    statflag <- as.numeric(data_set_3$variables[11])
+    plotsymbol <- as.numeric(data_set_3$variables[12])
     if(irefsp >= 0) {
-      hob$obsnam[nr] <- obsnam
-      hob$obsloc[nr] <- obsloc
-      hob$toffset[nr] <- toffset
-      hob$hobs[nr] <- hobs
-      hob$statistic[nr] <- statistic
-      hob$statflag[nr] <- statflag
-      hob$plotsymbol[nr] <- plotsymbol
-      hob$layer[nr] <- layer
-      hob$row[nr] <- row
-      hob$column[nr] <- column
-      hob$irefsp[nr] <- irefsp
-      hob$roff[nr] <- roff
-      hob$coff[nr] <- coff
+      df$obsnam[nr] <- obsnam
+      df$obsloc[nr] <- obsloc
+      df$toffset[nr] <- toffset
+      df$hobs[nr] <- hobs
+      df$statistic[nr] <- statistic
+      df$statflag[nr] <- statflag
+      df$plotsymbol[nr] <- plotsymbol
+      df$layer[nr] <- layer
+      df$row[nr] <- row
+      df$column[nr] <- column
+      df$nrefsp[nr] <- 1
+      df$irefsp[nr] <- irefsp
+      df$roff[nr] <- roff
+      df$coff[nr] <- coff
     }
+    hob_lines <- data_set_3$remaining_lines
+    rm(data_set_3)
+    
+    # data set 4
     if(layer < 0) {
-      dat <- rmfi_parse_variables(hob_lines)
-      line.split <- dat$variables
-      hob_lines <- dat$remaining_lines
-      for(layerNr in 1:abs(hob$layer[nr])) {
-        mlay[layerNr] <- line.split[(2*layerNr)-1]
-        pr[layerNr] <- line.split[2*layerNr]
+      data_set_4 <- rmfi_parse_variables(hob_lines)
+      for(layerNr in 1:abs(layer)) {
+        mlay[layerNr] <- data_set_4$variables[(2*layerNr)-1]
+        pr[layerNr] <- data_set_4$variables[2*layerNr]
       }
-      hob$mlay[[nr]] <- mlay
-      hob$pr[[nr]] <- pr
+      df$mlay[[nr]] <- mlay
+      df$pr[[nr]] <- pr
+      hob_lines <- data_set_4$remaining_lines
+      rm(data_set_4)
     }
+    
+    df$itt[nr] <- 1
     if(irefsp < 0) {
+      
       # data set 5
-      dat <- rmfi_parse_variables(hob_lines)
-      line.split <- dat$variables
-      hob_lines <- dat$remaining_lines
-      hob$itt <- line.split[1]    
+      data_set_5 <- rmfi_parse_variables(hob_lines)
+      itt <- as.numeric(data_set_5$variables[1]) 
+      hob_lines <- data_set_5$remaining_lines
+      rm(data_set_5)
+      
       # data set 6
       for(ntime in 1:abs(irefsp)) {
-        dat <- rmfi_parse_variables(hob_lines)
-        line.split <- dat$variables
-        hob_lines <- dat$remaining_lines
-        hob$obsnam[nr] <- line.split[1]
-        hob$obsloc[nr] <- obsloc
-        hob$irefsp[nr] <- as.numeric(line.split[2])
-        hob$toffset[nr] <- as.numeric(line.split[3])
-        hob$hobs[nr] <- as.numeric(line.split[4])
-        hob$stath[nr] <- as.numeric(line.split[5])
-        hob$statdd[nr] <- as.numeric(line.split[6])
-        hob$statflag[nr] <- as.numeric(line.split[7])
-        hob$plotsymbol[nr] <- as.numeric(line.split[8]) 
+        df$nrefsp[nr] <- abs(irefsp)
+        df$itt[nr] <- itt
+        data_set_6 <- rmfi_parse_variables(hob_lines)
+        df$obsnam[nr] <- as.character(data_set_6$variables[1])
+        df$obsloc[nr] <- obsloc
+        df$irefsp[nr] <- as.numeric(data_set_6$variables[2])
+        df$toffset[nr] <- as.numeric(data_set_6$variables[3])
+        df$hobs[nr] <- as.numeric(data_set_6$variables[4])
+        df$stath[nr] <- as.numeric(data_set_6$variables[5])
+        df$statdd[nr] <- as.numeric(data_set_6$variables[6])
+        df$statflag[nr] <- as.numeric(data_set_6$variables[7])
+        df$plotsymbol[nr] <- as.numeric(data_set_6$variables[8]) 
         if(layer < 0) {
-          hob$mlay[[nr]] <- mlay
-          hob$pr[[nr]] <- pr
+          df$mlay[[nr]] <- mlay
+          df$pr[[nr]] <- pr
         }
-        hob$statistic[nr] <- statistic
-        hob$layer[nr] <- layer
-        hob$row[nr] <- row
-        hob$column[nr] <- column
-        hob$roff[nr] <- roff
-        hob$coff[nr] <- coff
+        df$statistic[nr] <- statistic
+        df$layer[nr] <- layer
+        df$row[nr] <- row
+        df$column[nr] <- column
+        df$roff[nr] <- roff
+        df$coff[nr] <- coff
         if(ntime < abs(irefsp)) nr <- nr + 1
+        hob_lines <- data_set_6$remaining_lines
+        rm(data_set_6)
       }
     }   
     
     nr <- nr + 1
   }
-  # if(length(irefsp) != 0) hob$irefsp <- irefsp
+  # if(length(irefsp) != 0) df$irefsp <- irefsp
+  
+  if(hob$dimensions$mobs == 0) {
+    df$mlay <- df$layer
+    df$pr <- rep(1, hob$dimensions$nh)
+  } else {
+    s_lay <- which(df$layer > 0)
+    df$mlay[s_lay] <- df$layer[s_lay]
+    df$pr[s_lay] <- 1
+  }
+  
+  # Data
+  hob$data <- data.frame(obsnam = df$obsnam, layer = I(df$mlay), pr = I(df$pr), row = df$row, column = df$column, nrefsp = df$nrefsp, irefsp = df$irefsp,
+                         itt = df$itt, toffset = df$toffset, roff = df$roff, coff = df$coff, hobs = df$hobs, stringsAsFactors = FALSE)
   
   class(hob) <- c('hob','rmf_package')
   return(hob)
@@ -236,11 +311,12 @@ rmf_read_ob_hob <- function(...) {
 
 #' Write a MODFLOW head observations file
 #' 
-#' @param hob an \code{\link{RMODFLOW}} hob object
+#' @param hob a \code{\link{RMODFLOW}} hob object
 #' @param file filename to write to; typically '*.hob'
 #' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
 #' @return \code{NULL}
 #' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_read_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 rmf_write_hob <- function(hob,
                           file = {cat('Please select hob file to overwrite or provide new filename ...\n'); file.choose()}, ...) {
   
@@ -250,7 +326,7 @@ rmf_write_hob <- function(hob,
   cat(paste('#', comment(hob)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(hob$nh, hob$mobs, hob$maxm, hob$iuhobsv, hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
+  rmfi_write_variables(hob$dimensions$nh, hob$dimensions$mobs, hob$dimensions$maxm, hob$iuhobsv, hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
   
   # data set 2
   # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh) || is.null(hob$env),1,hob$evh), file=file) # MODFLOW-2000
@@ -258,26 +334,30 @@ rmf_write_hob <- function(hob,
   
   # data set 3 - 6
   i <- 1
-  while(i <= length(hob$layer)) {
-    for (k in 1:length(hob$obsnam[[i]])){
-      
-      rmfi_write_variables(hob$obsnam[[i]][k], hob$layer[i], hob$row[i], hob$column[i], hob$irefsp[[i]][k], hob$toffset[[i]][k],hob$roff[i], hob$coff[i], hob$hobs[[i]][k],file=file) 
-      
-      if(hob$layer[i] < 0) {
-        rmfi_write_variables(paste(hob$mlay[[i]],hob$pr[[i]],collapse=' '), file=file)
-      }
-      if(hob$irefsp[[i]][k] < 0) {
-        
-        # data set 5
-        rmfi_write_variables(hob$itt[i], file=file)
-        
-        # data set 6
-        for(j in 1:abs(hob$irefsp[[i]][k])) {
-          k <- k + 1
-          rmfi_write_variables(hob$obsnam[[i]][k], hob$irefsp[[i]][i], hob$toffset[[i]][k],hob$hobs[[i]][k], file=file)
-        }
-      }
+  while(i <= hob$dimensions$nh) {
+    # data set 3
+    rmfi_write_variables(hob$data$obsnam[i], ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1), hob$data$row[i], hob$data$column[i],
+                         ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i]), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
+                         file=file)
+    
+    # data set 4
+    if(length(hob$data$layer[[i]]) > 1) {
+      rmfi_write_variables(paste(hob$data$layer[[i]], hob$data$pr[[i]], collapse = ' '), file = file)
     }
-    i <- i + 1
+    
+    # data set 5 - 6
+    if(hob$data$nrefsp[i] > 1) {
+      # data set 5
+      rmfi_write_variables(hob$data$itt[i], file = file)
+      
+      for(j in 1:hob$data$nrefsp[i]) {
+        # data set 6
+        id <- i + j - 1
+        rmfi_write_variables(hob$data$obsnam[id], hob$data$irefsp[id],  hob$data$toffset[id],  hob$data$hobs[id], file = file)
+      }
+      i <- i + hob$data$nrefsp[i]
+    } else {
+      i <- i + 1
+    }
   }
 }  

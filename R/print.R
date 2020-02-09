@@ -1484,39 +1484,25 @@ print.lvda <- function(lvda, n = 10) {
 print.hob <- function(hob, n = 15) {
   
   cat('RMODFLOW Head-Observation Package object with:', '\n')
-  cat(hob$nh, 'head observations of which', hob$mobs, 'are multilayer observations', '\n')
-  if(hob$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$maxm, '\n')
+  cat(hob$dimensions$nh, 'head observations of which', hob$dimensions$mobs, 'are multilayer observations', '\n')
+  if(hob$dimensions$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$dimensions$maxm, '\n')
   cat('\n')
   cat('Observed values and simulated equivalents are', ifelse(hob$iuhobsv == 0, 'not written to a head-prediction file', paste('written to the head-prediction file on unit number', hob$iuhobsv)), '\n')
   if(hob$iuhobsv > 0) cat('Simulated equivalents of dry cells are assigned a value of', hob$hobdry, 'in the head-prediction file', '\n')
-  cat('Input and output data is', ifelse(hob$noprint, 'printed', 'not printed'), 'to the listing file', '\n')
+  cat('Input and output data are', ifelse(hob$noprint, 'printed', 'not printed'), 'to the listing file', '\n')
   cat('Time-offset multiplier:', hob$tomulth, '\n')
   cat('\n')
   
-  layer <- as.list(hob$layer)
-  pr <- rep(1, hob$nh)
-  if(hob$mobs > 0) {
-    layer[[which(hob$layer < 0)]] <- hob$mlay[[which(hob$layer < 0)]]
-    pr[[which(hob$layer < 0)]] <- hob$pr[[which(hob$layer < 0)]]
-  }
-  
-  # Locations
-  loc <- data.frame(obsnam = hob$obsnam, layer = I(layer), pr = I(pr), row = hob$row, column = hob$column, irefsp = hob$irefsp,
-                    toffset = hob$toffset, roff = hob$roff, coff = hob$coff, hobs = hob$hobs, stringsAsFactors = FALSE)
-  if(nrow(loc) > n) {
-    # cat('Locations overview (first', n, 'records): ', '\n')
+  # Data
+  if(nrow(hob$data) > n) {
     cat('Observations overview (first', n, 'records): ', '\n')
     nlay <- n
   } else {
-    # cat('Locations overview:', '\n')
     cat('Observations overview:', '\n')
-    nlay <- nrow(loc)
+    nlay <- nrow(hob$data)
   }
-  print(loc[1:nlay,], row.names = TRUE)
+  print(hob$data[1:nlay,], row.names = TRUE)
   # cat('\n')
-  
-  # Observations
-  
   
 }
 

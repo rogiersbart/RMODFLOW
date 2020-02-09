@@ -1160,18 +1160,53 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
   }
 }                                                                           
 
+#' Convert a hob object to a locations data frame
+#'
+#' @param hob \code{RMODFLOW} hob object
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj prj object
+#' @details returned z coordinate represents the center of the cell, not the top or bottom of the well screen
+#' @return a data frame containing name, screened layer proportion pr, cell indices k, i, j and x, y & z coordinates
+#' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_convert_hob_to_time_series}}
+rmf_convert_hob_to_locations <- function(hob,
+                                         dis,
+                                         prj = NULL) {
+  
+  hob$data <- hob$data[!duplicated(hob$data$obsnam),]
+  if(hob$dimensions$mobs > 0) {
+    m_id <- which(lengths(hob$data$layer) > 1)
+    df <- hob$data[-m_id, ]
+    df$layer <- unlist(df$layer)
+    df$pr <- unlist(df$pr)
+    df_m <- lapply(m_id, function(i) as.data.frame(lapply(hob$data[i, ], unlist)))
+    df_m <- do.call(rbind, df_m)
+    df <- rbind(df, df_m) 
+  } else {
+    df <- hob$data
+    df$layer <- unlist(df$layer)
+    df$pr <- unlist(df$pr)
+  }
+  
+  # TODO top & bottom filter
+  coords <- rmf_convert_grid_to_xyz(i = df$row, j = df$column, k = df$layer, roff = df$roff, coff=df$coff, dis = dis, prj = prj)
+  locations <- cbind(subset(df, select = c('obsnam', 'pr', 'layer', 'row', 'column')), coords)
+  locations <- setNames(locations, c('name', 'pr', 'k', 'i', 'j', 'x', 'y', 'z'))
+  return(locations)
+}
+
 #' Convert a hob object to a time series data frame
 #' 
-#' @param hob hob object
-#' @param dis dis object
-#' @param prj prj object
+#' @param hob \code{RMODFLOW} hob object
+#' @param dis \code{RMODFLOW} dis object
 #' @return time series data frame containing name, time and head columns
 #' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_convert_hob_to_locations}}
 rmf_convert_hob_to_time_series <- function(hob,
                                            dis,
-                                           prj) {
-  toffset <- lubridate::days(ifelse(hob$irefsp==1,0,cumsum(dis$perlen)[hob$irefsp-1]) + hob$toffset * hob$tomulth)
-  time_series <- data.frame(name = hob$obsloc, time = prj$starttime + toffset, head = hob$hobs)
+                                           starttime = dis$starttime) {
+  toffset <- ifelse(hob$data$irefsp==1,0,cumsum(dis$perlen)[hob$data$irefsp-1]) + hob$data$toffset * hob$tomulth
+  time_series <- data.frame(name = hob$data$obsnam, time = ifelse(is.null(starttime), 0, starttime) + toffset, head = hob$data$hobs)
   return(time_series)
 }
 
