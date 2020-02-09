@@ -338,24 +338,31 @@ rmf_plot.ddn <- function(ddn,
                          kstp = NULL,
                          ...) {
   
-  # skip if ijk are specified and a time series should be plotted
-  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
-    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
-      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-      l <- sum(dis$nstp)
-    }
+  if(inherits(ddn, 'rmf_4d_array')) {
+    # skip if ijk are specified and a time series should be plotted
+    if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+      if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+        if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+        l <- dim(ddn)[4]
+      }
+      
+      if(is.null(l)) {
+        if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+        l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+      }
+      
+      if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+      
+    } 
+    rmf_plot.rmf_4d_array(ddn, dis = dis, i=i, j=j, k=k, l=l, ...)
     
-    if(is.null(l)) {
-      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
-      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
-    }
-    
-    if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
-    
-  } 
-  
-  rmf_plot.rmf_4d_array(ddn, dis = dis, i=i, j=j, k=k, l=l, ...)
-  
+  } else if(inherits(ddn, 'rmf_3d_array')) {
+    rmf_plot.rmf_3d_array(ddn, dis = dis, i=i, j=j, k=k, ...)
+  } else if(inherits(ddn, 'rmf_2d_array')) {
+    rmf_plot.rmf_2d_array(ddn, dis = dis, i=i, j=j, ...)
+  } else {
+    stop('Array is not of class rmf_2d_array, rmf_3d_array or rmf_4d_array. Is the array subsetted ?', call. = FALSE)
+  }
 }
 
 #' Plot a RMODFLOW drn object
@@ -513,30 +520,37 @@ rmf_plot.hed <- function(hed,
                          saturated = FALSE,
                          ...) {
   
-  # skip if ijk are specified and a time series should be plotted
-  if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
-    if(is.null(l) && (is.null(kper) && is.null(kstp))) {
-      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-      l <- sum(dis$nstp)
-    }
-    
-    if(is.null(l)) {
-      if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
-      l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
-    }
-    
-    if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
-    
-    if(saturated) {  
-      satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
-      rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, ...)
+  if(inherits(hed, 'rmf_4d_array')) {
+    # skip if ijk are specified and a time series should be plotted
+    if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
+      if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+        if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+        l <- dim(hed)[4]
+      }
+      
+      if(is.null(l)) {
+        if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+        l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+      }
+      
+      if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
+      
+      if(saturated) {  
+        satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
+        rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, ...)
+      } else {
+        rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+      }
     } else {
       rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
     }
+  } else if(inherits(hed, 'rmf_3d_array')) {
+    rmf_plot.rmf_3d_array(hed, dis = dis, i=i, j=j, k=k, ...)
+  } else if(inherits(hed, 'rmf_2d_array')) {
+    rmf_plot.rmf_2d_array(hed, dis = dis, i=i, j=j, ...)
   } else {
-    rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+    stop('Array is not of class rmf_2d_array, rmf_3d_array or rmf_4d_array. Is the array subsetted ?', call. = FALSE)
   }
-  
 }
 
 #' Plot a RMODFLOW hfb object
@@ -967,35 +981,36 @@ rmf_plot.rmf_2d_array <- function(array,
     # TODO: can not know what index was subsetted so assumes a subset on index 1; 
     # might remove later
     if(!all(attr(array, 'dimlabels') == c("i", "j"))) {
-      if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
-      if("j" %in% attr(array, 'dimlabels')) {
-        sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
-        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
-          warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
-          mask <- array*0 + 1
-        }
-        sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
-        
-        p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
-                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
-                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height, 
-                      vecint = vecint, uvw=uvw,legend=legend)
-        return(p)
-        
-      } else if("i" %in% attr(array, 'dimlabels')) {
-        sub_array <- rmf_create_array(array, dim = c(dim(array)[1], 1, dim(array)[2]))
-        if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
-          warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
-          mask <- array*0 + 1
-        }
-        sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
-        
-        p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
-                      type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
-                      height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height,
-                      vecint = vecint, uvw=uvw,legend=legend)
-        return(p)
-      }
+      stop('Array needs to represent dimensions i & j. Is the array transposed or subsetted ?', call. = FALSE)
+      # if(attr(array, 'dimlabels')[1] == 'k') array <- t(array)
+      # if("j" %in% attr(array, 'dimlabels')) {
+      #   sub_array <- rmf_create_array(array, dim = c(1, dim(array)))
+      #   if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+      #     warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
+      #     mask <- array*0 + 1
+      #   }
+      #   sub_mask <- rmf_create_array(mask, dim = c(1, dim(mask)))
+      #   
+      #   p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+      #                 type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
+      #                 height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height, 
+      #                 vecint = vecint, uvw=uvw,legend=legend)
+      #   return(p)
+      #   
+      # } else if("i" %in% attr(array, 'dimlabels')) {
+      #   sub_array <- rmf_create_array(array, dim = c(dim(array)[1], 1, dim(array)[2]))
+      #   if(!isTRUE(all.equal(attr(mask, 'dimlabels'), attr(array, 'dimlabels')))) {
+      #     warning("Dimensions of mask do not match those of array. Skipping mask.", call. = FALSE)
+      #     mask <- array*0 + 1
+      #   }
+      #   sub_mask <- rmf_create_array(mask, dim = c(dim(mask)[1], 1, dim(mask)[2]))
+      #   
+      #   p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
+      #                 type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
+      #                 height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height,
+      #                 vecint = vecint, uvw=uvw,legend=legend)
+      #   return(p)
+      # }
     }
     
     # datapoly
@@ -1222,6 +1237,9 @@ rmf_plot.rmf_3d_array <- function(array,
   
   if(is.null(i) & is.null(j) & is.null(k)) {
     stop('Please provide i, j or k.', call. = FALSE)
+  }
+  if(!all(attr(array, 'dimlabels') == c("i", "j", "k"))) {
+    stop('Array needs to represent dimensions i, j & k. Is the array transposed or subsetted ?', call. = FALSE)
   }
   if(!is.null(hed)) {
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
@@ -1545,6 +1563,9 @@ rmf_plot.rmf_4d_array <- function(array,
                                   k = NULL,
                                   l = NULL,
                                   ...) {
+  if(!all(attr(array, 'dimlabels') == c("i", "j", "k", "l"))) {
+    stop('Array needs to represent dimensions i, j, k & l. Is the array transposed or subsetted ?', call. = FALSE)
+  }
   if(!is.null(l)) {
     rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
