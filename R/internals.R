@@ -1172,6 +1172,7 @@ rmfi_performance_measures <- function(observations, predictions,print=F,measures
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #'
 #' @return ggplot2 object or layer
@@ -1186,6 +1187,7 @@ rmfi_plot_bc <- function(obj,
                          k = NULL,
                          active_only = FALSE,
                          fun = sum,
+                         add = FALSE,
                          ...) {
   
   if(is.null(kper)) {
@@ -1200,12 +1202,16 @@ rmfi_plot_bc <- function(obj,
   
   if(nrow(obj) == 0) {
     id <- class(obj)[which(class(obj) == 'rmf_package') - 1]
-    warning(paste0(id, ' object has no active features in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
-    return(NULL)
+    if(add) {
+      warning(paste0(id, ' object has no active features in stress-period ', kper, '. Returning NULL.'), call. = FALSE)
+      return(NULL)
+    } else {
+      stop(paste0(id, ' object has no active features in stress-period ', kper, '.'), call. = FALSE)
+    }
   }
   
   # rmf_plot.rmf_list
-  rmf_plot(obj, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, ...)
+  rmf_plot(obj, dis = dis, variable = variable, active_only = active_only, i=i, j=j, k=k, fun = fun, add = add, ...)
   
 }
 

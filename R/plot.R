@@ -284,6 +284,7 @@ rmf_plot.cbc <- function(cbc,
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -299,9 +300,10 @@ rmf_plot.chd <- function(chd,
                          k = NULL,
                          active_only = TRUE,
                          fun = mean,
+                         add = FALSE,
                          ...) {
   
-  rmfi_plot_bc(obj = chd, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  rmfi_plot_bc(obj = chd, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, add = add, ...)
   
 }
 
@@ -376,6 +378,7 @@ rmf_plot.ddn <- function(ddn,
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'elevation' and sum for variable 'cond'.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -391,9 +394,10 @@ rmf_plot.drn <- function(drn,
                          k = NULL,
                          active_only = TRUE,
                          fun = ifelse(variable == 'elevation', mean, sum),
+                         add = FALSE,
                          ...) {
   
-  rmfi_plot_bc(obj = drn, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  rmfi_plot_bc(obj = drn, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, add = add, ...)
   
 }
 
@@ -462,6 +466,7 @@ rmf_plot.evt <- function(evt,
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'bhead' and sum for variable 'cond'.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -477,9 +482,10 @@ rmf_plot.ghb <- function(ghb,
                          k = NULL,
                          active_only = TRUE,
                          fun = ifelse(variable == 'bhead', mean, sum),
+                         add = FALSE,
                          ...) {
   
-  rmfi_plot_bc(obj = ghb, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  rmfi_plot_bc(obj = ghb, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, add = add, ...)
   
 }
 
@@ -596,16 +602,24 @@ rmf_plot.hfb <- function(hfb,
   
   if(!all_hfb) hfb$data <- subset(hfb$data, active == TRUE)
   if(nrow(hfb$data) == 0) {
-    warning('No horizontal-flow barriers active. Returning NULL.', call. = FALSE)
-    return(NULL)
+    if(add) {
+      warning('No horizontal-flow barriers active. Returning NULL.', call. = FALSE)
+      return(NULL)
+    } else {
+      stop('No horizontal-flow barriers active.', call. = FALSE)
+    }
   }  
   
   if(!is.null(k)) {
     layer <- k
     data <- subset(hfb$data, k == layer)
     if(nrow(data) == 0) {
-      warning(paste0('No horizontal-flow barriers in layer ', k, '. Returning NULL.'), call. = FALSE)
-      return(NULL)
+      if(add) {
+        warning(paste0('No horizontal-flow barriers in layer ', k, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      } else {
+        stop(paste0('No horizontal-flow barriers in layer ', k, '.'), call. = FALSE)
+      }
     }
     if(!is.character(variable)) variable <- colnames(data)[variable]
     data <- subset(data, select = c('i', 'j', 'k', 'irow2', 'icol2', if(variable != 'id') {variable}))
@@ -676,15 +690,23 @@ rmf_plot.hfb <- function(hfb,
       ind <- i
       data <- subset(hfb$data, i == ind)
       if(nrow(data) == 0) {
-        warning(paste0('No horizontal-flow barriers in row ', i, '. Returning NULL.'), call. = FALSE)
-        return(NULL)
+        if(add) {
+          warning(paste0('No horizontal-flow barriers in row ', i, '. Returning NULL.'), call. = FALSE)
+          return(NULL)
+        } else {
+          stop(paste0('No horizontal-flow barriers in row ', i, '.'), call. = FALSE)
+        }
       }
     } else if(!is.null(j)) {
       ind <- j
       data <- subset(hfb$data, j == ind)
       if(nrow(data) == 0) {
-        warning(paste0('No horizontal-flow barriers in column ', j, '. Returning NULL.'), call. = FALSE)
-        return(NULL)
+        if(add) {
+          warning(paste0('No horizontal-flow barriers in column ', j, '. Returning NULL.'), call. = FALSE)
+          return(NULL)
+        } else {
+          stop(paste0('No horizontal-flow barriers in column ', j, '.'), call. = FALSE)
+        }
       }
     }
     
@@ -880,6 +902,7 @@ rmf_plot.rch <- function(rch,
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'stage' & 'rbot' and sum for variable 'cond'.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -895,9 +918,10 @@ rmf_plot.riv <- function(riv,
                          k = NULL,
                          active_only = TRUE,
                          fun = ifelse(variable %in% c('stage', 'rbot'), mean, sum),
+                         add = FALSE,
                          ...) {
   
-  rmfi_plot_bc(obj = riv, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  rmfi_plot_bc(obj = riv, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, add = add, ...)
   
 }
 
@@ -1581,16 +1605,35 @@ rmf_plot.rmf_4d_array <- function(array,
 #'
 #' @param obj a \code{RMODFLOW} object of class \code{rmf_list}
 #' @param dis a \code{RMODFLOW} dis object
+#' @param bas a \code{RMODFLOW} dis object; optional. If present, mask will be set to bas$ibound.
+#' @param mask a 3D array with 0 or FALSE indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
 #' @param variable single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.
+#' @param geom either 'polygon' (default), 'line' or 'point'. Defines how the rmf_list features are plotted. See details.
+#' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
+#' @param levels (named) character vector with labels for the factor legend. If not named, factor levels are sorted before being labelled. If NULL, the array factor levels are used
+#' @param group variable name or index in \code{obj} used to group the data when \code{geom = 'line'}. Passed to \code{ggplot2} aesthetics. Defaults to NULL.
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
+#' @param prj projection file object
+#' @param crs coordinate reference system for the plot
+#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used. 
+#' @param nlevels number of levels for the colour scale; defaults to 7
+#' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param ... additional arguments passed to either \code{\link{rmf_plot.rmf_3d_array}} if \code{geom = 'polygon'}, \code{ggplot2::geom_point} if \code{geom = 'point'} or \code{ggplot2::geom_path} if \code{geom = 'line'}
 #' 
 #' @return ggplot2 object or layer
 #' @method rmf_plot rmf_list
 #' 
 #' @export
-#' @details the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+#' @details If \code{geom = 'polygon'}, the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+#'          If \code{geom = 'line'}, \code{ggplot2::geom_path} is used. If \code{geom = 'point'}, \code{ggplot2::geom_point} is used.
+#'          \code{geom = 'line'} will only work optimally if the \code{group} argument is set. 
 #'
 rmf_plot.rmf_list <- function(obj, 
                               dis, 
@@ -1616,6 +1659,48 @@ rmf_plot.rmf_list <- function(obj,
                               gridlines = FALSE,
                               ...) {
   
+  if(is.null(i) & is.null(j) & is.null(k)) {
+    stop('Please provide i, j or k.', call. = FALSE)
+  }
+  if(nrow(obj) == 0) {
+    if(add) {
+      warning('No features present in rmf_list object. Returning NULL.', call. = FALSE)
+      return(NULL)
+    } else {
+      stop('No features present in rmf_list object.', call. = FALSE)
+    }
+  }
+  if(!is.null(k)) {
+    if(length(which(obj$k == k)) == 0) {
+      if(add) {
+        warning(paste0('No rmf_list features in layer ', k, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      } else {
+        stop(paste0('No rmf_list features in layer ', k, '.'), call. = FALSE)
+      }
+    }
+  }
+  if(!is.null(i)) {
+    if(length(which(obj$i == i)) == 0) {
+      if(add) {
+        warning(paste0('No rmf_list features in row ', i, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      } else {
+        stop(paste0('No rmf_list features in row ', i, '.'), call. = FALSE)
+      }
+    }
+  }
+  if(!is.null(j)) {
+    if(length(which(obj$j == j)) == 0) {
+      if(add) {
+        warning(paste0('No rmf_list features in column ', j, '. Returning NULL.'), call. = FALSE)
+        return(NULL)
+      } else {
+        stop(paste0('No rmf_list features in column ', j, '.'), call. = FALSE)
+      }
+    }
+  }
+  
   if(geom == 'polygon') {
     na_value <- ifelse(active_only, NA, 0)
     
@@ -1635,16 +1720,13 @@ rmf_plot.rmf_list <- function(obj,
   } else {
     
     # geom point or lines
-    if(is.null(i) & is.null(j) & is.null(k)) {
-      stop('Please provide i, j or k.', call. = FALSE)
-    }
     
     # mask (possibly from bas)
     
     # subset based on ijk
-    if(!is.null(i)) obj <- subset(obj, obj$i == i)
-    if(!is.null(j)) obj <- subset(obj, obj$j == j)
-    if(!is.null(k)) obj <- subset(obj, obj$k == k)
+    if(!is.null(i)) obj <- obj[which(obj$i == i), ]
+    if(!is.null(j)) obj <- obj[which(obj$j == j), ]
+    if(!is.null(k)) obj <- obj[which(obj$k == k), ]
     df <- rmf_as_tibble(obj, dis = dis, prj = prj, crs = crs, as_points = TRUE)
     
     # set axis labels 
@@ -1828,6 +1910,7 @@ rmf_plot.sen <- function(sen,type='css')
 #' @param k layer number to plot
 #' @param active_only logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.
 #' @param fun function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum for variable 'q'.
+#' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}
 #' 
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -1843,8 +1926,9 @@ rmf_plot.wel <- function(wel,
                          k = NULL,
                          active_only = TRUE,
                          fun = sum,
+                         add = FALSE,
                          ...) {
   
-  rmfi_plot_bc(obj = wel, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, ...)
+  rmfi_plot_bc(obj = wel, dis = dis, kper = kper, variable = variable, i=i, j=j, k=k, active_only = active_only, fun = fun, add = add, ...)
   
 }
