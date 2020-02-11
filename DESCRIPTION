@@ -28,7 +28,9 @@ Imports:
     ggquiver,
     magrittr,
     fs,
-    processx
+    processx,
+    cli,
+    usethis
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 RoxygenNote: 7.0.2

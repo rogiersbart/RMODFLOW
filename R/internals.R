@@ -455,13 +455,13 @@ rmfi_list_packages <- function(type = 'all') {
   # update these two vectors everytime a new package is supported
   # NAM file is not in here but is supported
   pack_names <- c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF','RCH','CHD','BCF6','HFB6','RIV','DRN','EVT','SIP','DE4','NWT','UPW','LVDA','GMG')
-  rmf_names  <- c('hob','pvl', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda','gmg')
+  rmf_names  <- c('hob','pval', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda','gmg')
   
   df <- data.frame(ftype = pack_names, rmf = rmf_names, stringsAsFactors = FALSE)
   
   # Below is an exhaustive overview of all packages in MODFLOW-2005 & variants
   # basic
-  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pvl', 'lgr')
+  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pval', 'lgr')
   
   # flow packages
   flow <- c('bcf', 'lpf', 'huf', 'swi', 'hfb', 'uzf', 'upw', 'kdep', 'lvda')
