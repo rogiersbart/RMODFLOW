@@ -10,6 +10,8 @@
 #' @param prj 
 #' @param kper 
 #' @param op 
+#' @param k 
+#' @param ... 
 #'
 #' @return
 #' @export
@@ -21,16 +23,20 @@ rmf_as_list.sf <- function(obj,
                            prj = NULL, 
                            k = NULL,
                            kper = attr(obj, 'kper'),
-                           op = sf::st_intersects) {
+                           op = sf::st_intersects,
+                           ...) {
   
   # TODO check if obj projection == dis projection
   
+  # TODO check if intersects returns multiple values (eg point on cell face)
+  
   target <- rmf_create_array(1:(dis$nrow*dis$ncol), dim = c(dis$nrow, dis$ncol)) %>%
-    rmf_as_sf(dis = dis, name = 'id')
+    rmf_as_sf(dis = dis, prj = prj, name = '.polyid')
   
   # subset
-  ints <- target[obj, op = op] 
-  ijk <- rmf_convert_id_to_ijk(id = ints$id, dis = dis)
+  # ints <- target[obj, op = op, ...] 
+  ints <- sf::st_join(obj, target, join = op, left = FALSE, ...) # TODO should left be user-specified?
+  ijk <- rmf_convert_id_to_ijk(id = ints$.polyid, dis = dis)
   
   # k depends on z for XYZ points
   if(is.null(k)) {
@@ -76,7 +82,7 @@ rmf_as_array.sf <- function(obj,
                             kper = attr(obj, 'kper'),
                             ...) {
   
-  ar <- rmf_as_list(obj, dis = dis, select = select, prj = prj, k = k, op = op) %>%
+  ar <- rmf_as_list(obj, dis = dis, select = select, prj = prj, k = k, op = op, ...) %>%
     rmf_as_array(dis = dis, select = 4, sparse = sparse, kper = kper, ...)
   return(ar)
   
@@ -201,14 +207,14 @@ rmf_as_sf <- function(...) {
 #' @export
 #'
 #' @examples
-rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value', as_points = FALSE) {
+rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value', as_points = FALSE, id = 'r') {
   
   # faster to convert to stars and then to sf than to manually create sf object
   
   # TODO rotation does not work properly in stars when delta != 1;
   #
   # If affine works properly in stars, simply create stars and use sf::st_as_sf(stars):
-  s <- rmf_as_stars(array, dis = dis, mask = mask, prj = prj, crs = crs, name = name)
+  s <- rmf_as_stars(array, dis = dis, mask = mask, prj = prj, crs = crs, name = name, id = id)
   f <- sf::st_as_sf(s, as_points = as_points)
   # reset crs because stars drops EPSG
   if(!is.null(crs)) {
@@ -269,7 +275,7 @@ rmf_as_sf.rmf_4d_array <- function() {
 #' @export
 #'
 #' @examples
-rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, crs = NULL, as_points = FALSE) {
+rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, crs = NULL, as_points = FALSE, id = 'r') {
   
   # TODO check z coordinate in points; add z coordinate (or top/bottom) in polygons?
   df <- rmf_as_tibble(obj, dis = dis, prj = prj, crs = crs, as_points = as_points) %>%  
@@ -287,8 +293,19 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, crs = NULL, as_points = FAL
     geom <- lapply(seq_along(ids), function(i) set_poly(ids[i], df))
   }
   sfc <- sf::st_sfc(geom)
-  s <- sf::st_sf(as.data.frame(obj[,-which(colnames(obj) %in% c('i', 'j', 'k'))]), geom = sfc,
-                 crs = rmfi_ifelse0(is.null(crs), sf::st_crs(prj)))
+  nms <- colnames(obj)[-which(colnames(obj) %in% c('i', 'j', 'k'))]
+  
+  # TODO transform if crs is provided
+  s <- cbind(.id = 1, setNames(as.data.frame(obj[, nms]), nms)) %>%
+        sf::st_sf(geom = sfc,
+                  crs = rmfi_ifelse0(is.null(prj), NA, prj$projection))
+  
+  if(id %in% c('modflow', 'r')) {
+    s$.id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = id)
+  } else {
+    s$.id <- NULL
+  }
+  
   return(s)
 }
 
@@ -318,9 +335,10 @@ rmf_as_stars <- function(...) {
 #' @export
 #'
 #' @examples
-rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value') {
+rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, crs = NULL, name = 'value', id = 'r') {
   
   array[which(mask^2 != 1)] <- NA
+  array <- array[rev(1:dim(array)[1]),] # in MODFLOW, rows are numbered from N-S
   m <- t(as.matrix(array))
   dim(m) <- c(x = dim(m)[1], y = dim(m)[2]) # named dim
   
@@ -346,6 +364,16 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   attr(attr(s, 'dimensions'), 'raster')$affine <- c(gtf[3], gtf[5])
   attr(s, 'dimensions')[[1]]$delta <- gtf[2]
   attr(s, 'dimensions')[[2]]$delta <- gtf[6]
+  
+  # add .id
+  if(id == 'modflow') {
+    id <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
+    s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+  } else if(id == 'r') {
+    id <- array(1:prod(dim(array)[1:2]), dim = dim(array)[1:2])
+    s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+  }
+
   
   # add projection
   projection <- NULL
