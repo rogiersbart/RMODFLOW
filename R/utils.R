@@ -1684,6 +1684,7 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
     y <- y-prj$origin[2]
     angle <- atan(y/x)*180/pi - prj$rotation
     angle[which(is.na(angle))] <- 90-prj$rotation
+    angle[which(angle < 0)] <- 180 + angle[which(angle < 0)]
     s <- sqrt(x^2+y^2)
     x <- cos(angle*pi/180)*s
     y <- sin(angle*pi/180)*s
@@ -1704,19 +1705,24 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
       warning('Quasi-3D confining beds detected. Returned coordinates/indices only represent numerical layers.')
       cbd <- rmfi_confining_beds(dis)
     }
+    
+    # set min & max limits for checking out-of-bounds
+    lims <- list(x = c(0, sum(dis$delr)),
+                 y = c(0, sum(dis$delc)))
+    
     for(i in 1:nrow(dat)) {
       dat$i[i] <- which(cumsum(dis$delc) >= sum(dis$delc)-dat$y[i])[1]
       dat$j[i] <- which(cumsum(dis$delr) >= dat$x[i])[1]
       dat$roff[i] <- (sum(dis$delc)-dat$y[i] -(cumsum(dis$delc) - dis$delc/2)[dat$i[i]])/dis$delc[dat$i[i]]
       dat$coff[i] <- (dat$x[i] -(cumsum(dis$delr) - dis$delr/2)[dat$j[i]])/dis$delr[dat$j[i]]
       
-      if(dat$x[i] < 0 || dat$x[i] > sum(dis$delr)) {
+      if(dat$x[i] < lims$x[1] || dat$x[i] > lims$x[2]) {
         dat$j[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
         warning('x coordinate out of bounds. Setting j index and roff/coff to NA', call. = FALSE)
-      } 
-      if(dat$y[i] < 0 || dat$y[i] > sum(dis$delc)) {
+      }
+      if(dat$y[i] < lims$y[1] || dat$y[i] > lims$y[2]) {
         dat$i[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
