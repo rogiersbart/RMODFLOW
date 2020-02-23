@@ -462,7 +462,7 @@ rmf_as_tibble.rmf_list <- function(obj,
       coords$x <- coords_prj$x
       coords_y <- coords_prj$y
     }
-    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis), type = 'r')
+    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r'))
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     df <- tibble::as_tibble(cbind(df, data, coords))
     
@@ -1705,7 +1705,7 @@ rmf_convert_id_to_id = function(id, dis, from = 'modflow', to = 'r') {
 #' 
 #' @param id cell id, providing the place of the number in an input file 3d array
 #' @param dis a discretisation file object
-#' @param type 'r' or 'modflow'; defaults to 'r'
+#' @param type 'r' or 'modflow' specifying type of id. See details. Defaults to 'r'
 #' @details a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @export
 rmf_convert_id_to_ijk <- function(id,
@@ -1739,6 +1739,7 @@ convert_id_to_ijk <- function(...) {
 #' @param j vector of column numbers
 #' @param k vector of layer numbers
 #' @param dis a discretization file object
+#' @param type 'r' or 'modflow' specifying type of id. See details. Defaults to 'r'
 #' @return cell ids, providing the place of the cell in an input file 3d array
 #' @details a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @export

@@ -24,22 +24,21 @@ rmf_as_list.sf <- function(obj,
                            k = NULL,
                            kper = attr(obj, 'kper'),
                            op = sf::st_intersects,
-                           unique = 'POINT' %in% class(sf::st_geometry(obj)[[1]]),
                            ...) {
   
   # TODO check if obj projection == dis projection
-  
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, id = 'r', name = '.v')
   
   # spatial join
+  obj$.unq_id <- seq_len(nrow(obj))
   ints <- sf::st_join(obj, target, join = op, left = FALSE, ...) # TODO should left be user-specified?
   
-  if(unique) {
-    eq <- vapply(sf::st_equals(ints), function(i) i[1], 1)
-    ints <- ints[unique(eq), ]
-  }
+  # remove duplicate geometries caused by feature located on cell boundary
+  ints <- ints[!duplicated(ints$.unq_id), ]
+  ints$.unq_id <- NULL
+  obj$.unq_id <- NULL
   
-  ijk <- rmf_convert_id_to_ijk(id = ints$.id, dis = dis, type = 'r')
+  ijk <- rmf_convert_id_to_ijk(id = ints$id, dis = dis, type = 'r')
   
   # k depends on z for XYZ points
   if(is.null(k)) {
@@ -131,6 +130,7 @@ rmf_as_list.stars <- function(obj,
 #' @param crs 
 #' @param resample 
 #' @param method 
+#' @param ... ignored
 #'
 #' @return
 #' @export
@@ -142,12 +142,13 @@ rmf_as_array.stars <- function(obj,
                                select = 1,
                                resample = TRUE,
                                method = 'bilinear',
-                               kper = attr(obj, 'kper')) {
+                               kper = attr(obj, 'kper'),
+                               ...) {
   
   # TODO check if obj projection == dis projection
   # TODO implement support for higher dimension stars objects
   if(length(stars::st_dimensions(obj)) > 2) stop('Support for stars object with more than 2 dimensions not yet implemented', call. = FALSE)
-  if(any(vapply(stars::st_dimensions(obj), function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions not supported', call. = FALSE)
+  if(any(vapply(stars::st_dimensions(obj), function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions are not supported', call. = FALSE)
   
   target <- rmf_as_stars(dis$top, dis = dis, prj = prj, id = FALSE)
   if(resample) {
@@ -208,12 +209,16 @@ rmf_as_sf <- function(...) {
 #' @param crs 
 #' @param name 
 #' @param as_points 
+#' @param ... ignored
+#'
+#' @details returned z coordinate when as_points = TRUE reflects cell node 
 #'
 #' @return
 #' @export
-#'
+#' @rdname rmf_as_sf
+#' @method rmf_as_sf rmf_2d_array
 #' @examples
-rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r') {
+rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
   
   # faster to convert to stars and then to sf than to manually create sf object
   
@@ -232,49 +237,72 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_3d_array
 #' @export
-rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r') {
+rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
   
-  # TODO better to create a tibble from array; convert to data frame (for consistency) and do st_join with target grid using .id as binding column
-  template <- lk <- rmf_as_sf(array[,,1], dis = dis, mask = mask, prj = prj, name = name, as_points = as_points, id = id)
-  template$.layer <- lk$.layer <- 1
-  for(k in 2:dim(array)[3]) {
-    template[[name]] <- c(t(array[,,k]))
-    if(id %in% c('r', 'modflow')) template[['.id']] <- template[['.id']] + prod(dim(array)[1:2])
-    template$.layer <- k
-    lk <- rbind(lk, template)
+  target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
+    subset(select = 'id')
+  
+  tbl <- rmf_as_tibble(array, dis = dis, mask = mask, prj = prj, as_points = TRUE, id = 'r') %>%
+    as.data.frame()
+  tbl <- subset(tbl, select = -which(colnames(tbl) %in% rmfi_ifelse0(as_points, c('x', 'y'), c('x', 'y', 'z'))))
+  tbl$ido <- rep(tbl$id[seq_len(prod(dis$nrow, dis$ncol))], dis$nlay)
+  colnames(tbl) <- replace(colnames(tbl), which(colnames(tbl) == 'id'), 'id_3d')
+  
+  f <- merge(target, tbl, by.x = 'id', by.y = 'ido', sort = FALSE)
+  f$id <- NULL
+  colnames(f) <- replace(colnames(f), which(colnames(f) == 'id_3d'), 'id')
+  colnames(f) <- replace(colnames(f), which(colnames(f) == 'value'), name)
+  
+  # change id if necessary
+  if(id == 'modflow') {
+    f$id <- rmf_convert_id_to_id(f$id, dis = dis, from = 'r', to = 'modflow')
+  } else if(id != 'r') {
+    f$id <- NULL
   }
   
-  return(lk)
+  return(f)
 }
 
-rmf_as_sf.rmf_4d_array <- function() {
-  # TODO create a tibble from array; convert to data frame (for consistency) and do st_join with target grid using .id as binding column
-  stop('Not yet implemented', call. = FALSE)
-}
-
-#' Title
-#'
-#' @param obj 
-#' @param dis 
-#' @param prj 
-#' @param crs 
-#' @param as_points 
-#'
-#' @details returned z coordinate when as_points = TRUE reflects cell node 
-#'
-#' @return
+#' @rdname rmf_as_sf
+#' @method rmf_as_sf rmf_4d_array
 #' @export
-#' 
-#' @examples
-rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r') {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+
+  target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
+    subset(select = 'id')
   
-  # TODO set type of id through rmf_as_tibble
-  df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points) %>%  
+  tbl <- rmf_as_tibble(array, dis = dis, mask = mask, prj = prj, as_points = TRUE, id = 'r') %>%
     as.data.frame()
+  tbl <- subset(tbl, select = -which(colnames(tbl) %in% rmfi_ifelse0(as_points, c('x', 'y'), c('x', 'y', 'z'))))
+  tbl$ido <- rep(tbl$id[seq_len(prod(dis$nrow, dis$ncol))], dis$nlay * dim(array)[4])
+  colnames(tbl) <- replace(colnames(tbl), which(colnames(tbl) == 'id'), 'id_4d')
+  
+  f <- merge(target, tbl, by.x = 'id', by.y = 'ido', sort = FALSE)
+  f$id <- NULL
+  colnames(f) <- replace(colnames(f), which(colnames(f) == 'id_4d'), 'id')
+  colnames(f) <- replace(colnames(f), which(colnames(f) == 'value'), name)
+  
+  # change id if necessary
+  if(id == 'modflow') {
+    f$id <- rmf_convert_id_to_id(f$id, dis = dis, from = 'r', to = 'modflow')
+  } else if(id != 'r') {
+    f$id <- NULL
+  }
+  
+  return(f)
+}
+
+#' @rdname rmf_as_sf
+#' @method rmf_as_sf rmf_list
+#' @export
+rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r', ...) {
+  
+  df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%  
+    as.data.frame()
+  ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
+  
   if(as_points) {
     geom <- lapply(1:nrow(df), function(i) sf::st_point(as.numeric(df[i, c('x', 'y', 'z')])))
-    .top <- 1
-    .botm <- 1
   } else {
     set_poly <- function(ids, df) {
       df <- subset(df, id == ids)
@@ -282,29 +310,26 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r'
       m <- rbind(m, m[1,])
       sf::st_polygon(list(m))
     }
-    ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis)
     geom <- lapply(seq_along(ids), function(i) set_poly(ids[i], df))
-    
-    # top & botm of cells
-    if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
-    cbd <- rmfi_confining_beds(dis)
-    nnlay <- which(!cbd)[-length(cbd)]
-    tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay])), dim = c(dis$nrow, dis$ncol, length(which(!cbd))))
-    .top <- tops[ids] 
-    .botm <- dis$botm[ids]
   }
+  
+  # top & botm
+  cell_tops <- subset(df, select = rmfi_ifelse0(as_points, c('z', 'top', 'botm'), c('top', 'botm')))
+  if(!as_points) cell_tops <- cell_tops[seq(1, nrow(cell_tops), by = 4), ]
+  
+  # create sf
   sfc <- sf::st_sfc(geom)
   nms <- colnames(obj)[-which(colnames(obj) %in% c('i', 'j', 'k'))]
   
-  s <- cbind(setNames(as.data.frame(obj[, nms]), nms), .id = 1, .top, .botm) %>%
+  s <- cbind(data.frame(id = ids), setNames(as.data.frame(obj[, nms]), nms), cell_tops) %>%
        sf::st_sf(geom = sfc,
                  crs = rmfi_ifelse0(is.null(prj), NA, prj$projection))
-  if(as_points) s$.top <- s$.botm <- NULL
   
-  if(id %in% c('modflow', 'r')) {
-    s$.id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = id)
-  } else {
-    s$.id <- NULL
+  # change id if necessary
+  if(id == 'modflow') {
+    s$id <- rmf_convert_id_to_id(s$id, dis = dis, from = 'r', to = 'modflow')
+  } else if(id != 'r') {
+    s$id <- NULL
   }
   
   return(s)
@@ -331,15 +356,17 @@ rmf_as_stars <- function(...) {
 #' @param prj 
 #' @param crs 
 #' @param name 
+#' @param ... ignored
 #'
 #' @return
 #' @export
-#'
+#' @rdname rmf_as_stars
+#' @method rmf_as_stars rmf_2d_array
 #' @examples
-rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r') {
+rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
-  array <- array[rev(1:dim(array)[1]),] # in MODFLOW, rows are numbered from N-S
+  array <- array[rev(1:dim(array)[1]),] # in MODFLOW, rows are numbered from top to bottom
   m <- t(as.matrix(array))
   dim(m) <- c(x = dim(m)[1], y = dim(m)[2]) # named dim
   
@@ -366,13 +393,13 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   attr(s, 'dimensions')[[1]]$delta <- gtf[2]
   attr(s, 'dimensions')[[2]]$delta <- gtf[6]
   
-  # .id
+  # id
   if(id == 'modflow') {
     id <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
-    s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+    s$id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
   } else if(id == 'r') {
     id <- array(1:prod(dim(array)[1:2]), dim = dim(array)[1:2])
-    s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+    s$id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
   }
 
   # projection
@@ -385,24 +412,62 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   return(s)
 }
 
-rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r') {
+#' @rdname rmf_as_stars
+#' @method rmf_as_stars rmf_3d_array
+#' @export
+rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
   
-  # TODO see if there's no native stars function whichs adds a dimension
-  ar <- lapply(1:dim(array)[3], function(i) rmf_as_stars(array[,,i], dis = dis, prj = prj, name = name, id = id))
-  ar_3d <- do.call(c, ar) %>% 
+  s <- rmf_as_stars(array[,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
+  ids <- c(s$id) + c(rep(0, prod(dis$nrow, dis$ncol)), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = prod(dis$nrow, dis$ncol)))
+  d <- stars::st_dimensions(s)
+  
+  array_list <- lapply(seq_len(dim(array)[3]), 
+                        function(i) t(as.matrix(array[rev(seq_len(dim(array)[1])),,i]))) %>% 
+    setNames(paste('layer', seq_len(dim(array)[3]), sep = '_'))
+  s <- stars::st_as_stars(array_list, dimensions = d) %>%
     merge() %>%
     setNames(name) %>%
-    stars::st_set_dimensions(3, values = 1:dim(array)[3], names = c('layer'))
-  return(ar_3d)
+    stars::st_set_dimensions(names = c(names(d), 'layer'))
+  s$id <- ids
 
+  return(s)
 }
 
-rmf_as_stars.rmf_4d_array <- function() {
-  stop('Not yet implemented', call. = FALSE)
+#' @rdname rmf_as_stars
+#' @method rmf_as_stars rmf_4d_array
+#' @export
+rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
+  
+  array[which(mask^2 != 1)] <- NA
+  
+  s <- rmf_as_stars(array[,,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
+  ids <- c(s$id) 
+  d <- stars::st_dimensions(s)
+  
+  # time <- rep(rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))]),
+  #             each = prod(dis$nrow, dis$ncol, dis$nlay))
+  
+  time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
+
+  array_list <- lapply(seq_len(dim(array)[4]), 
+                       function(i) aperm(as.array(array[rev(seq_len(dim(array)[1])),,,i]), c(2,1,3))) %>% 
+                setNames(time)
+  
+  s <- stars::st_as_stars(array_list, dimensions = d) %>%
+    merge() %>%
+    setNames(name) %>%
+    stars::st_set_dimensions(names = c(names(d), 'time')) %>%
+    stars::st_set_dimensions(which = 4, values = time)
+  s$id <- ids
+  
+  return(s)
 }
 
+#' @rdname rmf_as_stars
+#' @method rmf_as_stars rmf_list
+#' @export
 rmf_as_stars.rmf_list <- function(obj, dis, prj = NULL, ...) {
   
   rmf_as_array(obj, dis = dis, ...) %>% rmf_as_stars(dis = dis, prj = prj, ...)
@@ -421,18 +486,30 @@ rmf_as_raster <- function(...) {
   UseMethod('rmf_as_raster')
 }
 
+#' @rdname rmf_as_raster
+#' @method rmf_as_raster rmf_2d_array
+#' @export
 rmf_as_raster.rmf_2d_array <- function(array, dis, prj = NULL, ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
+#' @rdname rmf_as_raster
+#' @method rmf_as_raster rmf_3d_array
+#' @export
 rmf_as_raster.rmf_3d_array <- function(array, dis, prj = NULL, ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
+#' @rdname rmf_as_raster
+#' @method rmf_as_raster rmf_4d_array
+#' @export
 rmf_as_raster.rmf_4d_array <- function(array, dis, prj = NULL, ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
+#' @rdname rmf_as_raster
+#' @method rmf_as_raster rmf_list
+#' @export
 rmf_as_raster.rmf_list <- function(obj, dis, prj = NULL, ...) {
   rmf_as_stars(obj, dis = dis, prj = prj, ...) %>% as('Raster')
 }
