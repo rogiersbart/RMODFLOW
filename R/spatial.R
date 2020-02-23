@@ -147,7 +147,7 @@ rmf_as_array.stars <- function(obj,
   # TODO check if obj projection == dis projection
   # TODO implement support for higher dimension stars objects
   if(length(stars::st_dimensions(obj)) > 2) stop('Support for stars object with more than 2 dimensions not yet implemented', call. = FALSE)
-  if(stars::st_dimensions(obj))
+  if(any(vapply(stars::st_dimensions(obj), function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions not supported', call. = FALSE)
   
   target <- rmf_as_stars(dis$top, dis = dis, prj = prj, id = FALSE)
   if(resample) {
@@ -218,34 +218,12 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
   # faster to convert to stars and then to sf than to manually create sf object
   
   # TODO rotation does not work properly in stars when delta != 1;
-  #
   # If affine works properly in stars, simply create stars and use sf::st_as_sf(stars):
+  
   s <- rmf_as_stars(array, dis = dis, mask = mask, prj = prj, name = name, id = id)
   f <- sf::st_as_sf(s, as_points = as_points)
   # reset crs because stars drops EPSG code
   if(!is.null(prj)) f <- sf::st_set_crs(f, sf::st_crs(prj$projection)) 
-  
-  #
-  # If affine does not work properly, manually adjust geotransform parameters
-  #
-  ## < MOVED TO rmf_as_stars
-  # prj_stars <- prj
-  # if(!is.null(prj_stars)) prj_stars$rotation <- 0 # to prevent warning in rmf_as_stars; affine parameters are overwritten below
-  # 
-  # s <- rmf_as_stars(array, dis = dis, mask = mask, prj = prj_stars, crs = crs, name = name)
-  # df <- data.frame(x = c(s[[1]]))
-  # colnames(df) <- name
-  # 
-  # rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
-  # gtf <- stars:::get_geotransform(s)
-  # gtf[3] <- gtf[2]*-sin(rot)
-  # gtf[2] <- gtf[2]*cos(rot)
-  # gtf[5] <- gtf[6]*sin(rot)
-  # gtf[6] <- gtf[6]*cos(rot)
-  # 
-  # f <- sf::st_as_sfc(stars::st_dimensions(s), as_points = as_points, geotransform = gtf) 
-  # f <- sf::st_sf(df, geometry = f)
-  ## >
   
   return(f)
   
@@ -290,7 +268,7 @@ rmf_as_sf.rmf_4d_array <- function() {
 #' @examples
 rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r') {
   
-  # TODO set type of id
+  # TODO set type of id through rmf_as_tibble
   df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points) %>%  
     as.data.frame()
   if(as_points) {
@@ -307,7 +285,7 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r'
     ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis)
     geom <- lapply(seq_along(ids), function(i) set_poly(ids[i], df))
     
-    # add top & botm of cells
+    # top & botm of cells
     if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
     cbd <- rmfi_confining_beds(dis)
     nnlay <- which(!cbd)[-length(cbd)]
@@ -388,7 +366,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   attr(s, 'dimensions')[[1]]$delta <- gtf[2]
   attr(s, 'dimensions')[[2]]$delta <- gtf[6]
   
-  # add .id
+  # .id
   if(id == 'modflow') {
     id <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
     s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
@@ -397,8 +375,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
     s$.id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
   }
 
-  
-  # add projection
+  # projection
   projection <- NULL
   if(!is.null(prj)) projection <- prj$projection
   if(!is.null(projection)) {

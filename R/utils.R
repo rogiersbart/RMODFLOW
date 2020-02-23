@@ -158,37 +158,51 @@ rmf_as_tibble.rmf_2d_array <- function(array,
                                        mask = array * 0 + 1,
                                        prj = NULL,
                                        crs = NULL,
-                                       as_points = FALSE) {
+                                       as_points = FALSE,
+                                       id = 'r') {
+  
+  xy <- expand.grid(sum(dis$delc) - (cumsum(dis$delc) - dis$delc/2), cumsum(dis$delr) - dis$delr/2)
+  names(xy) <- c('y','x')
+  mask[which(mask == 0)] <- NA
+  ids <- 1:(dis$nrow*dis$ncol)
+  
   if(as_points) {
-    
+    positions <- data.frame(id = ids, x = xy$x, y = xy$y)
+    values <- data.frame(id = ids, value = c(array*mask^2))
   } else {
-    xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
-    names(xy) <- c('x','y')
-    mask[which(mask==0)] <- NA
-    ids <- factor(1:(dis$nrow*dis$ncol))
-    xWidth <- rep(dis$delr,dis$nrow)
-    yWidth <- rep(dis$delc,each=dis$ncol)
-    positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-    values <- data.frame(id = ids,value = c(t(array*mask^2)))
-    if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
-      positions$x <- new_positions$x
-      positions$y <- new_positions$y
-    }
-    if(!is.null(crs)) {
-      positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
-    }
-    return(tibble::as_tibble(na.omit(merge(values, positions, by=c("id")))))
+    xWidth <- rep(dis$delr, dis$nrow)
+    yWidth <- rep(dis$delc, each = dis$ncol)
+    positions <- data.frame(id = rep(ids, each=4), x = rep(xy$x, each = 4), y = rep(xy$y, each = 4))
+    positions$x[(seq(1, nrow(positions), 4))] <- positions$x[(seq(1, nrow(positions), 4))] - xWidth/2
+    positions$x[(seq(2, nrow(positions), 4))] <- positions$x[(seq(2, nrow(positions), 4))] - xWidth/2
+    positions$x[(seq(3, nrow(positions), 4))] <- positions$x[(seq(3, nrow(positions), 4))] + xWidth/2
+    positions$x[(seq(4, nrow(positions), 4))] <- positions$x[(seq(4, nrow(positions), 4))] + xWidth/2
+    positions$y[(seq(1, nrow(positions), 4))] <- positions$y[(seq(1, nrow(positions), 4))] - yWidth/2
+    positions$y[(seq(2, nrow(positions), 4))] <- positions$y[(seq(2, nrow(positions), 4))] + yWidth/2
+    positions$y[(seq(3, nrow(positions), 4))] <- positions$y[(seq(3, nrow(positions), 4))] + yWidth/2
+    positions$y[(seq(4, nrow(positions), 4))] <- positions$y[(seq(4, nrow(positions), 4))] - yWidth/2
+    values <- data.frame(id = ids, value = c(array*mask^2))
   }
-
+  
+  if(!is.null(prj)) {
+    new_positions <- rmf_convert_grid_to_xyz(x = positions$x, y = positions$y, prj = prj)
+    positions$x <- new_positions$x
+    positions$y <- new_positions$y
+  }
+  if(!is.null(crs)) {
+    if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+    positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
+  }
+  
+  tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+  
+  if(id == 'modflow') {
+    tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+  } else if(id != 'r') {
+    tbl$id <- NULL
+  }
+  
+  return(tbl)
 }
 
 #' Title
@@ -207,73 +221,151 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #'
 #' @examples
 rmf_as_tibble.rmf_3d_array <- function(array,
+                                       dis,
                                        i = NULL,
                                        j = NULL,
                                        k = NULL,
-                                       dis,
                                        mask = array * 0 + 1,
                                        prj = NULL,
-                                       crs = NULL) {
-  if(!is.null(k)) {
-    mask <- mask # evaluate before making changes to array
-    array <- array[,,k]
-    class(array) <- 'rmf_2d_array'
-    mask <- mask[,,k]
-    rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs)
+                                       crs = NULL,
+                                       as_points = FALSE,
+                                       id = 'r') {
+  
+  if(is.null(i) && is.null(j) && is.null(k)) {
+    
+    tbl <- rmf_as_tibble(array = array[,,1], dis = dis, prj = prj, crs = crs, as_points = as_points, id = 'r')
+    
+    if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
+    cbd <- rmfi_confining_beds(dis)
+    nnlay <- which(!cbd)
+    tops <- dis$top
+    botm <- dis$botm[,,nnlay]
+    
+    if(length(nnlay) > 1) {
+      tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+      tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
+    } 
+    
+    z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+    center <- botm + (tops - botm)/2
+    mask[which(mask == 0)] <- NA
+    tbl$value <- c(array*mask^2)
+    tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
+    if(as_points) tbl$z <- center[tbl$id] + z_ref
+    tbl$top <- tops[tbl$id] + z_ref
+    tbl$botm <- botm[tbl$id] + z_ref
+
+    if(id == 'modflow') {
+      tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+    } else if(id != 'r') {
+      tbl$id <- NULL
+    }
+    
   } else {
-    xy <- NULL
-    xy$x <- cumsum(dis$delr)-dis$delr/2
-    xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
-    mask[which(mask==0)] <- NA
     
-    # reason for optionally explicitely representing confining bed thickness:
-    # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
-    if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
-      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
-      dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
-      botm <- rmfi_ifelse0(dis$nlay + sum(dis$laycbd != 0) > 1, dis$botm[,,cumsum((dis$laycbd != 0) +1)], dis$botm)
-      nnlay <- dis$nlay
-      dis$center <- botm
-      for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+    if(!is.null(k)) {
+      array <- array[,,k]
+      mask <- mask[,,k]
+      tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
     } else {
-      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
-      dis$thck <- rmf_calculate_thickness(dis)
-      nnlay <- dis$nlay + sum(dis$laycbd != 0)
-      dis$center <- dis$botm
-      for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+      xy <- NULL
+      xy$x <- cumsum(dis$delr)-dis$delr/2
+      xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
+      mask[which(mask==0)] <- NA
+      
+      # reason for optionally explicitely representing confining bed thickness:
+      # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
+      if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
+        warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
+        dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
+        botm <- rmfi_ifelse0(dis$nlay + sum(dis$laycbd != 0) > 1, dis$botm[,,cumsum((dis$laycbd != 0) +1)], dis$botm)
+        nnlay <- dis$nlay
+        dis$center <- botm
+        for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+      } else {
+        if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
+        dis$thck <- rmf_calculate_thickness(dis)
+        nnlay <- dis$nlay + sum(dis$laycbd != 0)
+        dis$center <- dis$botm
+        for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+      }
+      
+      if(is.null(i) & !is.null(j)) {
+        ids <- seq_len(dis$nrow) + (dis$nrow * (j-1))
+        if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$nrow), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$nrow))
+          
+        if(as_points) {
+          positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]))
+          values <- data.frame(id = ids, value = c((array[,j,]*mask[,j,]^2)))
+        } else {
+          xWidth <- rep(rev(dis$delc),dis$nlay)
+          yWidth <- dis$thck[,j,]
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
+          positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+          positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+          positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+          positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+          positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+          positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+          positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+          positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+          values <- data.frame(id = ids,value = c((array[,j,]*mask[,j,]^2)))
+        }
+        
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1,j=j,dis=dis)[[1]], y=positions$x, z=positions$y, prj=prj)
+          positions$x <- new_positions$y
+          positions$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+        }
+        
+      } else if(!is.null(i) & is.null(j)) {
+        ids <- i + c(0, cumsum(rep(dis$nrow, dis$ncol))[-dis$ncol])
+        if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$ncol), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$ncol))
+        
+        if(as_points) {
+          positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]))
+          values <- data.frame(id = ids, value = c((array[i,,]*mask[i,,]^2)))
+        } else {
+          xWidth <- rep(dis$delr,dis$nlay)
+          yWidth <- dis$thck[i,,]
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
+          positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
+          positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
+          positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
+          positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
+          positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
+          positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
+          positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
+          positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
+          values <- data.frame(id = ids,value = c((array[i,,]*mask[i,,]^2)))
+        }
+        
+        if(!is.null(prj)) {
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]], z=positions$y, prj=prj)
+          positions$x <- new_positions$x
+          positions$y <- new_positions$z
+        }
+        if(!is.null(crs)) {
+          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+        }
+      }
+      
+      tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+      
+      if(id == 'modflow') {
+        tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+      } else if(id != 'r') {
+        tbl$id <- NULL
+      }
+      
     }
-    
-    if(is.null(i) & !is.null(j)) {
-      ids <- factor(1:(dis$nrow*dis$nlay))
-      xWidth <- rep(rev(dis$delc),dis$nlay)
-      yWidth <- dis$thck[,j,]
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((array[,j,]*mask[,j,]^2)))
-    } else if(!is.null(i) & is.null(j)) {
-      ids <- factor(1:(dis$ncol*dis$nlay))
-      xWidth <- rep(dis$delr,dis$nlay)
-      yWidth <- dis$thck[i,,]
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((array[i,,]*mask[i,,]^2)))
-    }
-    return(tibble::as_tibble(na.omit(merge(values, positions, by=c("id")))))
   }
+  return(tbl)
 }
 
 #' Title
@@ -292,22 +384,39 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #'
 #' @examples
 rmf_as_tibble.rmf_4d_array <- function(array,
+                                       dis,
                                        i = NULL,
                                        j = NULL,
                                        k = NULL,
                                        l = NULL,
-                                       dis,
                                        mask = array * 0 + 1,
                                        prj = NULL,
-                                       crs = NULL) {
-  if(!is.null(l)) {
-    rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask[,,,l], prj = prj, crs = crs)
-  } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
-    tibble::tibble(value = array[i, j, k, ], time = attributes(array)$totim)
+                                       crs = NULL, 
+                                       as_points = FALSE,
+                                       id = 'r') {
+  
+  if(is.null(i) && is.null(j) && is.null(k) && is.null(l)) {
+    tbl <- rmf_as_tibble(array = rmf_create_array(array[,,,1]), dis = dis, prj = prj, crs = crs, as_points = as_points, id = id)
+    if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
+
+    mask[which(mask == 0)] <- NA
+    tbl$value <- c(array*mask^2)
+    time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
+    tbl$time <- rep(time, each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+    
   } else {
-    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Using final stress period results.', call. = FALSE)
-    rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask[,,,dim(array)[4]], prj = prj, crs = crs)
+    if(!is.null(l)) {
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask[,,,l], prj = prj, crs = crs, as_points = as_points, id = id)
+    } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
+      time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
+      tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
+    } else {
+      if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask[,,,dim(array)[4]], prj = prj, crs = crs, as_points = as_points, id = id)
+    }
   }
+  
+  return(tbl)
 }
 
 #' Title
@@ -328,13 +437,22 @@ rmf_as_tibble.rmf_list <- function(obj,
                                    ijk = NULL,
                                    prj = NULL,
                                    crs = NULL,
-                                   as_points = TRUE) {
+                                   as_points = FALSE, 
+                                   id = 'r') {
   
   if(!is.null(ijk)) {
     ijk_id <- rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = 'modflow')
     obj_id <-  rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'modflow')
     obj <- subset(obj, obj_id %in% ijk_id)
   }
+  
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
+  cbd <- rmfi_confining_beds(dis)
+  nnlay <- which(!cbd)
+  tops <- dis$top
+  botm <- dis$botm[,,nnlay]
+  if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+  z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
   
   if(as_points) {
     coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
@@ -344,16 +462,16 @@ rmf_as_tibble.rmf_list <- function(obj,
       coords$x <- coords_prj$x
       coords_y <- coords_prj$y
     }
-    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis))
+    df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis), type = 'r')
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
-    df <- cbind(df, data, coords)
+    df <- tibble::as_tibble(cbind(df, data, coords))
     
   } else {
     xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
-    id <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+    ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     xWidth <- dis$delr[obj$j]
     yWidth <- dis$delc[obj$i]
-    positions <- data.frame(id = rep(id, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4), z=rep(xy$z, each = 4))
+    positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
     positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
     positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
     positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
@@ -363,19 +481,29 @@ rmf_as_tibble.rmf_list <- function(obj,
     positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
     positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
-    values <- cbind(id, data)
+    values <- cbind(data.frame(id = ids), data)
     if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,z=positions$z,prj=prj)
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$y, prj=prj)
       positions$x <- new_positions$x
       positions$y <- new_positions$y
-      positions$z <- new_positions$z
     }
     if(!is.null(crs)) {
-      positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
+      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
+      positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
     }
-    df <- tibble::as_tibble(na.omit(merge(values, positions, by=c("id"))))
+    df <- tibble::as_tibble(merge(values, positions, by=c("id")))
   }
-  return(tibble::as_tibble(df))
+  
+  df$top <- tops[df$id] + z_ref
+  df$botm <- botm[df$id] + z_ref
+  
+  if(id == 'modflow') {
+    df$id <- rmf_convert_id_to_id(df$id, dis = dis, from = 'r', to = 'modflow')
+  } else if(id != 'r') {
+    df$id <- NULL
+  }
+  
+  return(df)
 }
 
 #' Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values
@@ -1562,8 +1690,12 @@ convert_ibound_to_neighbours <- function(...) {
 #' @export
 rmf_convert_id_to_id = function(id, dis, from = 'modflow', to = 'r') {
   
-  ijk <-  rmf_convert_id_to_ijk(id, dis = dis, type = from)
-  idn <-  rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = to)
+  if(from == to) {
+    idn <- id
+  } else {
+    ijk <-  rmf_convert_id_to_ijk(id, dis = dis, type = from)
+    idn <-  rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = to)
+  }
   
   return(idn)
   
