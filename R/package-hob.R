@@ -30,11 +30,11 @@ rmf_create_hob <- function(locations,
                            tomulth = 1,
                            itt = 1,
                            unique_obsnam = FALSE) {
-      
+  
   # error checks in locations & time_series
   if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations data.frame must have columns x, y, name, top and bottom', call. = FALSE)
   if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
-
+  
   # set locations tops and bottoms
   locations_top <- cbind(locations[,c('x','y','top')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
   locations_bottom <- cbind(locations[,c('x','y','bottom')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
@@ -48,9 +48,19 @@ rmf_create_hob <- function(locations,
     warning('Removing observations outside the grid domain: ', paste(na_names, collapse = ' '), call. = FALSE)
     if(nrow(locations_top) == 0 || nrow(locations_bottom) == 0 || nrow(locations) == 0) stop('No observations inside grid domain', call. = FALSE)
   }
+  if(!setequal(locations$name, time_series$name)) {
+    na_names <- setdiff(union(locations$name, time_series$name), intersect(locations$name, time_series$name))
+    warning('Following observations are not present in both locations and time series data.frames and are therefore removed: ', 
+            paste(na_names, collapse= ' '), call. = FALSE)
+    locations <- subset(locations, !(name %in% na_names))
+    time_series <- subset(time_series, !(name %in% na_names))
+    if(nrow(time_series) == 0) stop('time series is empty', call. = FALSE)
+    if(nrow(locations) == 0) stop('locations is empty', call. = FALSE)
+  }
+  
   locations_top$k <- ifelse(locations_top$loff == 0.5, locations_top$k + 1, locations_top$k)
   locations_bottom$k <- ifelse(locations_bottom$loff == -0.5, locations_bottom$k - 1, locations_bottom$k)  
-
+  
   # hob
   hob <- list()
   hob$dimensions <- list()
@@ -79,7 +89,7 @@ rmf_create_hob <- function(locations,
     ts_id <- which(time_series$name == locations$name[i])
     df$row[ts_id] <- locations_top$i[i]
     df$column[ts_id] <- locations_top$j[i]
-    first_greater_than <- function(x, y) which(y > x)[1]
+    first_greater_than <- function(x, y) which(y >= x)[1]
     if(length(ts_id) > 1) df$irefsp[ts_id] <- -length(ts_id)
     if(length(ts_id) == 1) df$irefsp[ts_id] <- first_greater_than(time_series$time[ts_id], cumsum(dis$perlen))
     df$nrefsp[ts_id] <- abs(df$irefsp[ts_id])
