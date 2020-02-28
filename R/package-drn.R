@@ -46,7 +46,7 @@ rmf_create_drn <-  function(...,
 #' @param file filename; typically '*.drn'
 #' @param dis an \code{RMODFLOW} dis object
 #' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
-
+#' @export
 #' @return \code{RMODFLOW} drn object
 #' @seealso \code{\link{rmf_write_drn}}, \code{\link{rmf_create_drn}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm}
 

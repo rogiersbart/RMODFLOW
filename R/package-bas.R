@@ -10,8 +10,8 @@
 #' @param showprogress logical; should progress information be displayed?
 #' @param stoperror logical; should the model be stopped based on budget percent discrepancy?
 #' @param stoper numeric; threshold budget percent discrepancy
-#' @param ibound 3d array specifying active (1), inactive (0) or constant head (0) status of all cells
-#' @param strt 3d array specifying starting heads
+#' @param ibound 3d array specifying active (1), inactive (0) or constant head (-1) status of all cells; defaults to all cells active
+#' @param strt 3d array specifying starting heads; defaults to \code{dis$top} for all layers
 #' @return Object of class bas
 #' @export
 #' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
@@ -25,7 +25,7 @@ rmf_create_bas <- function(dis,
                            stoper = 1,
                            ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                            hnoflo = -999,
-                           strt = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
+                           strt = rmf_create_array(dis$top, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
       
   bas <- NULL
   

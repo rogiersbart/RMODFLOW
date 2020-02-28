@@ -100,7 +100,10 @@ print.dis <- function(dis, n = 5) {
   # }
   
   # delr & delc
-  if(sum(dis$delr)/dis$ncol == dis$delr[1]) {
+  cnst_delr <- isTRUE(do.call(all.equal, as.list(range(dis$delr) / mean(dis$delr))))
+  cnst_delc <- isTRUE(do.call(all.equal, as.list(range(dis$delc) / mean(dis$delc))))
+  
+  if(cnst_delr) {
     delr <- c(dis$delr[1], '(constant)') 
   } else {
     if(dis$ncol > n) {
@@ -109,7 +112,7 @@ print.dis <- function(dis, n = 5) {
       delr <- dis$delr
     }
   }
-  if(sum(dis$delc)/dis$nrow == dis$delc[1]) {
+  if(cnst_delc) {
     delc <- c(dis$delc[1], '(constant)')
   } else {
     if(dis$nrow > n) {

@@ -1020,19 +1020,24 @@ rmf_convert_cbc_to_darcy <- function(cbc,
 #' 
 #' @param dis dis object
 #' @param hed hed object
-#' @return dis object
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}
+#' @return \code{RMODFLOW} dis object corresponding to the saturated domain.
 #' @export
 rmf_convert_dis_to_saturated_dis <- function(dis,
                                              hed, 
-                                             l = NULL) {
-  if(length(dim(hed))==4) {
+                                             l = NULL,
+                                             na_values = NULL) {
+  if(length(dim(hed)) == 4) {
     if(!is.null(l)) {
       hed <- hed[,,,l]
     } else {
-      warning('Using final stress period heads to determine saturated part of grid.', call. = FALSE)
+      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
       hed <- hed[,,,dim(hed)[4]]
     }
   }
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
   # adjusting confining beds  - REVIEW required
   nnlay <- dis$nlay + sum(dis$laycbd != 0)
   cbd <- rmfi_confining_beds(dis)
@@ -1045,7 +1050,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     if (1 %in% cbd) botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
-  dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))
+  dis$top <- rmf_create_array(hed[,,1], dim = c(dis$nrow, dis$ncol))
   return(dis)
 }
 
@@ -1158,7 +1163,34 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
     if(!is.null(k)) dat <- data.frame(x=x,y=y,z=z)
     return(dat)
   }
-}                                                                           
+}
+
+
+#' Obtain the water table elevation from a hydraulic head array
+#'
+#' @param hed 2d, 3d or 4d array with hydraulic heads
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}
+#'
+#' @return \code{rmf_2d_array} with the elevation of the water table, i.e. the first non-NA value in every vertical column of the grid
+#' @export
+#'
+rmf_convert_hed_to_water_table <- function(hed, l = NULL, na_values = NULL) {
+  
+  if(length(dim(hed)) == 4) {
+    if(!is.null(l)) {
+      hed <- hed[,,,l]
+    } else {
+      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
+      hed <- hed[,,,dim(hed)[4]]
+    }
+  }
+  
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
+  wt <- rmf_create_array(apply(hed, c(1,2), function(i) i[which(!is.na(i))[1]]))
+  return(wt)
+}
 
 #' Convert a hob object to a locations data frame
 #'
@@ -1915,6 +1947,20 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   if(is.null(dim(obj))) attributes(obj) <- NULL
   
   return(obj)
+}
+
+#' @export
+"[.hed" <-  function(x, i, j, k, l, ...) {
+  hed <- NextMethod(...)
+  if(length(dim(hed)) < 4) class(hed) <- subset(class(hed), class(hed) != 'hed')
+  return(hed)
+}
+
+#' @export
+"[.ddn" <-  function(x, i, j, k, l, ...) {
+  ddn <- NextMethod(...)
+  if(length(dim(ddn)) < 4) class(ddn) <- subset(class(ddn), class(ddn) != 'ddn')
+  return(ddn)
 }
 
 #' @export
