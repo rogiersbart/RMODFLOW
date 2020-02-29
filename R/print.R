@@ -1618,7 +1618,7 @@ print.cbc <- function(cbc, n = 5, l = -1) {
         cat('Overview of', names(cbc)[i], 'for time step', paste0(ll, ':'), '\n')
         nlay <- nrow(df)
       }
-      print(df[1:nlay,], row.names = FALSE)
+      print(as.data.frame(df[1:nlay,]), row.names = FALSE)
       cat('\n')
     }
   }
