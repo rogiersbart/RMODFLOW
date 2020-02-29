@@ -597,7 +597,7 @@ rmf_plot.hfb <- function(hfb,
                          crs = NULL,
                          size = 1,
                          colour = 'black',
-                         crop = TRUE,
+                         crop = FALSE,
                          add = FALSE,
                          ...) {
   
@@ -956,7 +956,7 @@ rmf_plot.riv <- function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
 #' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
@@ -984,7 +984,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   vecint = 1,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE)) {
@@ -1235,7 +1235,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
 #' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
@@ -1265,7 +1265,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   hed = NULL,
                                   l = NULL,
                                   binwidth = pretty(diff(zlim)/20, 1)[1],
@@ -1653,7 +1653,7 @@ rmf_plot.rmf_4d_array <- function(array,
 #' @param colour_palette a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
 #' @param ... additional arguments passed to either \code{\link{rmf_plot.rmf_3d_array}} if \code{geom = 'polygon'}, \code{ggplot2::geom_point} if \code{geom = 'point'} or \code{ggplot2::geom_path} if \code{geom = 'line'}
 #' 
@@ -1685,7 +1685,7 @@ rmf_plot.rmf_list <- function(obj,
                               colour_palette = rmfi_rev_rainbow,
                               nlevels = 7,
                               legend = ifelse(variable == 'id', FALSE, !add), 
-                              crop = TRUE,
+                              crop = FALSE,
                               gridlines = FALSE,
                               ...) {
   
@@ -1740,11 +1740,13 @@ rmf_plot.rmf_list <- function(obj,
       arr <- rmf_as_array(obj, dis = dis, select = 3, sparse = FALSE, na_value = na_value, fun = fun)
       indx <- rmfi_ifelse0(is.na(na_value), which(!is.na(arr)), which(arr != na_value))
       arr[indx] <- 1
-      rmf_plot(arr, dis = dis, type = ifelse(type == 'grid', type, 'factor'), add = add, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, ...)
+      rmf_plot(arr, dis = dis, type = ifelse(type == 'grid', type, 'factor'), add = add, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines,
+               levels = levels, colour_palette = colour_palette, nlevels = nlevels, legend = legend, ...)
       
     } else {
       arr <- rmf_as_array(obj, dis = dis, select = variable, sparse = FALSE, na_value = na_value, fun = fun)
-      rmf_plot(arr, dis = dis, add = add, type = type, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, ...)
+      rmf_plot(arr, dis = dis, add = add, type = type, i = i, j = j, k = k, prj = prj, crs = crs, crop = crop, gridlines = gridlines, 
+               levels = levels, colour_palette = colour_palette, nlevels = nlevels, legend = legend, ...)
     }
     
   } else {
