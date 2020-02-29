@@ -776,7 +776,7 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
 #' @param hgu character or integer of hgu to plot
 #' @param bas basic file object; optional
 #' @param mask a 3D array with 0 or F indicating inactive cells optional; 
-#' @param colour_palette a colour palette for imaging the array values
+#' @param colour_palette a colour palette for imaging continuous array values. 
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param levels labels that should be used on the factor legend; huf$hgunam is used by default
 #' @param type plot type: 'fill', 'factor' (default) or 'grid'
@@ -934,7 +934,7 @@ rmf_plot.riv <- function(riv,
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound
-#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used. 
+#' @param colour_palette a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
@@ -970,7 +970,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   gridlines = FALSE,
                                   add = FALSE,
                                   height_exaggeration = 100,
-                                  binwidth=ceiling(diff(zlim)/20),
+                                  binwidth=pretty(diff(zlim)/20, 1)[1],
                                   label=TRUE,
                                   prj=NULL,
                                   crs=NULL,
@@ -1118,20 +1118,31 @@ rmf_plot.rmf_2d_array <- function(array,
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(as.data.frame(xy))
-      xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(dis$delc)/min(dis$delc))))
-      xy$x <- rep(xy$x,ceiling(sum(dis$delc)/min(dis$delc)))
-      xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
-      xy$z <- c(xy$z)
-      xy <- as.data.frame(xy)
-      xy <- xy[which(xy$z >= zlim[1] & xy$z <= zlim[2]),]
-      closestGridPoints <- apply(xy[,c('x','y')],1,function(x) which.min((x[1]-xyBackup$x)^2 + (x[2]-xyBackup$y)^2))
-      xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
+      
+      # interpolate if grid is irregular for stat_contour
+      # skip interpolation if grid is regular
+      cnst_delr <- isTRUE(do.call(all.equal, as.list(range(dis$delr) / mean(dis$delr))))
+      cnst_delc <- isTRUE(do.call(all.equal, as.list(range(dis$delc) / mean(dis$delc))))
+      
+      if(!(cnst_delr && cnst_delc)) {
+        # TODO replace akima with interp (?)
+        lx <- min(ceiling(sum(dis$delr)/min(dis$delr)), dis$ncol * 10)
+        ly <- min(ceiling(sum(dis$delc)/min(dis$delc)), dis$nrow * 10)
+        xy <- akima::interp(xy$x, xy$y, xy$z, xo = seq(min(xy$x), max(xy$x), length.out = lx), yo =  seq(min(xy$y), sum(max(xy$y)), length.out = ly))
+        xy$x <- rep(xy$x, ly)
+        xy$y <- rep(xy$y, each = lx)
+        xy$z <- c(xy$z)
+        xy <- as.data.frame(xy)
+        xy <- xy[which(xy$z >= zlim[1] & xy$z <= zlim[2]),]
+        closestGridPoints <- apply(xy[,c('x','y')],1,function(x) which.min((x[1]-xyBackup$x)^2 + (x[2]-xyBackup$y)^2))
+        xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
+      }
       if(crop) {
-        xlim <- c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
-        ylim <- c(min(xy$y, na.rm = T), max(xy$y, na.rm = T))
+        xlim <- c(min(xy$x, na.rm = TRUE), max(xy$x, na.rm = TRUE))
+        ylim <- c(min(xy$y, na.rm = TRUE), max(xy$y, na.rm = TRUE))
       } else {
-        xlim <- c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
-        ylim <- c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
+        xlim <- c(min(xyBackup$x, na.rm = TRUE), max(xyBackup$x, na.rm = TRUE))
+        ylim <- c(min(xyBackup$y, na.rm = TRUE), max(xyBackup$y, na.rm = TRUE))
       }
       rm(xyBackup)
       if(add) {
@@ -1211,7 +1222,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param dis discretization file object
 #' @param bas basic file object; optional
 #' @param mask a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound
-#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.
+#' @param colour_palette a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param zlim vector of minimum and maximum value for the colour scale
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
@@ -1250,7 +1261,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
-                                  binwidth = ceiling(diff(zlim)/20),
+                                  binwidth = pretty(diff(zlim)/20, 1)[1],
                                   label = TRUE,
                                   prj = NULL,
                                   crs = NULL,
@@ -1361,10 +1372,13 @@ rmf_plot.rmf_3d_array <- function(array,
         xy$z <- c(t(array[,j,]*mask[,j,]^2))
         xyBackup <- xy
         xy <- na.omit(as.data.frame(xy))
+        
         thck <- na.omit(c(dis$thck[,j,]*mask[,j,]^2))
-        xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delc)/min(dis$delc))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(thck)/min(thck))))
-        xy$x <- rep(xy$x,ceiling(sum(thck)/min(thck)))
-        xy$y <- rep(xy$y,each=ceiling(sum(dis$delc)/min(dis$delc)))
+        lx <- min(ceiling(sum(dis$delc)/min(dis$delc)), dis$nrow * 10)
+        ly <- min(ceiling(sum(thck)/min(thck)), dis$nlay * 10)
+        xy <- akima::interp(xy$x, xy$y, xy$z, xo = seq(min(xy$x), max(xy$x), length.out = lx), yo = seq(min(xy$y), sum(max(xy$y)), length.out = ly))
+        xy$x <- rep(xy$x, ly)
+        xy$y <- rep(xy$y, each = lx)
         xy$z <- c(xy$z)
       }
     } else if(!is.null(i) & is.null(j)) {
@@ -1412,10 +1426,13 @@ rmf_plot.rmf_3d_array <- function(array,
         xy$z <- c(t(array[i,,]*mask[i,,]^2))
         xyBackup <- xy
         xy <- na.omit(as.data.frame(xy))
+        
         thck <- na.omit(c(dis$thck[i,,]*mask[i,,]^2))
-        xy <- akima::interp(xy$x,xy$y,xy$z,xo=seq(min(xy$x),max(xy$x),length=ceiling(sum(dis$delr)/min(dis$delr))),yo=seq(min(xy$y),sum(max(xy$y)),length=ceiling(sum(thck)/min(thck))))
-        xy$x <- rep(xy$x,ceiling(sum(thck)/min(thck)))
-        xy$y <- rep(xy$y,each=ceiling(sum(dis$delr)/min(dis$delr)))
+        lx <- min(ceiling(sum(dis$delr)/min(dis$delr)), dis$ncol * 10)
+        ly <- min(ceiling(sum(thck)/min(thck)), dis$nlay * 10)
+        xy <- akima::interp(xy$x, xy$y, xy$z, xo = seq(min(xy$x), max(xy$x), length.out = lx), yo = seq(min(xy$y), sum(max(xy$y)), length.out = ly))
+        xy$x <- rep(xy$x, ly)
+        xy$y <- rep(xy$y, each = lx)
         xy$z <- c(xy$z)
       } 
     }
@@ -1468,11 +1485,11 @@ rmf_plot.rmf_3d_array <- function(array,
       closestGridPoints <- apply(xy[,c('x','y')],1,function(x) which.min((x[1]-xyBackup$x)^2 + (x[2]-xyBackup$y)^2))
       xy$z[which(is.na(xyBackup$z[closestGridPoints]))] <- NA
       if(crop) {
-        xlim <- c(min(xy$x, na.rm = T), max(xy$x, na.rm = T))
-        ylim <- c(min(xy$y, na.rm = T), max(xy$y, na.rm = T))
+        xlim <- c(min(xy$x, na.rm = TRUE), max(xy$x, na.rm = TRUE))
+        ylim <- c(min(xy$y, na.rm = TRUE), max(xy$y, na.rm = TRUE))
       } else {
-        xlim <- c(min(xyBackup$x, na.rm = T), max(xyBackup$x, na.rm = T))
-        ylim <- c(min(xyBackup$y, na.rm = T), max(xyBackup$y, na.rm = T))
+        xlim <- c(min(xyBackup$x, na.rm = TRUE), max(xyBackup$x, na.rm = TRUE))
+        ylim <- c(min(xyBackup$y, na.rm = TRUE), max(xyBackup$y, na.rm = TRUE))
       }
       rm(xyBackup)
       if(add) {
@@ -1620,7 +1637,7 @@ rmf_plot.rmf_4d_array <- function(array,
 #' @param add logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
-#' @param colour_palette a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used. 
+#' @param colour_palette a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used. 
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
