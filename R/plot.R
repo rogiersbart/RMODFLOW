@@ -524,13 +524,16 @@ rmf_plot.hed <- function(hed,
                          kper = NULL,
                          kstp = NULL,
                          saturated = FALSE,
+                         type = 'fill',
+                         gridlines = FALSE,
+                         add = FALSE,
                          ...) {
   
   if(inherits(hed, 'rmf_4d_array')) {
     # skip if ijk are specified and a time series should be plotted
     if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
       if(is.null(l) && (is.null(kper) && is.null(kstp))) {
-        if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
+        if(dim(hed)[4] > 1) warning('Plotting final time step results.', call. = FALSE)
         l <- dim(hed)[4]
       }
       
@@ -543,17 +546,21 @@ rmf_plot.hed <- function(hed,
       
       if(saturated) {  
         satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
-        rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, ...)
+        p <- rmf_plot(hed[,,,l], dis=satdis, i=i,j=j,k=k, gridlines = FALSE, type = type, add = add, ...)
+        if(isTRUE(gridlines) || is.character(gridlines)) {
+          p <- p + rmf_plot(hed[,,,l], dis = dis, i=i, j=j, k=k, type = 'grid', gridlines = gridlines, add = TRUE, ...)
+        }
+        return(p)
       } else {
-        rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+        rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, gridlines = gridlines, type = type, add = add, ...)
       }
     } else {
-      rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, ...)
+      rmf_plot.rmf_4d_array(hed, dis = dis, i=i, j=j, k=k, l=l, gridlines = gridlines, type = type, add = add, ...)
     }
   } else if(inherits(hed, 'rmf_3d_array')) {
-    rmf_plot.rmf_3d_array(hed, dis = dis, i=i, j=j, k=k, ...)
+    rmf_plot.rmf_3d_array(hed, dis = dis, i=i, j=j, k=k, gridlines = gridlines, type = type, add = add, ...)
   } else if(inherits(hed, 'rmf_2d_array')) {
-    rmf_plot.rmf_2d_array(hed, dis = dis, i=i, j=j, ...)
+    rmf_plot.rmf_2d_array(hed, dis = dis, i=i, j=j, gridlines = gridlines, type = type, add = add, ...)
   } else {
     stop('Array is not of class rmf_2d_array, rmf_3d_array or rmf_4d_array. Is the array subsetted ?', call. = FALSE)
   }
@@ -1281,8 +1288,8 @@ rmf_plot.rmf_3d_array <- function(array,
     p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,
                   levels = levels, add=add, crop = crop, prj = prj, crs = crs, 
                   binwidth=binwidth, label=label, vecint=vecint, legend=legend, uvw = uvw, ...)
-    if(gridlines) {
-      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, crop=crop, prj=prj,crs=crs,...))
+    if(isTRUE(gridlines) || is.character(gridlines)) {
+      return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, gridlines=gridlines, crop=crop, prj=prj,crs=crs,...))
     } else {
       return(p)
     }
@@ -1607,14 +1614,20 @@ rmf_plot.rmf_4d_array <- function(array,
   if(!all(attr(array, 'dimlabels') == c("i", "j", "k", "l"))) {
     stop('Array needs to represent dimensions i, j, k & l. Is the array transposed or subsetted ?', call. = FALSE)
   }
+  if(is.null(i) & is.null(j) & is.null(k) & is.null(l)) {
+    stop('Please provide i, j, k and/or l.', call. = FALSE)
+  }
   if(!is.null(l)) {
-    rmf_plot(rmf_create_array(array(array[,,,l],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
+    rmf_plot(array[,,,l], dis=dis, i=i, j=j, k=k, ...)
   } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
-    ggplot2::ggplot(na.omit(data.frame(value=c(array[i,j,k,]), time = attributes(array)$totim)),ggplot2::aes(x=time,y=value))+
-      rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point())
+    time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
+    tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
+    
+    return(ggplot2::ggplot(na.omit(tbl), ggplot2::aes(x = time, y = value)) +
+              rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point()))
   } else {
-    if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-    rmf_plot(rmf_create_array(array(array[,,,dim(array)[4]],dim=dim(array)[1:3])), dis=dis, i=i, j=j, k=k, ...)
+    if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
+    rmf_plot(array[,,,dim(array)[4]], dis=dis, i=i, j=j, k=k, ...)
   }
 }
 

@@ -1185,7 +1185,8 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     if (1 %in% cbd) botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
-  dis$top <- rmf_create_array(hed[,,1], dim = c(dis$nrow, dis$ncol))
+  dis$top <- rmf_convert_hed_to_water_table(hed)
+  # dis$top <- rmf_create_array(hed[,,1], dim = c(dis$nrow, dis$ncol))
   return(dis)
 }
 
