@@ -2403,15 +2403,17 @@ rmf_gradient <- function(...) {
 #'
 #' @param obj 2d array with the scalars
 #' @param dis \code{RMODFLOW} dis object
-#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param na_values optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x and y components of the gradient field as 2d arrays
-#' @details The gradient is evaluated in the direction of increasing x & y values.
+#' @details The gradient is evaluated in the direction of increasing x & y values. 
+#' Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_2d_array
 #' 
-rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+rmf_gradient.rmf_2d_array <- function(obj, dis, na_values = NULL, mask = obj*0 + 1) {
     
   coords <- rmf_cell_coordinates(dis)
   x <- coords$x[1,,1]
@@ -2420,8 +2422,8 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
   n <- dis$nrow
   m <- dis$ncol
   
-  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
-  obj <- obj*mask
+  if(!is.null(na_values)) obj[which(obj %in% na_values)] <- 0
+  obj <- obj*(mask^2)
     
   gX <- gY <- 0 * obj
   if(n > 1) {
@@ -2445,15 +2447,17 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #'
 #' @param obj 3d array with the scalars
 #' @param dis \code{RMODFLOW} dis object
-#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param na_values optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x, y and z components of the gradient field as 3d arrays
 #' @details The gradient is evaluated in the direction of increasing x, y & z values.
+#' Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_3d_array
 #' 
-rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+rmf_gradient.rmf_3d_array <- function(obj, dis, na_values = NULL, mask = obj*0 + 1) {
   
   coords <- rmf_cell_coordinates(dis)
   x <- coords$x[1,,1]
@@ -2464,8 +2468,8 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
   m <- dis$ncol
   k <- dis$nlay
   
-  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
-  obj <- obj*mask
+  if(!is.null(na_values)) obj[which(obj %in% na_values)] <- 0
+  obj <- obj*(mask^2)
   
   gX <- gY <- gZ <- 0 * obj
   if(n > 1) {
@@ -2501,6 +2505,7 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_4d_array
 #' 
 rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
   if(missing(l)) stop('Please specify a l argument')

@@ -1119,7 +1119,7 @@ rmf_plot.riv <- function(riv,
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
 #' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
-#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param vecsize vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.
 #' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... ignored
@@ -1148,7 +1148,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   plot3d=FALSE,
                                   height=NULL,
                                   crop = FALSE,
-                                  vecint = 1,
+                                  vecsize = NULL,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
                                   ...) {
@@ -1189,7 +1189,7 @@ rmf_plot.rmf_2d_array <- function(array,
       #   p <- rmf_plot(sub_array, dis = dis, i = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
       #                 type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
       #                 height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height, 
-      #                 vecint = vecint, uvw=uvw,legend=legend)
+      #                 vecsize = vecsize, uvw=uvw,legend=legend)
       #   return(p)
       #   
       # } else if("i" %in% attr(array, 'dimlabels')) {
@@ -1203,7 +1203,7 @@ rmf_plot.rmf_2d_array <- function(array,
       #   p <- rmf_plot(sub_array, dis = dis, j = 1, bas = bas, mask = sub_mask, zlim = zlim, colour_palette = colour_palette, nlevels = nlevels,
       #                 type = type, levels = levels, gridlines = gridlines, add = add, crop = crop, prj = prj, crs = crs,
       #                 height_exaggeration = height_exaggeration, binwidth = binwidth, label = label, alpha = alpha, plot3d = plot3d, height = height,
-      #                 vecint = vecint, uvw=uvw,legend=legend)
+      #                 vecsize = vecsize, uvw=uvw,legend=legend)
       #   return(p)
       # }
     }
@@ -1341,8 +1341,7 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       vector_df$u <- -c(t(grad$x*mask^2))
       vector_df$v <- -c(t(grad$y*mask^2))
-      vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
-      vecsize <- 0.75*vecint
+
       if(add) {
         return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
                     ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
@@ -1385,7 +1384,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param label logical; should labels be added to contour plot
 #' @param prj projection file object
 #' @param crs coordinate reference system for the plot
-#' @param vecint positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing
+#' @param vecsize vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.
 #' @param uvw optional named list with u, v and w vectors or 3d arrays specifying the vector components in the x, y and z direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
 #' @param ... parameters provided to plot.rmf_2d_array
@@ -1415,7 +1414,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   label = TRUE,
                                   prj = NULL,
                                   crs = NULL,
-                                  vecint = 1,
+                                  vecsize = NULL,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
                                   ...) {
@@ -1430,7 +1429,7 @@ rmf_plot.rmf_3d_array <- function(array,
     satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
     p <- rmf_plot(array, dis = satdis, i=i,j=j,k=k,bas=bas,mask=mask,zlim=zlim,colour_palette=colour_palette,nlevels=nlevels,type=type,add=add,
                   levels = levels, add=add, crop = crop, prj = prj, crs = crs, 
-                  binwidth=binwidth, label=label, vecint=vecint, legend=legend, uvw = uvw, ...)
+                  binwidth=binwidth, label=label, vecsize=vecsize, legend=legend, uvw = uvw, ...)
     if(isTRUE(gridlines) || is.character(gridlines)) {
       return(p + rmf_plot(array, dis = dis, i=i,j=j,k=k,bas=bas,mask=mask,type='grid',add=TRUE, gridlines=gridlines, crop=crop, prj=prj,crs=crs,...))
     } else {
@@ -1442,14 +1441,12 @@ rmf_plot.rmf_3d_array <- function(array,
   if(!is.null(k)) {
     if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Make sure k index is adjusted correctly if the array explicitly represents Quasi-3D confining beds.', 
                                      call. = FALSE)
-    array <- array[,,k]
-    mask <- mask[,,k]
     if(!is.null(uvw)) {
       if(!is.null(attr(uvw$u, 'dim'))) uvw$u <- uvw$u[,,k]
       if(!is.null(attr(uvw$v, 'dim'))) uvw$v <- uvw$v[,,k]
     }
-    rmf_plot(array, dis, mask=mask, zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, 
-             binwidth=binwidth, label=label, vecint=vecint, legend=legend, uvw = uvw, ...)
+    rmf_plot(array[,,k], dis=dis, mask=mask[,,k], zlim=zlim, colour_palette = colour_palette, nlevels = nlevels, type=type, levels = levels, gridlines = gridlines, add=add, crop = crop, prj = prj, crs = crs, 
+             binwidth=binwidth, label=label, vecsize=vecsize, legend=legend, uvw = uvw, ...)
   } else {
     # cross-section
     # datapoly
@@ -1662,8 +1659,7 @@ rmf_plot.rmf_3d_array <- function(array,
         vector_df$v <- -c(grad$z[i,,]*mask[i,,]^2)
       }
       if(crop) vector_df <- na.omit(vector_df)
-      vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
-      vecsize <- 0.75*vecint
+
       if(add) {
         return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
                     ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
