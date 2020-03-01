@@ -185,8 +185,8 @@ rmf_plot.bud <-  function(bud,
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
 #' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
 #' @param active_only logical; indicating if only the active cells should be plotted for list-directed components of the cbc object. Non-active cells are set to NA. Defaults to FALSE.
-#' @param hed optional hed object for only plotting the saturated part of the grid; possibly subsetted with time step number. Also used in \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'. 
-#' @param porosity optional 3d array with porosity values passed to \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'.
+#' @param hed optional hed object for only plotting the saturated part of the grid; possibly subsetted with time step number. Also used in \code{\link{rmf_convert_cbc_to_darcy}} when \code{flux = 'darcy'} and \code{type = 'vector'}. 
+#' @param porosity optional 3d array with porosity values passed to \code{\link{rmf_convert_cbc_to_darcy}} when \code{flux = 'darcy'} and \code{type = 'vector'}.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}
 #' 
 #' @details Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
@@ -230,8 +230,9 @@ rmf_plot.cbc <- function(cbc,
   # skip if ijk are specified and a time series should be plotted
   if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
     if(is.null(l) && (is.null(kper) && is.null(kstp))) {
-      if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-      l <- sum(dis$nstp)
+      max_stp <- ifelse(inherits(obj, 'rmf_list'), length(unique(obj$nstp)), dim(obj)[4])
+      if(max_stp > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- max_stp
     }
     
     if(is.null(l)) {
@@ -242,7 +243,7 @@ rmf_plot.cbc <- function(cbc,
     if(inherits(obj, 'rmf_list')) {
       if(!(l %in% obj$nstp)) stop('No output written for specified time step.', call. = FALSE)
       obj <- subset(obj, nstp == l)
-      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'flow', active_only = active_only, hed = hed, type = type, ...)
+      rmf_plot(obj, dis = dis, i=i, j=j, k=k, variable = 'value', active_only = active_only, hed = hed, type = type, ...)
     } else {
       if(!(l %in% attr(obj, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
       rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, ...)
@@ -252,7 +253,7 @@ rmf_plot.cbc <- function(cbc,
     if(inherits(obj, 'rmf_list')) {
       convert <- function(l) {
         subset(obj, nstp == l) %>%
-          rmf_as_array(dis = dis, sparse = FALSE, na_value = ifelse(active_only, NA, 0), variable = which(colnames(obj) == 'flow'))
+          rmf_as_array(dis = dis, sparse = FALSE, na_value = ifelse(active_only, NA, 0), variable = which(colnames(obj) == 'value'))
       } 
       obj <- lapply(attr(obj, 'nstp'), convert) %>%
         abind::abind(along = 4) %>%
@@ -1688,7 +1689,7 @@ rmf_plot.rmf_3d_array <- function(array,
 #' @param j column number to plot
 #' @param k layer number to plot
 #' @param l time step number to plot
-#' @param ... parameters provided to plot.rmf_3d_array
+#' @param ... parameters provided to \code{\link{rmf_plot.rmf_3d_array}}
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @details specifying all of the \code{i, j & k} arguments will plot a time series at that cell location
 #' @method rmf_plot rmf_4d_array

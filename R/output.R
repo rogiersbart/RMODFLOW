@@ -211,13 +211,13 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                 if(is.null(cbc[[name]]) || is.array(cbc[[name]])) {
                   nstp <- ifelse(is.null(dis), 1, stp_nr)
                   cbc[[name]] <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j,as.data.frame(df)[,-1], nstp, kper, kstp))
-                  names(cbc[[name]]) <- tolower(c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper','kstp'))
+                  names(cbc[[name]]) <- tolower(c('k','i','j', 'value', if(nval > 1) {ctmp},'nstp', 'kper','kstp'))
                   cbc[[name]] <- rmf_create_list(cbc[[name]])
                   rm(df)
                 } else {
                   nstp <- ifelse(is.null(dis), cbc[[name]][nrow(cbc[[name]]),nstp]+1, stp_nr)
                   df <- as.data.frame(cbind(ijk$k,ijk$i,ijk$j, as.data.frame(df)[,-1], nstp, kper, kstp))
-                  names(df) <- tolower(c('k','i','j', 'flow', if(nval > 1) {ctmp},'nstp', 'kper', 'kstp'))
+                  names(df) <- tolower(c('k','i','j', 'value', if(nval > 1) {ctmp},'nstp', 'kper', 'kstp'))
                   
                   cbc[[name]] <- rbind(cbc[[name]], df)
                 }

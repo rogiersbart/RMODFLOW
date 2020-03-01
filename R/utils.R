@@ -178,6 +178,156 @@ rmf_as_tibble <- function(...) {
   UseMethod('rmf_as_tibble')
 }
 
+#' Convert a RMODFLOW cbc object to a tibble
+#'
+#' @param cbc \code{RMODFLOW} cbc object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subset
+#' @param mask optional 3D array with 0 or F indicating inactive cells; defaults to having all cells active
+#' @param ijk optional; a data.frame with i, j and k columns used to select the cells for \code{rmf_list} objects in \code{cbc}
+#' @param prj optional projection file object
+#' @param crs optional coordinate reference system to transform to
+#' @param id type of id used; options are \code{'r'} or \code{'modflow'}. Defaults to \code{'r'}
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
+#'
+#' @details Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+#'
+#' @return a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
+#' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble cbc
+#' 
+rmf_as_tibble.cbc <- function(cbc,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                              ijk = NULL,
+                              prj = NULL,
+                              crs = NULL, 
+                              as_points = FALSE,
+                              id = 'r',
+                              fluxes = 'all') {
+  
+  if(fluxes != 'all') cbc <- cbc[which(names(cbc) %in% fluxes)]
+  
+  set_tbl <- function(obj, flux) {
+    if(inherits(obj, 'rmf_list')) {
+      tbl <- rmf_as_tibble(obj, dis = dis, ijk = ijk, prj = prj, crs = crs, as_points = as_points, id = id)
+      ntimes <- table(tbl$nstp)
+      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], times = ntimes)
+      if(!is.null(attr(obj, 'totim'))) tbl$time <- tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], times = ntimes)
+      if(!is.null(attr(obj, 'delt'))) tbl$delt <- rep(attr(obj, 'delt')[!is.na(attr(obj, 'delt'))], times = ntimes)
+      
+    } else {
+      if(inherits(obj, 'rmf_2d_array')) {
+        warning('Using first layer of mask', call. = FALSE)
+        tbl <- rmf_as_tibble(obj, dis = dis, mask = mask[,,1], prj = prj, crs = crs, as_points = as_points, id = id)
+      } else if(inherits(obj, 'rmf_3d_array')) {
+        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      } else if(inherits(obj, 'rmf_4d_array')) {
+        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, l = l, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      }
+      if(!is.null(attr(obj, 'nstp'))) tbl$nstp <- rep(attr(obj, 'nstp')[!is.na(attr(obj, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+      if(!is.null(attr(obj, 'totim'))) tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+      if(!is.null(attr(obj, 'kper'))) tbl$kper <- rep(attr(obj, 'kper')[!is.na(attr(obj, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+      if(!is.null(attr(obj, 'kstp'))) tbl$kstp <- rep(attr(obj, 'kstp')[!is.na(attr(obj, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+    }
+    tbl$flux <- flux
+    return(tbl)
+  }
+  
+  set_empty_cols <- function(tbl) {
+    extra <- nms[which(!(nms %in% colnames(tbl)))]
+    if(length(extra) > 0) tbl[,extra] <- NA
+    return(tbl)
+  }
+  
+  tbls <- lapply(seq_along(cbc), function(i) set_tbl(cbc[[i]], names(cbc)[i]))
+  nms <- unique(unlist(lapply(tbls, colnames)))
+  tbls <- lapply(tbls, set_empty_cols)
+  
+  tbls <- do.call(rbind, tbls)
+  
+  return(tbls)
+}
+
+#' Title
+#'
+#' @param array 
+#' @param dis 
+#' @param i 
+#' @param j 
+#' @param k 
+#' @param l 
+#' @param as_points 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_as_tibble.ddn <- function(array,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              as_points = FALSE,
+                              ...) {
+  
+  tbl <- rmf_as_tibble.rmf_4d_array(array, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  if(!is.null(attr(array, 'nstp'))) tbl$nstp <- rep(attr(array, 'nstp')[!is.na(attr(array, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'totim'))) tbl$totim <- rep(attr(array, 'totim')[!is.na(attr(array, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'pertim'))) tbl$pertim <- rep(attr(array, 'pertim')[!is.na(attr(array, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'kper'))) tbl$kper <- rep(attr(array, 'kper')[!is.na(attr(array, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'kstp'))) tbl$kstp <- rep(attr(array, 'kstp')[!is.na(attr(array, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  
+  return(tbl)
+}
+
+#' Title
+#'
+#' @param array 
+#' @param dis 
+#' @param i 
+#' @param j 
+#' @param k 
+#' @param l 
+#' @param as_points 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_as_tibble.hed <- function(array,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              as_points = FALSE,
+                              ...) {
+  
+  tbl <- rmf_as_tibble.rmf_4d_array(array, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  if(!is.null(attr(array, 'nstp'))) tbl$nstp <- rep(attr(array, 'nstp')[!is.na(attr(array, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'totim'))) tbl$totim <- rep(attr(array, 'totim')[!is.na(attr(array, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'pertim'))) tbl$pertim <- rep(attr(array, 'pertim')[!is.na(attr(array, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'kper'))) tbl$kper <- rep(attr(array, 'kper')[!is.na(attr(array, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(array, 'kstp'))) tbl$kstp <- rep(attr(array, 'kstp')[!is.na(attr(array, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  
+  return(tbl)
+}
+
 #' Title
 #'
 #' @param array 
@@ -186,6 +336,7 @@ rmf_as_tibble <- function(...) {
 #' @param prj 
 #' @param crs 
 #' @param as_points 
+#' @param id 
 #'
 #' @return
 #' @export
@@ -253,6 +404,8 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #' @param i 
 #' @param j 
 #' @param k 
+#' @param as_points 
+#' @param id 
 #'
 #' @return
 #' @export
@@ -416,6 +569,9 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @param i 
 #' @param j 
 #' @param k 
+#' @param l 
+#' @param as_points 
+#' @param id 
 #'
 #' @return
 #' @export
@@ -427,7 +583,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        j = NULL,
                                        k = NULL,
                                        l = NULL,
-                                       mask = array * 0 + 1,
+                                       mask = array[,,,1] * 0 + 1,
                                        prj = NULL,
                                        crs = NULL, 
                                        as_points = FALSE,
@@ -438,19 +594,20 @@ rmf_as_tibble.rmf_4d_array <- function(array,
     if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
     
     mask[which(mask == 0)] <- NA
+    mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
     tbl$value <- c(array*mask^2)
     time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
     tbl$time <- rep(time, each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     
   } else {
     if(!is.null(l)) {
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask[,,,l], prj = prj, crs = crs, as_points = as_points, id = id)
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
     } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
       time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
       tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
     } else {
       if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask[,,,dim(array)[4]], prj = prj, crs = crs, as_points = as_points, id = id)
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
     }
   }
   
@@ -465,6 +622,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 #' @param prj 
 #' @param crs 
 #' @param as_points 
+#' @param id 
 #'
 #' @return
 #' @export
@@ -1085,8 +1243,8 @@ rmf_convert_bcf_to_lpf <- function(bcf,
 #' @param cbc \code{RMODFLOW} cbc object
 #' @param dis \code{RMODFLOW} dis object
 #' @param hed \code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used
-#' @param porosity optional 3d array with porosity values. If used, the groundwater velocities are returned.
-#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities (or groundwater velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
+#' @param porosity optional 3d array with porosity values. If used, the average linear groundwater flow velocities are returned.
+#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent Darcy velocities (or average linear groundwater flow velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 #' @export
 rmf_convert_cbc_to_darcy <- function(cbc,
                                      dis,
