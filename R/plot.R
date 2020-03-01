@@ -61,7 +61,7 @@ rmf_plot.bud <-  function(bud,
   }
   
   df <- lapply(bud, tidy_df)
-
+  
   # plot
   
   if(what %in% c('difference', 'discrepancy', 'total')) {
@@ -251,14 +251,14 @@ rmf_plot.cbc <- function(cbc,
   } else {
     if(inherits(obj, 'rmf_list')) {
       convert <- function(l) {
-         subset(obj, nstp == l) %>%
+        subset(obj, nstp == l) %>%
           rmf_as_array(dis = dis, sparse = FALSE, na_value = ifelse(active_only, NA, 0), variable = which(colnames(obj) == 'flow'))
       } 
       obj <- lapply(attr(obj, 'nstp'), convert) %>%
-                abind::abind(along = 4) %>%
-                structure(dimnames = NULL, totim = attr(obj, 'totim')) %>%
-                rmf_create_array() 
-                
+        abind::abind(along = 4) %>%
+        structure(dimnames = NULL, totim = attr(obj, 'totim')) %>%
+        rmf_create_array() 
+      
       rmf_plot(obj, dis = dis, i=i, j=j, k=k, l=l, hed = hed, type = type, ...)
       
     } else {
@@ -633,7 +633,7 @@ rmf_plot.hfb <- function(hfb,
     data$id <- rmf_convert_ijk_to_id(i=data$i, j=data$j, k=1, dis = dis, type = 'modflow')
     
     # coordinate tibble
-  
+    
     get_face <- function(data) {
       i <- data$i
       j <- data$j
@@ -671,7 +671,7 @@ rmf_plot.hfb <- function(hfb,
     df <- lapply(1:nrow(data), function(i) get_face(data[i,]))
     df <- do.call(rbind, df)
     df$row <- rep(1:(nrow(df)/2), each = 2)
-
+    
     # plot
     if(variable == 'id') {
       p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row), size = size, colour = colour)
@@ -883,11 +883,11 @@ rmf_plot.hob <- function(hob,
         return(list(p_grid, ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), ...)))
       } else {
         return(ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
-               p_grid +
-               ggplot2::geom_point(...) +
-               ggplot2::xlab(lbl[1]) +
-               ggplot2::ylab(lbl[2]) +
-               lims)
+                 p_grid +
+                 ggplot2::geom_point(...) +
+                 ggplot2::xlab(lbl[1]) +
+                 ggplot2::ylab(lbl[2]) +
+                 lims)
       }
     } else {
       # rmf_plot.rmf_list
@@ -1213,29 +1213,8 @@ rmf_plot.rmf_2d_array <- function(array,
     names(xy) <- c('x','y')
     mask[which(mask==0)] <- NA
     
-    ids <- factor(1:(dis$nrow*dis$ncol))
-    xWidth <- rep(dis$delr,dis$nrow)
-    yWidth <- rep(dis$delc,each=dis$ncol)
-    positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-    positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-    positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-    positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-    positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-    positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-    positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-    values <- data.frame(id = ids,value = c(t(array*mask^2)))
-    if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
-      positions$x <- new_positions$x
-      positions$y <- new_positions$y
-    }
-    if(!is.null(crs)) {
-      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-      positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
-    }
-    datapoly <- merge(values, positions, by=c("id"))
+    datapoly <- rmf_as_tibble(array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = FALSE)
+    datapoly$id <- factor(datapoly$id)
     if(crop) datapoly <- na.omit(datapoly)
     
     # legend
@@ -1284,7 +1263,7 @@ rmf_plot.rmf_2d_array <- function(array,
         xy$y <- new_xy$y
       }
       if(!is.null(crs)) {
-        xy <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        xy <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))
       }
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
@@ -1340,7 +1319,7 @@ rmf_plot.rmf_2d_array <- function(array,
         }
       }
     } else if(type == 'vector') {
-
+      
       # x & y are center of cells
       vector_df <- xy
       if(!is.null(prj)) {
@@ -1350,7 +1329,7 @@ rmf_plot.rmf_2d_array <- function(array,
       }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))
       }
       if(crop) vector_df <- na.omit(vector_df)
       # add gradient values; negative because want to show arrow from high to low
@@ -1416,10 +1395,10 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @method rmf_plot rmf_3d_array
 #' @export
 rmf_plot.rmf_3d_array <- function(array,
+                                  dis,
                                   i = NULL,
                                   j = NULL,
                                   k = NULL,
-                                  dis,
                                   bas = NULL,
                                   mask = rmfi_ifelse0(is.null(bas),array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1)), bas$ibound)),
                                   zlim = range(array[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)][as.logical(mask[rmfi_ifelse0(is.null(i),c(1:dim(array)[1]),i),rmfi_ifelse0(is.null(j),c(1:dim(array)[2]),j),rmfi_ifelse0(is.null(k),c(1:dim(array)[3]),k)])], finite=TRUE),
@@ -1463,12 +1442,8 @@ rmf_plot.rmf_3d_array <- function(array,
   if(!is.null(k)) {
     if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Make sure k index is adjusted correctly if the array explicitly represents Quasi-3D confining beds.', 
                                      call. = FALSE)
-    zlim <- zlim
-    mask <- mask
     array <- array[,,k]
-    class(array) <- 'rmf_2d_array'
     mask <- mask[,,k]
-    class(mask) <- 'rmf_2d_array'
     if(!is.null(uvw)) {
       if(!is.null(attr(uvw$u, 'dim'))) uvw$u <- uvw$u[,,k]
       if(!is.null(attr(uvw$v, 'dim'))) uvw$v <- uvw$v[,,k]
@@ -1483,47 +1458,28 @@ rmf_plot.rmf_3d_array <- function(array,
     xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
     mask[which(mask==0)] <- NA
     
+    # warnings generated in rmf_as_tibble
     if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
-      warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.', call. = FALSE)
+      # warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
       dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
       botm <- rmfi_ifelse0(dis$nlay + sum(dis$laycbd != 0) > 1, dis$botm[,,cumsum((dis$laycbd != 0) +1)], dis$botm)
       nnlay <- dis$nlay
       dis$center <- botm
       for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
     } else {
-      if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.', call. = FALSE)
+      # if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
       dis$thck <- rmf_calculate_thickness(dis)
       nnlay <- dis$nlay + sum(dis$laycbd != 0)
       dis$center <- dis$botm
       for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
-    }
-
+    }    
+    
+    datapoly <- rmf_as_tibble(array, dis = dis, i = i, j = j, k = k, mask = mask, prj = prj, crs = crs, as_points = FALSE)
+    datapoly$id <- factor(datapoly$id)
+    if(crop) datapoly <- na.omit(datapoly)
+    
     if(is.null(i) & !is.null(j)) {
-      ids <- factor(1:(dis$nrow*nnlay))
-      xWidth <- rep(rev(dis$delc),nnlay)
-      yWidth <- dis$thck[,j,]
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((array[,j,]*mask[,j,]^2)))
-      if(!is.null(prj)) {
-        new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=positions$x,z=positions$y,prj=prj)
-        positions$x <- new_positions$y
-        positions$y <- new_positions$z
-      }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        #warning('Transforming vertical coordinates', call. = FALSE)
-        positions$x <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
-      }
-      datapoly <- merge(values, positions, by=c("id"))
-      if(crop) datapoly <- na.omit(datapoly)
+      
       xlabel <- 'y'
       ylabel <- 'z'
       
@@ -1537,8 +1493,7 @@ rmf_plot.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          #warning('Transforming vertical coordinates', call. = FALSE)
-          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
         }
         xy$z <- c(t(array[,j,]*mask[,j,]^2))
         xyBackup <- xy
@@ -1553,31 +1508,7 @@ rmf_plot.rmf_3d_array <- function(array,
         xy$z <- c(xy$z)
       }
     } else if(!is.null(i) & is.null(j)) {
-      ids <- factor(1:(dis$ncol*nnlay))
-      xWidth <- rep(dis$delr,nnlay)
-      yWidth <- dis$thck[i,,]
-      positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
-      positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-      positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-      positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-      positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-      positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-      positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-      values <- data.frame(id = ids,value = c((array[i,,]*mask[i,,]^2)))
-      if(!is.null(prj)) {
-        new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=positions$y,prj=prj)
-        positions$x <- new_positions$x
-        positions$y <- new_positions$z
-      }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        #warning('Transforming vertical coordinates', call. = FALSE)
-        positions$x <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
-      }
-      datapoly <- merge(values, positions, by=c("id"))
-      if(crop) datapoly <- na.omit(datapoly)
+      
       xlabel <- 'x'
       ylabel <- 'z'
       
@@ -1591,8 +1522,7 @@ rmf_plot.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          #warning('Transforming vertical coordinates', call. = FALSE)
-          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
         }
         xy$z <- c(t(array[i,,]*mask[i,,]^2))
         xyBackup <- xy
@@ -1710,8 +1640,7 @@ rmf_plot.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          #warning('Transforming vertical coordinates', call. = FALSE)
-          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
         }
         # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$y[,j,]*mask[,j,]^2))
@@ -1726,28 +1655,27 @@ rmf_plot.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          #warning('Transforming vertical coordinates', call. = FALSE)
-          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))$x
+          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
         }
         # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$x[i,,]*mask[i,,]^2))
         vector_df$v <- -c(grad$z[i,,]*mask[i,,]^2)
       }
-        if(crop) vector_df <- na.omit(vector_df)
-        vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
-        vecsize <- 0.75*vecint
-        if(add) {
-          return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
-                      ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
-                      ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
-        } else {
-          return(ggplot2::ggplot() +
-                   ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
-                   ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
-                   ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
-                   ggplot2::xlab(xlabel) +
-                   ggplot2::ylab(ylabel))
-        }
+      if(crop) vector_df <- na.omit(vector_df)
+      vector_df <- vector_df[seq(1,nrow(vector_df),vecint),]
+      vecsize <- 0.75*vecint
+      if(add) {
+        return(list(ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA),
+                    ggquiver::geom_quiver(data = vector_df, ggplot2::aes(x=x, y=y, u=u, v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize=vecsize),
+                    ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA))) 
+      } else {
+        return(ggplot2::ggplot() +
+                 ggplot2::geom_polygon(data=datapoly, ggplot2::aes(group=id,x=x,y=y),colour = ifelse(gridlines==TRUE,'black',ifelse(gridlines==FALSE,NA,gridlines)),fill=NA) +
+                 ggquiver::geom_quiver(data=vector_df, ggplot2::aes(x=x,y=y,u=u,v=v, colour = sqrt(u^2 + v^2)),show.legend=legend, center = TRUE, vecsize = vecsize) +
+                 ggplot2::scale_colour_gradientn(name, colours=rmfi_ifelse0(is.function(colour_palette), colour_palette(nlevels), colour_palette),  na.value = NA) +
+                 ggplot2::xlab(xlabel) +
+                 ggplot2::ylab(ylabel))
+      }
     } else {
       stop('Please provide valid plot type.', call. = FALSE)
     }
@@ -1789,7 +1717,7 @@ rmf_plot.rmf_4d_array <- function(array,
     tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
     
     return(ggplot2::ggplot(na.omit(tbl), ggplot2::aes(x = time, y = value)) +
-              rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point()))
+             rmfi_ifelse0(dim(array)[4] > 1, ggplot2::geom_path(), ggplot2::geom_point()))
   } else {
     if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
     rmf_plot(array[,,,dim(array)[4]], dis=dis, i=i, j=j, k=k, ...)
@@ -1949,8 +1877,8 @@ rmf_plot.rmf_list <- function(obj,
       #   xlim <- rmf_convert_grid_to_xyz(x = x, y = 0, dis = dis, prj = prj)
       #   ylim <- rmf_convert_grid_to_xyz(x = 0, y = y, dis = dis, prj = prj)
       # } else {
-        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = 0, dis = dis, prj = prj)
-        ylim <- rmf_convert_grid_to_xyz(x = 0, y = c(0, sum(dis$delc)), dis = dis, prj = prj)
+      xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = 0, dis = dis, prj = prj)
+      ylim <- rmf_convert_grid_to_xyz(x = 0, y = c(0, sum(dis$delc)), dis = dis, prj = prj)
       # }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
@@ -1970,8 +1898,8 @@ rmf_plot.rmf_list <- function(obj,
       #   if(dis$nlay > 1) top[,,2:dis$nlay] <- dis$botm[,,1:(dis$nlay - 1)]
       #   ylim <- range(c(top[i,,range(obj$k)], dis$botm[i,,range(obj$k)])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
       # } else {
-        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)[i], dis = dis, prj = prj)
-        ylim <- range(c(dis$top[i,], dis$botm[i,,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)[i], dis = dis, prj = prj)
+      ylim <- range(c(dis$top[i,], dis$botm[i,,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
       # }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
@@ -1989,10 +1917,10 @@ rmf_plot.rmf_list <- function(obj,
       #   if(dis$nlay > 1) top[,,2:dis$nlay] <- dis$botm[,,1:(dis$nlay - 1)]
       #   ylim <- range(c(top[,j,range(obj$k)], dis$botm[,j,range(obj$k)])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
       # } else {
-        xlim <- rmf_convert_grid_to_xyz(x = (cumsum(dis$delr) - dis$delr/2)[j], y = c(0, sum(dis$delc)), dis = dis, prj = prj)
-        ylim <- range(c(dis$top[,j], dis$botm[,j,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+      xlim <- rmf_convert_grid_to_xyz(x = (cumsum(dis$delr) - dis$delr/2)[j], y = c(0, sum(dis$delc)), dis = dis, prj = prj)
+      ylim <- range(c(dis$top[,j], dis$botm[,j,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
       # }
-
+      
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
         xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
@@ -2001,8 +1929,8 @@ rmf_plot.rmf_list <- function(obj,
     }
     
     lims <- rmfi_ifelse0(crop, NULL ,ggplot2::lims(x = xlim, y = ylim))
-  
-  
+    
+    
     # set legend
     if(is.logical(legend)) {
       name <- variable
@@ -2041,32 +1969,32 @@ rmf_plot.rmf_list <- function(obj,
     } else {
       if(variable == 'id') {
         if(geom == 'point') return(ggplot2::ggplot() +
-                                   p_grid +
-                                   ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), show.legend = legend, ...) +
-                                   ggplot2::xlab(lbl[1]) +
-                                   ggplot2::ylab(lbl[2]) +
-                                   lims)
+                                     p_grid +
+                                     ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), show.legend = legend, ...) +
+                                     ggplot2::xlab(lbl[1]) +
+                                     ggplot2::ylab(lbl[2]) +
+                                     lims)
         if(geom == 'line') return(ggplot2::ggplot() + 
-                                  p_grid +
-                                  ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group), show.legend = legend, ...) +
-                                  ggplot2::xlab(lbl[1]) +
-                                  ggplot2::ylab(lbl[2]) +
-                                  lims)
+                                    p_grid +
+                                    ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group), show.legend = legend, ...) +
+                                    ggplot2::xlab(lbl[1]) +
+                                    ggplot2::ylab(lbl[2]) +
+                                    lims)
       } else {
         if(geom == 'point') return(ggplot2::ggplot() +
-                                   p_grid +
-                                   ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
-                                   plot_scales +
-                                   ggplot2::xlab(lbl[1]) +
-                                   ggplot2::ylab(lbl[2]) +
-                                   lims)
+                                     p_grid +
+                                     ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
+                                     plot_scales +
+                                     ggplot2::xlab(lbl[1]) +
+                                     ggplot2::ylab(lbl[2]) +
+                                     lims)
         if(geom == 'line') return(ggplot2::ggplot() + 
-                                  p_grid +
-                                  ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
-                                  plot_scales +
-                                  ggplot2::xlab(lbl[1]) +
-                                  ggplot2::ylab(lbl[2]) +
-                                  lims)
+                                    p_grid +
+                                    ggplot2::geom_path(data = df, ggplot2::aes(x = x, y = y, group = group, colour = !!ggplot2::sym(variable)), show.legend = legend, ...) +
+                                    plot_scales +
+                                    ggplot2::xlab(lbl[1]) +
+                                    ggplot2::ylab(lbl[2]) +
+                                    lims)
       }
     }
   }
