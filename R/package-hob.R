@@ -2,7 +2,7 @@
 #' 
 #' \code{rmf_create_hob} creates an RMODFLOW hob object
 #' 
-#' @param locations data.frame with the name, x and y coordinates, and top and bottom of the monitoring well filter
+#' @param locations data.frame or \code{sf POINT} object with the name, x and y coordinates (if data.frame), and top and bottom of the monitoring well filter
 #' @param time_series data.frame with the name of the monitoring well filter and the observation time and head
 #' @param dis RMODFLOW dis object
 #' @param hydraulic_conductivity 3d array with hydraulic conductivity values, for calculating the weights for a multilayer observations
@@ -30,9 +30,22 @@ rmf_create_hob <- function(locations,
                            tomulth = 1,
                            itt = 1,
                            unique_obsnam = FALSE) {
-  
+
+  # locations is sf object
+  if(inherits(locations, 'sf')) {
+    geom <- unique(sf::st_geometry_type(locations))
+    if(length(geom) > 1 || geom != 'POINT') stop('A locations sf object should have geometry type POINT for all features', call. = FALSE)
+    if(!is.na(sf::st_crs(locations))) {
+      if(is.null(prj) || sf::st_crs(locations) != sf::st_crs(prj$projection)) stop('When locations is an sf object with a crs, prj should be provided with the same crs', call. = FALSE)
+    } else {
+      if(!is.null(prj) && !is.na(sf::st_crs(prj$projection))) stop('prj has a crs defined whereas locations does not', call. = FALSE) 
+    }
+    coords <- setNames(as.data.frame(sf::st_coordinates(locations)), c('x', 'y'))
+    locations <- cbind(sf::st_set_geometry(locations, NULL), coords)
+  }
+
   # error checks in locations & time_series
-  if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations data.frame must have columns x, y, name, top and bottom', call. = FALSE)
+  if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations object must have columns x, y, name, top and bottom', call. = FALSE)
   if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
   
   # set locations tops and bottoms
