@@ -114,7 +114,7 @@ rmf_as_list.stars <- function(obj,
                               op = sf::st_intersects,
                               ...) {
   
-  lst <- sf::st_as_sf(obj[select]) %>%
+  lst <- sf::st_as_sf(obj[select], as_points = FALSE, merge = FALSE) %>%
     rmf_as_list(dis = dis, k = k, prj = prj, kper = kper, op = op, ...)
   
   return(lst)
@@ -266,7 +266,7 @@ rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_4d_array
 #' @export
-rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)), prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
 
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -297,7 +297,7 @@ rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @export
 rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r', ...) {
   
-  df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%  
+  df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points, id = 'r', ...) %>%  
     as.data.frame()
   ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
   
@@ -564,4 +564,31 @@ rmf_create_grid <- function(obj,
   
 }
 
+rmf_create_prj <- function(origin = c(0, 0), 
+                           rotation = 0, 
+                           crs = NA) {
+  
+  # TODO
+  # add corner_coord = FALSE when origin represents cell node
+  # add upperleft = TRUE when origin represents upperleft cell
+  
+  prj <- list()
+  # z coordinate
+  origin[3] <- ifelse(length(origin) > 2, origin[3], 0)
+  crs <- sf::st_crs(crs)
+  prj$origin <- origin
+  prj$rotation <- rotation
+  prj$crs <- crs
+  
+  class(prj) <- 'prj'
+  return(prj)
+}
 
+print.prj <- function(prj) {
+  cat('RMODFLOW Projection object:', '\n')
+  cat('Origin coordinates (x y z) of the bottomleft corner:', '\n')
+  cat(' ', prj$origin, '\n')
+  cat('Grid rotation (degrees counterclockwise):', '\n')
+  cat(' ', prj$rotation, '\n')
+  print(prj$crs)
+}
