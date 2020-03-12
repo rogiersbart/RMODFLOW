@@ -1478,6 +1478,8 @@ rmf_plot.rmf_3d_array <- function(array,
     
     if(is.null(i) & !is.null(j)) {
       
+      colnames(datapoly) <- replace(colnames(datapoly), match(c('x', 'y', 'z'), colnames(datapoly)), c('z', 'x', 'y'))
+      
       xlabel <- 'y'
       ylabel <- 'z'
       
@@ -1506,6 +1508,8 @@ rmf_plot.rmf_3d_array <- function(array,
         xy$z <- c(xy$z)
       }
     } else if(!is.null(i) & is.null(j)) {
+      
+      colnames(datapoly) <- replace(colnames(datapoly), match(c('x', 'y', 'z'), colnames(datapoly)), c('x', 'z', 'y'))
       
       xlabel <- 'x'
       ylabel <- 'z'

@@ -170,7 +170,7 @@ rmf_as_sf.rmf_2d_array <- function(array,
   return(df)
 }
 
-#' Generic function to convert rmf_array objects to tibbles
+#' Generic function to convert rmf_array and rmf_list objects to tibbles
 #' 
 #' @rdname rmf_as_tibble
 #' @export
@@ -190,15 +190,16 @@ rmf_as_tibble <- function(...) {
 #' @param ijk optional; a data.frame with i, j and k columns used to select the cells for \code{rmf_list} objects in \code{cbc}
 #' @param prj optional projection file object
 #' @param crs optional coordinate reference system to transform to
-#' @param id type of id used; options are \code{'r'} or \code{'modflow'}. Defaults to \code{'r'}
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id type of id used; options are \code{'r'} or \code{'modflow'}. Defaults to \code{'r'}
 #' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
+#' @param ts_time logical passed to \code{rmf_as_tibble.rmf_4d_array}; should the returned time column represent the cumulative modelled time or the time step numbers. Defaults to TRUE (cumulative modelled time)
 #' @param ... ignored
 #'
 #' @details Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
 #'
-#' @return a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
+#' @return A \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble cbc
@@ -216,6 +217,7 @@ rmf_as_tibble.cbc <- function(cbc,
                               as_points = FALSE,
                               id = 'r',
                               fluxes = 'all',
+                              ts_time = TRUE,
                               ...) {
   
   if(fluxes != 'all') cbc <- cbc[which(names(cbc) %in% fluxes)]
@@ -235,7 +237,7 @@ rmf_as_tibble.cbc <- function(cbc,
       } else if(inherits(obj, 'rmf_3d_array')) {
         tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
       } else if(inherits(obj, 'rmf_4d_array')) {
-        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, l = l, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, l = l, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id, ts_time = ts_time)
       }
       if(!is.null(attr(obj, 'nstp'))) tbl$nstp <- rep(attr(obj, 'nstp')[!is.na(attr(obj, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
       if(!is.null(attr(obj, 'totim'))) tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
@@ -262,7 +264,7 @@ rmf_as_tibble.cbc <- function(cbc,
   return(tbls)
 }
 
-#' Title
+#' Convert a RMODFLOW ddn object to a tibble
 #'
 #' @param ddn \code{RMODFLOW} ddn object
 #' @param dis \code{RMODFLOW} dis object
@@ -273,9 +275,11 @@ rmf_as_tibble.cbc <- function(cbc,
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}}
 #'
-#' @return 
+#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'
 #' @export
-#' 
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble ddn
 #' 
@@ -298,22 +302,25 @@ rmf_as_tibble.ddn <- function(ddn,
   return(tbl)
 }
 
-#' Title
+#' Convert a RMODFLOW hed object to a tibble
 #'
-#' @param array 
-#' @param dis 
-#' @param i 
-#' @param j 
-#' @param k 
-#' @param l 
-#' @param as_points 
-#' @param ... 
+#' @param hed \code{RMODFLOW} hed object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subset
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}}
 #'
-#' @return
+#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'
 #' @export
-#'
-#' @examples
-rmf_as_tibble.hed <- function(array,
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble hed
+rmf_as_tibble.hed <- function(hed,
                               dis,
                               i = NULL,
                               j = NULL,
@@ -322,12 +329,12 @@ rmf_as_tibble.hed <- function(array,
                               as_points = FALSE,
                               ...) {
   
-  tbl <- rmf_as_tibble.rmf_4d_array(array, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
-  if(!is.null(attr(array, 'nstp'))) tbl$nstp <- rep(attr(array, 'nstp')[!is.na(attr(array, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(array, 'totim'))) tbl$totim <- rep(attr(array, 'totim')[!is.na(attr(array, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(array, 'pertim'))) tbl$pertim <- rep(attr(array, 'pertim')[!is.na(attr(array, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(array, 'kper'))) tbl$kper <- rep(attr(array, 'kper')[!is.na(attr(array, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(array, 'kstp'))) tbl$kstp <- rep(attr(array, 'kstp')[!is.na(attr(array, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  tbl <- rmf_as_tibble.rmf_4d_array(hed, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[!is.na(attr(hed, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[!is.na(attr(hed, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[!is.na(attr(hed, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
   
   return(tbl)
 }
@@ -343,8 +350,8 @@ rmf_as_tibble.hed <- function(array,
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
 #' @param ... ignored
 #'
-#' @return a \code{tibble} with columns \code{id, value, x, y} representing the cell's id (either MODFLOW or R style; see the \code{id} argument), array value and
-#' x & y coordinates. If \code{as_points = FALSE}, the x & y coordinates represent the cell's corners, otherwise the cell center.
+#' @return A \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
+#' x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'  
 #' @export
 #' @rdname rmf_as_tibble
@@ -396,6 +403,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   
   if(id == 'modflow') {
     tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+    tbl$id <- as.integer(tbl$id)
   } else if(id != 'r') {
     tbl$id <- NULL
   }
@@ -417,10 +425,12 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
 #' @param ... ignored
 #'  
-#' @return a \code{tibble} with columns \code{id, value, x, y, top, botm, time} representing the cell's id (either MODFLOW or R style; see the \code{id} argument), array value, 
-#' x & y coordinates and top and bottom. If \code{as_points = FALSE}, the x & y coordinates represent the cell's corners, otherwise the cell center. Furthermore if \code{as_points = TRUE},
-#' a \code{z} column is present as well representing the z coordinate of the cell center. 
-#' The \code{i, j & k} arguments are used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}
+#' @return a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'
+#' Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+#' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+#' Providing \code{i or j} can be used for subsetting a cross-section through the array.
 #' 
 #' @export
 #' @rdname rmf_as_tibble
@@ -438,50 +448,43 @@ rmf_as_tibble.rmf_3d_array <- function(array,
                                        id = 'r',
                                        ...) {
   
+  # set 3d tops & botm
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
+  cbd <- rmfi_confining_beds(dis)
+  nnlay <- which(!cbd)
+  tops <- dis$top
+  botm <- dis$botm[,,nnlay]
+  if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+  center <- botm + (tops - botm)/2
+  z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+  
+  # return full array
   if(is.null(i) && is.null(j) && is.null(k)) {
     
     tbl <- rmf_as_tibble(array = array[,,1], dis = dis, prj = prj, crs = crs, as_points = as_points, id = 'r')
+    if(length(nnlay) > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
     
-    if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
-    cbd <- rmfi_confining_beds(dis)
-    nnlay <- which(!cbd)
-    tops <- dis$top
-    botm <- dis$botm[,,nnlay]
-    
-    if(length(nnlay) > 1) {
-      tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
-      tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
-    } 
-    
-    z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
-    center <- botm + (tops - botm)/2
     mask[which(mask == 0)] <- NA
     tbl$value <- c(array*mask^2)
     tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
     if(as_points) tbl$z <- center[tbl$id] + z_ref
-    tbl$top <- tops[tbl$id] + z_ref
-    tbl$botm <- botm[tbl$id] + z_ref
-    
-    if(id == 'modflow') {
-      tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
-    } else if(id != 'r') {
-      tbl$id <- NULL
-    }
     
   } else {
     
     if(!is.null(k)) {
       mask <- mask[,,k]
       array <- array[,,k]
-      tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
-    } else {
+      tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
+      if(k > 1) tbl$id <- tbl$id + ((k -1) * prod(dis$nrow, dis$ncol))
+      if(as_points) tbl$z <- center[tbl$id] + z_ref
+      
+    } else { # cross-section
       xy <- NULL
       xy$x <- cumsum(dis$delr)-dis$delr/2
       xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
       mask[which(mask==0)] <- NA
       
-      # reason for optionally explicitely representing confining bed thickness:
-      # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
+      # confining beds should explicitely be plotted
       if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
         warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
         dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
@@ -489,25 +492,34 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         nnlay <- dis$nlay
         dis$center <- botm
         for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+        tops <- dis$top
+        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
       } else {
         if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
         dis$thck <- rmf_calculate_thickness(dis)
         nnlay <- dis$nlay + sum(dis$laycbd != 0)
         dis$center <- dis$botm
         for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+        tops <- dis$top
+        botm <- dis$botm
+        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
       }
       
       if(is.null(i) & !is.null(j)) {
+        # y-z 
         ids <- seq_len(dis$nrow) + (dis$nrow * (j-1))
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$nrow), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$nrow))
         
+        # x-values
+        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis)$x
+        
         if(as_points) {
-          positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]))
+          positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]), z = cst_values)
           values <- data.frame(id = ids, value = c((array[,j,]*mask[,j,]^2)))
         } else {
           xWidth <- rep(rev(dis$delc),dis$nlay)
           yWidth <- dis$thck[,j,]
-          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4),z=rep(cst_values, each = 4))
           positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
           positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
           positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
@@ -520,26 +532,38 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1,j=j,dis=dis)[[1]], y=positions$x, z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$z, y=positions$x, z=positions$y, prj=prj)
           positions$x <- new_positions$y
           positions$y <- new_positions$z
+          positions$z <- new_positions$x
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+          crs_positions <-  rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))
+          positions$x <- crs_positions$y
+          positions$z <- crs_positions$x
         }
         
+        tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+        colnames(tbl) <- replace(colnames(tbl), match(c('x', 'y', 'z'), colnames(tbl)), c('y', 'z', 'x'))
+        tbl <- tbl[,c('id', 'value', 'x', 'y', 'z')]
+        # if(!as_points) tbl$x <- NULL 
+        
       } else if(!is.null(i) & is.null(j)) {
+        # x-z
         ids <- i + c(0, cumsum(rep(dis$nrow, dis$ncol))[-dis$ncol])
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$ncol), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$ncol))
         
+        # y-values
+        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis)$y
+        
         if(as_points) {
-          positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]))
+          positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]), z = cst_values)
           values <- data.frame(id = ids, value = c((array[i,,]*mask[i,,]^2)))
         } else {
           xWidth <- rep(dis$delr,dis$nlay)
           yWidth <- dis$thck[i,,]
-          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4),z=rep(cst_values, each=4))
           positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
           positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
           positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
@@ -552,32 +576,43 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]], z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$z, z=positions$y, prj=prj)
           positions$x <- new_positions$x
           positions$y <- new_positions$z
+          positions$z <- new_positions$y
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+          crs_positions <-  rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))
+          positions$x <- crs_positions$x
+          positions$z <- crs_positions$y
         }
+        
+        tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+        colnames(tbl) <- replace(colnames(tbl), match(c('x', 'y', 'z'), colnames(tbl)), c('x', 'z', 'y'))
+        tbl <- tbl[,c('id', 'value', 'x', 'y', 'z')]
+        # if(!as_points) tbl$y <- NULL
       }
-      
-      tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
-      
-      if(id == 'modflow') {
-        tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
-      } else if(id != 'r') {
-        tbl$id <- NULL
-      }
-      
     }
   }
+  
+  # add top & botm
+  tbl$top <- tops[tbl$id] + z_ref
+  tbl$botm <- botm[tbl$id] + z_ref
+  
+  # change id
+  if(id == 'modflow') {
+    tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+    tbl$id <- as.integer(tbl$id)
+  } else if(id != 'r') {
+    tbl$id <- NULL
+  }
+  
   return(tbl)
 }
 
 #' Convert a rmf_4d_array to a tibble
 #'
-
 #' @param array a \code{rmf_3d_array} object
 #' @param dis a \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -589,15 +624,28 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @param crs optional; a crs object
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ts_time logical; should the returned time column represent the cumulative modelled time or the time step numbers. See details. Defaults to TRUE (cumulative modelled time)
 #' @param ... ignored
 #'
-#' @return a \code{tibble} with columns \code{id, value, x, y, top, botm & time} representing the cell's id (either MODFLOW or R style; see the \code{id} argument), array value, 
-#' x & y coordinates, top and bottom and MODFLOW time. If \code{as_points = FALSE}, the x & y coordinates represent the cell's corners, otherwise the cell center. Furthermore if \code{as_points = TRUE},
-#' a \code{z} column is present as well representing the z coordinate of the cell center. 
-#' The \code{i, j, k & l} arguments are used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}
-#' @export
+#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' 
+#' Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+#' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+#' Providing \code{i or j} can be used for subsetting a cross-section through the array.
 #'
-#' @examples
+#' If \code{i, j and k} are provided, a \code{tibble} of a single cell time series is returned.
+#' If \code{l} is not provided but \code{i, j or k} is, a \code{tibble} with a time series of the subsetted array according to \code{i, j or k} is returned.
+#'
+#' @details The time steps (\code{nstp} column) are numbered from 1 to \code{dim(array)[4]}. Since in some cases, the \code{rmf_4d_array} does not represent all time steps of the simulation,
+#' (e.g. output is only written during certain time steps), the \code{nstp} value might not correspond to the true time step number for which output was written.
+#' In those cases, the \code{time} column might not give the correct cumulative time values if \code{ts_time = TRUE}. A warning will be thrown and the user should consider setting \code{ts_time = FALSE}
+#' and calculate the exact cumulative modelled time with e.g. \code{\link{rmf_time_steps}}.
+#'
+#' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_4d_array
+#' 
 rmf_as_tibble.rmf_4d_array <- function(array,
                                        dis,
                                        i = NULL,
@@ -609,10 +657,14 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        crs = NULL, 
                                        as_points = FALSE,
                                        id = 'r',
+                                       ts_time = TRUE,
                                        ...) {
   
-  ts <- rmf_time_steps(dis = dis, incl_ss = TRUE)
+  ts <- rmf_time_steps(dis, incl_ss = TRUE)
+  if(ts_time && length(ts$cumsum) != dim(array)[4]) warning('ts_time is TRUE but the array contains less time steps than specified by dis. Please consider setting ts_time = FALSE', call. = FALSE)
+  time <- rmfi_ifelse0(ts_time, ts$cumsum[seq_len(dim(array)[4])], seq_len(dim(array)[4]))
   
+  # full 4d array
   if(is.null(i) && is.null(j) && is.null(k) && is.null(l)) {
     tbl <- rmf_as_tibble(array = rmf_create_array(array[,,,1]), dis = dis, prj = prj, crs = crs, as_points = as_points, id = id)
     if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
@@ -620,51 +672,75 @@ rmf_as_tibble.rmf_4d_array <- function(array,
     mask[which(mask == 0)] <- NA
     mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
     tbl$value <- c(array*mask^2)
-    time <- rmfi_ifelse0(is.null(attr(array, 'totim')), ts$cumsum, attr(array, 'totim')[!is.na(attr(array, 'totim'))])
     tbl$time <- rep(time, each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     tbl$nstp <- rep(seq_len(dim(array)[4]), each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     
   } else {
+    # full 3d array + time columns of subsetted time step
     if(!is.null(l)) {
       tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
-      tbl$time <- rmfi_ifelse0(is.null(attr(array, 'totim')), ts$cumsum[l], attr(array, 'totim')[!is.na(attr(array, 'totim'))][l])
+      tbl$time <- time[l]
       tbl$nstp <- l
-    } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
-      time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
-      tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
+    } else if(!is.null(i) & !is.null(j) & !is.null(k)) { # single cell (time series)
+      tbl <- rmf_as_tibble(array[,,,1], k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
+      cell_id <- rmf_convert_ijk_to_id(i = i, j = j, k = k, dis = dis, type = 'r')
+      tbl <- tbl[which(tbl$id == cell_id),]
+      if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
+      
+      tbl$time <- rep(time, each = ifelse(as_points, 1, 4))
+      tbl$nstp <- rep(seq_len(dim(array)[4]), each = ifelse(as_points, 1, 4))
+
+      # change id
+      if(id == 'modflow') {
+        tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+        tbl$id <- as.integer(tbl$id)
+      } else if(id != 'r') {
+        tbl$id <- NULL
+      }
+      
     } else {
-      if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
-      l <- dim(array)[4]
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
-      tbl$time <- rmfi_ifelse0(is.null(attr(array, 'totim')), ts$cumsum[l], attr(array, 'totim')[!is.na(attr(array, 'totim'))][l])
-      tbl$nstp <- l
+      # time series of a layer, row or column
+      tbl <- rmf_as_tibble(array, i = i, j = j, k = k, l = 1, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      if(dim(array)[4] > 1) {
+        ncell <- nrow(tbl)
+        tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
+        tbl$time <- rep(time, each = ncell * ifelse(as_points, 1, 4))
+        tbl$nstp <- rep(seq_len(dim(array)[4]), each = ncell * ifelse(as_points, 1, 4))
+      }
     }
   }
   
+  tbl$nstp <- as.integer(tbl$nstp)
   return(tbl)
 }
 
-#' Title
+#' Convert a rmf_list object to a tibble
 #'
-#' @param obj 
-#' @param dis 
-#' @param ijk 
-#' @param prj 
-#' @param crs 
-#' @param as_points 
-#' @param id 
+#' @param obj \code{RMODFLOW} rmf_list object
+#' @param dis \code{RMODFLOW} dis object
+#' @param ijk optional; a data.frame with i, j and k columns used to select the cells in the final tibble.
+#' @param prj optional; a projection object
+#' @param crs optional; a crs object
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ... ignored
 #'
-#' @return
+#' @return a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
+#' x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
+#' 
 #' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_list
 #'
-#' @examples
 rmf_as_tibble.rmf_list <- function(obj,
                                    dis,
                                    ijk = NULL,
                                    prj = NULL,
                                    crs = NULL,
                                    as_points = FALSE, 
-                                   id = 'r') {
+                                   id = 'r',
+                                   ...) {
   
   if(!is.null(ijk)) {
     ijk_id <- rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = 'modflow')
@@ -723,8 +799,10 @@ rmf_as_tibble.rmf_list <- function(obj,
   df$top <- tops[df$id] + z_ref
   df$botm <- botm[df$id] + z_ref
   
+  df$id <- as.integer(df$id)
   if(id == 'modflow') {
     df$id <- rmf_convert_id_to_id(df$id, dis = dis, from = 'r', to = 'modflow')
+    df$id <- as.integer(df$id)
   } else if(id != 'r') {
     df$id <- NULL
   }
