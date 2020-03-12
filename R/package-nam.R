@@ -37,7 +37,7 @@ rmf_create_nam <- function(...) {
     nam$fname[i+1] <- paste0('input.',classes[i])
     nam$ftype[i+1] <- df$ftype[classes[i] == df$rmf]
   }
-
+  
   # check for additional output files
   # check if hed, cbc, hpr output files are required or not
   if('HOB' %in% nam$ftype) {
@@ -81,10 +81,20 @@ rmf_create_nam <- function(...) {
     }
   }
   # check if solver output files are necessary
-  if('GMG' %in% nam$ftype) {
-    gmg <- fobjects[[which(nam$ftype=='GMG')-1]]
+  gmg_type <- df[which(df$rmf == 'gmg'),]
+  if(gmg_type$ftype %in% nam$ftype) {
+    gmg <- fobjects[[which(nam$ftype == gmg_type$ftype) - 1]]
     if(gmg$iunitmhc > 0) {
       nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = gmg$iunitmhc, fname = 'output.mhc', options = NA))  
+    }
+  }
+  
+  # check if ftl unit is already-used
+  lmt_type <- df[which(df$rmf == 'lmt'),]
+  if(lmt_type$ftype %in% nam$ftype) {
+    lmt <- fobjects[[which(nam$ftype == lmt_type$ftype) - 1]]
+    if(lmt$inftl %in% nam$nunit) {
+      stop('lmt intfl number is already occupied by the ', df$rmf[which(df$ftype %in% nam$ftype[which(nam$nunit == lmt$inftl)])], ' package. Please change the inftl value in the lmt object.', call. = FALSE)
     }
   }
   

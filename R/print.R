@@ -1774,3 +1774,12 @@ print.gmg <- function(gmg) {
   }
 
 }
+
+#' @export
+print.lmt <- function(lmt) {
+  cat('RMODFLOW Link-MT3DMS Package object:', '\n')
+  cat('Flow-transport link file:', lmt$fname, '\n')
+  cat('on unit number:', lmt$inftl, '\n')
+  cat('as', ifelse(lmt$formatted, 'a formatted', 'an unformatted'), 'file', 'using the', ifelse(lmt$extended, 'extended', 'standard'), 'header', '\n')
+  if(!is.null(lmt$package_flows)) cat('Package flows:', lmt$package_flows)
+}
