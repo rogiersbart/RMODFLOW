@@ -4,10 +4,12 @@
 \alias{rmf_read_wel}
 \title{Read a MODFLOW well file}
 \usage{
-rmf_read_wel(file = {     cat("Please select well file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+rmf_read_wel(
+  file = {     cat("Please select well file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.wel'}

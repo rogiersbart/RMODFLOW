@@ -4,9 +4,11 @@
 \alias{rmf_read_sip}
 \title{Read a MODFLOW strongly implicit procedure file}
 \usage{
-rmf_read_sip(file = {    
-  cat("Please select strongly implicit procedure file ...\\n")    
-  file.choose() }, ...)
+rmf_read_sip(
+  file = {     cat("Please select strongly implicit procedure file ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*_sip'}

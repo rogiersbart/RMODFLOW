@@ -2,17 +2,16 @@
 % Please edit documentation in R/modflow.R
 \name{rmf_create}
 \alias{rmf_create}
-\alias{create_modflow}
 \title{Create an \code{RMODFLOW} modflow object}
 \usage{
-rmf_create(..., cbc = NULL)
-
-create_modflow(...)
+rmf_create(..., cbc = NULL, recreate_nam = FALSE)
 }
 \arguments{
 \item{...}{(list of) \code{RMODFLOW} objects of class \code{rmf_package} to be included in the modflow object. If a nam object is not provided, it is added automatically.}
 
 \item{cbc}{optional integer; sets the flag and unit number for writing cell-by-cell flow data. Overwrites the values set in the objects. Defaults to NULL.}
+
+\item{recreate_nam}{logical; if a nam object is supplied, should it be recreated from scratch ? Defaults to FALSE}
 }
 \value{
 a \code{modflow} object which is a list containing all MODFLOW packages
@@ -20,11 +19,6 @@ a \code{modflow} object which is a list containing all MODFLOW packages
 \description{
 \code{rmf_create} creates an \code{RMODFLOW} modflow object from \code{rmf_package} objects
 }
-\section{Functions}{
-\itemize{
-\item \code{create_modflow}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_read}}, \code{\link{rmf_write}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html}
 }

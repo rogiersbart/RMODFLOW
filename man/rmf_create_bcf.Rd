@@ -4,11 +4,24 @@
 \alias{rmf_create_bcf}
 \title{Create an \code{RMODFLOW} bcf object}
 \usage{
-rmf_create_bcf(dis, ibcfcb = 0, hdry = -888, iwdflg = 0,
-  wetfct = 1, iwetit = 1, ihdwet = 0, layavg = rep(0, dis$nlay),
-  laycon = rep(0, dis$nlay), trpy = rep(1, dis$nlay), sf1 = 1e-05,
-  tran = 0.001, hy = 1e-04, vcont = 1e-05, sf2 = 0.15,
-  wetdry = NULL)
+rmf_create_bcf(
+  dis,
+  ibcfcb = 0,
+  hdry = -888,
+  iwdflg = 0,
+  wetfct = 1,
+  iwetit = 1,
+  ihdwet = 0,
+  layavg = rep(0, dis$nlay),
+  laycon = rep(0, dis$nlay),
+  trpy = rep(1, dis$nlay),
+  sf1 = 1e-05,
+  tran = 0.001,
+  hy = 1e-04,
+  vcont = 1e-05,
+  sf2 = 0.15,
+  wetdry = NULL
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object}

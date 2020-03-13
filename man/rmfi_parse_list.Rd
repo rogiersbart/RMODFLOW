@@ -4,8 +4,18 @@
 \alias{rmfi_parse_list}
 \title{Reads a MODFLOW list}
 \usage{
-rmfi_parse_list(remaining_lines, nlst, l = NULL, varnames,
-  scalevar = 4, file, format = "free", precision = "single", ...)
+rmfi_parse_list(
+  remaining_lines,
+  nlst,
+  l = NULL,
+  varnames,
+  scalevar = 4,
+  file,
+  naux = 0,
+  format = "free",
+  precision = "single",
+  ...
+)
 }
 \arguments{
 \item{nlst}{number of list rows to read}
@@ -17,6 +27,8 @@ rmfi_parse_list(remaining_lines, nlst, l = NULL, varnames,
 \item{scalevar}{column name or integer; this column will be scaled}
 
 \item{file}{the file that is being read; needed if list is specified through an OPEN/CLOSE statement}
+
+\item{naux}{integer; number of auxiliary variables to read (which are always free format). Defaults to 0.}
 
 \item{format}{either 'fixed' or 'free'}
 

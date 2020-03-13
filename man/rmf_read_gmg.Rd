@@ -4,8 +4,10 @@
 \alias{rmf_read_gmg}
 \title{Read a MODFLOW Geometric Multigrid Solver file}
 \usage{
-rmf_read_gmg(file = {     cat("Please select gmg file ...\\n")    
-  file.choose() }, ...)
+rmf_read_gmg(
+  file = {     cat("Please select gmg file ...\\n")     file.choose() },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.gmg'}

@@ -2,12 +2,9 @@
 % Please edit documentation in R/package-nam.R
 \name{rmf_create_nam}
 \alias{rmf_create_nam}
-\alias{create_nam}
 \title{Create an \code{RMODFLOW} nam object}
 \usage{
 rmf_create_nam(...)
-
-create_nam(...)
 }
 \arguments{
 \item{...}{RMODFLOW objects to be included in the nam file}
@@ -21,11 +18,6 @@ Object of class nam
 \details{
 if a \code{RMODFLOW nam} object is present, it is recreated.
 }
-\section{Functions}{
-\itemize{
-\item \code{create_nam}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
 }

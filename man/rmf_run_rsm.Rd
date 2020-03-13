@@ -2,13 +2,18 @@
 % Please edit documentation in R/execute.R
 \name{rmf_run_rsm}
 \alias{rmf_run_rsm}
-\alias{run_rsm}
 \title{Run a MODFLOW model response surface mapping}
 \usage{
-rmf_run_rsm(file, executable = "mf2005", par = NULL, include = NULL,
-  trans = NULL, lower, upper, n)
-
-run_rsm(...)
+rmf_run_rsm(
+  file,
+  executable = "mf2005",
+  par = NULL,
+  include = NULL,
+  trans = NULL,
+  lower,
+  upper,
+  n
+)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
@@ -33,8 +38,3 @@ an rsm object with the full list of parameters and the response value
 \description{
 \code{run_modflow_rsm} runs a MODFLOW response surface mapping.
 }
-\section{Functions}{
-\itemize{
-\item \code{run_rsm}: Deprecated function name
-}}
-

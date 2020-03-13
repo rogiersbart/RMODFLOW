@@ -2,13 +2,12 @@
 % Please edit documentation in R/package-pcg.R
 \name{rmf_read_pcg}
 \alias{rmf_read_pcg}
-\alias{read_pcg}
 \title{Read a MODFLOW preconditioned conjugate-gradient package file}
 \usage{
-rmf_read_pcg(file = {     cat("Please select pcg file ...\\n")    
-  file.choose() }, ...)
-
-read_pcg(...)
+rmf_read_pcg(
+  file = {     cat("Please select pcg file ...\\n")     file.choose() },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.pcg'}
@@ -21,11 +20,6 @@ object of class pcg
 \description{
 \code{read_pcg} reads in a MODFLOW preconditioned conjugate-gradient package file and returns it as an \code{\link{RMODFLOW}} pcg object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_pcg}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_write_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 }

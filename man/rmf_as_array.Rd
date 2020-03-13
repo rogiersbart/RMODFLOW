@@ -7,8 +7,16 @@
 \usage{
 rmf_as_array(...)
 
-\method{rmf_as_array}{rmf_list}(obj, dis, select = 4, na_value = 0,
-  sparse = TRUE, kper = attr(obj, "kper"), fun = sum, ...)
+\method{rmf_as_array}{rmf_list}(
+  obj,
+  dis,
+  select = 4,
+  na_value = 0,
+  sparse = TRUE,
+  kper = attr(obj, "kper"),
+  fun = sum,
+  ...
+)
 }
 \arguments{
 \item{...}{additional arguments passed to fun.}

@@ -4,10 +4,21 @@
 \alias{rmf_create_parameter.default}
 \title{Create an array parameter}
 \usage{
-\method{rmf_create_parameter}{default}(dis, kper = NULL, layer = NULL,
-  parnam, parval = 1, mltnam = "NONE", zonnam = "ALL", iz = NULL,
-  partyp = NULL, mlt = NULL, zon = NULL, instnam = NULL,
-  hgunam = NULL)
+\method{rmf_create_parameter}{default}(
+  dis,
+  kper = NULL,
+  layer = NULL,
+  parnam,
+  parval = 1,
+  mltnam = "NONE",
+  zonnam = "ALL",
+  iz = NULL,
+  partyp = NULL,
+  mlt = NULL,
+  zon = NULL,
+  instnam = NULL,
+  hgunam = NULL
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object. Used to dimension the final array.}

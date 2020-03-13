@@ -2,14 +2,16 @@
 % Please edit documentation in R/package-dis.R
 \name{rmf_write_dis}
 \alias{rmf_write_dis}
-\alias{write_dis}
 \title{Write a MODFLOW discretization file}
 \usage{
-rmf_write_dis(dis, file = {    
-  cat("Please select dis file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
-
-write_dis(...)
+rmf_write_dis(
+  dis,
+  file = {    
+    cat("Please select dis file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{dis}{an \code{\link{RMODFLOW}} dis object}
@@ -26,11 +28,6 @@ write_dis(...)
 \description{
 Write a MODFLOW discretization file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_dis}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_read_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 }

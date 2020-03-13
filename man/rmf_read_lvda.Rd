@@ -4,9 +4,12 @@
 \alias{rmf_read_lvda}
 \title{Read a MODFLOW model-layer variable-direction horizontal anisotropy capability file}
 \usage{
-rmf_read_lvda(file, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+rmf_read_lvda(
+  file,
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  ...
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object}
@@ -20,6 +23,9 @@ object of class lvda
 }
 \description{
 \code{rmf_read_lvda} reads in a MODFLOW Model-Layer Variable-Direction Horizontal Anisotropy Capability file and returns it as an \code{RMODFLOW} lvda object.
+}
+\details{
+Note that the parameters are defined on the numerical grid, not the HUF grid
 }
 \seealso{
 \code{\link{rmf_create_lvda}}, \code{\link{rmf_write_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}

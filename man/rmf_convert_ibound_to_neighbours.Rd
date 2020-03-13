@@ -2,12 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_ibound_to_neighbours}
 \alias{rmf_convert_ibound_to_neighbours}
-\alias{convert_ibound_to_neighbours}
 \title{Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell}
 \usage{
 rmf_convert_ibound_to_neighbours(ibound)
-
-convert_ibound_to_neighbours(...)
 }
 \arguments{
 \item{ibound}{3d \code{ibound} array as specified in a MODFLOW BAS object}
@@ -18,8 +15,3 @@ list of lower, upper, left, right, front and back logical 3d arrays
 \description{
 Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_ibound_to_neighbours}: Deprecated function name
-}}
-

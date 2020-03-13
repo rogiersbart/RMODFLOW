@@ -4,11 +4,16 @@
 \alias{rmf_write_bcf}
 \title{Write a MODFLOW block-centered flow file}
 \usage{
-rmf_write_bcf(bcf, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, file = {    
-  cat("Please select bcf file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
+rmf_write_bcf(
+  bcf,
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  file = {    
+    cat("Please select bcf file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{bcf}{an \code{RMODFLOW} bcf object}

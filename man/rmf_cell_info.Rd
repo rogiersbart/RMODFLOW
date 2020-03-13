@@ -20,10 +20,6 @@ rmf_cell_info(...)
 \item{j}{column number}
 
 \item{huf}{a hydrogeologic unit file object}
-
-\item{i}{row number}
-
-\item{j}{column number}
 }
 \value{
 \code{NULL}

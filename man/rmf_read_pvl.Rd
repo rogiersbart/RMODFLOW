@@ -2,13 +2,12 @@
 % Please edit documentation in R/package-pval.R
 \name{rmf_read_pvl}
 \alias{rmf_read_pvl}
-\alias{read_pvl}
 \title{Read a MODFLOW parameter value file}
 \usage{
-rmf_read_pvl(file = {     cat("Please select pvl file ...\\n")    
-  file.choose() }, read_all = FALSE)
-
-read_pvl(...)
+rmf_read_pvl(
+  file = {     cat("Please select pvl file ...\\n")     file.choose() },
+  read_all = FALSE
+)
 }
 \arguments{
 \item{file}{filename; typically '*.pvl'}
@@ -21,11 +20,6 @@ object of class pvl
 \description{
 \code{rmf_read_pvl} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pvl object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_pvl}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_create_pvl}}, \code{\link{rmf_write_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
 }

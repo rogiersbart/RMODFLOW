@@ -4,8 +4,7 @@
 \alias{rmf_as_sf.rmf_2d_array}
 \title{Title}
 \usage{
-\method{rmf_as_sf}{rmf_2d_array}(array, dis, mask = array * 0 + 1,
-  prj = NULL, crs = NULL)
+\method{rmf_as_sf}{rmf_2d_array}(array, dis, mask = array * 0 + 1, prj = NULL, crs = NULL)
 }
 \arguments{
 \item{array}{}
@@ -17,6 +16,9 @@
 \item{prj}{}
 
 \item{crs}{}
+}
+\value{
+
 }
 \description{
 Title

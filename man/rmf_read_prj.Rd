@@ -2,13 +2,11 @@
 % Please edit documentation in R/utils.R
 \name{rmf_read_prj}
 \alias{rmf_read_prj}
-\alias{read_prj}
 \title{Read a projection file}
 \usage{
-rmf_read_prj(file = {     cat("Please select prj file ...\\n")    
-  file.choose() })
-
-read_prj(...)
+rmf_read_prj(
+  file = {     cat("Please select prj file ...\\n")     file.choose() }
+)
 }
 \arguments{
 \item{file}{filename; typically '*.prj'}
@@ -19,8 +17,3 @@ object of class prj
 \description{
 \code{read_prj} reads in projection file and returns it as a prj object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_prj}: Deprecated function name
-}}
-

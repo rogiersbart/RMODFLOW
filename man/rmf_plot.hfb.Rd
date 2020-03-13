@@ -4,11 +4,25 @@
 \alias{rmf_plot.hfb}
 \title{Plot a RMODFLOW hfb object}
 \usage{
-\method{rmf_plot}{hfb}(hfb, dis, variable = "id", all_hfb = FALSE,
-  i = NULL, j = NULL, k = NULL, type = "fill",
-  active_only = TRUE, fun = ifelse(variable == "hydchr", sum, mean),
-  prj = NULL, crs = NULL, size = 1, colour = "black",
-  crop = TRUE, add = FALSE, ...)
+\method{rmf_plot}{hfb}(
+  hfb,
+  dis,
+  variable = "id",
+  all_hfb = FALSE,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  type = "fill",
+  active_only = TRUE,
+  fun = ifelse(variable == "hydchr", sum, mean),
+  prj = NULL,
+  crs = NULL,
+  size = 1,
+  colour = "black",
+  crop = FALSE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hfb}{an \code{RMODFLOW} hfb object}
@@ -32,7 +46,7 @@
 \item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
 }
 \value{
-ggplot2 object or layer;
+ggplot2 object or layer
 }
 \description{
 Plot a RMODFLOW hfb object

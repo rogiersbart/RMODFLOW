@@ -2,15 +2,14 @@
 % Please edit documentation in R/package-huf.R
 \name{rmf_read_kdep}
 \alias{rmf_read_kdep}
-\alias{read_kdep}
 \title{Read a MODFLOW hydraulic conductivity depth-dependence capability file}
 \usage{
-rmf_read_kdep(file = {     cat("Please select kdep file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
-
-read_kdep(...)
+rmf_read_kdep(
+  file = {     cat("Please select kdep file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  ...
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object}
@@ -25,11 +24,10 @@ object of class kdep
 \description{
 \code{rmf_read_kdep} reads in a MODFLOW Hydraulic-Conductivity Depth-Dependence Capability file and returns it as an \code{RMODFLOW} kdep object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_kdep}: Deprecated function name
-}}
-
+\details{
+Note that the parameters are defined on the HUF grid, not the numerical grid
+         \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the huf grid to the numerical grid
+}
 \seealso{
-\code{\link{rmf_create_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
+\code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_create_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}
 }

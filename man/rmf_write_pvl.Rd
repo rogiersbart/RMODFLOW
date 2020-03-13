@@ -2,14 +2,14 @@
 % Please edit documentation in R/package-pval.R
 \name{rmf_write_pvl}
 \alias{rmf_write_pvl}
-\alias{write_pvl}
 \title{Write a MODFLOW parameter value file}
 \usage{
-rmf_write_pvl(pvl, file = {    
-  cat("Please select pvl file to overwrite or provide new filename ...\\n")
-      file.choose() })
-
-write_pvl(...)
+rmf_write_pvl(
+  pvl,
+  file = {    
+    cat("Please select pvl file to overwrite or provide new filename ...\\n")    
+    file.choose() }
+)
 }
 \arguments{
 \item{pvl}{an \code{\link{RMODFLOW}} pvl object}
@@ -22,11 +22,6 @@ write_pvl(...)
 \description{
 Write a MODFLOW parameter value file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_pvl}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_create_pvl}}, \code{\link{rmf_read_pvl}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pvl.htm}
 }

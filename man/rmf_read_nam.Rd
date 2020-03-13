@@ -2,13 +2,11 @@
 % Please edit documentation in R/package-nam.R
 \name{rmf_read_nam}
 \alias{rmf_read_nam}
-\alias{read_nam}
 \title{Read a MODFLOW name file}
 \usage{
-rmf_read_nam(file = {     cat("Please select nam file ...\\n")    
-  file.choose() })
-
-read_nam(...)
+rmf_read_nam(
+  file = {     cat("Please select nam file ...\\n")     file.choose() }
+)
 }
 \arguments{
 \item{file}{filename; typically '*.nam'}
@@ -19,8 +17,6 @@ object of class nam
 \description{
 \code{rmf_read_nam} reads in a MODFLOW name file and returns it as an \code{\link{RMODFLOW}} nam object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_nam}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
+}

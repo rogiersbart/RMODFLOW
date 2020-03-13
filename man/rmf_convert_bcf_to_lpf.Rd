@@ -4,10 +4,19 @@
 \alias{rmf_convert_bcf_to_lpf}
 \title{Convert a bcf to a lpf object}
 \usage{
-rmf_convert_bcf_to_lpf(bcf, dis, storagecoefficient = FALSE,
-  constantcv = FALSE, thickstrt = FALSE, nocvcorrection = FALSE,
-  novfc = FALSE, noparcheck = FALSE, ss_value = 1e-05,
-  wetdry_value = -0.01, vk_bot = NULL)
+rmf_convert_bcf_to_lpf(
+  bcf,
+  dis,
+  storagecoefficient = FALSE,
+  constantcv = FALSE,
+  thickstrt = FALSE,
+  nocvcorrection = FALSE,
+  novfc = FALSE,
+  noparcheck = FALSE,
+  ss_value = 1e-05,
+  wetdry_value = -0.01,
+  vk_bot = NULL
+)
 }
 \arguments{
 \item{bcf}{\code{RMODFLOW} bcf object}

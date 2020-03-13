@@ -4,8 +4,7 @@
 \alias{rmf_plot.rmf_4d_array}
 \title{Plot a 2D section through a MODFLOW 4D array}
 \usage{
-\method{rmf_plot}{rmf_4d_array}(array, dis, i = NULL, j = NULL,
-  k = NULL, l = NULL, ...)
+\method{rmf_plot}{rmf_4d_array}(array, dis, i = NULL, j = NULL, k = NULL, l = NULL, ...)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}
@@ -20,11 +19,14 @@
 
 \item{l}{time step number to plot}
 
-\item{...}{parameters provided to plot.rmf_3d_array}
+\item{...}{parameters provided to \code{\link{rmf_plot.rmf_3d_array}}}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 }
 \description{
 \code{rmf_plot.rmf_4d_array} plots a 2D section through a MODFLOW 4D array.
+}
+\details{
+specifying all of the \code{i, j & k} arguments will plot a time series at that cell location
 }

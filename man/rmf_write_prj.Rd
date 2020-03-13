@@ -2,14 +2,14 @@
 % Please edit documentation in R/utils.R
 \name{rmf_write_prj}
 \alias{rmf_write_prj}
-\alias{write_prj}
 \title{Write an RMODFLOW projection file}
 \usage{
-rmf_write_prj(prj, file = {    
-  cat("Please select prj file to overwrite or provide new filename ...\\n")
-      file.choose() })
-
-write_prj(...)
+rmf_write_prj(
+  prj,
+  file = {    
+    cat("Please select prj file to overwrite or provide new filename ...\\n")    
+    file.choose() }
+)
 }
 \arguments{
 \item{prj}{an \code{\link{RMODFLOW}} prj object}
@@ -19,8 +19,3 @@ write_prj(...)
 \description{
 \code{write.prj} writes a projection file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_prj}: Deprecated function name
-}}
-

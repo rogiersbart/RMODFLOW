@@ -4,8 +4,17 @@
 \alias{rmf_plot.ddn}
 \title{Plot a MODFLOW drawdown file object}
 \usage{
-\method{rmf_plot}{ddn}(ddn, dis, i = NULL, j = NULL, k = NULL,
-  l = NULL, kper = NULL, kstp = NULL, ...)
+\method{rmf_plot}{ddn}(
+  ddn,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  kper = NULL,
+  kstp = NULL,
+  ...
+)
 }
 \arguments{
 \item{ddn}{\code{RMODFLOW} ddn object}

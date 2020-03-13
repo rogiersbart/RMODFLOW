@@ -34,7 +34,8 @@ Imports:
     processx
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
-RoxygenNote: 7.0.2
+Encoding: UTF-8
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown,

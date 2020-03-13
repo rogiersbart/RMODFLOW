@@ -5,9 +5,20 @@
 \title{Write modflow array
 Internal function used in the write_* functions for writing array datasets}
 \usage{
-rmfi_write_array(array, file, cnstnt = 1, iprn = -1, append = TRUE,
-  external = NULL, fname = NULL, binary = NULL,
-  precision = "single", nam = NULL, xsection = FALSE, ...)
+rmfi_write_array(
+  array,
+  file,
+  cnstnt = 1,
+  iprn = -1,
+  append = TRUE,
+  external = NULL,
+  fname = NULL,
+  binary = NULL,
+  precision = "single",
+  nam = NULL,
+  xsection = FALSE,
+  ...
+)
 }
 \arguments{
 \item{external}{character vector with names corresponding to the dataset; used to write external arrays}

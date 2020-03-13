@@ -2,12 +2,9 @@
 % Please edit documentation in R/execute.R
 \name{rmf_run_sen}
 \alias{rmf_run_sen}
-\alias{run_sen}
 \title{Run a MODFLOW model sensitivity analysis, based on the parameter value file}
 \usage{
 rmf_run_sen(file, executable = "mf2005", par = NULL, include = NULL)
-
-run_sen(...)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
@@ -24,8 +21,3 @@ sensitivity analysis results
 \description{
 \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
 }
-\section{Functions}{
-\itemize{
-\item \code{run_sen}: Deprecated function name
-}}
-

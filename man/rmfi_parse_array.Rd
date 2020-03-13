@@ -4,9 +4,20 @@
 \alias{rmfi_parse_array}
 \title{Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
 \usage{
-rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
-  fmt = NULL, skip_header = FALSE, nam = NULL,
-  precision = "single", file = NULL, integer = FALSE, ...)
+rmfi_parse_array(
+  remaining_lines,
+  nrow,
+  ncol,
+  nlay,
+  ndim = NULL,
+  fmt = NULL,
+  skip_header = FALSE,
+  nam = NULL,
+  precision = "single",
+  file = NULL,
+  integer = FALSE,
+  ...
+)
 }
 \arguments{
 \item{remaining_lines}{lines to read the array from}

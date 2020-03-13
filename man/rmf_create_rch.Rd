@@ -4,8 +4,7 @@
 \alias{rmf_create_rch}
 \title{Create an \code{RMODFLOW} rch object.}
 \usage{
-rmf_create_rch(..., dis, nrchop = 3, irchcb = 0, irch = NULL,
-  irchpf = -1)
+rmf_create_rch(..., dis, nrchop = 3, irchcb = 0, irch = NULL, irchpf = -1)
 }
 \arguments{
 \item{...}{\code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the recharge values. See details.}
