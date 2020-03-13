@@ -42,7 +42,7 @@ rmf_create_lmt <- function(fname = 'output.ftl',
 #'
 #' @seealso \code{\link{rmf_create_lmt}}, \code{\link{rmf_write_lmt}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt6.htm}
 #' @examples 
-#' file <- rmf_example_file('rocky-mountain-arsenal.lmt)
+#' file <- rmf_example_file('rocky-mountain-arsenal.lmt')
 #' rmf_read_lmt(file)
 #' 
 rmf_read_lmt <- function(file={cat('Please select lmt file ...\n'); file.choose()}, ...) {

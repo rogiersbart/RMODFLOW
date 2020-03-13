@@ -239,11 +239,12 @@ rmf_as_tibble.cbc <- function(cbc,
       } else if(inherits(obj, 'rmf_4d_array')) {
         tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, l = l, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id, ts_time = ts_time)
       }
-      if(!is.null(attr(obj, 'nstp'))) tbl$nstp <- rep(attr(obj, 'nstp')[!is.na(attr(obj, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-      if(!is.null(attr(obj, 'totim'))) tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-      if(!is.null(attr(obj, 'kper'))) tbl$kper <- rep(attr(obj, 'kper')[!is.na(attr(obj, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-      if(!is.null(attr(obj, 'kstp'))) tbl$kstp <- rep(attr(obj, 'kstp')[!is.na(attr(obj, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+      repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+      if(!is.null(attr(obj, 'nstp'))) tbl$nstp <- rep(attr(obj, 'nstp')[!is.na(attr(obj, 'nstp'))], each = repeats)
+      if(!is.null(attr(obj, 'totim'))) tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], each = repeats)
+      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], each = repeats)
+      if(!is.null(attr(obj, 'kper'))) tbl$kper <- rep(attr(obj, 'kper')[!is.na(attr(obj, 'kper'))], each = repeats)
+      if(!is.null(attr(obj, 'kstp'))) tbl$kstp <- rep(attr(obj, 'kstp')[!is.na(attr(obj, 'kstp'))], each = repeats)
     }
     tbl$flux <- flux
     return(tbl)
@@ -293,11 +294,12 @@ rmf_as_tibble.ddn <- function(ddn,
                               ...) {
   
   tbl <- rmf_as_tibble.rmf_4d_array(ddn, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
-  if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[!is.na(attr(ddn, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[!is.na(attr(ddn, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(ddn, 'pertim'))) tbl$pertim <- rep(attr(ddn, 'pertim')[!is.na(attr(ddn, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(ddn, 'kper'))) tbl$kper <- rep(attr(ddn, 'kper')[!is.na(attr(ddn, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(ddn, 'kstp'))) tbl$kstp <- rep(attr(ddn, 'kstp')[!is.na(attr(ddn, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+  if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[!is.na(attr(ddn, 'nstp'))], each = repeats)
+  if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[!is.na(attr(ddn, 'totim'))], each = repeats)
+  if(!is.null(attr(ddn, 'pertim'))) tbl$pertim <- rep(attr(ddn, 'pertim')[!is.na(attr(ddn, 'pertim'))], each = repeats)
+  if(!is.null(attr(ddn, 'kper'))) tbl$kper <- rep(attr(ddn, 'kper')[!is.na(attr(ddn, 'kper'))], each = repeats)
+  if(!is.null(attr(ddn, 'kstp'))) tbl$kstp <- rep(attr(ddn, 'kstp')[!is.na(attr(ddn, 'kstp'))], each = repeats)
   
   return(tbl)
 }
@@ -330,11 +332,12 @@ rmf_as_tibble.hed <- function(hed,
                               ...) {
   
   tbl <- rmf_as_tibble.rmf_4d_array(hed, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
-  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[!is.na(attr(hed, 'pertim'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[!is.na(attr(hed, 'kper'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
-  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[!is.na(attr(hed, 'kstp'))], each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+  repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = repeats)
+  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = repeats)
+  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[!is.na(attr(hed, 'pertim'))], each = repeats)
+  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[!is.na(attr(hed, 'kper'))], each = repeats)
+  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[!is.na(attr(hed, 'kstp'))], each = repeats)
   
   return(tbl)
 }
@@ -448,6 +451,8 @@ rmf_as_tibble.rmf_3d_array <- function(array,
                                        id = 'r',
                                        ...) {
   
+  if(any(length(i) > 1 || length(j) > 1 || length(k) > 1)) stop('i, j or k should be of length 1', call. = FALSE)
+  
   # set 3d tops & botm
   if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
   cbd <- rmfi_confining_beds(dis)
@@ -475,7 +480,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
       mask <- mask[,,k]
       array <- array[,,k]
       tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
-      if(k > 1) tbl$id <- tbl$id + ((k -1) * prod(dis$nrow, dis$ncol))
+      tbl$id <- tbl$id + ((k -1) * prod(dis$nrow, dis$ncol))
       if(as_points) tbl$z <- center[tbl$id] + z_ref
       
     } else { # cross-section
@@ -659,6 +664,8 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        id = 'r',
                                        ts_time = TRUE,
                                        ...) {
+  
+  if(any(length(i) > 1 || length(j) > 1 || length(k) > 1 || length(l) > 1)) stop('i, j, k or l should be of length 1', call. = FALSE)
   
   ts <- rmf_time_steps(dis, incl_ss = TRUE)
   if(ts_time && length(ts$cumsum) != dim(array)[4]) warning('ts_time is TRUE but the array contains less time steps than specified by dis. Please consider setting ts_time = FALSE', call. = FALSE)
@@ -1392,11 +1399,11 @@ rmf_convert_cbc_to_darcy <- function(cbc,
          darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
       }
       if('drains' %in% names(cbc)) {
-        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
         darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
       }
       if('river_leakage' %in% names(cbc)) {
-        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
         darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
       }
     }

@@ -1198,7 +1198,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
   }
 }
 
-#' @describeIn rmf_read_ddn
+#' @rdname rmf_read_ddn
 #' @export
 rmf_read_drawdown <- function(...) {
   rmf_read_ddn(...)
@@ -1288,7 +1288,7 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
 }
 
 
-#' @describeIn rmf_read_bud
+#' @rdname rmf_read_bud
 #' @export
 rmf_read_budget <- function(...) {
   rmf_read_bud(...)

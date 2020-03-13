@@ -1132,7 +1132,7 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
 #' @param measures any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)
 #' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' @keywords internal
-rmfi_performance_measures <- function(observations, predictions,print=F,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
+rmfi_performance_measures <- function(observations, predictions,print=FALSE,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
   gof <- hydroGOF::gof(predictions, observations, ...)
   name <- c('Mean error', 'Mean absolute error', 'Mean square error', 'Root mean square error', 'Normalized root mean square error',
             'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standars deviations', 'Nash-Sutcliffe efficiency', 
