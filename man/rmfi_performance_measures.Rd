@@ -7,7 +7,7 @@
 rmfi_performance_measures(
   observations,
   predictions,
-  print = F,
+  print = FALSE,
   measures = c("ssq", "mse", "mae", "me", "r2", "nse", "rmse", "pbias", "kge"),
   ...
 )

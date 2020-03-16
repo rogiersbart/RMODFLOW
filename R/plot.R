@@ -739,18 +739,12 @@ rmf_plot.hfb <- function(hfb,
 #'
 #' @param hob \code{RMODFLOW} hob object
 #' @param dis \code{RMODFLOW} dis object
-#' @param kper integer specifying the stress-period to plot
-#' @param exact logical specifying if the exact locations are to be plotted or the cells containing the observations (default)
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param geom either 'polygon' (default), 'line' or 'point'. Defines how the rmf_list features are plotted using \code{\link{rmf_plot.rmf_list}}
 #' @param prj projection file object; defaults to NULL
-#' @param crs coordinate reference system for the plot; defaults to NULL
-#' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param crop logical; should plot be cropped to the domain represented by the features; defaults to FALSE
-#' @param add logical; if TRUE, provide ggplot2 layers instead of object; defaults to FALSE
-#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_list}} or \code{ggplot2::geom_point} when \code{exact = TRUE}
+#' @param kper integer specifying the stress-period to plot
+#' @param ... additional arguments passed to \code{\link{rmf_plot.rmf_list}}
 #' 
 #' @details specifying all of the \code{i, j & k} arguments will plot a time series at that cell location. The observations are grouped by name.
 #' 
@@ -760,17 +754,11 @@ rmf_plot.hfb <- function(hfb,
 #' 
 rmf_plot.hob <- function(hob,
                          dis,
-                         kper = NULL,
-                         exact = FALSE,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         geom = 'polygon',
                          prj = NULL,
-                         crs = NULL,
-                         gridlines = FALSE,
-                         crop = FALSE,
-                         add = FALSE,
+                         kper = NULL,
                          ...) {
   
   if(is.null(i) && is.null(j) && is.null(k)) stop('Please provide i, j or k.', call. = FALSE)
@@ -778,7 +766,7 @@ rmf_plot.hob <- function(hob,
   if(!is.null(kper)) hob$data <- subset(hob$data, hob$data$irefsp == kper)
   
   locations <- rmf_convert_hob_to_locations(hob, dis, prj = prj)
-  locations$hobs <- hob$data$hobs
+  locations$hobs <- rep(hob$data$hobs, lengths(hob$data$layer))
   
   # plot time series
   if(!is.null(i) && !is.null(j) && !is.null(k)) {
@@ -792,109 +780,10 @@ rmf_plot.hob <- function(hob,
   } else {
     df <- rmf_create_list(locations)
     
-    if(exact) {
-      if(nrow(df) == 0) {
-        if(add) {
-          warning('No observations present in hob object. Returning NULL.', call. = FALSE)
-          return(NULL)
-        } else {
-          stop('No observations present in hob object.', call. = FALSE)
-        }
-      }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        #warning('Transforming vertical coordinates', call. = FALSE)
-        positions <- rmfi_convert_coordinates(df, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
-        df$x <- positions$x
-        df$y <- positions$x
-      }
-      
-      if(!is.null(i)) {
-        if(length(which(df$i == i)) == 0) {
-          if(add) {
-            warning(paste0('No observations in row ', i, '. Returning NULL.'), call. = FALSE)
-            return(NULL)
-          } else {
-            stop(paste0('No observations in row ', i, '.'), call. = FALSE)
-          }
-        }
-        df <- df[which(df$i == i),]
-        colnames(df) <- replace(colnames(df), match(c('y', 'z'), colnames(df)), c('z', 'y'))
-        lbl <- c('x', 'z')
-        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = rev(cumsum(rev(dis$delc))-rev(dis$delc)/2)[i], dis = dis, prj = prj)
-        ylim <- range(c(dis$top[i,], dis$botm[i,,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
-        }
-        xlim <- xlim$x
-        
-      } else if(!is.null(j)) {
-        if(length(which(df$j == j)) == 0) {
-          if(add) {
-            warning(paste0('No observations in column ', j, '. Returning NULL.'), call. = FALSE)
-            return(NULL)
-          } else {
-            stop(paste0('No observations in column ', j, '.'), call. = FALSE)
-          }
-        }
-        df <- df[which(df$j == j),]
-        colnames(df) <- replace(colnames(df), match(c('x', 'y', 'z'), colnames(df)), c('z', 'x', 'y'))
-        lbl <- c('y', 'z')
-        xlim <- rmf_convert_grid_to_xyz(x = (cumsum(dis$delr) - dis$delr/2)[j], y = c(0, sum(dis$delc)), dis = dis, prj = prj)
-        ylim <- range(c(dis$top[,j], dis$botm[,j,])) + ifelse(is.null(prj), 0, ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
-        }
-        xlim <- xlim$y
-        
-      } else if(!is.null(k)) {
-        if(length(which(df$k == k)) == 0) {
-          if(add) {
-            warning(paste0('No observations in layer ', k, '. Returning NULL.'), call. = FALSE)
-            return(NULL)
-          } else {
-            stop(paste0('No observations in layer ', k, '.'), call. = FALSE)
-          }
-        }
-        df <- df[which(df$k == k),]
-        lbl <- c('x', 'y')
-        xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = 0, dis = dis, prj = prj)
-        ylim <- rmf_convert_grid_to_xyz(x = 0, y = c(0, sum(dis$delc)), dis = dis, prj = prj)
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
-          ylim <- rmfi_convert_coordinates(ylim, from = prj$projection, to = crs)
-        }
-        xlim <- xlim$x
-        ylim <- ylim$y
-      }
-      
-      lims <- rmfi_ifelse0(crop, NULL, ggplot2::lims(x = xlim, y = ylim))
-      
-      # grid
-      if(gridlines || is.character(gridlines)) {
-        p_grid <- rmf_plot(hob, dis = dis, kper = NULL, i = i, j = j, k = k, type = 'grid', gridlines = gridlines, add = TRUE, prj = prj, crs = crs, exact = FALSE, active_only = crop)
-      } else {
-        p_grid <- NULL
-      }
-      
-      if(add) {
-        return(list(p_grid, ggplot2::geom_point(data = df, ggplot2::aes(x = x, y = y), ...)))
-      } else {
-        return(ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
-                 p_grid +
-                 ggplot2::geom_point(...) +
-                 ggplot2::xlab(lbl[1]) +
-                 ggplot2::ylab(lbl[2]) +
-                 lims)
-      }
-    } else {
-      # rmf_plot.rmf_list
-      df <- df[, -which(colnames(df) %in% c('x', 'y', 'z'))]
-      rmf_plot(df, dis = dis, i = i, j = j, k = k, geom = geom, prj = prj, crs = crs, gridlines = gridlines, crop = crop, add = add, ...)
-    }
+    # rmf_plot.rmf_list
+    df <- df[, -which(colnames(df) %in% c('x', 'y', 'z'))]
+    rmf_plot(df, dis = dis, i = i, j = j, k = k, prj = prj, ...)
+  
   }
 }
 
@@ -1878,16 +1767,14 @@ rmf_plot.rmf_list <- function(obj,
       #   xlim <- rmf_convert_grid_to_xyz(x = x, y = 0, dis = dis, prj = prj)
       #   ylim <- rmf_convert_grid_to_xyz(x = 0, y = y, dis = dis, prj = prj)
       # } else {
-      xlim <- rmf_convert_grid_to_xyz(x = c(0, sum(dis$delr)), y = 0, dis = dis, prj = prj)
-      ylim <- rmf_convert_grid_to_xyz(x = 0, y = c(0, sum(dis$delc)), dis = dis, prj = prj)
+      lim <- rmf_convert_grid_to_xyz(x = rep(c(0, sum(dis$delr)), 2), y = rep(c(0, sum(dis$delc)), each = 2), dis = dis, prj = prj)
       # }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
-        ylim <- rmfi_convert_coordinates(ylim, from = prj$projection, to = crs)
+        lim <- rmfi_convert_coordinates(lim, from = prj$projection, to = crs)
       }
-      xlim <- xlim$x
-      ylim <- ylim$y
+      xlim <- range(lim$x)
+      ylim <- range(lim$y)
     }
     if(!is.null(i)) {
       # if(crop) {
@@ -1929,7 +1816,7 @@ rmf_plot.rmf_list <- function(obj,
       xlim <- xlim$y
     }
     
-    lims <- rmfi_ifelse0(crop, NULL ,ggplot2::lims(x = xlim, y = ylim))
+    lims <- rmfi_ifelse0(crop, NULL, ggplot2::lims(x = xlim, y = ylim))
     
     
     # set legend

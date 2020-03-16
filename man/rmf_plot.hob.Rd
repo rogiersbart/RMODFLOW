@@ -4,31 +4,12 @@
 \alias{rmf_plot.hob}
 \title{Plot a RMODFLOW hob object}
 \usage{
-\method{rmf_plot}{hob}(
-  hob,
-  dis,
-  kper = NULL,
-  exact = FALSE,
-  i = NULL,
-  j = NULL,
-  k = NULL,
-  geom = "polygon",
-  prj = NULL,
-  crs = NULL,
-  gridlines = FALSE,
-  crop = FALSE,
-  add = FALSE,
-  ...
-)
+\method{rmf_plot}{hob}(hob, dis, i = NULL, j = NULL, k = NULL, prj = NULL, kper = NULL, ...)
 }
 \arguments{
 \item{hob}{\code{RMODFLOW} hob object}
 
 \item{dis}{\code{RMODFLOW} dis object}
-
-\item{kper}{integer specifying the stress-period to plot}
-
-\item{exact}{logical specifying if the exact locations are to be plotted or the cells containing the observations (default)}
 
 \item{i}{row number to plot}
 
@@ -36,19 +17,11 @@
 
 \item{k}{layer number to plot}
 
-\item{geom}{either 'polygon' (default), 'line' or 'point'. Defines how the rmf_list features are plotted using \code{\link{rmf_plot.rmf_list}}}
-
 \item{prj}{projection file object; defaults to NULL}
 
-\item{crs}{coordinate reference system for the plot; defaults to NULL}
+\item{kper}{integer specifying the stress-period to plot}
 
-\item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
-
-\item{crop}{logical; should plot be cropped to the domain represented by the features; defaults to FALSE}
-
-\item{add}{logical; if TRUE, provide ggplot2 layers instead of object; defaults to FALSE}
-
-\item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_list}} or \code{ggplot2::geom_point} when \code{exact = TRUE}}
+\item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_list}}}
 }
 \value{
 ggplot2 object or layer
