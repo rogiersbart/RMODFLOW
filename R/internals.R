@@ -190,6 +190,8 @@ rmfi_create_bc_array <- function(arg, dis) {
     if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'), call. = FALSE)
   }
   
+  # check if any kper are active
+  if(!(any(is.na(as.logical(c(unlist(kper[,-1]))))) || any(as.logical(c(unlist(kper[,-1])))))) warning('No boundary condition features are active. Perhaps reset the kper attribute?', call. = FALSE)
   
   # combine
   data <- c(parameters, arrays)
@@ -347,6 +349,9 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     if(length(parameters) > 0 && 'instance' %in% colnames(parameters))  lists$instance <-  NA
     
   }
+  
+  # check if any kper are active
+  if(!(any(is.na(as.logical(c(unlist(kper[,-1]))))) || any(as.logical(c(unlist(kper[,-1])))))) warning('No boundary condition features are active. Perhaps reset the kper attribute?', call. = FALSE)
   
   # combine
   data <- structure(rbind(parameters, lists), kper = NULL)
