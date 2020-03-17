@@ -3294,7 +3294,7 @@ rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binar
 rmf_create_list <-  function(df, kper = NULL) {
   
   df <- as.data.frame(df)
-  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j', call. = FALSE)
+  if(any(!(c('k','i','j') %in% names(df)))) stop('df object should at least have columns k, i, j', call. = FALSE)
   
   attr(df, 'kper') <- kper  
   class(df) <- c('rmf_list', class(df))

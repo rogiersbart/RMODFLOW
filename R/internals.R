@@ -211,6 +211,8 @@ rmfi_create_bc_array <- function(arg, dis) {
 
 rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
+  var_cols <- 4:(3+length(varnames))
+  
   # find dis
   if(missing(dis)) {
     dis_present <- vapply(arg, function(i) 'dis' %in% class(i), TRUE)
@@ -229,6 +231,11 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   #                                             {warning("Coercing data.frame to rmf_list; list active for all stress-periods", call. = FALSE); rmf_create_list(i, kper = 1:dis$nper)}, 
   #                                             i) )
   
+  # check if all varnames are present (partial string matching)
+  nms_check <- lapply(arg, function(i) pmatch(colnames(i)[var_cols], varnames))
+  if(any(vapply(nms_check, function(i) any(is.na(i)), TRUE))) stop('Please make sure all rmf_list objects have columns k, i, j, ', paste(varnames, collapse = ', '), call. = FALSE)
+  arg <- lapply(seq_along(arg), function(i) setNames(arg[[i]], replace(colnames(arg[[i]]), var_cols, varnames[nms_check[[i]]])))
+  
   # check for parameters and/or lists and name them
   parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
   if(length(parameters) > 0) names(parameters) <- vapply(parameters, function(i) attr(i, 'parnam'), 'text')
@@ -237,7 +244,6 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   if(any(vapply(c(parameters, lists), function(i) is.null(attr(i, 'kper')), TRUE))) {
     stop('Please make sure all rmf_list and rmf_parameter objects have a kper attribute', call. = FALSE)
   }
-  
   
   # stress period data frame
   kper <- cbind(data.frame(kper = 1:dis$nper),
@@ -292,7 +298,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     
     #check aux
     if(!is.null(aux)) {
-      all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
+      all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), TRUE))
       if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
@@ -300,8 +306,8 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
       instnam <- attr(i, 'instnam')
       i$parameter <- TRUE
       i$name <- attr(i, 'parnam')
-      i <- i[c("i","j","k",varnames,if(!is.null(aux)){aux},"parameter","name")]
-      colnames(i)[4:(3+length(varnames))] <-  varnames
+      i <- i[c('k', 'i', 'j',varnames,if(!is.null(aux)){aux},"parameter","name")]
+      colnames(i)[var_cols] <-  varnames
       if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux
       return(structure(i, instnam = instnam))
     }
@@ -331,8 +337,8 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     itmp <- structure(vapply(lists, nrow, 1), names = names(lists))
     
     # set lists df
-    lists <- lapply(lists, function(i) {i <- i[c("i","j","k",varnames,if(!is.null(aux)){aux})];
-    colnames(i)[4:(3+length(varnames))] <-  varnames;
+    lists <- lapply(lists, function(i) {i <- i[c('k', 'i', 'j',varnames,if(!is.null(aux)){aux})];
+    colnames(i)[var_cols] <-  varnames;
     if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux;
     i$parameter <-  FALSE;
     i})

@@ -18,6 +18,7 @@ rmf_create_hfb <-  function(...,
                             noprint = FALSE
 ) {
   vars <- c('irow2', 'icol2', 'hydchr')
+  var_cols <- 4:(3+length(vars))
   
   # set kper and direction
   # find dis
@@ -40,6 +41,11 @@ rmf_create_hfb <-  function(...,
       arg <- lapply(arg, function(i) rmf_create_list(i, kper = 1:dis$nper))
     }
   }
+  
+  # check if all varnames are present (partial string matching)
+  nms_check <- lapply(arg, function(i) pmatch(colnames(i)[var_cols], vars))
+  if(any(vapply(nms_check, function(i) any(is.na(i)), TRUE))) stop('Please make sure all rmf_list objects have columns k, i, j, ', paste(vars, collapse = ', '), call. = FALSE)
+  arg <- lapply(seq_along(arg), function(i) setNames(arg[[i]], replace(colnames(arg[[i]]), var_cols, vars[nms_check[[i]]])))
   
   set_hfb <- function(rmf_list) {
     if(is.null(attr(rmf_list, 'kper'))) {
@@ -92,8 +98,8 @@ rmf_create_hfb <-  function(...,
     parameters <- lapply(parameters, function(i) {i$parameter <-  TRUE;
                                                   i$name <-  attr(i, 'parnam');
                                                   i$active <- !is.null(attr(i,"kper"));
-                                                  i <- i[c("i","j","k",vars,'parameter','name','active')];
-                                                  colnames(i)[4:(3+length(vars))] <-  vars;
+                                                  i <- i[c('k', 'i', 'j',vars,'parameter','name','active')];
+                                                  colnames(i)[var_cols] <-  vars;
                                                   i})
     parameters <- do.call(rbind, unname(parameters))
 
@@ -102,8 +108,8 @@ rmf_create_hfb <-  function(...,
   # lists
   if(length(lists) > 0) {
     # set lists df
-    lists <- lapply(lists, function(i) {i <- i[c("i","j","k",vars)];
-                                        colnames(i)[4:(3+length(vars))] <-  vars;
+    lists <- lapply(lists, function(i) {i <- i[c('k', 'i', 'j',vars)];
+                                        colnames(i)[var_cols] <-  vars;
                                         i$parameter <-  FALSE;
                                         i$active <- is.null(attr(i,"kper"));
                                         i})
