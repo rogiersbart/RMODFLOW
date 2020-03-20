@@ -145,28 +145,37 @@ rmf_as_array.stars <- function(obj,
                                kper = attr(obj, 'kper'),
                                ...) {
   
+  #TODO st_warp doesn't work when objects don't have crs
+  
+  dims <- stars::st_dimensions(obj)
+  ndim <- length(dims)
+  
   # TODO check if obj projection == dis projection
   # TODO implement support for higher dimension stars objects
-  if(length(stars::st_dimensions(obj)) > 2) stop('Support for stars object with more than 2 dimensions not yet implemented', call. = FALSE)
+  if(ndim > 4) stop('Support for stars object with more than 4 dimensions not implemented', call. = FALSE)
   if(any(vapply(stars::st_dimensions(obj), function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions are not supported', call. = FALSE)
   
   target <- rmf_as_stars(dis$top, dis = dis, prj = prj, id = FALSE)
-  if(resample) {
-    ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
-    ar <- t(ar[[1]]) %>% c() %>% rev() %>%
-      rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
-  } else {
-    # error out if obj dimensions do not coincide with dis domain
-    if(!identical(sf::st_bbox(obj), sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
-    if(!identical(setNames(dim(obj), NULL), setNames(dim(target), NULL))) stop('Spatial resolution of obj and dis are not the same. Consider setting resample = TRUE', call. = FALSE)
-    
-    ar <- t(obj[[select]]) %>% c() %>% rev() %>%
-      rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
-  }
   
-  # 3D
+  # 2D
+  if(ndim == 2) {
+    if(resample) {
+      ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
+      ar <- t(ar[[1]]) %>% c() %>%
+        rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
+    } else {
+      # error out if obj dimensions do not coincide with dis domain
+      if(!identical(sf::st_bbox(obj), sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
+      if(!identical(setNames(dim(obj), NULL), setNames(dim(target), NULL))) stop('Spatial resolution of obj and dis are not the same. Consider setting resample = TRUE', call. = FALSE)
+      
+      ar <- t(obj[[select]]) %>% c() %>%
+        rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
+    }
+  } 
   
-  # 4D
+  #3D
+  
+  #4D
   
   return(ar)
   
@@ -366,7 +375,6 @@ rmf_as_stars <- function(...) {
 rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
-  array <- array[rev(1:dim(array)[1]),] # in MODFLOW, rows are numbered from top to bottom
   m <- t(as.matrix(array))
   dim(m) <- c(x = dim(m)[1], y = dim(m)[2]) # named dim
   
@@ -376,13 +384,13 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   # TODO rotation does not work properly in stars;
   
   # create stars object
-  # d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = org[2] + rev(c(cumsum(dis$delc))), affine = rep(aff, 2))
-  d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = org[2] + c(0, cumsum(dis$delc)))
+  # use negative deltay: more consistent with how most raster data is read from file
+  # d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = rev(org[2] + c(0, cumsum(dis$delc))), affine = rep(aff, 2))
+  d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = rev(org[2] + c(0, cumsum(dis$delc))))
   s <- stars::st_as_stars(m, dimensions = d)
   names(s) <- name
   
-  # rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
-  rot <- ifelse(is.null(prj), 0, prj$rotation * pi/180)
+  rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
   gtf <- stars:::get_geotransform(s)
   gtf[3] <- gtf[2]*-sin(rot)
   gtf[2] <- gtf[2]*cos(rot)
@@ -395,11 +403,11 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   
   # id
   if(id == 'modflow') {
-    id <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
-    s$id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+    ids <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
+    s$id <- c(aperm(ids, c(2,1)))
   } else if(id == 'r') {
-    id <- array(1:prod(dim(array)[1:2]), dim = dim(array)[1:2])
-    s$id <- c(aperm(id[rev(1:dim(id)[1]), ], c(2,1)))
+    ids <- array(1:prod(dim(array)[1:2]), dim = dim(array)[1:2])
+    s$id <- c(aperm(ids, c(2,1)))
   }
 
   # projection
@@ -424,14 +432,15 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   d <- stars::st_dimensions(s)
   
   array_list <- lapply(seq_len(dim(array)[3]), 
-                        function(i) t(as.matrix(array[rev(seq_len(dim(array)[1])),,i]))) %>% 
+                        function(i) t(as.matrix(array[,,i]))) %>% 
     setNames(paste('layer', seq_len(dim(array)[3]), sep = '_'))
   s <- stars::st_as_stars(array_list, dimensions = d) %>%
     merge() %>%
     setNames(name) %>%
     stars::st_set_dimensions(names = c(names(d), 'layer'))
   s$id <- ids
-
+  dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
+  
   return(s)
 }
 
@@ -452,7 +461,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
   time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
 
   array_list <- lapply(seq_len(dim(array)[4]), 
-                       function(i) aperm(as.array(array[rev(seq_len(dim(array)[1])),,,i]), c(2,1,3))) %>% 
+                       function(i) aperm(as.array(array[,,,i]), c(2,1,3))) %>% 
                 setNames(time)
   
   s <- stars::st_as_stars(array_list, dimensions = d) %>%
@@ -461,6 +470,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
     stars::st_set_dimensions(names = c(names(d), 'time')) %>%
     stars::st_set_dimensions(which = 4, values = time)
   s$id <- ids
+  dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
   
   return(s)
 }
@@ -503,8 +513,9 @@ rmf_as_raster.rmf_3d_array <- function(array, dis, prj = NULL, ...) {
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_4d_array
 #' @export
-rmf_as_raster.rmf_4d_array <- function(array, dis, prj = NULL, ...) {
-  rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
+rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = NULL, ...) {
+  if(is.null(l)) stop('Please provide a l argument to subset the 4d array', call. = FALSE)
+  rmf_as_stars(array[,,,l], dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
 #' @rdname rmf_as_raster
