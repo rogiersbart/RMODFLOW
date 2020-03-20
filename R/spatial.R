@@ -145,17 +145,26 @@ rmf_as_array.stars <- function(obj,
                                kper = attr(obj, 'kper'),
                                ...) {
   
-  #TODO st_warp doesn't work when objects don't have crs
-  
   dims <- stars::st_dimensions(obj)
   ndim <- length(dims)
   
   # TODO check if obj projection == dis projection
-  # TODO implement support for higher dimension stars objects
-  if(ndim > 4) stop('Support for stars object with more than 4 dimensions not implemented', call. = FALSE)
-  if(any(vapply(stars::st_dimensions(obj), function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions are not supported', call. = FALSE)
-  
+
+  if(ndim > 4) stop('Support for obj with more than 4 dimensions not implemented', call. = FALSE)
+  if(any(vapply(dims, function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions are not supported', call. = FALSE)
+
   target <- rmf_as_stars(dis$top, dis = dis, prj = prj, id = FALSE)
+  
+  if(resample) {
+    # st_warp doesn't work when objects don't have crs
+    if(is.null(prj) || is.na(sf::st_crs(prj$projection)) || is.na(sf::st_crs(obj))) {
+      stop('obj crs and/or prj are missing. Consider setting resample = FALSE', call. = FALSE)
+    }
+  } else {
+    # error out if obj dimensions do not coincide with dis domain
+    if(!identical(sf::st_bbox(obj), sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
+    if(!identical(setNames(dim(obj)[1:2], NULL), setNames(dim(target), NULL))) stop('Spatial resolution of obj and dis are not the same. Consider setting resample = TRUE', call. = FALSE)
+  }
   
   # 2D
   if(ndim == 2) {
@@ -164,21 +173,43 @@ rmf_as_array.stars <- function(obj,
       ar <- t(ar[[1]]) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
     } else {
-      # error out if obj dimensions do not coincide with dis domain
-      if(!identical(sf::st_bbox(obj), sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
-      if(!identical(setNames(dim(obj), NULL), setNames(dim(target), NULL))) stop('Spatial resolution of obj and dis are not the same. Consider setting resample = TRUE', call. = FALSE)
-      
+      # extract array
       ar <- t(obj[[select]]) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
     }
-  } 
-  
-  #3D
-  
-  #4D
+  } else if(ndim == 3) {
+    # 3D
+    nnlay <- dis$nlay + sum(dis$laycbd != 0)
+    if(dim(obj)[3] != nnlay) stop('Third dimension of stars object should have length equal to dis$nlay (+ number of optional confining beds)', call. = FALSE)
+    
+    if(resample) {
+      ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
+      ar <- aperm(ar[[1]], c(2,1,3)) %>% c() %>% 
+        rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
+    } else {
+      # extract array
+      ar <- aperm(obj[[select]], c(2,1,3)) %>% c() %>% 
+        rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
+    }
+    
+  } else if(ndim == 4) {
+    # 4D
+    nnlay <- dis$nlay + sum(dis$laycbd != 0)
+    if(dim(obj)[3] != nnlay) stop('Third dimension of stars object should have length equal to dis$nlay (+ number of optional confining beds)', call. = FALSE)
+    if(dim(obj)[4] != sum(dis$nstp)) stop('Fourth dimension of stars object should have length equal to sum(dis$nstp)' , call. = FALSE)
+    
+    if(resample) {
+      ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
+      ar <- aperm(ar[[1]], c(2,1,3,4)) %>% c() %>% 
+        rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
+    } else {
+      # extract array
+      ar <- aperm(obj[[select]], c(2,1,3,4)) %>% c() %>% 
+        rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
+    }
+  }
   
   return(ar)
-  
 }
 
 #' Title
@@ -275,7 +306,7 @@ rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_4d_array
 #' @export
-rmf_as_sf.rmf_4d_array <- function(array, dis, mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)), prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
 
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -447,8 +478,9 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_4d_array
 #' @export
-rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = NULL, name = 'value', id = 'r', ...) {
   
+  mask <- array(mask, dim = c(dim(mask), dim(array)[4]))
   array[which(mask^2 != 1)] <- NA
   
   s <- rmf_as_stars(array[,,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
