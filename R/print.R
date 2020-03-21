@@ -163,6 +163,11 @@ print.dis <- function(dis, n = 5) {
   }
   print(sp[1:nper,], row.names = FALSE)
   
+  if(!is.null(dis$prj)) {
+    cat('\n')
+    print(dis$prj)
+  } 
+  
 }
 
 #' @export

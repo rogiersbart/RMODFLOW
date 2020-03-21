@@ -156,7 +156,7 @@ rmf_as_tibble <- function(...) {
 rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
                                        mask = array * 0 + 1,
-                                       prj = NULL,
+                                       prj = dis$prj,
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r') {
@@ -191,7 +191,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   }
   if(!is.null(crs)) {
     if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-    positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
+    positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$crs), to = sf::st_crs(crs))
   }
   
   tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
@@ -226,7 +226,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
                                        j = NULL,
                                        k = NULL,
                                        mask = array * 0 + 1,
-                                       prj = NULL,
+                                       prj = dis$prj,
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r') {
@@ -319,7 +319,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$crs), to=sf::st_crs(crs))$x
         }
         
       } else if(!is.null(i) & is.null(j)) {
@@ -351,7 +351,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         if(!is.null(crs)) {
           if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))$x
+          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$crs), to=sf::st_crs(crs))$x
         }
       }
       
@@ -390,7 +390,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        k = NULL,
                                        l = NULL,
                                        mask = array * 0 + 1,
-                                       prj = NULL,
+                                       prj = dis$prj,
                                        crs = NULL, 
                                        as_points = FALSE,
                                        id = 'r') {
@@ -435,7 +435,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 rmf_as_tibble.rmf_list <- function(obj,
                                    dis,
                                    ijk = NULL,
-                                   prj = NULL,
+                                   prj = dis$prj,
                                    crs = NULL,
                                    as_points = FALSE, 
                                    id = 'r') {
@@ -458,7 +458,7 @@ rmf_as_tibble.rmf_list <- function(obj,
     coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
     if(!is.null(crs)) {
       if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
-      coords_prj <- rmfi_convert_coordinates(coords, from = prj$projection, to = crs)
+      coords_prj <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
       coords$x <- coords_prj$x
       coords_y <- coords_prj$y
     }
@@ -489,7 +489,7 @@ rmf_as_tibble.rmf_list <- function(obj,
     }
     if(!is.null(crs)) {
       if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-      positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
+      positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$crs), to = sf::st_crs(crs))
     }
     df <- tibble::as_tibble(merge(values, positions, by=c("id")))
   }
@@ -632,7 +632,7 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' @method rmf_cell_coordinates dis
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
-                                     prj = NULL,
+                                     prj = dis$prj,
                                      include_faces = FALSE) {
   if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates only represent numerical layers.")
   cell_coordinates <- NULL
@@ -697,7 +697,7 @@ rmf_cell_coordinates.dis <- function(dis,
 #' @export
 rmf_cell_coordinates.huf <- function(huf,
                                      dis = NULL,
-                                     prj = NULL,
+                                     prj = dis$prj,
                                      include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$top - huf$thck/2
@@ -1258,7 +1258,7 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
                                     roff = NULL,
                                     coff = NULL,
                                     loff = NULL,
-                                    prj = NULL,
+                                    prj = dis$prj,
                                     dis = NULL) {
   if(!is.null(x)) {
     if(!is.null(prj)) {
@@ -1875,7 +1875,7 @@ rmf_convert_upw_to_lpf <- function(upw,
 #' If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 #' @return data frame with modflow coordinates
 #' @export
-rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
+rmf_convert_xyz_to_grid <- function(x,y,prj=dis$prj,z=NULL,dis=NULL,output='xyz') {
   output_xyz <- 'xyz' %in% output
   output_ijk <- 'ijk' %in% output
   output_off <- 'off' %in% output
@@ -3394,51 +3394,4 @@ rmf_create_list <-  function(df, kper = NULL) {
 
 #' @export
 as.data.frame.rmf_list <- function(obj) as.data.frame.data.frame(structure(obj, kper = NULL))
-
-#' Read a projection file
-#' 
-#' \code{read_prj} reads in projection file and returns it as a prj object.
-#' 
-#' @param file filename; typically '*.prj'
-#' @return object of class prj
-#' @export
-rmf_read_prj <- function(file = {cat('Please select prj file ...\n'); file.choose()}) {
-  prj.lines <- readr::read_lines(file)
-  prj <- list()
-  prj$projection <- prj.lines[1]
-  prj$origin <- as.numeric(RMODFLOW:::rmfi_remove_empty_strings(strsplit(prj.lines[2],' ')[[1]]))
-  prj$rotation <- as.numeric(RMODFLOW:::rmfi_remove_empty_strings(strsplit(prj.lines[3],' ')[[1]])[1])
-  if(length(prj.lines) > 3) prj$starttime <- as.POSIXct(prj.lines[4])
-  class(prj) <- 'prj'
-  return(prj)
-}
-
-#' @describeIn rmf_read_prj Deprecated function name
-#' @export
-read_prj <- function(...) {
-  .Deprecated(new = "rmf_read_prj", old = "read_prj")
-  rmf_read_prj(...)
-}
-
-#' Write an RMODFLOW projection file
-#' 
-#' \code{write.prj} writes a projection file
-#' 
-#' @param prj an \code{\link{RMODFLOW}} prj object
-#' @param file filename to write to; typically '*.prj'
-#' @export
-rmf_write_prj <- function(prj,
-                          file = {cat('Please select prj file to overwrite or provide new filename ...\n'); file.choose()}) {
-  cat(paste0(prj$projection,'\n'), file=file)
-  cat(paste0(paste0(prj$origin,collapse=' '),'\n'), file=file, append=TRUE)
-  cat(paste0(prj$rotation,'\n'), file=file, append=TRUE)
-  if(length(prj) > 3) cat(paste0(format(prj$starttime,format='%Y-%m-%d %H:%M:%S'),'\n'), file=file, append=TRUE)
-}
-
-#' @describeIn rmf_write_prj Deprecated function name
-#' @export
-write_prj <- function(...) {
-  .Deprecated(new = "rmf_write_prj", old = "write_prj")
-  rmf_write_prj(...)
-}
 

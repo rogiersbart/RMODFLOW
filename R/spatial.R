@@ -20,7 +20,7 @@
 rmf_as_list.sf <- function(obj,
                            dis,
                            select = colnames(sf::st_set_geometry(obj, NULL)), 
-                           prj = NULL, 
+                           prj = dis$prj, 
                            k = NULL,
                            kper = attr(obj, 'kper'),
                            op = sf::st_intersects,
@@ -78,7 +78,7 @@ rmf_as_array.sf <- function(obj,
                             dis,
                             select,
                             k = NULL,
-                            prj = NULL,
+                            prj = dis$prj,
                             sparse = TRUE,
                             op = sf::st_intersects,
                             kper = attr(obj, 'kper'),
@@ -109,7 +109,7 @@ rmf_as_list.stars <- function(obj,
                               dis,
                               select = names(obj),
                               k = NULL,
-                              prj = NULL,
+                              prj = dis$prj,
                               kper = attr(obj, 'kper'),
                               op = sf::st_intersects,
                               ...) {
@@ -138,7 +138,7 @@ rmf_as_list.stars <- function(obj,
 #' @examples
 rmf_as_array.stars <- function(obj,
                                dis, 
-                               prj = NULL,
+                               prj = dis$prj,
                                select = 1,
                                resample = TRUE,
                                method = 'bilinear',
@@ -157,7 +157,7 @@ rmf_as_array.stars <- function(obj,
   
   if(resample) {
     # st_warp doesn't work when objects don't have crs
-    if(is.null(prj) || is.na(sf::st_crs(prj$projection)) || is.na(sf::st_crs(obj))) {
+    if(is.null(prj) || is.na(sf::st_crs(prj$crs)) || is.na(sf::st_crs(obj))) {
       stop('obj crs and/or prj are missing. Consider setting resample = FALSE', call. = FALSE)
     }
   } else {
@@ -258,7 +258,7 @@ rmf_as_sf <- function(...) {
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_2d_array
 #' @examples
-rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
   
   # faster to convert to stars and then to sf than to manually create sf object
   
@@ -268,7 +268,7 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
   s <- rmf_as_stars(array, dis = dis, mask = mask, prj = prj, name = name, id = id)
   f <- sf::st_as_sf(s, as_points = as_points)
   # reset crs because stars drops EPSG code
-  if(!is.null(prj)) f <- sf::st_set_crs(f, sf::st_crs(prj$projection)) 
+  if(!is.null(prj)) f <- sf::st_set_crs(f, sf::st_crs(prj$crs)) 
   
   return(f)
   
@@ -277,7 +277,7 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_3d_array
 #' @export
-rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
   
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -306,7 +306,7 @@ rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, n
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_4d_array
 #' @export
-rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = NULL, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
 
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -335,7 +335,7 @@ rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array))
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_list
 #' @export
-rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_list <- function(obj, dis, prj = dis$prj, as_points = FALSE, id = 'r', ...) {
   
   df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points, id = 'r', ...) %>%  
     as.data.frame()
@@ -363,7 +363,7 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = NULL, as_points = FALSE, id = 'r'
   
   s <- cbind(data.frame(id = ids), setNames(as.data.frame(obj[, nms]), nms), cell_tops) %>%
        sf::st_sf(geom = sfc,
-                 crs = rmfi_ifelse0(is.null(prj), NA, prj$projection))
+                 crs = rmfi_ifelse0(is.null(prj), NA, prj$crs))
   
   # change id if necessary
   if(id == 'modflow') {
@@ -403,7 +403,7 @@ rmf_as_stars <- function(...) {
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_2d_array
 #' @examples
-rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
   m <- t(as.matrix(array))
@@ -443,7 +443,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
 
   # projection
   projection <- NULL
-  if(!is.null(prj)) projection <- prj$projection
+  if(!is.null(prj)) projection <- prj$crs
   if(!is.null(projection)) {
     s <- sf::st_set_crs(s, sf::st_crs(projection))
   }
@@ -454,7 +454,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_3d_array
 #' @export
-rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
   
@@ -478,7 +478,7 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = NULL
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_4d_array
 #' @export
-rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = NULL, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = dis$prj, name = 'value', id = 'r', ...) {
   
   mask <- array(mask, dim = c(dim(mask), dim(array)[4]))
   array[which(mask^2 != 1)] <- NA
@@ -510,7 +510,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_list
 #' @export
-rmf_as_stars.rmf_list <- function(obj, dis, prj = NULL, ...) {
+rmf_as_stars.rmf_list <- function(obj, dis, prj = dis$prj, ...) {
   
   rmf_as_array(obj, dis = dis, ...) %>% rmf_as_stars(dis = dis, prj = prj, ...)
   
@@ -531,21 +531,21 @@ rmf_as_raster <- function(...) {
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_2d_array
 #' @export
-rmf_as_raster.rmf_2d_array <- function(array, dis, prj = NULL, ...) {
+rmf_as_raster.rmf_2d_array <- function(array, dis, prj = dis$prj, ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_3d_array
 #' @export
-rmf_as_raster.rmf_3d_array <- function(array, dis, prj = NULL, ...) {
+rmf_as_raster.rmf_3d_array <- function(array, dis, prj = dis$prj, ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_4d_array
 #' @export
-rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = NULL, ...) {
+rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = dis$prj, ...) {
   if(is.null(l)) stop('Please provide a l argument to subset the 4d array', call. = FALSE)
   rmf_as_stars(array[,,,l], dis = dis, prj = prj, ...) %>% as('Raster')
 }
@@ -553,72 +553,65 @@ rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = NULL, ...) {
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_list
 #' @export
-rmf_as_raster.rmf_list <- function(obj, dis, prj = NULL, ...) {
+rmf_as_raster.rmf_list <- function(obj, dis, prj = dis$prj, ...) {
   rmf_as_stars(obj, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
-## UTILS
+## Projection 
+##
 
 #' Title
 #'
-#' @param obj 
+#' @param origin 
+#' @param rotation 
+#' @param crs 
+#' @param ulcoordinate 
+#' @param nodecoord 
 #' @param dis 
-#' @param prj 
-#' @param op 
-#' @param sparse 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-rmf_create_ibound <- function(obj,
-                           dis,
-                           prj = NULL,
-                           op = sf::st_intersects,
-                           sparse = FALSE) {
+rmf_create_prj <- function(origin = c(0, 0, 0), 
+                           rotation = 0, 
+                           crs = NA,
+                           ulcoordinate = FALSE,
+                           nodecoord = FALSE,
+                           dis = NULL) {
   
-  # TODO check if obj & dis have same projection
-  
-  target <- rmf_create_array(1:(dis$nrow*dis$ncol), dim = c(dis$nrow, dis$ncol)) %>%
-    rmf_as_sf(dis = dis, prj = prj)
-  
-  active <- target[obj, op = op]
-  
-  ibound <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol))
-  ibound[active$value] <- 1
-  if(!sparse) ibound <- rmf_create_array(ibound, dim = c(dis$nrow, dis$ncol, dis$nlay))
-  return(ibound)
-}
-
-
-rmf_create_grid <- function(obj, 
-                            nrow = 10,
-                            ncol = 10,
-                            nlay = 3,
-                            cellsize = NULL,
-                            rotation = 0, 
-                            op = sf::st_intersects) {
-  
-  if(rotation != 0) {
+  if(ulcoordinate) {
+    if(is.null(dis)) stop('Please provide a dis object when ulcoordinate = TRUE', call. = FALSE)
     
-  } else {
-    gr <- sf::st_make_grid(obj, cellsize = if(!is.null(cellsize)) {cellsize}, n = c(nrow, ncol))
+    if(nodecoord) { # set origin as corner coordinate
+      origin[1] <- origin[1] - dis$delr[1]/2
+      origin[2] <- origin[2] + dis$delc[1]/2
+    } 
+    
+    # unrotated lowerleft coordinate
+    unrot_x <- origin[1]
+    unrot_y <- origin[2] - sum(dis$delc)
+    angle <- rotation * pi/180
+    
+    # rotated lowerleft coordinate
+    xRot = origin[1] + cos(angle)*(unrot_x - origin[1]) - sin(angle)*(unrot_y - origin[2])
+    yRot = origin[2] + sin(angle)*(unrot_x - origin[1]) + cos(angle)*(unrot_y - origin[2])
+    
+    origin[1] <- xRot
+    origin[2] <- yRot
+    
+  } else if(nodecoord) {
+    # set origin as corner coordinate
+    if(is.null(dis)) stop('Please provide a dis object when nodecoord = TRUE', call. = FALSE)
+    origin[1] <- origin[1] - dis$delr[dis$nrow]/2
+    origin[2] <- origin[2] - dis$delc[1]/2
   }
   
-}
-
-rmf_create_prj <- function(origin = c(0, 0), 
-                           rotation = 0, 
-                           crs = NA) {
-  
-  # TODO
-  # add corner_coord = FALSE when origin represents cell node
-  # add upperleft = TRUE when origin represents upperleft cell
-  
-  prj <- list()
   # z coordinate
   origin[3] <- ifelse(length(origin) > 2, origin[3], 0)
   crs <- sf::st_crs(crs)
+  
+  prj <- list()
   prj$origin <- origin
   prj$rotation <- rotation
   prj$crs <- crs
@@ -627,11 +620,274 @@ rmf_create_prj <- function(origin = c(0, 0),
   return(prj)
 }
 
+#' @export
 print.prj <- function(prj) {
   cat('RMODFLOW Projection object:', '\n')
-  cat('Origin coordinates (x y z) of the bottomleft corner:', '\n')
+  cat('Origin coordinates (x y z) of the lowerleft corner:', '\n')
   cat(' ', prj$origin, '\n')
   cat('Grid rotation (degrees counterclockwise):', '\n')
   cat(' ', prj$rotation, '\n')
   print(prj$crs)
 }
+
+#' Title
+#'
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_set_prj <- function(...) {
+  UseMethod('rmf_set_prj')
+}
+
+#' Title
+#'
+#' @param file 
+#' @param prj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_set_prj.character <- function(file, dis, prj = dis$prj) {
+  
+  # TODO only write if prj is present: keep?
+  if(!is.null(prj)) {
+    lines <- readr::read_lines(file)
+    comment_lines <- rmfi_parse_comments(lines)
+    st <- grep('Start RMODFLOW projection information', comment_lines$comments)
+    if(length(st) > 0) {
+      end <- grep('End RMODFLOW projection information', comment_lines$comments)
+      warning('Overwriting existing RMODFLOW projection information in file', call. = FALSE)
+      comment_lines$comments <- comment_lines$comments[-c(st:end)]
+    }
+    readr::write_lines(paste0("#", comment_lines$comments), path = file, append = FALSE)
+    rmfi_write_prj(dis, prj, file)
+    readr::write_lines(comment_lines$remaining_lines, path = file, append = TRUE)
+  } else {
+    warning('prj is NULL. No projection information is written.', call. = FALSE)
+  }
+  
+}
+
+#' Title
+#'
+#' @param dis 
+#' @param prj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_set_prj.dis <- function(dis, prj) {
+  if(!is.null(dis$prj)) warning('Overwriting existing prj object in dis', call. = FALSE)
+  dis$prj <- prj
+  return(dis)
+}
+
+#' Title
+#'
+#' @param prj 
+#' @param file 
+#'
+#' @return
+#'
+rmfi_write_prj <- function(dis, prj, file) {
+  
+  # TODO only write if prj is present: keep?
+  if(!is.null(prj)) {
+    extent <- rmf_extent(dis, prj)
+    
+    cat('#', 'Start RMODFLOW projection information', '\n', file = file, append = TRUE)
+    cat('#', 'Upper left corner:', paste0('(', paste(extent$corners['ul',], collapse = ', '), ')'), '\n', file=file, append=TRUE)
+    cat('#', 'Lower left corner:', paste0('(', paste(extent$corners['ll',], collapse = ', '), ')'), '\n', file=file, append=TRUE)
+    cat('#', 'Upper right corner:', paste0('(', paste(extent$corners['ur',], collapse = ', '), ')'), '\n', file=file, append=TRUE)
+    cat('#', 'Lower right corner:', paste0('(', paste(extent$corners['lr',], collapse = ', '), ')'), '\n', file=file, append=TRUE)
+    cat('#', 'Grid angle (in degrees counterclockwise):', ifelse(is.null(prj), 0, prj$rotation), '\n', file = file, append = TRUE)
+    cat('#', 'Z coordinate lower left corner:', ifelse(is.null(prj) || is.na(prj$origin[3]), 0, prj$origin[3]), '\n', file=file, append = TRUE)
+    
+    if(is.null(prj) || is.na(prj$crs)) {
+      cat('#', 'proj4string:', 'NA', '\n', file = file, append = TRUE)
+    } else {
+      if(!is.na(prj$crs$epsg)) {
+        cat('#', 'epsg:', prj$crs$epsg, '\n', file = file, append = TRUE)
+      } else if(!is.na(prj$crs$proj4string)) {
+        cat('#', 'proj4string:', prj$crs$proj4string, '\n', file = file, append = TRUE)
+      } else {
+        if(packageVersion('sf') >= '0.9') {
+          cat('#', 'wkt:', '\n', file = file, append = TRUE)
+          cat(paste('#', prj$crs$wkt), sep = '\n', file = file, append = TRUE)
+        }
+      }
+    }
+    cat('#', 'End RMODFLOW projection information', '\n', file = file, append = TRUE)
+  }
+ 
+} 
+
+#' Title
+#'
+#' @param comments 
+#'
+#' @return
+#'
+rmfi_parse_prj <- function(comments) {
+  
+  # first check if RMODFLOW projection information is present
+  st <- grep('Start RMODFLOW projection information', comments)
+  if(length(st) > 0) {
+    end <- grep('End RMODFLOW projection information', comments)
+    rmf_comments <- comments[st:end]
+    
+    # origin
+    ll_line <- grep('Lower left corner', rmf_comments, ignore.case = TRUE)[1]
+    coords <- rmfi_parse_variables(rmf_comments[ll_line])$variables
+    x <- as.numeric(gsub('\\(', '', coords[4]))
+    y <- as.numeric(gsub('\\)', '', coords[5]))
+    
+    z_line <- grep('Z coordinate', rmf_comments)
+    z_coord <- rmfi_parse_variables(rmf_comments[z_line])$variables
+    z <- as.numeric(z_coord[6])
+    origin <- c(x, y, z)
+    
+    # rotation
+    rot_line <- grep('Grid angle', rmf_comments, ignore.case = TRUE)
+    rot <- rmfi_parse_variables(rmf_comments[rot_line])$variables
+    rotation <- as.numeric(rot[6])
+    
+    # crs
+    prj4 <- grep('proj4string', rmf_comments, ignore.case = TRUE)
+    epsg <- grep('epsg', rmf_comments, ignore.case = TRUE)
+    wkt <- grep('wkt', rmf_comments, ignore.case = TRUE)
+    
+    if(length(wkt) > 0) {
+      crs <- rmf_comments[(wkt+1):(end-1)]
+    } else if(length(epsg) > 0) {
+      crs <- as.numeric(sub('epsg: ', '', rmf_comments[epsg], ignore.case = TRUE))
+    } else if(length(prj4) > 0) {
+      crs <- sub('proj4string: ', '', rmf_comments[prj4], ignore.case = TRUE)
+    } else {
+      crs <- NA
+    }
+    if(is.character(crs) && toupper(trimws(crs)) == "NA") crs <- NA
+    
+    prj <- rmf_create_prj(origin = origin, rotation = rotation, crs = crs)
+    comments <- comments[-c(st:end)]
+    
+  } else {
+    # else check if ModelMuse type projection information is present
+    
+    # origin
+    ll_line <- grep('Lower left corner', comments, ignore.case = TRUE)
+    if(length(ll_line) > 0) {
+      coords <- rmfi_parse_variables(comments[ll_line])$variables
+      x <- as.numeric(gsub('\\(', '', coords[4]))
+      y <- as.numeric(gsub('\\)', '', coords[5]))
+      origin <- c(x, y)
+      if(any(is.na(origin))) origin <- NA
+    } else {
+      origin <- NA
+    }
+    
+    # if not proper format, set prj to NULL
+    if(length(origin) == 1 && is.na(origin)) {
+      prj <- NULL
+    } else {
+      # rotation
+      rot_line <- grep('Grid angle', comments, ignore.case = TRUE)
+      if(length(rot_line) > 0) {
+        rot <- rmfi_parse_variables(comments[rot_line])$variables
+        rotation <- as.numeric(rot[6])
+      } else {
+        rotation <- 0
+      }
+      prj <- rmf_create_prj(origin = origin, rotation = rotation)
+    }
+  } 
+
+  return(list(prj = prj, remaining_comments = comments))
+}
+
+
+#' Title
+#'
+#' @param file 
+#' @param dis 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_read_usgs_model_reference <- function(file = {cat('Please select usgs.model.reference file ...\n'); file.choose()},
+                                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}) {
+  
+  lines <- readr::read_lines(file)
+  
+  # remove commented lines
+  comments <- which(substr(lines, 1, 1) == "#")
+  if(length(comments) > 0) lines <- lines[-comments]
+  
+  # origin
+  xul <- grep('xul', lines, ignore.case = TRUE)
+  yul <- grep('yul', lines, ignore.case = TRUE)
+  x <- as.numeric(rmfi_parse_variables(lines[xul])$variables[2])
+  y <- as.numeric(rmfi_parse_variables(lines[yul])$variables[2])
+  origin <- c(x, y)
+  
+  # rotation
+  rot <- grep('rotation', lines, ignore.case = TRUE)
+  rotation <- as.numeric(rmfi_parse_variables(lines[rot])$variables[2])
+  
+  # crs
+  epsg <- grep('epsg', lines, ignore.case = TRUE)
+  prj4 <- grep('proj4', lines, ignore.case = TRUE)
+  
+  if(length(epsg) > 0) {
+    crs <- as.numeric(rmfi_parse_variables(lines[epsg])$variables[2])
+  } else if(length(prj4) > 0) {
+    crs <- sub('proj4', '', lines[prj4], ignore.case = TRUE)
+  } else {
+    crs <- NA
+  }
+  
+  prj <- rmf_create_prj(origin = origin, rotation = rotation, crs = crs, ulcoordinate = TRUE, dis = dis)
+  return(prj)
+}
+
+
+
+# TODO add to utils
+
+#' Title
+#'
+#' @param dis 
+#' @param prj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmf_extent <- function(dis, prj = dis$prj) {
+  
+  corners <- data.frame(x = rep(c(0, sum(dis$delr)), each = 2), y = c(0, sum(dis$delc), sum(dis$delc), 0))
+  row.names(corners) <- c('ll', 'ul', 'ur', 'lr')
+  
+  if(!is.null(prj)) {
+    coords <- rmf_convert_grid_to_xyz(x = corners$x,
+                                      y = corners$y,
+                                      prj = prj,
+                                      dis = dis)
+    corners <- structure(coords, row.names = row.names(corners))
+  } 
+  
+  bbox <- sf::st_bbox(c(xmin = min(corners$x),
+                        xmax = max(corners$x),
+                        ymin = min(corners$y),
+                        ymax = max(corners$y)),
+                      crs = ifelse(is.null(prj), NA, prj$crs))
+
+  return(list(corners = corners, bbox = bbox))
+}
+
