@@ -201,23 +201,27 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   }
   
   # data set 5
+  # data set 5 does not have to be present (not stated in manual/online-help)
+  # source code states that data set 5 is only read when np (nphfb in src) > 0
   data_set_5 <- rmfi_parse_variables(lines)
-  nacthfb <- as.numeric(data_set_5$variables[1])
-  lines <- data_set_5$remaining_lines
-  rm(data_set_5)
-  
-  # data set 6
-  acthfb <- vector(mode = 'character', length = nacthfb)
-  for(i in 1:nacthfb) {
-    data_set_6 <- rmfi_parse_variables(lines)
-    acthfb[i] <- toupper(data_set_6$variables[1])
-    lines <- data_set_6$remaining_lines
-    rm(data_set_6)
+  if(np > 0) {
+    nacthfb <- as.numeric(data_set_5$variables[1])
+    lines <- data_set_5$remaining_lines
+    rm(data_set_5)
+    
+    # data set 6
+    acthfb <- vector(mode = 'character', length = nacthfb)
+    for(i in 1:nacthfb) {
+      data_set_6 <- rmfi_parse_variables(lines)
+      acthfb[i] <- toupper(data_set_6$variables[1])
+      lines <- data_set_6$remaining_lines
+      rm(data_set_6)
+    }
+    
+    # set kper for parameters
+    rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (toupper(attr(i, 'parnam')) %in% acthfb), structure(i, kper = 1:dis$nper), i))
   }
-  
-  # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (toupper(attr(i, 'parnam')) %in% acthfb), structure(i, kper = 1:dis$nper), i))
-  
+
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))
   comment(obj) <- comments

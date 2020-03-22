@@ -1644,7 +1644,9 @@ print.hpr <- function(hpr, n = 20) {
   
   cat('Goodness-of-fit metrics:', '\n')
   metrics <- suppressWarnings(rmf_performance(hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
-  print(round(unlist(metrics), 2))
+  # pretty
+  metrics <- lapply(metrics, function(i) ifelse(i > 1e5, as.numeric(formatC(i, format = 'e', digits = 2)), round(i, 2)))
+  print(data.frame(metrics), row.names = FALSE)
    
 }
 
@@ -1685,7 +1687,7 @@ print.modflow <- function(modflow, n = 5) {
   
   # TODO add other observations
   if('hob' %in% input) {
-    cat(modflow$hob$nh, ifelse(modflow$hob$nh > 1, 'head observations', 'head observation'), '\n')
+    cat(modflow$hob$dimensions$nh, ifelse(modflow$hob$dimensions$nh > 1, 'head observations', 'head observation'), '\n')
     cat('\n')
   }
   
@@ -1716,7 +1718,9 @@ print.modflow <- function(modflow, n = 5) {
   if('hpr' %in% output) {
     cat('Goodness-of-fit metrics (head observations):', '\n')
     metrics <- suppressWarnings(rmf_performance(modflow$hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
-    print(round(unlist(metrics), 2))
+    # pretty
+    metrics <- lapply(metrics, function(i) ifelse(i > 1e5, as.numeric(formatC(i, format = 'e', digits = 2)), round(i, 2)))
+    print(data.frame(metrics), row.names = FALSE)
   }
   
 }

@@ -820,6 +820,8 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
                ggplot2::scale_fill_gradientn('Count',colours=rmfi_rev_rainbow(7))+
                ggplot2::xlab('Simulated equivalent - observed value')
     )
+  } else {
+    stop('plot type not supported', call. = FALSE)
   }
 }
 
