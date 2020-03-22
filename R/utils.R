@@ -156,7 +156,7 @@ rmf_as_tibble <- function(...) {
 rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
                                        mask = array * 0 + 1,
-                                       prj = rmf_get_dis(dis),
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r') {
