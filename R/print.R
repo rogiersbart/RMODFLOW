@@ -163,9 +163,9 @@ print.dis <- function(dis, n = 5) {
   }
   print(sp[1:nper,], row.names = FALSE)
   
-  if(!is.null(dis$prj)) {
+  if(rmf_has_prj(dis)) {
     cat('\n')
-    print(dis$prj)
+    print(rmf_get_prj(dis))
   } 
   
 }

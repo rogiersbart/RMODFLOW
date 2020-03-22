@@ -115,9 +115,9 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
   ftype <- ftype[-which(ftype == 'DIS')]
   
   # if usgs.model.reference file is present, get prj from that
-  all_files <- list.files(dirname(file))
+  all_files <- list.files(dir_nam)
   ref_file <- all_files[which(all_files == 'usgs.model.reference')]
-  if(length(ref_file) > 0) modflow$dis$prj <- rmf_read_usgs_model_reference(ref_file, modflow$dis)
+  if(length(ref_file) == 1) modflow$dis$prj <- rmf_read_usgs_model_reference(file.path(dir_nam, ref_file), modflow$dis)
   
   if(verbose) print_reading('BAS6', file = fname[which(modflow$nam$ftype == 'BAS6')])
   modflow$bas <- rmf_read_bas(file = fname[which(modflow$nam$ftype == 'BAS6')], dis = modflow$dis, nam = modflow$nam, precision = precision)

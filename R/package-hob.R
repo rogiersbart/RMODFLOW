@@ -25,7 +25,7 @@ rmf_create_hob <- function(locations,
                            tomulth = 1,
                            itt = 1,
                            unique_obsnam = FALSE,
-                           prj = dis$prj) {
+                           prj = rmf_get_prj(dis)) {
       
   hob <- NULL
   

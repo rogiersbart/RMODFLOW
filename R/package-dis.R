@@ -77,7 +77,7 @@ rmf_create_dis <- function(nlay = 3,
     dis$sstr <- sstr
     
     # prj
-    dis$prj <- prj
+    dis$prj <- rmfi_ifelse0(inherits(prj, 'prj'), prj, NULL)
 
   class(dis) <- c('dis','rmf_package')
   return(dis)
@@ -220,8 +220,9 @@ rmf_write_dis <- function(dis,
   cat(paste('# MODFLOW Discretization File created by RMODFLOW, version',v,'\n'), file=file)
   cat(paste('#', comment(dis)), sep='\n', file=file, append=TRUE)
   
+  # TODO only write if prj is present: keep?
   # write RMODFLOW projection information
-  rmfi_write_prj(dis, dis$prj, file)
+  if(rmf_has_prj(dis)) rmfi_write_prj(dis, prj = rmf_get_prj(dis), file = file)
   
   # data set 1
   rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file)

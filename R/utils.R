@@ -156,7 +156,7 @@ rmf_as_tibble <- function(...) {
 rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
                                        mask = array * 0 + 1,
-                                       prj = dis$prj,
+                                       prj = rmf_get_dis(dis),
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r') {
@@ -226,7 +226,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
                                        j = NULL,
                                        k = NULL,
                                        mask = array * 0 + 1,
-                                       prj = dis$prj,
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r') {
@@ -390,7 +390,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        k = NULL,
                                        l = NULL,
                                        mask = array * 0 + 1,
-                                       prj = dis$prj,
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL, 
                                        as_points = FALSE,
                                        id = 'r') {
@@ -435,7 +435,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 rmf_as_tibble.rmf_list <- function(obj,
                                    dis,
                                    ijk = NULL,
-                                   prj = dis$prj,
+                                   prj = rmf_get_prj(dis),
                                    crs = NULL,
                                    as_points = FALSE, 
                                    id = 'r') {
@@ -632,7 +632,7 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' @method rmf_cell_coordinates dis
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
-                                     prj = dis$prj,
+                                     prj = rmf_get_prj(dis),
                                      include_faces = FALSE) {
   if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates only represent numerical layers.")
   cell_coordinates <- NULL
@@ -697,7 +697,7 @@ rmf_cell_coordinates.dis <- function(dis,
 #' @export
 rmf_cell_coordinates.huf <- function(huf,
                                      dis = NULL,
-                                     prj = dis$prj,
+                                     prj = rmf_get_prj(dis),
                                      include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$top - huf$thck/2
@@ -1258,7 +1258,7 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
                                     roff = NULL,
                                     coff = NULL,
                                     loff = NULL,
-                                    prj = dis$prj,
+                                    prj = rmf_get_prj(dis),
                                     dis = NULL) {
   if(!is.null(x)) {
     if(!is.null(prj)) {
@@ -1875,7 +1875,7 @@ rmf_convert_upw_to_lpf <- function(upw,
 #' If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 #' @return data frame with modflow coordinates
 #' @export
-rmf_convert_xyz_to_grid <- function(x,y,prj=dis$prj,z=NULL,dis=NULL,output='xyz') {
+rmf_convert_xyz_to_grid <- function(x,y,prj=rmf_get_prj(dis),z=NULL,dis=NULL,output='xyz') {
   output_xyz <- 'xyz' %in% output
   output_ijk <- 'ijk' %in% output
   output_off <- 'off' %in% output

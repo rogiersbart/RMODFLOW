@@ -20,7 +20,7 @@
 rmf_as_list.sf <- function(obj,
                            dis,
                            select = colnames(sf::st_set_geometry(obj, NULL)), 
-                           prj = dis$prj, 
+                           prj = rmf_get_prj(dis), 
                            k = NULL,
                            kper = attr(obj, 'kper'),
                            op = sf::st_intersects,
@@ -78,7 +78,7 @@ rmf_as_array.sf <- function(obj,
                             dis,
                             select,
                             k = NULL,
-                            prj = dis$prj,
+                            prj = rmf_get_prj(dis),
                             sparse = TRUE,
                             op = sf::st_intersects,
                             kper = attr(obj, 'kper'),
@@ -109,7 +109,7 @@ rmf_as_list.stars <- function(obj,
                               dis,
                               select = names(obj),
                               k = NULL,
-                              prj = dis$prj,
+                              prj = rmf_get_prj(dis),
                               kper = attr(obj, 'kper'),
                               op = sf::st_intersects,
                               ...) {
@@ -138,7 +138,7 @@ rmf_as_list.stars <- function(obj,
 #' @examples
 rmf_as_array.stars <- function(obj,
                                dis, 
-                               prj = dis$prj,
+                               prj = rmf_get_prj(dis),
                                select = 1,
                                resample = TRUE,
                                method = 'bilinear',
@@ -258,7 +258,7 @@ rmf_as_sf <- function(...) {
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_2d_array
 #' @examples
-rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
   
   # faster to convert to stars and then to sf than to manually create sf object
   
@@ -277,7 +277,7 @@ rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_3d_array
 #' @export
-rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
   
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -306,7 +306,7 @@ rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_4d_array
 #' @export
-rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = dis$prj, name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
 
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')
@@ -335,7 +335,7 @@ rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array))
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_list
 #' @export
-rmf_as_sf.rmf_list <- function(obj, dis, prj = dis$prj, as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), as_points = FALSE, id = 'r', ...) {
   
   df <- rmf_as_tibble(obj, dis = dis, prj = prj, as_points = as_points, id = 'r', ...) %>%  
     as.data.frame()
@@ -403,7 +403,7 @@ rmf_as_stars <- function(...) {
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_2d_array
 #' @examples
-rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
   m <- t(as.matrix(array))
@@ -454,7 +454,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = dis$
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_3d_array
 #' @export
-rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$prj, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
   
@@ -478,7 +478,7 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = dis$
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_4d_array
 #' @export
-rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = dis$prj, name = 'value', id = 'r', ...) {
+rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   mask <- array(mask, dim = c(dim(mask), dim(array)[4]))
   array[which(mask^2 != 1)] <- NA
@@ -510,7 +510,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_list
 #' @export
-rmf_as_stars.rmf_list <- function(obj, dis, prj = dis$prj, ...) {
+rmf_as_stars.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), ...) {
   
   rmf_as_array(obj, dis = dis, ...) %>% rmf_as_stars(dis = dis, prj = prj, ...)
   
@@ -531,21 +531,21 @@ rmf_as_raster <- function(...) {
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_2d_array
 #' @export
-rmf_as_raster.rmf_2d_array <- function(array, dis, prj = dis$prj, ...) {
+rmf_as_raster.rmf_2d_array <- function(array, dis, prj = rmf_get_prj(dis), ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_3d_array
 #' @export
-rmf_as_raster.rmf_3d_array <- function(array, dis, prj = dis$prj, ...) {
+rmf_as_raster.rmf_3d_array <- function(array, dis, prj = rmf_get_prj(dis), ...) {
   rmf_as_stars(array, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_4d_array
 #' @export
-rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = dis$prj, ...) {
+rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = rmf_get_prj(dis), ...) {
   if(is.null(l)) stop('Please provide a l argument to subset the 4d array', call. = FALSE)
   rmf_as_stars(array[,,,l], dis = dis, prj = prj, ...) %>% as('Raster')
 }
@@ -553,7 +553,7 @@ rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = dis$prj, ...)
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_list
 #' @export
-rmf_as_raster.rmf_list <- function(obj, dis, prj = dis$prj, ...) {
+rmf_as_raster.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), ...) {
   rmf_as_stars(obj, dis = dis, prj = prj, ...) %>% as('Raster')
 }
 
@@ -630,28 +630,85 @@ print.prj <- function(prj) {
   print(prj$crs)
 }
 
-#' Title
-#'
-#' @param ... 
-#'
-#' @return
+#' Functions to get, set and check presence of prj objects
+#' 
+#' @param dis \code{RMODFLOW} dis object
+#' @param modflow \code{RMODFLOW} modflow object
+#' @param prj \code{RMODFLOW} prj object
+#' @param file path to discretization file; typically "*.dis"
+#' 
+#' @name prj_auxiliary
+NULL
+
+#' 
+#' @return \code{rmf_get_prj} returns a \code{RMODFLOW} prj object if present; otherwise \code{NULL}
 #' @export
+#' @rdname prj_auxiliary
+#' @examples
+rmf_get_prj <- function(...) {
+  UseMethod('rmf_get_prj')
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_get_prj dis
+rmf_get_prj.dis <- function(dis) {
+  if(rmf_has_prj(dis)) {
+    return(dis$prj)
+  } else {
+    return(NULL)
+  }
+}
+
 #'
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_get_prj dis
+rmf_get_prj.modflow <- function(modflow) {
+  if(rmf_has_prj(modflow)) {
+    return(modflow$dis$prj)
+  } else {
+    return(NULL)
+  }
+}
+
+#'
+#' @return \code{rmf_has_prj} returns a logical depending on whether or not a \code{RMODFLOW} prj object is present
+#' @export
+#' @rdname prj_auxiliary
+#' @examples
+rmf_has_prj <- function(...) {
+  UseMethod('rmf_has_prj')
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_has_prj dis
+rmf_has_prj.dis <- function(dis) {
+  !is.null(dis$prj) && inherits(dis$prj, 'prj')
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_has_prj modflow
+rmf_has_prj.modflow <- function(modflow) {
+  !is.null(modflow$dis$prj) && inherits(modflow$dis$prj, 'prj')
+}
+
+#'
+#' @return \code{rmf_set_prj} returns either a \code{RMODFLOW} dis or modflow object with the prj set or nothing when writing directly to a file 
+#' @export
+#' @rdname prj_auxiliary
 #' @examples
 rmf_set_prj <- function(...) {
   UseMethod('rmf_set_prj')
 }
 
-#' Title
-#'
-#' @param file 
-#' @param prj 
-#'
-#' @return
+#' @details \code{rmf_set_prj.character} writes the projection information of \code{prj} directly into the header comments of the discretization file
 #' @export
-#'
-#' @examples
-rmf_set_prj.character <- function(file, dis, prj = dis$prj) {
+#' @rdname prj_auxiliary
+#' @method rmf_set_prj character
+rmf_set_prj.character <- function(file, dis, prj = rmf_get_prj(dis)) {
   
   # TODO only write if prj is present: keep?
   if(!is.null(prj)) {
@@ -663,8 +720,10 @@ rmf_set_prj.character <- function(file, dis, prj = dis$prj) {
       warning('Overwriting existing RMODFLOW projection information in file', call. = FALSE)
       comment_lines$comments <- comment_lines$comments[-c(st:end)]
     }
-    readr::write_lines(paste0("#", comment_lines$comments), path = file, append = FALSE)
-    rmfi_write_prj(dis, prj, file)
+    v <- packageDescription("RMODFLOW")$Version
+    readr::write_lines(paste('# MODFLOW Discretization File created by RMODFLOW, version', v), path=file, append = FALSE)
+    readr::write_lines(paste0("#", comment_lines$comments), path = file, append = TRUE)
+    rmfi_write_prj(dis, prj = prj, file = file)
     readr::write_lines(comment_lines$remaining_lines, path = file, append = TRUE)
   } else {
     warning('prj is NULL. No projection information is written.', call. = FALSE)
@@ -672,19 +731,22 @@ rmf_set_prj.character <- function(file, dis, prj = dis$prj) {
   
 }
 
-#' Title
-#'
-#' @param dis 
-#' @param prj 
-#'
-#' @return
 #' @export
-#'
-#' @examples
+#' @rdname prj_auxiliary
+#' @method rmf_set_prj dis
 rmf_set_prj.dis <- function(dis, prj) {
-  if(!is.null(dis$prj)) warning('Overwriting existing prj object in dis', call. = FALSE)
+  if(rmf_has_prj(dis)) warning('Overwriting existing prj object in dis object', call. = FALSE)
   dis$prj <- prj
   return(dis)
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_set_prj modflow
+rmf_set_prj.modflow <- function(modflow, prj) {
+  if(rmf_has_prj(modflow)) warning('Overwriting existing prj object in modflow object', call. = FALSE)
+  modflow$dis$prj <- prj
+  return(modflow)
 }
 
 #' Title
@@ -869,7 +931,7 @@ rmf_read_usgs_model_reference <- function(file = {cat('Please select usgs.model.
 #' @export
 #'
 #' @examples
-rmf_extent <- function(dis, prj = dis$prj) {
+rmf_extent <- function(dis, prj = rmf_get_prj(dis)) {
   
   corners <- data.frame(x = rep(c(0, sum(dis$delr)), each = 2), y = c(0, sum(dis$delc), sum(dis$delc), 0))
   row.names(corners) <- c('ll', 'ul', 'ur', 'lr')
