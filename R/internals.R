@@ -24,7 +24,7 @@ rmfi_confining_beds <- function(dis) {
 rmfi_convert_coordinates <- function(dat, from, to) {
   nrs <- which(!is.na(apply(dat, 1, sum)))
   if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming', call. = FALSE)
-  converted_coords <- sf::st_transform(sf::st_as_sf(df, coords = colnames(dat[nrs, ]), crs = sf::st_crs(from)), crs = sf::st_crs(to))
+  converted_coords <- sf::st_transform(sf::st_as_sf(dat[nrs,], coords = colnames(dat), crs = sf::st_crs(from)), crs = sf::st_crs(to))
   converted_coords <- as.data.frame(sf::st_coordinates(converted_coords))
   colnames(converted_coords) <- colnames(dat)
   dat[nrs,] <- converted_coords

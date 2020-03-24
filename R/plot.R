@@ -1030,15 +1030,22 @@ rmf_plot.rmf_2d_array <- function(array,
     positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
     positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
     values <- data.frame(id = ids,value = c(t(array*mask^2)))
+    
     if(!is.null(prj)) {
       new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
       positions$x <- new_positions$x
       positions$y <- new_positions$y
+
+      if(!is.null(crs)) {
+        transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        positions$x <- transf_positions$x
+        positions$y <- transf_positions$y
+      }
+      
+    } else if(!is.null(crs)) {
+      stop('Please provide a prj file when transforming the crs', call. = FALSE)
     }
-    if(!is.null(crs)) {
-      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-      positions <- rmfi_convert_coordinates(positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
-    }
+
     datapoly <- merge(values, positions, by=c("id"))
     if(crop) datapoly <- na.omit(datapoly)
     
@@ -1086,10 +1093,17 @@ rmf_plot.rmf_2d_array <- function(array,
         new_xy <- rmf_convert_grid_to_xyz(x=xy$x,y=xy$y,prj=prj,dis=dis)
         xy$x <- new_xy$x
         xy$y <- new_xy$y
+        
+        if(!is.null(crs)) {
+          transf_positions <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+          xy$x <- transf_positions$x
+          xy$y <- transf_positions$y
+        }
+        
+      } else if(!is.null(crs)) {
+        stop('Please provide a prj file when transforming the crs', call. = FALSE)
       }
-      if(!is.null(crs)) {
-        xy <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
-      }
+
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(as.data.frame(xy))
@@ -1140,11 +1154,17 @@ rmf_plot.rmf_2d_array <- function(array,
         new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=vector_df$y,prj=prj,dis=dis)
         vector_df$x <- new_positions$x
         vector_df$y <- new_positions$y
+        
+        if(!is.null(crs)) {
+          transf_positions <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+          vector_df$x <- transf_positions$x
+          vector_df$y <- transf_positions$y
+        }
+        
+      } else if(!is.null(crs)) {
+        stop('Please provide a prj file when transforming the crs', call. = FALSE)
       }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
-      }
+
       if(crop) vector_df <- na.omit(vector_df)
       # add gradient values; negative because want to show arrow from high to low
       if(is.null(uvw)) {

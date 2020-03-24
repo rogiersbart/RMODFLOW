@@ -185,13 +185,18 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   }
   
   if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x = positions$x, y = positions$y, prj = prj, dis = dis)
+    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
-  }
-  if(!is.null(crs)) {
-    if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-    positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$crs), to = sf::st_crs(crs))
+    
+    if(!is.null(crs)) {
+      transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+      positions$x <- transf_positions$x
+      positions$y <- transf_positions$y
+    }
+    
+  } else if(!is.null(crs)) {
+    stop('Please provide a prj file when transforming the crs', call. = FALSE)
   }
   
   tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
@@ -492,15 +497,22 @@ rmf_as_tibble.rmf_list <- function(obj,
     positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     values <- cbind(data.frame(id = ids), data)
+    
     if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$y, prj=prj, dis=dis)
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
       positions$x <- new_positions$x
       positions$y <- new_positions$y
+      
+      if(!is.null(crs)) {
+        transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        positions$x <- transf_positions$x
+        positions$y <- transf_positions$y
+      }
+      
+    } else if(!is.null(crs)) {
+      stop('Please provide a prj file when transforming the crs', call. = FALSE)
     }
-    if(!is.null(crs)) {
-      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-      positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$crs), to = sf::st_crs(crs))
-    }
+    
     df <- tibble::as_tibble(merge(values, positions, by=c("id")))
   }
   
