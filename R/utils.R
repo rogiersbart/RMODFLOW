@@ -1911,20 +1911,19 @@ rmf_convert_xyz_to_grid <- function(dis,x,y,prj=rmf_get_prj(dis),z=NULL,output='
   output_off <- 'off' %in% output
   if(!is.null(prj)) {
     if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
-    x <- (x * length_mlt) - prj$origin[1]
-    y <- (y * length_mlt) - prj$origin[2]
+    x <- (x - prj$origin[1]) * length_mlt
+    y <- (y - prj$origin[2]) * length_mlt
     angle <- atan(y/x)*180/pi - prj$rotation
     angle[which(is.na(angle))] <- 90-prj$rotation
     angle[which(angle < 0)] <- 180 + angle[which(angle < 0)]
     s <- sqrt(x^2+y^2)
     x <- cos(angle*pi/180)*s
     y <- sin(angle*pi/180)*s
-    if(!is.null(z)) z <- (z * length_mlt) - prj$origin[3]
+    if(!is.null(z)) z <- (z - prj$origin[3]) * length_mlt
   }
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
   if(output_ijk || output_off) {
-    if(is.null(dis)) stop('Please provide dis argument', call. = FALSE)    
     if(ncol(dat)==3) {
       dis$thck <- dis$tops <- dis$botm
       dis$thck <- rmf_calculate_thickness(dis)
