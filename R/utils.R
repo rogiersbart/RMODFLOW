@@ -185,7 +185,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   }
   
   if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x = positions$x, y = positions$y, prj = prj)
+    new_positions <- rmf_convert_grid_to_xyz(x = positions$x, y = positions$y, prj = prj, dis = dis)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
   }
@@ -246,14 +246,15 @@ rmf_as_tibble.rmf_3d_array <- function(array,
       tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
     } 
     
+    length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
     z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
     center <- botm + (tops - botm)/2
     mask[which(mask == 0)] <- NA
     tbl$value <- c(array*mask^2)
     tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
-    if(as_points) tbl$z <- center[tbl$id] + z_ref
-    tbl$top <- tops[tbl$id] + z_ref
-    tbl$botm <- botm[tbl$id] + z_ref
+    if(as_points) tbl$z <- (length_mlt * center[tbl$id]) + z_ref
+    tbl$top <- (length_mlt * tops[tbl$id]) + z_ref
+    tbl$botm <- (length_mlt * botm[tbl$id]) + z_ref
 
     if(id == 'modflow') {
       tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
@@ -313,13 +314,18 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1,j=j,dis=dis)[[1]], y=positions$x, z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=positions$x,z=positions$y,prj=prj, dis=dis)
           positions$x <- new_positions$y
           positions$y <- new_positions$z
-        }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$crs), to=sf::st_crs(crs))$x
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            positions$x <- transf_positions$y
+            positions$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
         
       } else if(!is.null(i) & is.null(j)) {
@@ -345,13 +351,18 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]], z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=positions$y,prj=prj,dis=dis)
           positions$x <- new_positions$x
           positions$y <- new_positions$z
-        }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          positions$x <- rmfi_convert_coordinates(positions, from=sf::st_crs(prj$crs), to=sf::st_crs(crs))$x
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            positions$x <- transf_positions$x
+            positions$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
       }
       
@@ -453,14 +464,13 @@ rmf_as_tibble.rmf_list <- function(obj,
   botm <- dis$botm[,,nnlay]
   if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
   z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
   
   if(as_points) {
     coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
     if(!is.null(crs)) {
       if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
-      coords_prj <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
-      coords$x <- coords_prj$x
-      coords_y <- coords_prj$y
+      coords <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
     }
     df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r'))
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
@@ -483,7 +493,7 @@ rmf_as_tibble.rmf_list <- function(obj,
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     values <- cbind(data.frame(id = ids), data)
     if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$y, prj=prj)
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$y, prj=prj, dis=dis)
       positions$x <- new_positions$x
       positions$y <- new_positions$y
     }
@@ -494,8 +504,8 @@ rmf_as_tibble.rmf_list <- function(obj,
     df <- tibble::as_tibble(merge(values, positions, by=c("id")))
   }
   
-  df$top <- tops[df$id] + z_ref
-  df$botm <- botm[df$id] + z_ref
+  df$top <- (length_mlt * tops[df$id]) + z_ref
+  df$botm <- (length_mlt * botm[df$id]) + z_ref
   
   if(id == 'modflow') {
     df$id <- rmf_convert_id_to_id(df$id, dis = dis, from = 'r', to = 'modflow')
@@ -665,14 +675,14 @@ rmf_cell_coordinates.dis <- function(dis,
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
   }
   if(!is.null(prj)) {
-    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj)
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj, dis=dis)
     cell_coordinates$x[] <- coord_prj$x
     cell_coordinates$y[] <- coord_prj$y
     cell_coordinates$z[] <- coord_prj$z
     
     if(include_faces) {
-      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj)
-      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj)
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
       cell_coordinates$front[] <- faces_prj_1$x
       cell_coordinates$right[] <- faces_prj_1$y
       cell_coordinates$upper[] <- faces_prj_1$z
@@ -718,14 +728,14 @@ rmf_cell_coordinates.huf <- function(huf,
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
   }
   if(!is.null(prj)) {
-    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj)
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj, dis=dis)
     cell_coordinates$x[] <- coord_prj$x
     cell_coordinates$y[] <- coord_prj$y
     cell_coordinates$z[] <- coord_prj$z
     
     if(include_faces) {
-      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj)
-      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj)
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
       cell_coordinates$front[] <- faces_prj_1$x
       cell_coordinates$right[] <- faces_prj_1$y
       cell_coordinates$upper[] <- faces_prj_1$z
@@ -1228,6 +1238,7 @@ convert_dis_to_saturated_dis <- function(...) {
 
 #' Convert modflow coordinates to real world coordinates
 #' 
+#' @param dis \code{RMODFLOW} dis object
 #' @param x modflow x coordinate
 #' @param y modflow y coordinate
 #' @param z modflow z coordinate
@@ -1238,7 +1249,6 @@ convert_dis_to_saturated_dis <- function(...) {
 #' @param coff modflow column offset
 #' @param loff modflow layer offset
 #' @param prj prj object
-#' @param dis dis object
 #' @details Provide either xyz or ijk
 #'   If xyz is provided, it is reprojected using the optional prj object.
 #'   
@@ -1248,8 +1258,10 @@ convert_dis_to_saturated_dis <- function(...) {
 #'   set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
 #'   
 #' @return data frame with real world x and y (and optionally z) coordinates
+#' @seealso \code{\link{rmf_convert_xyz_to_grid}}
 #' @export
-rmf_convert_grid_to_xyz <- function(x = NULL,
+rmf_convert_grid_to_xyz <- function(dis,
+                                    x = NULL,
                                     y = NULL,
                                     z = NULL,
                                     i = NULL,
@@ -1258,8 +1270,10 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
                                     roff = NULL,
                                     coff = NULL,
                                     loff = NULL,
-                                    prj = rmf_get_prj(dis),
-                                    dis = NULL) {
+                                    prj = rmf_get_prj(dis)) {
+  
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
+  
   if(!is.null(x)) {
     if(!is.null(prj)) {
       if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
@@ -1267,14 +1281,13 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       angle <- atan(y/x)*180/pi+prj$rotation
       angle[which(is.na(angle))] <- 90-prj$rotation
       s <- sqrt(x^2+y^2)
-      x <- prj$origin[1]+ cos(angle*pi/180)*s
-      y <- prj$origin[2]+ sin(angle*pi/180)*s
-      if(!is.null(z)) z <- prj$origin[3]+z
+      x <- prj$origin[1] + ((cos(angle*pi/180)*s) * length_mlt)
+      y <- prj$origin[2] + ((sin(angle*pi/180)*s) * length_mlt)
+      if(!is.null(z)) z <- prj$origin[3] + ((z) * length_mlt)
     }
     ifelse(!is.null(z),return(data.frame(x=x,y=y,z=z)),return(data.frame(x=x,y=y)))
     
   } else if(!is.null(i)) {
-    if(is.null(dis)) stop('Please provide a dis object', call. = FALSE)
     y_grid <- c(cumsum(rev(dis$delc))-rev(dis$delc)/2)[(dis$nrow-i+1)]
     x_grid <- c(cumsum(dis$delr)-dis$delr/2)[j]
     
@@ -1324,10 +1337,10 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       angle <- asin(y_grid/s)*180/pi + prj$rotation
       x_grid <- cos(angle*pi/180)*s
       y_grid <- sin(angle*pi/180)*s
-      x <- prj$origin[1] + x_grid
-      y <- prj$origin[2] + y_grid
+      x <- prj$origin[1] + (x_grid * length_mlt)
+      y <- prj$origin[2] + (y_grid * length_mlt)
       if(!is.null(k)) {
-        z <- prj$origin[3] + z_grid
+        z <- prj$origin[3] + (z_grid * length_mlt)
       }
     }
     
@@ -1862,34 +1875,39 @@ rmf_convert_upw_to_lpf <- function(upw,
 
 #' Convert real world coordinates to modflow coordinates
 #' 
+#' @param dis \code{RMODFLOW} dis object
 #' @param x real world x coordinate
 #' @param y real world y coordinate
 #' @param z real world z coordinate; optional
-#' @param prj prj object
-#' @param dis dis object; optional
+#' @param prj optional \code{RMODFLOW} prj object
 #' @param output character; containing 'xyz','ijk' and/or 'off' for the return of x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @details
-#' If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
+#' If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
+#' If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
 #' If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned. 
 #'
 #' If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 #' @return data frame with modflow coordinates
+#' @seealso \code{\link{rmf_convert_grid_to_xyz}}
 #' @export
-rmf_convert_xyz_to_grid <- function(x,y,prj=rmf_get_prj(dis),z=NULL,dis=NULL,output='xyz') {
+rmf_convert_xyz_to_grid <- function(dis,x,y,prj=rmf_get_prj(dis),z=NULL,output='xyz') {
+  
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'grid')
+  
   output_xyz <- 'xyz' %in% output
   output_ijk <- 'ijk' %in% output
   output_off <- 'off' %in% output
   if(!is.null(prj)) {
     if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
-    x <- x-prj$origin[1]
-    y <- y-prj$origin[2]
+    x <- (x * length_mlt) - prj$origin[1]
+    y <- (y * length_mlt) - prj$origin[2]
     angle <- atan(y/x)*180/pi - prj$rotation
     angle[which(is.na(angle))] <- 90-prj$rotation
     angle[which(angle < 0)] <- 180 + angle[which(angle < 0)]
     s <- sqrt(x^2+y^2)
     x <- cos(angle*pi/180)*s
     y <- sin(angle*pi/180)*s
-    if(!is.null(z)) z <- z - prj$origin[3]
+    if(!is.null(z)) z <- (z * length_mlt) - prj$origin[3]
   }
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
@@ -3016,7 +3034,7 @@ rmf_export_vector.rmf_2d_array <- function(array,
   positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
   positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
   if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj)
+    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
   }

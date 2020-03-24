@@ -412,12 +412,14 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   # origin
   org <- rmfi_ifelse0(is.null(prj), c(0, 0, 0), prj$origin)
   
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = "xyz")
+  
   # TODO rotation does not work properly in stars;
   
   # create stars object
   # use negative deltay: more consistent with how most raster data is read from file
   # d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = rev(org[2] + c(0, cumsum(dis$delc))), affine = rep(aff, 2))
-  d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = rev(org[2] + c(0, cumsum(dis$delc))))
+  d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = rev(org[2] + (c(0, cumsum(dis$delc)) * length_mlt)))
   s <- stars::st_as_stars(m, dimensions = d)
   names(s) <- name
   
@@ -562,7 +564,7 @@ rmf_as_raster.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), ...) {
 
 #' Title
 #'
-#' @param origin 
+#' @param origin in length units of crs
 #' @param rotation 
 #' @param crs 
 #' @param ulcoordinate 
@@ -580,17 +582,20 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
                            nodecoord = FALSE,
                            dis = NULL) {
   
+  crs <- sf::st_crs(crs)
+  
   if(ulcoordinate) {
     if(is.null(dis)) stop('Please provide a dis object when ulcoordinate = TRUE', call. = FALSE)
+    length_mlt <- rmfi_prj_length_multiplier(dis, prj = list(crs = crs), to = 'xyz')
     
     if(nodecoord) { # set origin as corner coordinate
-      origin[1] <- origin[1] - dis$delr[1]/2
-      origin[2] <- origin[2] + dis$delc[1]/2
+      origin[1] <- origin[1] - ((dis$delr[1]/2) * length_mlt)
+      origin[2] <- origin[2] + ((dis$delc[1]/2) * length_mlt)
     } 
     
     # unrotated lowerleft coordinate
     unrot_x <- origin[1]
-    unrot_y <- origin[2] - sum(dis$delc)
+    unrot_y <- origin[2] - (sum(dis$delc) * length_mlt)
     angle <- rotation * pi/180
     
     # rotated lowerleft coordinate
@@ -603,13 +608,14 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
   } else if(nodecoord) {
     # set origin as corner coordinate
     if(is.null(dis)) stop('Please provide a dis object when nodecoord = TRUE', call. = FALSE)
-    origin[1] <- origin[1] - dis$delr[dis$nrow]/2
-    origin[2] <- origin[2] - dis$delc[1]/2
+    length_mlt <- rmfi_prj_length_multiplier(dis, prj = list(crs = crs), to = 'xyz')
+    
+    origin[1] <- origin[1] - ((dis$delr[dis$nrow]/2) * length_mlt)
+    origin[2] <- origin[2] - ((dis$delc[1]/2) * length_mlt)
   }
   
   # z coordinate
   origin[3] <- ifelse(length(origin) > 2, origin[3], 0)
-  crs <- sf::st_crs(crs)
   
   prj <- list()
   prj$origin <- origin
@@ -755,7 +761,7 @@ rmf_set_prj.modflow <- function(modflow, prj) {
 #' @param file 
 #'
 #' @return
-#'
+#' @keywords internal
 rmfi_write_prj <- function(dis, prj, file) {
   
   # TODO only write if prj is present: keep?
@@ -772,7 +778,7 @@ rmfi_write_prj <- function(dis, prj, file) {
     
     if(is.null(prj) || is.na(prj$crs)) {
       cat('#', 'proj4string:', 'NA', '\n', file = file, append = TRUE)
-    } else {
+    } else { # if crs is present it should have either epsg, proj4string or wkt (for sf >= 0.9)
       if(!is.na(prj$crs$epsg)) {
         cat('#', 'epsg:', prj$crs$epsg, '\n', file = file, append = TRUE)
       } else if(!is.na(prj$crs$proj4string)) {
@@ -794,7 +800,7 @@ rmfi_write_prj <- function(dis, prj, file) {
 #' @param comments 
 #'
 #' @return
-#'
+#' @keywords internal
 rmfi_parse_prj <- function(comments) {
   
   # first check if RMODFLOW projection information is present
@@ -951,5 +957,42 @@ rmf_extent <- function(dis, prj = rmf_get_prj(dis)) {
                       crs = ifelse(is.null(prj), NA, prj$crs))
 
   return(list(corners = corners, bbox = bbox))
+}
+
+
+
+#' Obtain a multiplier to convert MODFLOW length units to projection length units
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj \code{RMODFLOW} prj object
+#' @param to either 'grid' or 'xyz' specifying if the multiplier should convert coordinates to the modflow grid or to real world coordinates (inverse)
+#' @details The MODFLOW length unit \code{(dis$lenuni)} can be different from the projection unit \code{(prj$crs$units)}. When converting coordinates
+#' using \code{rmf_convert_grid_to_xyz} or \code{rmf_convert_xyz_to_grid} the difference in length unit needs to be corrected for.
+#' @return single numeric value which can be used to multiply MODFLOW coordinates with so to convert them to prj length units.
+#' @keywords internal
+rmfi_prj_length_multiplier <- function(dis, prj, to) {
+  
+  if(dis$lenuni == 0 || is.null(prj) || is.na(prj$crs) || is.null(prj$crs$units)) {
+    mlt <- 1
+  } else {
+    
+    # units in m
+    un <- c('km','m','dm','cm','mm','kmi','in','ft','yd','mi','fath','ch',
+            'link','us-in','us-ft','us-yd','us-ch','us-mi','ind-yd','ind-ft') 
+    conv <- c(1000,1,0.1,0.01,0.001,1852,0.0254,0.3048,0.9144,1609.344,1.828804,20.11684,
+              0.2011684,0.02540005,0.3048006,0.9144018,20.116840234,1609.347,0.9143988,0.3047996)
+    prj_un <- prj$crs$units
+    
+    # convert prj units & mf units to meter
+    prj_to_meter <- conv[which(un == prj_un)]
+    mf_to_meter <- switch(as.character(dis$lenuni),
+                          '1' = conv[which(un == 'ft')],
+                          '2' = conv[which(un == 'm')],
+                          '3' = conv[which(un == 'cm')])
+    
+    mlt <- mf_to_meter / prj_to_meter
+  }
+  mlt <- ifelse(to == 'grid', 1/mlt, mlt)
+  return(mlt)
 }
 
