@@ -158,14 +158,15 @@ rmfi_create_bc_array <- function(arg, dis) {
       parameter_values <- parameter_values[!duplicated(names(parameter_values))]
       
       # if parameter is time-varying, list all instances
-      inst <- parameters[instances]
+      inst_l <- vapply(parameters, function(i) !is.null(attr(i, 'instnam')), TRUE)
+      inst <- parameters[inst_l]
       p_names <- vapply(inst, function(i) attr(i, 'parnam'), 'text')
       unq_names <- unique(p_names)
       names(inst) <- vapply(inst, function(i) attr(i, 'instnam'), 'text')
       
       p_inst <- lapply(seq_along(unq_names), function(i) inst[which(p_names == unq_names[i])])
       names(p_inst) <- unq_names
-      parameters <- c(parameters[!instances], p_inst)
+      parameters <- c(parameters[!inst_l], p_inst)
     }
   }
   
@@ -883,6 +884,8 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
     # time-varying parameters
     if(!is.null(p_tv) && p_tv){
       
+      inst_list <- list()
+      
       # loop over instances
       for(j in 1:numinst){
         
@@ -914,7 +917,13 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
           lines <- data_set_4b$remaining_lines
           rm(data_set_4b)
         }
-      } 
+        inst_list[[j]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = instnam,
+                                                                   parval = parval, parnam = parnam, kper = 0)
+        names(inst_list)[j] <- instnam
+      }
+      parm_list[[length(parm_list)+1]] <- inst_list
+      names(parm_list)[length(parm_list)] <- parnam
+      parm_list[[length(parm_list)]] <- lapply(parm_list[[length(parm_list)]], function(i) {attr(i, 'kper') <- NULL; return(i)})
       
     } else {
       # non time-varying
@@ -939,15 +948,17 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
       }
+      
+      parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = NULL,
+                                                               parval = parval, parnam = parnam, kper = 0)
+      names(parm_list)[length(parm_list)] <- parnam
+      attr(parm_list[[length(parm_list)]], 'kper') <- NULL
     }
     
-    parm_list[[length(parm_list)+1]] <- rmf_create_parameter(dis = dis, mlt = mlt, mltnam = mltarr, zon = zon, zonnam = zonarr, iz = iz, instnam = rmfi_ifelse0(!is.null(p_tv) && p_tv, instnam, NULL),
-                                                             parval = parval, parnam = parnam, kper = 0)
-    names(parm_list)[length(parm_list)] <- parnam
+
     i <- i+1
   }
   
-  parm_list <- lapply(parm_list, function(i) {attr(i, 'kper') <- NULL; return(i)})
   
   return(list(parameters = parm_list, remaining_lines = lines))
 }
@@ -1587,13 +1598,13 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
         
         # clusters
         for (k in 1:nclu){
-          rmfi_write_variables(toupper(attr(arr2, 'mlt')[k]), toupper(attr(arr2, 'zon')[k]), ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
+          rmfi_write_variables(attr(arr2, 'mlt')[k], attr(arr2, 'zon')[k], ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
         }
         rm(arr2)
       }
     } else { # non-time-varying
       for (k in 1:nclu){
-        rmfi_write_variables(toupper(attr(arr, 'mlt')[k]), toupper(attr(arr, 'zon')[k]), ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
+        rmfi_write_variables(attr(arr, 'mlt')[k], attr(arr, 'zon')[k], ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
       }  
       rm(arr)
     }

@@ -110,24 +110,21 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
     rm(data_set_3)
   }
   
-  # stress periods
-  # function for setting kper attribute for parameters
-  set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
-      if(!is.null(i_name)) {
-        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
-      } else {
-        attr(k, 'kper') <- c(attr(k, 'kper'), kper)
-      }
-    }
-    return(k)
-  }
-  
   # function for setting kper attribute of parameter the same as previous kper
   previous_kper <- function(k, kper) {
-    if(kper-1 %in% attr(k, 'kper')) {
-      attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+    set_previous_kper <- function(kk, kper) {
+      if(!is.null(attr(kk, 'kper')) && kper-1 %in% attr(kk, 'kper')) {
+        attr(kk, 'kper') <- c(attr(kk, 'kper'), kper)
+      }
+      return(kk)
     }
+    
+    if(is.list(k) && !is.null(attr(k[[1]], 'instnam'))) {
+      k <- lapply(k, set_previous_kper, kper = kper)
+    } else {
+      k <- set_previous_kper(k, kper)
+    }
+
     return(k)
   }
   
@@ -160,19 +157,21 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
           # data set 7
           data_set_7 <-  rmfi_parse_variables(lines, character = TRUE)
           p_name <-  as.character(data_set_7$variables[1])
-          if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+          if(is.list(rmf_arrays[[p_name]]) && !is.null(attr(rmf_arrays[[p_name]][[1]], 'instnam'))) {
             i_name <- data_set_7$variables[2]
             if(length(data_set_7$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[3])))) {
               irchpf[i] <- as.numeric(data_set_7$variables[3])
             }
+            attr(rmf_arrays[[p_name]][[i_name]], 'kper') <- c(attr(rmf_arrays[[p_name]][[i_name]], 'kper'), i)
           } else {
             i_name <- NULL
             if(length(data_set_7$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_7$variables[2])))) {
               irchpf[i] <- as.numeric(data_set_7$variables[2])
             }
+            attr(rmf_arrays[[p_name]], 'kper') <- c(attr(rmf_arrays[[p_name]], 'kper'), i)
           }
           
-          rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+          # rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
           
           lines <- data_set_7$remaining_lines
           rm(data_set_7)
@@ -197,6 +196,16 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
       }
     }
   }
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(rmf_arrays, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  rmf_arrays <- lapply(rmf_arrays, function(i) rmfi_ifelse0(is.null(attr(i, 'kper')), structure(i, kper = 0), i))
   
   rch <- rmf_create_rch(rmf_arrays, dis = dis, nrchop = nrchop, irchcb = irchcb, irch = irch, irchpf = rmfi_ifelse0(is.null(irchpf), -1, irchpf))
   comment(rch) <- comments
@@ -246,10 +255,16 @@ rmf_write_rch <-  function(rch,
   # stress periods
   for (i in 1:dis$nper){
     
+    check_prev <- function(kper, i) {
+      df <- kper[c(i-1,i), -1, drop = FALSE]
+      identical(c(df[2,]), c(df[1,]))
+    }
+    
     # data set 5
     # inrech
     names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-1]]
-    if(i > 1 && identical(names_act, colnames(rch$kper)[which(rch$kper[i-1,which(!is.na(rch$kper[i-1,]))] != FALSE)[-1]])) {
+    
+    if(i > 1 && check_prev(rch$kper, i)) {
       inrech <- -1
     } else {
       inrech <- length(names_act)

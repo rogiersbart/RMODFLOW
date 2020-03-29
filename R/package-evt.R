@@ -160,9 +160,19 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   
   # function for setting kper attribute of parameter the same as previous kper
   previous_kper <- function(k, kper) {
-    if(kper-1 %in% attr(k, 'kper')) {
-      attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+    set_previous_kper <- function(kk, kper) {
+      if(!is.null(attr(kk, 'kper')) && kper-1 %in% attr(kk, 'kper')) {
+        attr(kk, 'kper') <- c(attr(kk, 'kper'), kper)
+      }
+      return(kk)
     }
+    
+    if(is.list(k) && !is.null(attr(k[[1]], 'instnam'))) {
+      k <- lapply(k, set_previous_kper, kper = kper)
+    } else {
+      k <- set_previous_kper(k, kper)
+    }
+    
     return(k)
   }
   
@@ -205,20 +215,21 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
           # data set 8
           data_set_8 <-  rmfi_parse_variables(lines, character = TRUE)
           p_name <-  as.character(data_set_8$variables[1])
-          if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+          if(is.list(rmf_arrays[[p_name]]) && !is.null(attr(rmf_arrays[[p_name]][[1]], 'instnam'))) {
             i_name <- data_set_8$variables[2]
             if(length(data_set_8$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[3])))) {
               ievtpf[i] <- as.numeric(data_set_8$variables[3])
             }
-            
+            attr(rmf_arrays[[p_name]][[i_name]], 'kper') <- c(attr(rmf_arrays[[p_name]][[i_name]], 'kper'), i)
           } else {
             i_name <- NULL
             if(length(data_set_8$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[2])))) {
               ievtpf[i] <- as.numeric(data_set_8$variables[2])
             }
+            attr(rmf_arrays[[p_name]], 'kper') <- c(attr(rmf_arrays[[p_name]], 'kper'), i)
           }
           
-          rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+          # rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
           
           lines <- data_set_8$remaining_lines
           rm(data_set_8)
@@ -252,6 +263,17 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
       }
     }
   }
+  
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(rmf_arrays, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  rmf_arrays <- lapply(rmf_arrays, function(i) rmfi_ifelse0(is.null(attr(i, 'kper')), structure(i, kper = 0), i))
   
   evt <- rmf_create_evt(rmf_arrays, dis = dis, nevtop = nevtop, ievtcb = ievtcb, surf = surf, exdp = exdp, ievt = ievt, ievtpf = rmfi_ifelse0(is.null(ievtpf), -1, ievtpf))
   comment(evt) <- comments
@@ -301,6 +323,11 @@ rmf_write_evt <-  function(evt,
   # stress periods
   for (i in 1:dis$nper){
     
+    check_prev <- function(kper, i) {
+      df <- kper[c(i-1,i), -1, drop = FALSE]
+      identical(c(df[2,]), c(df[1,]))
+    }
+    
     # data set 5
     # insurf
     insurf_act <- evt$kper$surf[i]
@@ -315,7 +342,7 @@ rmf_write_evt <-  function(evt,
     # inevtr
     drop_id <- which(colnames(evt$kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
     names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-drop_id]]
-    if(i > 1 && identical(names_act, colnames(evt$kper)[which(evt$kper[i-1,which(!is.na(evt$kper[i-1,]))] != FALSE)[-1]])) {
+    if(i > 1 && check_prev(evt$kper, i)) {
       inevtr <- -1
     } else {
       inevtr <- length(names_act)

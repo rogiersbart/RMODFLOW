@@ -858,18 +858,29 @@ print.rch <- function(rch, n = 5) {
   cat(rmfi_ifelse0(rch$irchcb == 0, 'RCH fluxes are not saved to a cell-by-cell flow budget file', c('RCH fluxes are saved to the cell-by-cell flow budget file on unit number', rch$irchcb)), '\n')
   cat('\n')
   
+  # for time-varing parameters
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(rch$recharge, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  
   # recharge
-  if(length(rch$recharge) > n) {
+  if(length(rmf_arrays) > n) {
     cat('Summary of recharge (first', n, 'arrays):', '\n')
     nlay <- n
   } else {
     cat('Summary of recharge arrays:', '\n')
-    nlay <- length(rch$recharge)
+    nlay <- length(rmf_arrays)
   }
   
-  abind::abind(rch$recharge, along = 3) %>%
+  abind::abind(rmf_arrays, along = 3) %>%
   apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
-    setNames(names(rch$recharge)) %>% subset(select = 1:nlay) %>% print()
+    setNames(names(rmf_arrays)) %>% subset(select = 1:nlay) %>% print()
   
   # irch
   if(rch$nrchop == 2) {
@@ -1135,18 +1146,29 @@ print.evt <- function(evt, n = 5) {
   cat(rmfi_ifelse0(evt$ievtcb == 0, 'EVT fluxes are not saved to a cell-by-cell flow budget file', c('EVT fluxes are saved to the cell-by-cell flow budget file on unit number', evt$ievtcb)), '\n')
   cat('\n')
   
+  # for time-varing parameters
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(evt$evt, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  
   # evt
-  if(length(evt$evt) > n) {
+  if(length(rmf_arrays) > n) {
     cat('Summary of evapotranspiration (first', n, 'arrays):', '\n')
     nlay <- n
   } else {
     cat('Summary of evapotranspiration arrays:', '\n')
-    nlay <- length(evt$evt)
+    nlay <- length(rmf_arrays)
   }
   
-  abind::abind(evt$evt, along = 3) %>%
+  abind::abind(rmf_arrays, along = 3) %>%
     apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
-    setNames(names(evt$evt)) %>% subset(select = 1:nlay) %>% print()
+    setNames(names(rmf_arrays)) %>% subset(select = 1:nlay) %>% print()
   cat('\n')
   
   # surf

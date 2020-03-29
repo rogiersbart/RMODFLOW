@@ -43,7 +43,7 @@
 
 \item{zon}{\code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}}
 
-\item{instnam}{optional character specying the instance name of the parameter is to be time-varying; defaults to NULL}
+\item{instnam}{optional character specying the instance name if the parameter is to be time-varying; defaults to NULL}
 
 \item{hgunam}{character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.}
 }

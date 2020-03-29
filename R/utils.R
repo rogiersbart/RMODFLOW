@@ -2373,22 +2373,22 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 }
 
 #' @export
-as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
+as.matrix.rmf_2d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
+as.matrix.rmf_3d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
+as.matrix.rmf_4d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.array.rmf_2d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
 
 #' @export
-as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.array.rmf_3d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
 
 #' @export
-as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.array.rmf_4d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
 
 #' @export
 aperm.rmf_2d_array <- function(a, perm, ...) {
@@ -2467,7 +2467,7 @@ rmf_create_parameter <- function(...) {
 #' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY}, \code{VKCB} for lpf and \code{SYTP} for huf. Not used when \code{layer} is \code{NULL}.
 #' @param mlt \code{RMODFLOW} mlt object which holds the multiplier arrays specified in \code{mltnam}
 #' @param zon \code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}
-#' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
+#' @param instnam optional character specying the instance name if the parameter is to be time-varying; defaults to NULL
 #' @param hgunam character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.
 #' @details A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
 #'          If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
@@ -3303,7 +3303,7 @@ rmf_create_list <-  function(df, kper = NULL) {
 }
 
 #' @export
-as.data.frame.rmf_list <- function(obj) as.data.frame.data.frame(structure(obj, kper = NULL))
+as.data.frame.rmf_list <- function(obj, ...) structure(NextMethod(...), kper = NULL)
 
 #' Read a projection file
 #' 
