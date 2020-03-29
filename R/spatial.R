@@ -638,8 +638,11 @@ print.prj <- function(prj) {
   if(is.na(prj$crs)) {
     cat(' NA')
   } else {
-    cat(' EPSG:', prj$crs$epsg, '\n')
-    cat(' proj4string:', prj$crs$proj4string)
+    cat(' ', 'EPSG:', prj$crs$epsg, '\n')
+    cat(' ', 'proj4string:', prj$crs$proj4string)
+    if(is.na(prj$crs$epsg) && (is.character(prj$crs$proj4string) && length(prj$crs$proj4string) == 1) && !is.null(prj$crs$wkt)) {
+      cat('\n', ' wkt defined')
+    }
   }
 
 }
@@ -803,7 +806,7 @@ rmf_transform_prj.dis <- function(dis, crs) {
 #' @method rmf_transform_prj modflow
 rmf_transform_prj.modflow <- function(modflow, crs) {
   if(!rmf_has_prj(modflow)) stop('modflow object has no prj object to transform', call. = FALSE)
-  prj <- rmf_get_prj(dis)
+  prj <- rmf_get_prj(modflow)
   prj <- rmf_transform(prj, crs)
   return(prj)
 }
