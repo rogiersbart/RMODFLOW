@@ -583,6 +583,7 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
                            dis = NULL) {
   
   crs <- sf::st_crs(crs)
+  origin <- unlist(origin)
   
   if(ulcoordinate) {
     if(is.null(dis)) stop('Please provide a dis object when ulcoordinate = TRUE', call. = FALSE)
@@ -618,7 +619,7 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
   origin[3] <- ifelse(length(origin) > 2, origin[3], 0)
   
   prj <- list()
-  prj$origin <- origin
+  prj$origin <- setNames(origin, c('x', 'y', 'z'))
   prj$rotation <- rotation
   prj$crs <- crs
   
@@ -633,15 +634,23 @@ print.prj <- function(prj) {
   cat(' ', prj$origin, '\n')
   cat('Grid rotation (degrees counterclockwise):', '\n')
   cat(' ', prj$rotation, '\n')
-  print(prj$crs)
+  cat('Coordinate Reference System:', '\n')
+  if(is.na(prj$crs)) {
+    cat(' NA')
+  } else {
+    cat(' EPSG:', prj$crs$epsg, '\n')
+    cat(' proj4string:', prj$crs$proj4string)
+  }
+
 }
 
-#' Functions to get, set and check presence of prj objects
+#' Functions to get, set, transform and check presence of prj objects
 #' 
 #' @param dis \code{RMODFLOW} dis object
 #' @param modflow \code{RMODFLOW} modflow object
 #' @param prj \code{RMODFLOW} prj object
 #' @param file path to discretization file; typically "*.dis"
+#' @param crs crs to transform to. Input for \code{sf::st_crs}.
 #' 
 #' @name prj_auxiliary
 NULL
@@ -755,6 +764,50 @@ rmf_set_prj.modflow <- function(modflow, prj) {
   return(modflow)
 }
 
+#'
+#' @return \code{rmf_transform_prj} returns an \code{RMODFLOW} prj object with transformed crs
+#' @details \code{rmf_transform_prj} transforms the origin coordinates to the new crs.
+#' @export
+#' @rdname prj_auxiliary
+#' @examples
+rmf_transform_prj <- function(...) {
+  UseMethod('rmf_transform_prj')
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_transform_prj prj
+rmf_transform_prj.prj <- function(prj, crs) {
+  if(missing(crs)) stop('Please supply a crs argument to transform to', call. = FALSE)
+  crs <- sf::st_crs(crs)
+  
+  origin <- data.frame(x = prj$origin[1], y = prj$origin[2], z = ifelse(is.na(prj$origin[3]), 0, prj$origin[3]))
+  transf <- rmfi_convert_coordinates(origin, from = prj$crs, to = crs)
+  
+  prj <- rmf_create_prj(origin = transf[1,], rotation = prj$rotation, crs = crs)
+  return(prj)
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_transform_prj dis
+rmf_transform_prj.dis <- function(dis, crs) {
+  if(!rmf_has_prj(dis)) stop('dis object has no prj object to transform', call. = FALSE)
+  prj <- rmf_get_prj(dis)
+  prj <- rmf_transform(prj, crs)
+  return(prj)
+}
+
+#' @export
+#' @rdname prj_auxiliary
+#' @method rmf_transform_prj modflow
+rmf_transform_prj.modflow <- function(modflow, crs) {
+  if(!rmf_has_prj(modflow)) stop('modflow object has no prj object to transform', call. = FALSE)
+  prj <- rmf_get_prj(dis)
+  prj <- rmf_transform(prj, crs)
+  return(prj)
+}
+
 #' Title
 #'
 #' @param prj 
@@ -808,6 +861,7 @@ rmfi_parse_prj <- function(comments) {
   if(length(st) > 0) {
     end <- grep('End RMODFLOW projection information', comments)
     rmf_comments <- comments[st:end]
+    rmf_end <- grep('End RMODFLOW projection information', rmf_comments)
     
     # origin
     ll_line <- grep('Lower left corner', rmf_comments, ignore.case = TRUE)[1]
@@ -831,7 +885,7 @@ rmfi_parse_prj <- function(comments) {
     wkt <- grep('wkt', rmf_comments, ignore.case = TRUE)
     
     if(length(wkt) > 0) {
-      crs <- rmf_comments[(wkt+1):(end-1)]
+      crs <- trimws(paste0(rmf_comments[(wkt+1):(rmf_end-1)], collapse = '\n'))
     } else if(length(epsg) > 0) {
       crs <- as.numeric(sub('epsg: ', '', rmf_comments[epsg], ignore.case = TRUE))
     } else if(length(prj4) > 0) {
