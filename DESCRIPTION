@@ -30,9 +30,14 @@ Imports:
     fs,
     processx,
     cli,
-    usethis
+    usethis,
+    tidyr,
+    spectralscale
+Remotes:
+    rogiersbart/spectralscale
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.0.2
 Suggests: 
     knitr,

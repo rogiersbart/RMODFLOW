@@ -4,3 +4,4 @@
 ^pkgdown$
 ^NEWS\.md$
 ^inst/code/
+^data-raw$

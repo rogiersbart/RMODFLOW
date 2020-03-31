@@ -1,70 +1,83 @@
-#' Run a MODFLOW model
+#' Execute a MODFLOW model
 #' 
-#' \code{rmf_execute} runs a MODFLOW model.
+#' These functions execute MODFLOW models.
 #' 
-#' @param path path to name file; typically '*.nam'
-#' @param code name of the MODFLOW variant to use
-#' @param par vector of parameter value file parameter values to run the model with
-#' @param convergence character denoting the message in the terminal output used to check for convergence
-#' @rdname rmf_execute
-#' @method rmf_execute character
+#' @param code Name of the MODFLOW variant to use, or path to the executable.
+#' @param evaluate Vector of PVAL file parameter values to evaluate. This should
+#'   be a named vector if not all parameters are provided in their order of
+#'   occurrence, where the names (can be regular expressions to) match the
+#'   parameter names. Parameters that are not mentioned take the value from the
+#'   PVAL file. If `NULL` (default), no values are changed in the original
+#'   PVAL file.
+#' @param convergence Character. The message in the terminal output used
+#'   to check for convergence.
+#' @return Invisible logical indicating normal termination, when done for an on
+#'   disk model. Full `modflow` object including all results otherwise (in
+#'   memory model).
 #' @export
-#' @seealso \code{\link{rmf_install}}
+#' @seealso
+#' [rmf_install()] for external code installation,\cr
+#' [rmf_analyze()] for local sensitivity analysis, and\cr
+#' [rmf_optimize()] for local calibration.
+rmf_execute <- function(...) {
+  UseMethod('rmf_execute')
+}
+
+#' @rdname rmf_execute
+#' @param path Path to the NAM file. Typically with extension `.nam`.
+#' @export
 rmf_execute.character <- function(
   path,
-  code = 2005,
-  par = NULL,
+  code = "2005",
+  evaluate = NULL,
+  backup = FALSE,
+  ui = NULL,
   convergence = "Normal termination"
 ) {
-  
+  # TODO check if convergence argument is required - seems ok for all versions?
+  # Or is this for custom executables?
   code <- rmfi_find(code)
   
   # get directory and filename
-    dir <- dirname(path)
-    file <- basename(path)
-    
-    # set initial parameters if provided  
-    if(!is.null(par)) {
-      nam <- rmf_read_nam(path)
-      if('PVAL' %in% nam$ftype) {
-        pval <- rmf_read_pval(file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+  dir <- dirname(path)
+  file <- basename(path)
+
+  # set initial parameters if provided  
+  if(!is.null(evaluate)) {
+    nam <- rmf_read_nam(path)
+    if('PVAL' %in% nam$ftype) {
+      pval <- rmf_read_pval(rmfi_look_for_path(dir, nam, "pval"))
+      
+      # pval file backup
+        if (backup) rmfi_backup_pval(dir, nam)
+      
+      # replace evaluate values in parval
+        pval$parval <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
         
-        # copy and write original pval
-        rmf_write_pval(pval, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
-        
-        pval$parval <- par
-        rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
-        
-      } else {
-        ui_warn('Model does not have pval input file. Ignoring par argument')
-      }
+      rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+    } else {
+      ui_warn('Model does not have pval input file. Ignoring evaluate argument.')
     }
-    
+  }
+  
   # run modflow
-    mf_stdout <- ! getOption("RMODFLOW.ui") == "none"
-    out <- processx::run(code, file, wd = dir,
-                         stdout_line_callback = if (mf_stdout) rmfi_line_callback else NULL)
-    cvg <- grepl(convergence, out$stdout)
-    invisible(cvg)
+  mf_stdout <- ! getOption("RMODFLOW.ui") == "none"
+  if (!is.null(ui)) mf_stdout <- ! ui == "none"
+  out <- processx::run(
+    code, file, wd = dir,
+    stdout_line_callback = if (mf_stdout) rmfi_line_callback else NULL
+  )
+  invisible(grepl(convergence, out$stdout))
 }
 
-#' Run a MODFLOW model
-#' 
-#' \code{execute} runs a MODFLOW model.
-#' 
-#' @param modflow modflow object
-#' @param code name of the MODFLOW variant to use
-#' @param par vector of parameter value file parameter values to run the model with
-#' 
 #' @rdname rmf_execute
-#' @method rmf_execute modflow
+#' @param modflow modflow object
 #' @export
 rmf_execute.modflow <- function(
   modflow,
-  code = 2005,
-  par = NULL
+  code = "2005",
+  evaluate = NULL
 ) {
-  
   # TODO change class and top-level S3 to "rmf_model" instead of modflow
   code <- rmfi_find(code)
   
@@ -86,241 +99,384 @@ rmf_execute.modflow <- function(
   }
   
   # run modflow
-  rmf_execute('input.nam', code = code, par = par)
+  rmf_execute('input.nam', code = code, evaluate = evaluate, backup = FALSE)
   
   # read all output
   
 }
 
-#' Generic function to execute a MODFLOW model
-#' 
-#' @rdname rmf_execute
-#' @export
-rmf_execute <- function(...) {
-  UseMethod('rmf_execute')
-}
-
-rmfi_line_callback <- function(line, process) {
-  line <- stringr::str_squish(line)
-  if (line == "") return(invisible())
-  if (line %in% c("MODFLOW-2005", "MODFLOW-LGR2", "MODFLOW-NWT-SWR1", "OWHM 1.0")) {
-    ui_title(line)
-    return(invisible())
-  }
-  if (grepl("Normal termination of simulation", line)) {
-    ui_done(line)
-    return(invisible())
-  }
-  # TODO add if no convergence!
-  ui_info(line)
-  invisible()
-}
-
-#' Run a MODFLOW model optimization, based on the parameter value file and the head predictions output file
-#' 
-#' \code{rmf_optimize} runs a MODFLOW optimization.
-#' 
-#' @param path path to name file; typically '*.nam'
-#' @param code name of the MODFLOW variant to use
-#' @param par initial parameter values (for all or only included parameters); current parameter value file values are used if par is not provided (default)
-#' @param include logical vector indicating which parameters in the parameter value file to include in the optimization
-#' @param lower lower parameter bounds
-#' @param upper upper parameter bounds
-#' @param control list of control arguments
-#' @param logtrans logical vector indicating which parameters should be logtransformed
-#' @param cost character denoting which statistic should be used to compute the cost. Possible values are those returned by \code{\link{rmf_performance}}. Defaults to 'ssq'
-#' @param out_file optional file path to write cost value, convergence and parameter values to for each iteration
-#' @param convergence character denoting the message in the terminal output used to check for convergence
-#' @param ... further arguments provided to \code{optim}
+#' Analyze a MODFLOW model
 #'
-#' @details Only works with models using MODFLOW parameters and having a head predictions output file as defined in the HOB object
-#'          The only method currently available is "L-BFGS-B". See \code{\link{optim}}
-#' @return \code{optim} results with the full list of parameters
+#' This function performs local sensitivity analysis of a MODFLOW model .
+#'
+#' Only works with models using MODFLOW parameters and having a head
+#' predictions output file as defined in the HOB object
+#'
+#' @inheritParams rmf_execute
+#' @param include Character vector indicating which PVAL file parameters should
+#'   be included. Regular expressions can be used to include multiple parameters
+#'   at once. Parameters that are not mentioned are not included. If `NULL`
+#'   (default), all parameters are included.
+#' @param transform Character vector of transformations. This should be a named
+#'   vector if not all parameters are transformed, and listed in their order of
+#'   occurrence, where the names (can be regular expressions to) match the
+#'   parameter names. Parameters that are not mentioned are not transformed. If
+#'   `NULL` (default), no transformations are done. Currently only `"log"` is
+#'   supported.
+#' @param backup Logical. Should a backup (with `.old` suffix) of the original
+#'   PVAL file be created? Defaults to `TRUE`.
+#' @param restore Logical. Should the original PVAL file be restored? Defaults
+#'   to `FALSE`.
+#' @param visualize Logical. Should the results be visualized during the
+#'   analysis? Defaults to `TRUE` in an interactive session; `FALSE` otherwise.
+#' @param control List of control options for the sensitivity estimation.
+#'   Currently without any implementation.
+#' @param ... Optional arguments passed to [rmf_execute()].
+#' @return An `rmf_analyze` object, which is a list with dimensionless scaled
+#'   sensitivities (dss) and composite scaled sensitivies (css).
 #' @export
-#' @seealso \code{\link{optim}}, \code{\link{rmf_execute}}, \code{\link{rmf_create_pval}} & \code{\link{rmf_create_hob}} 
-rmf_optimize <- function(
-  path,
-  code = 2005,
-  par = NULL,
-  include = NULL,
-  logtrans = NULL,
-  lower = 0, # TODO think about this default value ...
-  upper = Inf,
-  cost = 'ssq',
-  out_file = NULL,
-  control = list(),
-  convergence = 'Normal termination',
-  ...
-) {
-  code <- rmfi_find(code)
-  dir <- dirname(path)
-  nam <- rmf_read_nam(path)
-  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) ui_stop('rmf_optimize only works with models having pval and HOB input')
-  pval <- rmf_read_pval(file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
-  hob <- rmf_read_hob(file.path(dir, nam$fname[which(nam$ftype=='HOB')]))
-  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
-    ui_stop('rmf_optimize only works with models having a head predictions output file. This can be created by setting the iuhobsv argument of the HOB file to a non-zero value')
-  }
-  
-  # copy and write original pval
-  rmf_write_pval(pval, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
-  
-  if(is.null(par)) par <- pval$parval
-  if(is.null(include)) include <- rep(TRUE,length(par))
-  
-  if(is.infinite(lower)) lower <- rep(lower,pval$np)
-  if(is.infinite(upper)) upper <- rep(upper,pval$np)
-  if(!is.null(logtrans)) {
-    par[which(logtrans)] <- log(par[which(logtrans)])
-    lower[which(logtrans)] <- log(lower[which(logtrans)])
-    upper[which(logtrans)] <- log(upper[which(logtrans)])
-    if('parscale' %in% names(control)) {
-      control$parscale[which(trans[include])] <- log(control$parscale[which(trans[include])])
-    }
-  }
-
-  # if par only has values for include = TRUE
-  if(length(par) != length(pval$parval)) {
-    par2 <- par
-    par <- pval$parval
-    par[which(include)] <- par2
-  }
-  
-  optim_modflow <- function(par_include) {
-    # adjust values
-    pval$parval <- par
-    pval$parval[which(include)] <- par_include
-    if(!is.null(logtrans)) pval$parval[which(logtrans)] <- exp(pval$parval[which(logtrans)])
-    
-    # write values
-    rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
-    
-    # run modflow
-    cvg <- rmf_execute(file = file, executable = executable, version = version, convergence = convergence)
-    
-    # get cost
-    if(cvg) {
-      hpr <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit==hob$iuhobsv)]))
-      cost_value <- rmf_performance(hpr)[cost]
-    } else { # return large cost when not converging
-      cost_value <- ifelse(!is.null(control$fnscale) && control$fnscale < 0, -1e100, 1e100) # maximization/minimization
-    }
-    
-    # print 
-    cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(cvg), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'))
-    if(!is.null(out_file)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(cvg), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = out_file, append = TRUE)
-    
-    return(cost_value)
-  }
-  
-  # optimize; L-BGFS-B only
-  opt <- optim(par[which(include)], optim_modflow, method = 'L-BFGS-B', lower = lower[which(include)], upper = upper[which(include)], control = control, ...)
-  opt$included <- include
-  return(opt)
-}
-
-#' Run a MODFLOW model sensitivity analysis, based on the parameter value file and the head predictions output file
-#' 
-#' \code{rmf_analyze} performs a MODFLOW model sensitivity analysis.
-#' 
-#' @param path path to name file; typically '*.nam'
-#' @param code name of the MODFLOW variant to use
-#' @param par central parameter values (for all or only included parameters); parameter value file values are used if par is not provided (default)
-#' @param include logical vector indicating which parameters in the parameter value file to include in the sensitivity analysis
-#' @param ... optional arguments passed to \code{rmf_execute}
-#' @details Only works with models using MODFLOW parameters and having a head predictions output file as defined in the HOB object
-#' @return object of class \code{sen} which is a list with dimensionless scaled sensitivities (dss) and composite scaled sensitivies (css)
-#' @export
-#' @seealso \code{\link{rmf_execute}}, \code{\link{rmf_create_pval}} & \code{\link{rmf_create_hob}} 
+#' @seealso
+#' [rmf_execute()] for executing a MODFLOW model.\cr
+#' [rmf_optimize()] for optimizing a MODFLOW model.
 rmf_analyze <- function(path,
                         code = "2005",
-                        par = NULL,
+                        evaluate = NULL,
                         include = NULL,
+                        transform = NULL,
+                        backup = TRUE,
+                        restore = FALSE,
+                        visualize = interactive(),
+                        control = list(),
                         ...) {
+  # TODO allow for controlling some settings for the gradient approximation
+  # like the step size and one/two-sided approximation etc, through control
+  # argument, similar to rmf_optimize?
+  # TODO consider parallel options here when rmf_execute.modflow works
+  # TODO better include restoring in on.exit?
   code <- rmfi_find(code)
   dir <- dirname(path)
   nam <- rmf_read_nam(path)
-  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) ui_stop('rmf_analyze only works with models having pval and HOB input')
-  pval <- rmf_read_pval(file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
-  hob <- rmf_read_hob(file.path(dir, nam$fname[which(nam$ftype=='HOB')]))
-  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
-    ui_stop('rmf_analyze only works with models having a head predictions output file. This can be created by setting the iuhobsv argument of the HOB file to a non-zero value')
-  }
-  pval_org <- pval
-  if(is.null(par)) par <- pval$parval
-  if(is.null(include)) include <- rep(TRUE,length(par))
   
-  # if par only has values for include = TRUE
-  if(length(par) != length(pval$parval)) {
-    par2 <- par
-    par <- pval$parval
-    par[which(include)] <- par2
-  } 
-
-  # copy and write original pval
-  rmf_write_pval(pval_org, file = file.path(dir, paste('original', nam$fname[which(nam$ftype=='PVAL')], sep = '_')))
+  # pval file backup
+  if (backup) rmfi_backup_pval(dir, nam)
+  
+  # read pval and hob
+  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
+    ui_alert("{.fun rmf_analyze} only works with PVAL and HOB file types.")
+    ui_stop("Issue with model structure.")
+  }
+  pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
+  hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
+  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
+    ui_alert("{.fun rmf_analyze} only works with a HOB output file.",
+             "This can be created by setting {.arg iuhobsv} of the HOB file to",
+             "a non-zero value, and including a corresponding DATA type entry",
+             "in the NAM file.")
+    ui_stop('Issue with model structure.')
+  }
+  
+  # evaluate, include, transform
+  if (is.null(evaluate)) {
+    evaluate <- pval$parval
+  } else {
+    evaluate <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
+  }
+  if (is.null(include)) {
+    include <- rep(TRUE,length(evaluate))
+  } else {
+    regex_to_include <- rep(TRUE, length(include))
+    names(regex_to_include) <- include
+    include <- rep(FALSE, pval$np)
+    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+  }
+  if(!is.null(transform)) {
+    if (!all(transform %in% "log")) {
+      ui_alert('Use {.val "log"} in {.arg transform} for logarithmic',
+               "transformations. Other options are not available yet.")
+      ui_stop("Issue with transformation definition.")
+    }
+    transform[transform == "log"] <- TRUE
+    transform <- as.logical(transform) %>% setNames(names(transform))
+    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
+    evaluate[transform] <- log(evaluate[transform])
+    if("parscale" %in% names(control)) {
+      control$parscale[which(transform[include])] <- log(control$parscale[which(transform[include])])
+    }
+  }
+  
+  # analyze
+  ui_start("Analyzing")
   
   # initial run
-  rmf_execute(path = path, code = code, par = par, version = version, ...)
-  hpr_orig <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit == hob$iuhobsv)]))
-
-  sens <- list()
-  sens$dss <- matrix(NA, nrow = length(hob$obsnam), ncol = length(pval$parval))
-  sens$css <- pval$parval*NA
+  pval$parval <- evaluate
+  if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
+  rmf_write_pval(pval, file = rmfi_look_for_path(dir, nam, type = "pval"))
+  rmf_execute(path = path, code = code, ui = "none", ...)
+  hob_out_orig <- rmfi_look_for_path(dir, nam, unit = hob$iuhobsv) %>% 
+    rmf_read_hob_out()
+  rmf_analyze <- list()
+  rmf_analyze$dss <- matrix(NA_real_,
+                    nrow = hob$nh,
+                    ncol = pval$np)
+  rmf_analyze$css <- rep(NA_real_, pval$np)
+  rmf_analyze$parnam <- pval$parnam
   
   # dss & css
   for(i in which(include)) {
-    pval$parval <- par
+    pval$parval <- evaluate
+    
+    # perturbation
     pval$parval[i] <- pval$parval[i]*1.01
-    rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
-    rmf_execute(file = file, executable = executable, par = NULL, version = version, ...)
-    hpr <- rmf_read_hpr(file.path(dir, nam$fname[which(nam$nunit == hob$iuhobsv)]))
-    sens$dss[,i] <- (hpr$simulated - hpr_orig$simulated)/(0.01)
-    sens$css[i] <- sqrt(sum(sens$dss[,i]^2)/hob$nh)
+    if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
+    
+    # evaluation
+    rmf_write_pval(pval, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_execute(path = path, code = code, ui = "none", ...)
+    hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
+    
+    # assignment
+    rmf_analyze$dss[,i] <- (hob_out$simulated - hob_out_orig$simulated)/(0.01)
+    rmf_analyze$css[i] <- sqrt(sum(rmf_analyze$dss[,i]^2)/hob$nh)
+    
+    # visualize
+    if (visualize) {
+      print(rmf_plot.rmf_analyze(rmf_analyze))
+    }
+  }
+  ui_end_done()
+  
+  # restore original pval
+  if (restore) {
+    ui_start("Restoring")
+    rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_execute(path = path, code = code, ...)
+    ui_end_done()
+  }
+
+  class(rmf_analyze) <- c("rmf_analyze", class(rmf_analyze))
+  rmf_analyze
+}
+
+#' Optimize a MODFLOW model
+#' 
+#' This function performs local optimization of a MODFLOW model.
+#'
+#' Only works with models using MODFLOW parameters and having a head
+#' predictions output file as defined in the HOB object The only method
+#' currently available is "L-BFGS-B". See \code{\link{optim}}
+#' 
+#' @inheritParams rmf_execute
+#' @inheritParams rmf_analyze
+#' @param start,lower,upper Vectors of PVAL file parameter values to start the
+#'   optimization, and corresponding lower and upper limits. These should be
+#'   named vectors if not all parameters are provided in their order of
+#'   occurrence, where the names (can be regular expressions to) match the
+#'   parameter names. Parameters that are not mentioned take the starting value
+#'   from the PVAL file, and/or have no constraints. If NULL (default), no
+#'   values are changed in the original PVAL file, and/or no constraints are
+#'   imposed.
+#' @param control List of control arguments for [optim()].
+#' @param cost Character. The performance measure that should be used as the
+#'   cost function. Possible values are those supported by [rmf_performance()].
+#'   Defaults to `"ssq"`.
+#' @param export Optional file path to export intermediate results to after each
+#'   iteration.
+#' @param ... Optional arguments passed to [optim()].
+#' @return Invisible list with [optim()] results and the full parameter list.
+#' @export
+#' @seealso
+#' [rmf_execute()] for executing a MODFLOW model.\cr
+#' [rmf_analyze()] for analyzing a MODFLOW model.
+rmf_optimize <- function(
+  path,
+  code = "2005",
+  start = NULL,
+  lower = -Inf, # TODO think about this default value ...
+  upper = Inf,
+  include = NULL,
+  transform = NULL,
+  cost = "ssq",
+  backup = TRUE,
+  restore = FALSE,
+  visualize = interactive(),
+  export = NULL,
+  control = list(),
+  ...
+) {
+  # TODO add api for choosing which observation file to use
+  # TODO add rmf class to returned object? and foresee print/plot methods?
+  code <- rmfi_find(code)
+  dir <- dirname(path)
+  nam <- rmf_read_nam(path)
+  
+  # pval file backup
+    if (backup) rmfi_backup_pval(dir, nam)
+    
+  # read pval and hob
+    if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
+      ui_alert("{.fun rmf_optimize} only works with PVAL and HOB file types.")
+      ui_stop("Issue with model structure.")
+    }
+    pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
+    hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
+    if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
+      ui_alert("{.fun rmf_optimize} only works with a HOB output file.",
+               "This can be created by setting {.arg iuhobsv} of the HOB file to",
+               "a non-zero value, and including a corresponding DATA type entry",
+               "in the NAM file.")
+      ui_stop('Issue with model structure.')
+    }
+  
+  # start, include, transform, lower, upper
+  if (is.null(start)) {
+    start <- pval$parval
+  } else {
+    start <- rmfi_replace_in_vector(pval$parnam, pval$parval, start)
+  }
+  if (is.null(include)) {
+    include <- rep(TRUE,length(start))
+  } else {
+    regex_to_include <- rep(TRUE, length(include))
+    names(regex_to_include) <- include
+    include <- rep(FALSE, pval$np)
+    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+  }
+  if (length(lower) == 1 & is.infinite(lower[1])) {
+    lower <- rep(lower, pval$np)
+  } else {
+    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, pval$np), lower)
+  }
+  if (length(upper) == 1 & is.infinite(upper[1])) {
+    upper <- rep(upper, pval$np)
+  } else {
+    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, pval$np), upper)
+  }
+  if(!is.null(transform)) {
+    if (!all(transform %in% "log")) ui_stop("Only logarithmic transforms are currently implemented.")
+    transform[transform == "log"] <- TRUE
+    transform <- as.logical(transform) %>% setNames(names(transform))
+    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
+    start[transform] <- log(start[transform])
+    lower[transform] <- log(lower[transform])
+    upper[transform] <- log(upper[transform])
+    if("parscale" %in% names(control)) {
+      control$parscale[which(transform[include])] <- log(control$parscale[which(transform[include])])
+    }
   }
   
-  #  write original pval and run
-  rmf_write_pval(pval_org, file = file.path(dir, nam$fname[which(nam$ftype=='PVAL')]))
-  rmf_execute(file = file, executable = executable, par = NULL, version = version, ...)
-  
-  sens$parnam <- pval$parnam
-  class(sens) <- 'sen'
-  return(sens)
+  # optimize
+  ui_start("Optimizing")
+  run <- 0
+  optimization_history <- matrix(ncol = pval$np + 1, nrow = 0)
+  optim_modflow <- function(included_parval) {
+    run <<- run + 1
+    # adjust values
+      pval$parval <- start
+      pval$parval[which(include)] <- included_parval
+      if(!is.null(transform)) {
+        pval$parval[which(transform)] <- exp(pval$parval[which(transform)])
+      } 
+    
+    # write values
+      rmf_write_pval(pval,
+                     file = rmfi_look_for_path(dir, nam, "pval"))
+    
+    # run modflow
+      converged <- rmf_execute(path = path, code = code, ui = "none", ...)
+
+    # get cost
+      if(converged) {
+        hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
+        cost_value <- rmf_performance(hob_out)[[cost]]
+      } else { # return large cost when not converging
+        cost_value <- ifelse(!is.null(control$fnscale) && control$fnscale < 0,
+                             -1e100, 1e100) # maximization/minimization
+        # TODO check best approach here; other algorithms allow for returning NA?
+      }
+    
+    new_step <- (run + sum(include)*2)%%(sum(include)*2 +1) == 0
+    if (new_step) {
+      optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$parval))
+      # print 
+      ui_info(
+        paste(stringr::str_to_upper(cost),
+              format(cost_value, scientific = TRUE, digits = 4),
+              ifelse(converged, "Converged.", "No convergence."))
+      )
+    }
+    
+    
+    if (!is.null(export)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(converged), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = export, append = TRUE)
+    if (visualize & new_step) {
+      optimization_history <- as.data.frame(optimization_history)
+      names(optimization_history) <- c(cost, pval$parnam)
+      print(
+        optimization_history %>%
+          dplyr::mutate(run = 1:nrow(.)) %>% 
+          dplyr::mutate_at(pval$parnam[transform], log10) %>% 
+          tidyr::gather("parameter", "value", -run, -1) %>% 
+          ggplot2::ggplot() +
+          ggplot2::aes(run, value) +
+          ggplot2::geom_point() +
+          # ggplot2::geom_line() +
+          ggplot2::facet_wrap(parameter~., scales = "free_y")
+      )
+      # TODO think of including local sensitivity based on sensitivity runs
+    }
+    return(cost_value)
+  }
+  rmf_optimize <- optim(start[include],
+               optim_modflow,
+               method = 'L-BFGS-B',
+               lower = lower[include],
+               upper = upper[include],
+               control = control)
+  rmf_optimize$included <- include
+  switch(rmf_optimize$convergence + 1, ui_end_fail(), ui_end_done())
+  if (rmf_optimize$convergence == 0) {
+    ui_alert("Optimization has not converged in {.arg maxit} iterations!")
+    ui_warn("Issue with optimization.")
+  }
+    
+  # restore original pval
+  if (restore) {
+    ui_start("Restoring")
+    rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_execute(path = path, code = code, ...)
+    ui_end_done()
+  }
+
+  invisible(rmf_optimize)
 }
 
 #' Find paths to executables
-#' 
-#' \code{rmfi_find} finds the path to external software executables.
-#' 
-#' The function first looks for the executable in the current working
-#' directory. If not there, it looks in \file{C:/WRDAPP/}, where the
-#' software might have been installed by \code{\link{rmf_install}}. If the
-#' executable cannot be found, the system path variable is used in an attempt
-#' to locate it. If it still cannot be located, you should first install the
-#' software or add the folder with the executable to the system path.
 #'
-#' @param code Character. Name of the code. Currently supported values are 
-#' listed in \code{RMODFLOW:::supported_codes}
-#' @param precision Character. Can be \code{"single"} or \code{"double"}. Only relevant for MODFLOW-2005.
+#' This function tries to locate external code executables.
 #'
+#' It first looks for the executable in the current working directory. If not
+#' there, it looks in the bin subfolder of `getOption("RMODFLOW.path")`, where
+#' the software might have been installed by [rmf_install()]. If the executable
+#' cannot be found, a final attempt is made by checking the system path
+#' variable. If it still cannot be located, an error is thrown.
+#' 
+#' @inheritParams rmf_execute
+#' @param precision Character. Can be \code{"single"} or \code{"double"}. Only
+#'   relevant for MODFLOW-2005.
 #' @return Path to the executable.
-#'
-#' @examples
-#' rmfi_find("MODFLOW-2005")
 rmfi_find <- function(
   code = "2005",
   precision = "single"
 ) {
   # TODO automatically select 32 bit executables if available, otherwise throw
-  #      error on 32 bit systems
-  # TODO check if executable provided in code exists in current wd, not name
-  #      of executable that we are using in RMODFLOW!
+  # error on 32 bit systems
+  if (file.exists(code)) return(code)
   if (grepl("2005", code)) {
     if (grepl("dbl", code)) precision <- "double"
     code <- "MODFLOW-2005"
     executable <- ifelse(precision == "single", "mf2005.exe", "mf2005dbl.exe")
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
+                                     "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -329,11 +485,13 @@ rmfi_find <- function(
       }
     }
     return(paste0(folder, executable))
-  } else if (grepl("owhm", code, ignore.case = TRUE)) {
+  }
+  if (grepl("owhm", code, ignore.case = TRUE)) {
     code <- "MODFLOW-OWHM"
     executable <- "MF_OWHM.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
+                                     "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -342,11 +500,13 @@ rmfi_find <- function(
       }
     }
     return(paste0(folder, executable))
-  } else if (grepl("nwt", code, ignore.case = TRUE)) {
+  }
+  if (grepl("nwt", code, ignore.case = TRUE)) {
     code <- "MODFLOW-NWT"
     executable <- "MODFLOW-NWT_64.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
+                                     "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -355,11 +515,13 @@ rmfi_find <- function(
       }
     }
     return(paste0(folder, executable))
-  } else if (grepl("lgr", code, ignore.case = TRUE)) {
+  } 
+  if (grepl("lgr", code, ignore.case = TRUE)) {
     code <- "MODFLOW-LGR"
     executable <- "mflgr.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code, "/bin/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
+                                     "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
@@ -368,7 +530,8 @@ rmfi_find <- function(
       }
     }
     return(paste0(folder, executable))
-  } else if (grepl("cfp", code, ignore.case = TRUE)) {
+  } 
+  if (grepl("cfp", code, ignore.case = TRUE)) {
     code <- "MODFLOW-CFP"
     executable <- "mf2005cfp.exe"
     folder <- ""
@@ -381,7 +544,86 @@ rmfi_find <- function(
       }
     }
     return(paste0(folder, executable))
-  } else {
-    ui_stop("Finding paths to the executables of software other than MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or MODFLOW-CFP is currently not supported.")
   }
+  ui_alert("Finding paths to the executables of codes other than ",
+           "MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or ",
+           "MODFLOW-CFP is currently not supported.")
+  ui_stop("Issue with code path.")
+}
+
+#' Look for a file path in a NAM file
+#'
+#' @param dir Character. Path to directory containing the NAM file.
+#' @param nam Character. File name of the NAM file.
+#' @param type Character. File type (ftype) of the entry to look for.
+#' @param unit Integer. Unit number of the entry to look for.
+#' @return
+rmfi_look_for_path <- function(dir, nam, type = NULL, unit = NULL) {
+  if (!is.null(type)) {
+    return(file.path(dir, nam$fname[which(nam$ftype == stringr::str_to_upper(type))]))
+  }
+  if (!is.null(unit)) {
+    return(file.path(dir, nam$fname[which(nam$nunit == unit)]))
+  }
+  ui_alert("Either {.arg type} or {.arg unit} should be provided.")
+  ui_stop("Issue with arguments.")
+}
+
+rmfi_line_callback <- function(line, process) {
+  line <- stringr::str_squish(line)
+  if (line == "") return(invisible())
+  if (line %in% c("MODFLOW-2005", "MODFLOW-LGR2", "MODFLOW-NWT-SWR1",
+                  "OWHM 1.0")) {
+    ui_title(line)
+    return(invisible())
+  }
+  if (grepl("Normal termination of simulation", line)) {
+    ui_done(line)
+    return(invisible())
+  }
+  if (grepl("FAILED TO MEET SOLVER CONVERGENCE CRITERIA", line)) {
+    ui_fail(line)
+    return(invisible())
+  }
+  ui_info(line)
+  invisible()
+}
+
+#' Replace values in a vector with corresponding parameter names
+#' 
+#' This function is a helper for processing the arguments of [rmf_execute()],
+#' [rmf_analyze()] and [rmf_optimize()] that can be named vectors.
+#'
+#' @param parnam Character vector of parameter names from a PVAL file.
+#' @param parval Vector of values. Can be numeric as in PVAL file, but also
+#'   character for *e.g.* the transformation. 
+#' @param new Named vector.
+#' @return
+rmfi_replace_in_vector <- function(parnam, parval, new) {
+  if (is.null(names(new)) & length(new) == length(parnam)) return(parval)
+  if (!is.null(names(new))) {
+    for (i in 1:length(new)) {
+      parval[grepl(names(new)[i], parnam)] <- new[i]
+    }
+    return(parval)
+  }
+  ui_alert("Length of one of the vector arguments does not equal the number of",
+           "parameters in the PVAL file, and the vector is not named.")
+  ui_stop("Issue with the function arguments.")
+}
+
+#' Backup a PVAL file
+#'
+#' @inheritParams rmfi_look_for_path
+rmfi_backup_pval <- function(dir, nam) {
+  if (file.exists(paste0(rmfi_look_for_path(dir, nam, "pval"), ".old"))) {
+    ui_warn("Backup of the original PVAL file is already there.")
+  } else {
+    path <- rmfi_look_for_path(dir, nam, "pval")
+    file.copy(
+      path,
+      paste0(path, ".old")
+    )
+  }
+  invisible()
 }
