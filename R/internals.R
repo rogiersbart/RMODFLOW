@@ -1138,7 +1138,7 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
     if(!character && !any(is.na(suppressWarnings(as.numeric(variables))))) variables <- as.numeric(variables)
   } else if(format == 'fixed') { # every value has 10 characters; empty values are zero
     variables <- (unlist(lapply(seq(1,nchar(remaining_lines[1]), by=10), 
-                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+9)], collapse=''))))
+                                function(i) paste0(strsplit(rmfi_remove_comments_end_of_line(remaining_lines[1]),'')[[1]][i:(i+min(10, nchar(remaining_lines[1])-i+1)-1)], collapse=''))))
     variables <- lapply(strsplit(variables, " |\t"), rmfi_remove_empty_strings)
     variables[which(lengths(variables)==0)] <-  0 # empty values are set to 0
     variables <- unlist(variables)
