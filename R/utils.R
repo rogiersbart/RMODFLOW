@@ -678,7 +678,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
     
     mask[which(mask == 0)] <- NA
     mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
-    tbl$value <- c(array*mask^2)
+    tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
     tbl$time <- rep(time, each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     tbl$nstp <- rep(seq_len(dim(array)[4]), each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     
@@ -713,6 +713,10 @@ rmf_as_tibble.rmf_4d_array <- function(array,
         tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
         tbl$time <- rep(time, each = ncell)
         tbl$nstp <- rep(seq_len(dim(array)[4]), each = ncell)
+        
+        mask[which(mask == 0)] <- NA
+        mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
+        tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
       }
     }
   }
