@@ -293,7 +293,7 @@ rmf_as_tibble.ddn <- function(ddn,
                               as_points = FALSE,
                               ...) {
   
-  tbl <- rmf_as_tibble.rmf_4d_array(ddn, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  tbl <- rmf_as_tibble(rmf_create_array(ddn), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
   repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
   if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[!is.na(attr(ddn, 'nstp'))], each = repeats)
   if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[!is.na(attr(ddn, 'totim'))], each = repeats)
@@ -331,7 +331,7 @@ rmf_as_tibble.hed <- function(hed,
                               as_points = FALSE,
                               ...) {
   
-  tbl <- rmf_as_tibble.rmf_4d_array(hed, dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  tbl <- rmf_as_tibble(rmf_create_array(hed), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
   repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
   if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = repeats)
   if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = repeats)
@@ -711,8 +711,8 @@ rmf_as_tibble.rmf_4d_array <- function(array,
       if(dim(array)[4] > 1) {
         ncell <- nrow(tbl)
         tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
-        tbl$time <- rep(time, each = ncell * ifelse(as_points, 1, 4))
-        tbl$nstp <- rep(seq_len(dim(array)[4]), each = ncell * ifelse(as_points, 1, 4))
+        tbl$time <- rep(time, each = ncell)
+        tbl$nstp <- rep(seq_len(dim(array)[4]), each = ncell)
       }
     }
   }
