@@ -417,13 +417,18 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   # TODO rotation does not work properly in stars;
   
   # create stars object
-  # use negative deltay: more consistent with how most raster data is read from file
+  # TODO specify affine parameters directly instead of get_geotransform. Only possible when stars API is updated to allow this
   # d <-  stars::st_dimensions(x = org[1] + c(0, cumsum(dis$delr)), y = rev(org[2] + c(0, cumsum(dis$delc))), affine = rep(aff, 2))
-  d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = rev(org[2] + (c(0, cumsum(dis$delc)) * length_mlt)))
+ 
+  # TODO use negative deltay: more consistent with how most raster data is read from file. Problem is that origin is then upper left and problems are created with rotations
+  # d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = rev(org[2] + (c(0, cumsum(dis$delc)) * length_mlt)))
+  
+  d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = org[2] + (c(0, cumsum(dis$delc)) * length_mlt))
   s <- stars::st_as_stars(m, dimensions = d)
   names(s) <- name
   
-  rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180)
+  # rot <- ifelse(is.null(prj), 0, - prj$rotation * pi/180) # for negative deltay
+  rot <- ifelse(is.null(prj), 0, prj$rotation * pi/180)
   gtf <- stars:::get_geotransform(s)
   gtf[3] <- gtf[2]*-sin(rot)
   gtf[2] <- gtf[2]*cos(rot)
@@ -437,10 +442,10 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   # id
   if(id == 'modflow') {
     ids <- aperm(array(1:prod(dim(array)[1:2]), dim = rev(dim(array)[1:2])), c(2,1))
-    s$id <- c(aperm(ids, c(2,1)))
+    s$id <- c(aperm(ids[rev(1:dim(ids)[1]), ], c(2,1)))
   } else if(id == 'r') {
     ids <- array(1:prod(dim(array)[1:2]), dim = dim(array)[1:2])
-    s$id <- c(aperm(ids, c(2,1)))
+    s$id <- c(aperm(ids[rev(1:dim(ids)[1]), ], c(2,1)))
   }
 
   # projection
@@ -449,7 +454,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   if(!is.null(projection)) {
     s <- sf::st_set_crs(s, sf::st_crs(projection))
   }
-
+  
   return(s)
 }
 
@@ -465,7 +470,7 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   d <- stars::st_dimensions(s)
   
   array_list <- lapply(seq_len(dim(array)[3]), 
-                        function(i) t(as.matrix(array[,,i]))) %>% 
+                        function(i) t(as.matrix(array[rev(seq_len(dim(array)[1])),,i]))) %>% 
     setNames(paste('layer', seq_len(dim(array)[3]), sep = '_'))
   s <- stars::st_as_stars(array_list, dimensions = d) %>%
     merge() %>%
@@ -495,7 +500,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
   time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
 
   array_list <- lapply(seq_len(dim(array)[4]), 
-                       function(i) aperm(as.array(array[,,,i]), c(2,1,3))) %>% 
+                       function(i) aperm(as.array(array[rev(seq_len(dim(array)[1])),,,i]), c(2,1,3))) %>% 
                 setNames(time)
   
   s <- stars::st_as_stars(array_list, dimensions = d) %>%
