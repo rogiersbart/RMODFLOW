@@ -153,7 +153,7 @@ rmf_as_array.stars <- function(obj,
   if(ndim > 4) stop('Support for obj with more than 4 dimensions not implemented', call. = FALSE)
   if(any(vapply(dims, function(i) inherits(i$values, 'sfc'), TRUE))) stop('stars objects with sfc dimensions are not supported', call. = FALSE)
 
-  target <- rmf_as_stars(dis$top, dis = dis, prj = prj, id = FALSE)
+  target <- rmf_as_stars(rmf_create_array(1, dim = c(dis$nrow, dis$ncol)), dis = dis, prj = prj, id = FALSE)
   
   if(resample) {
     # st_warp doesn't work when objects don't have crs
@@ -177,20 +177,26 @@ rmf_as_array.stars <- function(obj,
       ar <- t(obj[[select]]) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
     }
+    # TODO remove when deltay is negative
+    ar <- ar[rev(1:dim(ar)[1]),]
+    
   } else if(ndim == 3) {
     # 3D
     nnlay <- dis$nlay + sum(dis$laycbd != 0)
     if(dim(obj)[3] != nnlay) stop('Third dimension of stars object should have length equal to dis$nlay (+ number of optional confining beds)', call. = FALSE)
     
     if(resample) {
+      target <- rmf_as_stars(rmf_create_array(1, dim = c(dis$nrow, dis$ncol, nnlay)), dis = dis, prj = prj, id = FALSE)
       ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
-      ar <- aperm(ar[[1]], c(2,1,3)) %>% c() %>% 
+      ar <- aperm(ar[[1]], c(2,1,3)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
     } else {
       # extract array
-      ar <- aperm(obj[[select]], c(2,1,3)) %>% c() %>% 
+      ar <- aperm(obj[[select]], c(2,1,3)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
     }
+    # TODO remove when deltay is negative
+    ar <- ar[rev(1:dim(ar)[1]),,]
     
   } else if(ndim == 4) {
     # 4D
@@ -199,14 +205,17 @@ rmf_as_array.stars <- function(obj,
     if(dim(obj)[4] != sum(dis$nstp)) stop('Fourth dimension of stars object should have length equal to sum(dis$nstp)' , call. = FALSE)
     
     if(resample) {
+      target <- rmf_as_stars(rmf_create_array(1, dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp))), dis = dis, prj = prj, id = FALSE)
       ar <- stars::st_warp(obj[select], target, method = method, use_gdal = method != 'near')
-      ar <- aperm(ar[[1]], c(2,1,3,4)) %>% c() %>% 
+      ar <- aperm(ar[[1]], c(2,1,3,4)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
     } else {
       # extract array
-      ar <- aperm(obj[[select]], c(2,1,3,4)) %>% c() %>% 
+      ar <- aperm(obj[[select]], c(2,1,3,4)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
     }
+    # TODO remove when deltay is negative
+    ar <- ar[rev(1:dim(ar)[1]),,,]
   }
   
   return(ar)
@@ -466,7 +475,7 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   array[which(mask^2 != 1)] <- NA
   
   s <- rmf_as_stars(array[,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
-  ids <- c(s$id) + c(rep(0, prod(dis$nrow, dis$ncol)), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = prod(dis$nrow, dis$ncol)))
+  if(id %in% c('r', 'modflow')) ids <- c(s$id) + c(rep(0, prod(dis$nrow, dis$ncol)), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = prod(dis$nrow, dis$ncol)))
   d <- stars::st_dimensions(s)
   
   array_list <- lapply(seq_len(dim(array)[3]), 
@@ -476,9 +485,11 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
     merge() %>%
     setNames(name) %>%
     stars::st_set_dimensions(names = c(names(d), 'layer'))
-  s$id <- ids
-  dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
-  
+  if(id %in% c('r', 'modflow')) {
+    s$id <- ids
+    dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
+  }
+
   return(s)
 }
 
@@ -491,7 +502,7 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
   array[which(mask^2 != 1)] <- NA
   
   s <- rmf_as_stars(array[,,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
-  ids <- c(s$id) 
+  if(id %in% c('r', 'modflow')) ids <- c(s$id) 
   d <- stars::st_dimensions(s)
   
   # time <- rep(rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))]),
@@ -508,8 +519,10 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
     setNames(name) %>%
     stars::st_set_dimensions(names = c(names(d), 'time')) %>%
     stars::st_set_dimensions(which = 4, values = time)
-  s$id <- ids
-  dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
+  if(id %in% c('r', 'modflow')) {
+    s$id <- ids
+    dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
+  }
   
   return(s)
 }
