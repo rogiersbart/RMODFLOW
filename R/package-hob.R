@@ -30,7 +30,7 @@ rmf_create_hob <- function(locations,
                            tomulth = 1,
                            itt = 1,
                            unique_obsnam = FALSE) {
-
+  
   # locations is sf object
   if(inherits(locations, 'sf')) {
     geom <- unique(sf::st_geometry_type(locations))
@@ -43,7 +43,7 @@ rmf_create_hob <- function(locations,
     coords <- setNames(as.data.frame(sf::st_coordinates(locations)), c('x', 'y'))
     locations <- cbind(sf::st_set_geometry(locations, NULL), coords)
   }
-
+  
   # error checks in locations & time_series
   if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations object must have columns x, y, name, top and bottom', call. = FALSE)
   if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
@@ -121,7 +121,7 @@ rmf_create_hob <- function(locations,
     df$mlay[ts_id] <- df$pr[ts_id] <- NA
     if(m_lay < 0) {
       df$mlay[ts_id] <- lapply(df$mlay[ts_id], function(x) x <- locations_top$k[i]:locations_bottom$k[i]) 
-      length_in_cell <- rep(NA, abs(df$layer[i]))
+      length_in_cell <- rep(NA, abs(df$layer[ts_id[1]]))
       for(j in 1:abs(df$layer[ts_id[1]])) {
         m_val <- df$mlay[[ts_id[1]]][j]
         layer_tops <- rmf_cell_coordinates(dis, include_faces = TRUE)$upper
