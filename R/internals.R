@@ -520,7 +520,7 @@ rmfi_list_packages <- function(type = 'all') {
 #' @param nrow number of rows in the array
 #' @param ncol number of columns in the array
 #' @param nlay number of layers in the array that should be read
-#' @param ndim optional; dimensions of the array to read
+#' @param ndim dimensions of the array to read; either 1, 2 or 3. Denotes the if the returned array should be 1D, 2D or 3D.
 #' @param fmt optional; character with a proper FORTRAN format enclosed in parentheses. Only used when skip_header = TRUE and a fixed-format array needs to be read, i.e. output arrays. 
 #' @param skip_header optional; should the control record be skipped
 #' @param nam a \code{RMODFLOW} nam object. Required when reading fixed-format or EXTERNAL arrays
@@ -530,7 +530,7 @@ rmfi_list_packages <- function(type = 'all') {
 #' @param ... ignored
 #' @return A list containing the array and the remaining text of the MODFLOW input file
 #' @keywords internal
-rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = NULL,
+rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
                              skip_header = FALSE, nam = NULL, precision = "single", file = NULL, integer = FALSE, ...) {
   
   # Initialize array object
@@ -823,22 +823,14 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim = NULL, fmt = 
   }
   
   # Set class of object (2darray; 3darray)
-  if(is.null(ndim)) {
-    if(nlay==1){
-      if(ncol==1 || nrow==1) {
-        array <- c(array(array,dim=nrow*ncol*nlay))
-      } else {
-        array <- rmf_create_array(array[,,1])
-      }
-    } else {
-      array <- rmf_create_array(array)
-    }
-  } else if(ndim == 1) {
+  if(ndim == 1) {
     array <- c(array(array,dim=nrow*ncol*nlay))
   } else if(ndim == 2) {
     array <- rmf_create_array(array[,,1], dim = c(nrow, ncol))
   } else if(ndim == 3) {
     array <- rmf_create_array(array, dim = c(nrow, ncol, nlay))
+  } else {
+    stop('ndim should be 1, 2 or 3')
   }
   
   # Return output of reading function 

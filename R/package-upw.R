@@ -276,7 +276,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     if('HK' %in% types) {
       upw_lines <- upw_lines[-1]  
     } else {
-      data_set_10 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_10 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       upw_lines <- data_set_10$remaining_lines
       upw$hk[,,k] <- data_set_10$array
       rm(data_set_10)
@@ -287,7 +287,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('HANI' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_11 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_11 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_11$remaining_lines
         upw$hani[,,k] <- data_set_11$array
         rm(data_set_11)
@@ -298,7 +298,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     if('VK' %in% types || 'VANI' %in% types) {
       upw_lines <- upw_lines[-1]  
     } else {
-      data_set_12 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_12 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       upw_lines <- data_set_12$remaining_lines
       upw$vka[,,k] <- data_set_12$array
       rm(data_set_12)
@@ -309,7 +309,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('SS' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_13 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_13 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_13$remaining_lines
         upw$ss[,,k] <- data_set_13$array
         rm(data_set_13)
@@ -321,7 +321,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('SY' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_14 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_14 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_14$remaining_lines
         upw$sy[,,k] <- data_set_14$array
         rm(data_set_14)
@@ -333,7 +333,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('VKCB' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_15 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_15 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_15$remaining_lines
         upw$vkcb[,,k] <- data_set_15$array
         rm(data_set_15)

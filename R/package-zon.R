@@ -78,7 +78,7 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
       rm(data_set_2)
       
       # data set 3
-      data_set_3 <- rmfi_parse_array(zon_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, integer = TRUE, ...)
+      data_set_3 <- rmfi_parse_array(zon_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, integer = TRUE, ...)
       zon$izon[[i]] <- apply(data_set_3$array, 1:length(dim(data_set_3$array)), function(i) as.integer(i))
       zon_lines <- data_set_3$remaining_lines
       rm(data_set_3)

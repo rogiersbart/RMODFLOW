@@ -845,7 +845,7 @@ print.rch <- function(rch, n = 5) {
   
   cat('RMODFLOW Recharge Package object with:', '\n')
   cat(length(rch$recharge), 'recharge', ifelse(length(rch$recharge) > 1, 'arrays', 'array'), '\n')
-  if(rch$dimensions$np > 0) cat('inlcuding', rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
+  if(rch$dimensions$np > 0) cat('including', rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, ifelse(rch$dimensions$np == 1, 'parameter', 'parameters'), '\n')
   if(rch$nrchop == 1) {
     nrchop <- 'the top grid layer'
   } else if(rch$nrchop == 2) {
@@ -1135,7 +1135,7 @@ print.evt <- function(evt, n = 5) {
   
   cat('RMODFLOW Evapotranspiration Package object with:', '\n')
   cat(length(evt$evt), 'evapotranspiration', ifelse(length(evt$evt) > 1, 'arrays', 'array'), '\n')
-  if(evt$dimensions$np > 0) cat('including', evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
+  if(evt$dimensions$np > 0) cat('including', evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, ifelse(evt$dimensions$np == 1, 'parameter', 'parameters'), '\n')
   if(evt$nevtop == 1) {
     nevtop <- 'the top grid layer'
   } else if(evt$nevtop == 2) {

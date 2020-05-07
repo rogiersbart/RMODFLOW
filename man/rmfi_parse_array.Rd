@@ -9,7 +9,7 @@ rmfi_parse_array(
   nrow,
   ncol,
   nlay,
-  ndim = NULL,
+  ndim,
   fmt = NULL,
   skip_header = FALSE,
   nam = NULL,
@@ -28,7 +28,7 @@ rmfi_parse_array(
 
 \item{nlay}{number of layers in the array that should be read}
 
-\item{ndim}{optional; dimensions of the array to read}
+\item{ndim}{dimensions of the array to read; either 1, 2 or 3. Denotes the if the returned array should be 1D, 2D or 3D.}
 
 \item{fmt}{optional; character with a proper FORTRAN format enclosed in parentheses. Only used when skip_header = TRUE and a fixed-format array needs to be read, i.e. output arrays.}
 

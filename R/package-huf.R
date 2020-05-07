@@ -239,7 +239,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
       rm(data_set_4)
       
       # data set 5
-      data_set_5 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)), file = file, ...)
+      data_set_5 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol,sum(which(huf$laywt!=0)), ndim = 3, file = file, ...)
       huf$wetdry <- rmf_create_array(dim = c(dis$nrow, dis$ncol, dis$nlay))
       huf$wetdry[,,which(huf$laywt != 0)] <- data_set_5$array
       huf_lines <- data_set_5$remaining_lines
@@ -256,12 +256,12 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
       huf_lines <- data_set_6$remaining_lines
       rm(data_set_6)
       
-      data_set_7 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol, 1, file = file, ...)
+      data_set_7 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol, 1, ndim = 2, file = file, ...)
       huf$top[,,i] <- data_set_7$array
       huf_lines <- data_set_7$remaining_lines
       rm(data_set_7)
       
-      data_set_8 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol, 1, file = file, ...)
+      data_set_8 <- rmfi_parse_array(huf_lines,dis$nrow,dis$ncol, 1, ndim = 2, file = file, ...)
       huf$thck[,,i] <- data_set_8$array
       huf_lines <- data_set_8$remaining_lines
       rm(data_set_8)
@@ -499,7 +499,7 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
   
   # data set 2
   if(kdep$ifkdep > 0) {
-    data_set2 <- rmfi_parse_array(kdep_lines,dis$nrow,dis$ncol,1, file = file, ...)
+    data_set2 <- rmfi_parse_array(kdep_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
     kdep_lines <- data_set2$remaining_lines
     kdep$rs <- data_set2$array
     rm(data_set2)

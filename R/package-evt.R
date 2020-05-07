@@ -188,7 +188,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     
     # data set 6
     if(insurf >= 0) {
-      data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
       surf[[length(surf) + 1]] <- structure(data_set_6$array, kper = i)
       lines <- data_set_6$remaining_lines
       rm(data_set_6)
@@ -201,7 +201,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     if(np == 0) {
       
       if(inevtr >= 0) {
-        data_set_7 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        data_set_7 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
         rmf_arrays[[length(rmf_arrays) + 1]] <- structure(data_set_7$array, kper = i)
         lines <- data_set_7$remaining_lines
         rm(data_set_7)
@@ -243,7 +243,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     
     # data set 9
     if(inexdp >= 0) {
-      data_set_9 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      data_set_9 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
       exdp[[length(exdp) + 1]] <- structure(data_set_9$array, kper = i)
       lines <- data_set_9$remaining_lines
       rm(data_set_9)
@@ -254,7 +254,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     # data set 10
     if(nevtop == 2) {
       if(inievt >= 0) {
-        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
         ievt[[length(ievt) + 1]] <- structure(data_set_10$array, kper = i)
         lines <- data_set_10$remaining_lines
         rm(data_set_10)

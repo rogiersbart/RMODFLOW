@@ -723,7 +723,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
       
       # read array
-      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE, fmt = fmt)
+      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, ndim = 2, skip_header = TRUE, fmt = fmt)
       
       if(first) {
         hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
@@ -1147,7 +1147,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
       
       # read array
-      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, skip_header = TRUE, fmt = fmt)
+      data_set <- rmfi_parse_array(hed.lines,dis$nrow,dis$ncol,1, ndim = 2, skip_header = TRUE, fmt = fmt)
       
       if(first) {
         hed <- array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay, nsteps))
@@ -1282,7 +1282,7 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
     stop("No budget was printed to listing file. You can change this in the OC file.", call. = FALSE)
   }
   
-  class(balance) = 'bud'
+  class(balance) <- 'bud'
   return(balance)
   
 }

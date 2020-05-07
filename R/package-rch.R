@@ -142,7 +142,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
     if(np == 0) {
       
       if(inrech >= 0) {
-        data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
         rmf_arrays[[length(rmf_arrays) + 1]] <- structure(data_set_6$array, kper = i)
         lines <- data_set_6$remaining_lines
         rm(data_set_6)
@@ -187,7 +187,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
     # data set 8
     if(nrchop == 2) {
       if(inirch >= 0) {
-        data_set_8 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        data_set_8 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
         irch[[length(irch) + 1]] <- structure(data_set_8$array, kper = i)
         lines <- data_set_8$remaining_lines
         rm(data_set_8)

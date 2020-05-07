@@ -3190,7 +3190,7 @@ rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binar
         ilay <- abs(as.numeric(variables[length(variables)-1]))
         lines <- lines[-1]
         
-        data_set <- rmfi_parse_array(lines,nrow,ncol,1, skip_header = TRUE)
+        data_set <- rmfi_parse_array(lines,nrow,ncol,1, ndim = 2, skip_header = TRUE)
         
         if(stp_nr == 0) { # initialize 3d array
           arr <- array(data_set$array, dim = c(dim(data_set$array), 1))
@@ -3219,7 +3219,7 @@ rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binar
       
       for(stp_nr in 1:nstp)  {
         for(ilay in 1:nlay) {
-          data_set <- rmfi_parse_array(lines,nrow,ncol,1, skip_header = TRUE)
+          data_set <- rmfi_parse_array(lines,nrow,ncol,1, ndim = 2, skip_header = TRUE)
           arr[,,ilay,stp_nr] <- data_set$array
           lines <- data_set$remaining_lines
         }
