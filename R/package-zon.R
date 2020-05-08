@@ -27,8 +27,9 @@ rmf_create_zon <-  function(nzn = length(zonnam),
   zon$zonnam <-  zonnam
   
   # data set 3
-  if(!inherits(izon, 'list') && is.array(izon)) izon <- list(izon)
-  zon$izon <-  lapply(izon, function(i) apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)))
+  if(!inherits(izon, 'list')) izon <- list(izon)
+  izon <- lapply(izon, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
+  zon$izon <- izon
   names(zon$izon) <- zon$zonnam
   
   class(zon) <-  c('zon', 'modflow_package')
@@ -79,11 +80,10 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
       
       # data set 3
       data_set_3 <- rmfi_parse_array(zon_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, integer = TRUE, ...)
-      zon$izon[[i]] <- apply(data_set_3$array, 1:length(dim(data_set_3$array)), function(i) as.integer(i))
+      zon$izon[[i]] <- rmf_create_array(apply(data_set_3$array, 1:length(dim(data_set_3$array)), function(i) as.integer(i)))
       zon_lines <- data_set_3$remaining_lines
       rm(data_set_3)
     }
-    zon$izon <- lapply(zon$izon, rmf_create_array)
     names(zon$izon) <- zon$zonnam
   }
   

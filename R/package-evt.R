@@ -69,6 +69,7 @@ rmf_create_evt <- function(...,
   if(nevtop == 2) {
     if(is.null(ievt)) stop('Please supply a ievt argument when nevtop = 2', call. = FALSE)
     if(!inherits(ievt, 'list')) ievt <- list(ievt)
+    ievt <- lapply(ievt, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
     obj$ievt <- ievt
     names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
     obj$kper$ievt <- NA_character_
@@ -254,8 +255,8 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     # data set 10
     if(nevtop == 2) {
       if(inievt >= 0) {
-        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
-        ievt[[length(ievt) + 1]] <- structure(data_set_10$array, kper = i)
+        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, integer = TRUE, ...)
+        ievt[[length(ievt) + 1]] <- rmf_create_array(structure(apply(data_set_10$array, 1:length(dim(data_set_10$array)), function(i) as.integer(i)), kper = i))
         lines <- data_set_10$remaining_lines
         rm(data_set_10)
       } else if(inievt < 0 && i > 1) {

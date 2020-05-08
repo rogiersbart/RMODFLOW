@@ -188,7 +188,7 @@ rmfi_create_bc_array <- function(arg, dis) {
     select <- rmfi_ifelse0(length(parameters > 0), names(kper) != names(parameters), names(kper))
     nparm_df <- subset(kper, select = select[-1])
     nparm_err <- vapply(1:dis$nper, function(i) sum(is.na(nparm_df[i,]) | nparm_df[i,] == TRUE) > 1, TRUE)
-    if(any(nparm_err)) stop(paste('There can be only 1 active non-parameter array per stress period. Stress period(s)', which(nparm_err), 'have multiple active arrays.'), call. = FALSE)
+    if(any(nparm_err)) stop('There can be only 1 active non-parameter array per stress period. Stress period(s) ', paste0(which(nparm_err), collapse = ' '), ' have multiple active arrays.', call. = FALSE)
   }
   
   # check if any kper are active

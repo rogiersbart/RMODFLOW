@@ -37,6 +37,7 @@ rmf_create_rch <- function(...,
   if(nrchop == 2) {
     if(is.null(irch)) stop('Please supply a irch argument when nrchop = 2', call. = FALSE)
     if(!inherits(irch, 'list')) irch <- list(irch)
+    irch <- lapply(irch, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
     obj$irch <- irch
     names(obj$irch) <- paste('irch', length(irch), sep = '_')
     obj$kper$irch <- NA_character_
@@ -187,8 +188,8 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
     # data set 8
     if(nrchop == 2) {
       if(inirch >= 0) {
-        data_set_8 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
-        irch[[length(irch) + 1]] <- structure(data_set_8$array, kper = i)
+        data_set_8 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, integer = TRUE, ...)
+        irch[[length(irch) + 1]] <- rmf_create_array(structure(apply(data_set_8$array, 1:length(dim(data_set_8$array)), function(i) as.integer(i)), kper = i))
         lines <- data_set_8$remaining_lines
         rm(data_set_8)
       } else if(inirch < 0 && i > 1) {
@@ -262,7 +263,8 @@ rmf_write_rch <-  function(rch,
     
     # data set 5
     # inrech
-    names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-1]]
+    drop_id <- which(colnames(rch$kper) %in% c('kper', 'irch'))
+    names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-drop_id]]
     
     if(i > 1 && check_prev(rch$kper, i)) {
       inrech <- -1
