@@ -115,7 +115,7 @@ rmf_write_zon <-  function(zon,
   cat(paste('#', comment(zon)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(zon$nzn, file=file)
+  rmfi_write_variables(zon$nzn, file=file, integer = TRUE)
   
   for (i in 1:zon$nzn){
     

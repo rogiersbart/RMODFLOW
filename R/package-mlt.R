@@ -143,7 +143,7 @@ rmf_write_mlt <-  function(mlt,
   cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(mlt$nml, file=file)
+  rmfi_write_variables(mlt$nml, file=file, integer = TRUE)
   
   for (i in 1:mlt$nml){
     

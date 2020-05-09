@@ -239,10 +239,10 @@ rmf_write_rch <-  function(rch,
   cat(paste('#', comment(rch)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(rch$dimensions$np > 0) rmfi_write_variables('PARAMETER', rch$dimensions$np, file=file)
+  if(rch$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(rch$dimensions$np), file=file)
   
   # data set 2
-  rmfi_write_variables(rch$nrchop, rch$irchcb, file=file, ...)
+  rmfi_write_variables(rch$nrchop, rch$irchcb, file=file, integer = TRUE, ...)
   
   # parameters
   partyp <- 'RCH'
@@ -291,7 +291,7 @@ rmf_write_rch <-  function(rch,
       np <- 0
     }
     
-    rmfi_write_variables(inrech, ifelse(rch$nrchop == 2, inirch, ''), file=file, ...)
+    rmfi_write_variables(inrech, ifelse(rch$nrchop == 2, inirch, ''), file=file, integer = TRUE, ...)
     
     # data set 6
     if(np == 0 && inrech >= 0) rmfi_write_array(rch$recharge[[names_act]], file = file, iprn = iprn, ...)
@@ -299,7 +299,7 @@ rmf_write_rch <-  function(rch,
     # data set 7
     if(np > 0){
       for(j in 1:np){
-        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], rch$kper[i,parm_names_active[j]], ''), ifelse(length(rch$irchpf) == 1, rch$irchpf, rch$irchpf[j]), file=file)
+        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], rch$kper[i,parm_names_active[j]], ''), as.integer(ifelse(length(rch$irchpf) == 1, rch$irchpf, rch$irchpf[j])), file=file)
       }
     }
     

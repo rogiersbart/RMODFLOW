@@ -307,10 +307,10 @@ rmf_write_evt <-  function(evt,
   cat(paste('#', comment(evt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', evt$dimensions$np, file=file)
+  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(evt$dimensions$np), file=file)
   
   # data set 2
-  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, ...)
+  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, integer = TRUE, ...)
   
   # parameters
   partyp <- 'EVT'
@@ -380,7 +380,7 @@ rmf_write_evt <-  function(evt,
       np <- 0
     }
     
-    rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, ...)
+    rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, integer = TRUE, ...)
     
     # data set 6
     if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, iprn = iprn, ...)
@@ -391,7 +391,7 @@ rmf_write_evt <-  function(evt,
     # data set 8
     if(np > 0){
       for(j in 1:np){
-        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], evt$kper[i,parm_names_active[j]], ''), ifelse(length(evt$ievtpf) == 1, evt$ievtpf, evt$ievtpf[j]), file=file)
+        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], evt$kper[i,parm_names_active[j]], ''), as.integer(ifelse(length(evt$ievtpf) == 1, evt$ievtpf, evt$ievtpf[j])), file=file)
       }
     }
     

@@ -81,7 +81,7 @@ rmf_write_pvl <- function(pvl,
   cat(paste('#', comment(pvl)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(pvl$np, file=file)
+  rmfi_write_variables(pvl$np, file=file, integer = TRUE)
   
   # data set 2
   for(i in 1:pvl$np) {

@@ -232,16 +232,17 @@ rmf_write_nwt <- function(nwt,
   cat(paste('#', comment(nwt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(nwt$headtol, nwt$fluxtol, nwt$maxiterout, nwt$thickfact, nwt$linmeth, nwt$iprnwt, nwt$ibotav, toupper(nwt$options), 
-                       rmfi_ifelse0(toupper(nwt$options) == "SPECIFIED", paste(ifelse(nwt$continue, 'CONTINUE', ''), nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, nwt$backflag, nwt$maxbackiter, nwt$backtol, nwt$backreduce), '') , file=file, ...)
+  rmfi_write_variables(nwt$headtol, nwt$fluxtol, as.integer(nwt$maxiterout), nwt$thickfact, as.integer(nwt$linmeth), as.integer(nwt$iprnwt), as.integer(nwt$ibotav), toupper(nwt$options), 
+                       rmfi_ifelse0(toupper(nwt$options) == "SPECIFIED", paste(ifelse(nwt$continue, 'CONTINUE', ''), nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, as.integer(nwt$backflag), 
+                                                                               as.integer(nwt$maxbackiter), nwt$backtol, nwt$backreduce), '') , file=file, ...)
   
   # data set 2
   if(toupper(nwt$options) == "SPECIFIED") {
     
     if(nwt$linmeth == 1) {
-      rmfi_write_variables(nwt$maxitinner, nwt$ilumethod, nwt$levfill, nwt$stoptol, nwt$msdr, file = file, ...)
+      rmfi_write_variables(as.integer(nwt$maxitinner), as.integer(nwt$ilumethod), as.integer(nwt$levfill), nwt$stoptol, as.integer(nwt$msdr), file = file, ...)
     } else if(nwt$linmeth == 2) {
-      rmfi_write_variables(nwt$iacl, nwt$norder, nwt$level, nwt$north, nwt$iredsys, nwt$rrctols, nwt$idroptol, nwt$epsrn, nwt$hclosexmd, nwt$mxiterxmd, file = file, ...)
+      rmfi_write_variables(as.integer(nwt$iacl), as.integer(nwt$norder), as.integer(nwt$level), as.integer(nwt$north), as.integer(nwt$iredsys), nwt$rrctols, as.integer(nwt$idroptol), nwt$epsrn, nwt$hclosexmd, as.integer(nwt$mxiterxmd), file = file, ...)
     }
   }
   

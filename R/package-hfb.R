@@ -254,7 +254,7 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   cat(paste('#', comment(hfb)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(hfb$dimensions$np, hfb$dimensions$mxl, hfb$dimensions$nnp, ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
+  rmfi_write_variables(as.integer(hfb$dimensions$np), as.integer(hfb$dimensions$mxl), as.integer(hfb$dimensions$nnp), ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
   
   # parameters
   if(hfb$dimensions$np > 0){
@@ -263,13 +263,15 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
     for (i in 1:hfb$dimensions$np){
       p_name <- parm_names[i]
       df <- subset(hfb$data, name == p_name)
-      nlst <- nrow(df)
+      df[[vars[1]]] <- as.integer(df[[vars[1]]])
+      df[[vars[2]]] <- as.integer(df[[vars[2]]])
+      nlst <- as.integer(nrow(df))
       
       # data set 2
       rmfi_write_variables(p_name, toupper(partyp), hfb$parameter_values[i], nlst, file=file)
       # data set 3
       for (k in 1:nlst){
-        rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, vars], file=file)
+        rmfi_write_variables(as.integer(df$k[k]), as.integer(df$i[k]), as.integer(df$j[k]), df[k, vars], file=file)
       }
       rm(df)
     }
@@ -277,13 +279,16 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   
   # data set 4
   df <- subset(hfb$data, parameter == FALSE)
+  df[[vars[1]]] <- as.integer(df[[vars[1]]])
+  df[[vars[2]]] <- as.integer(df[[vars[2]]])
+  
   if(nrow(df) > 0) {
     rmfi_write_list(df, file = file, varnames = vars)
     rm(df)
   }
   
   # data set 5
-  rmfi_write_variables(hfb$dimensions$nacthfb, file = file)
+  rmfi_write_variables(as.integer(hfb$dimensions$nacthfb), file = file)
   
   # data set 6
   if(hfb$dimensions$nacthfb > 0){

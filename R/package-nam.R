@@ -180,6 +180,7 @@ rmf_write_nam <- function(nam,
   }
   if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified', call. = FALSE)
   if(any(c(5, 6, 96:99) %in% nam$nunit)) stop('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
+  nam$nunit <- as.integer(nam$nunit)
   
   # check for spaces in fname
   if(any(grepl(' |\t', nam$fname))) stop('Whitespaces are not allowed in fname', call. = FALSE)

@@ -361,37 +361,39 @@ rmf_write_upw <- function(upw,
                           iprn=-1, 
                           ...) {
   
+  iprn <- as.integer(iprn)
+  
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Upstream Weighting Package created by RMODFLOW, version',v,'\n'), file = file)
   cat(paste('#', comment(upw)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(upw$iupwcb,upw$hdry,upw$npupw, ifelse(upw$iphdry, 1, 0), file=file)
+  rmfi_write_variables(as.integer(upw$iupwcb),upw$hdry,as.integer(upw$npupw), ifelse(upw$iphdry, 1L, 0L), file=file)
   
   # data set 2
-  rmfi_write_variables(upw$laytyp, file = file)
+  rmfi_write_variables(upw$laytyp, file = file, integer = TRUE)
   
   # data set 3
-  rmfi_write_variables(upw$layavg, file = file)
+  rmfi_write_variables(upw$layavg, file = file, integer = TRUE)
   
   # data set 4
-  rmfi_write_variables(upw$chani, file = file)
+  rmfi_write_variables(upw$chani, file = file, integer = TRUE)
   
   # data set 5
-  rmfi_write_variables(upw$layvka, file = file)
+  rmfi_write_variables(upw$layvka, file = file, integer = TRUE)
   
   # data set 6
-  rmfi_write_variables(upw$laywet, file = file)
+  rmfi_write_variables(upw$laywet, file = file, integer = TRUE)
   
   # data set 7-8
   types <- NULL
   if(upw$npupw > 0) {
     for(i in 1:upw$npupw) {
       types <- append(types, attr(upw$parameters[[i]], 'partyp'))
-      rmfi_write_variables(attr(upw$parameters[[i]], 'parnam'), attr(upw$parameters[[i]], 'partyp'),attr(upw$parameters[[i]], 'parval'),length(attr(upw$parameters[[i]], 'mlt')), file = file)
+      rmfi_write_variables(attr(upw$parameters[[i]], 'parnam'), attr(upw$parameters[[i]], 'partyp'),attr(upw$parameters[[i]], 'parval'),as.integer(length(attr(upw$parameters[[i]], 'mlt'))), file = file)
       for(j in 1:length(attr(upw$parameters[[i]], 'mlt'))) {
-        rmfi_write_variables(attr(upw$parameters[[i]], 'layer')[j],attr(upw$parameters[[i]], 'mlt')[j], attr(upw$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(upw$parameters[[i]], 'zon')[j] == "ALL", NULL, attr(upw$parameters[[i]], 'iz')[[j]]), file=file)
+        rmfi_write_variables(as.integer(attr(upw$parameters[[i]], 'layer')[j]),attr(upw$parameters[[i]], 'mlt')[j], attr(upw$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(upw$parameters[[i]], 'zon')[j] == "ALL", NULL, as.integer(attr(upw$parameters[[i]], 'iz')[[j]])), file=file)
       } 
     }
   }

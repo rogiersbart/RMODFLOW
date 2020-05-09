@@ -368,17 +368,17 @@ rmf_write_huf <- function(huf,
   cat(paste('#', comment(huf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(huf$ihufcb,huf$hdry,huf$nhuf,huf$nphuf,huf$iohufheads,huf$iohufflows, file = file)
+  rmfi_write_variables(as.integer(huf$ihufcb),huf$hdry,as.integer(huf$nhuf),as.integer(huf$nphuf),as.integer(huf$iohufheads),as.integer(huf$iohufflows), file = file)
   
   # data set 2
-  rmfi_write_variables(huf$lthuf, file=file)
+  rmfi_write_variables(huf$lthuf, file=file, integer = TRUE)
   
   # data set 3
-  rmfi_write_variables(huf$laywt, file=file)
+  rmfi_write_variables(huf$laywt, file=file, integer = TRUE)
   
   # data set 4
   if(any(huf$laywt > 0)) {
-    rmfi_write_variables(huf$wetfct, huf$iwetit, huf$ihdwet, file = file)
+    rmfi_write_variables(huf$wetfct, as.integer(huf$iwetit), as.integer(huf$ihdwet), file = file)
     
     # data set 5
     if(dim(huf$wetdry)[3]>0) {
@@ -401,9 +401,9 @@ rmf_write_huf <- function(huf,
   # data set 10-11
   for(i in 1:huf$nphuf) {
     attrb <- attributes(huf$parameters[[i]])
-    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, as.integer(length(attrb$mlt)), file=file)
     for(j in 1:length(attrb$mlt)) {
-      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
+      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', as.integer(attrb$iz[[j]]), ''), file=file)      
     }
   }
   
@@ -576,7 +576,7 @@ rmf_write_kdep <- function(kdep,
   cat(paste('#', comment(kdep)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(kdep$npkdep, kdep$ifkdep, file = file)
+  rmfi_write_variables(kdep$npkdep, kdep$ifkdep, file = file, integer = TRUE)
   
   # data set 2
   if(kdep$ifkdep > 0) rmfi_write_array(kdep$rs, file = file, iprn = iprn, ...) 
@@ -584,9 +584,9 @@ rmf_write_kdep <- function(kdep,
   # data set 3-4
   for(i in 1:kdep$npkdep) {
     attrb <- attributes(kdep$parameters[[i]])
-    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, as.integer(length(attrb$mlt)), file=file)
     for(j in 1:length(attrb$mlt)) {
-      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
+      rmfi_write_variables(attrb$hgunam[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', as.integer(attrb$iz[[j]]), ''), file=file)      
     }
   }
   
@@ -747,14 +747,14 @@ rmf_write_lvda <- function(lvda,
   cat(paste('#', comment(lvda)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(lvda$nplvda, file = file)
+  rmfi_write_variables(lvda$nplvda, file = file, integer = TRUE)
   
   # data set 3-4
   for(i in 1:lvda$nplvda) {
     attrb <- attributes(lvda$parameters[[i]])
-    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, length(attrb$mlt), file=file)
+    rmfi_write_variables(attrb$parnam, attrb$partyp, attrb$parval, as.integer(length(attrb$mlt)), file=file)
     for(j in 1:length(attrb$mlt)) {
-      rmfi_write_variables(attrb$layer[j], attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', attrb$iz[[j]], ''), file=file)      
+      rmfi_write_variables(as.integer(attrb$layer[j]), attrb$mlt[j], attrb$zon[j], rmfi_ifelse0(attrb$zon[j] != 'ALL', as.integer(attrb$iz[[j]]), ''), file=file)      
     }
   }
   

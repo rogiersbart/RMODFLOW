@@ -1443,6 +1443,7 @@ rmfi_weighted_harmean <- function(x, w, ...) {
 #' @param nam \code{\link{RMODFLOW}} nam object; used when writing external arrays
 #' @param xsection logical; does the array represent a NLAY x NCOL cross-section. Passed to \code{rmf_write_array}
 #' @param ... ignored
+#' @details if the array should be written as integers, an integer array should be provided
 rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, external = NULL, fname = NULL, binary = NULL, precision = 'single', nam = NULL, xsection = FALSE, ...) {
   
   arrname <-  sub(x=sub(".*[$]","",deparse(substitute(array))),pattern = '[[].*', replacement='')
@@ -1461,22 +1462,24 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
   } else {
     iprn <- ifelse(is.na(iprn[arrname]), -1, iprn[arrname])
   }
+  iprn <- as.integer(iprn)
   
   if(external) { # external
     if(is.null(nam)) stop('Please supply a nam object when writing EXTERNAL arrays', call. = FALSE)
     extfile <-  file.path(dirname(file), paste(arrname, 'ext', sep='.'))
     
     # set unit number in nam file
-    found <-  F
+    found <-  FALSE
     nunit <- 200
     while(!found) {
       if(!(nunit %in%nam$nunit)) {
         nam <-  rbind(nam, list(ifelse(binary[arrname],"DATA(BINARY)","DATA"),nunit,extfile,NA))
-        found <- T
+        found <- TRUE
       } else {
         nunit <-  nunit+1
       }
     }
+    nunit <- as.integer(nunit)
     
     if(!is.null(dim(array)) && length(dim(array)) > 2) {
       for(i in 1:dim(array)[3]) {
@@ -1576,7 +1579,7 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
     nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
     
     # headers
-    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nclu, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
+    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nclu), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$dimensions$instances[p_name]), ''), file=file)
     
     # time-varying
     if(tv_parm[i]){
@@ -1590,13 +1593,13 @@ rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
         
         # clusters
         for (k in 1:nclu){
-          rmfi_write_variables(attr(arr2, 'mlt')[k], attr(arr2, 'zon')[k], ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.numeric(attr(arr2, 'iz')[[k]])), file=file)
+          rmfi_write_variables(attr(arr2, 'mlt')[k], attr(arr2, 'zon')[k], ifelse(toupper(attr(arr2, 'zon')[k]) == "ALL", '', as.integer(attr(arr2, 'iz')[[k]])), file=file)
         }
         rm(arr2)
       }
     } else { # non-time-varying
       for (k in 1:nclu){
-        rmfi_write_variables(attr(arr, 'mlt')[k], attr(arr, 'zon')[k], ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.numeric(attr(arr, 'iz')[[k]])), file=file)
+        rmfi_write_variables(attr(arr, 'mlt')[k], attr(arr, 'zon')[k], ifelse(toupper(attr(arr, 'zon')[k]) == "ALL", '', as.integer(attr(arr, 'iz')[[k]])), file=file)
       }  
       rm(arr)
     }
@@ -1629,13 +1632,13 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   cat(paste('#', comment(obj)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(obj$dimensions$np > 0) rmfi_write_variables('PARAMETER', obj$dimensions$np, obj$dimensions$mxl, file=file)
+  if(obj$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(obj$dimensions$np), as.integer(obj$dimensions$mxl), file=file)
   
   # data set 2
   if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
-    ds2 <- paste0(formatC(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]]), width = 10), collapse='')
+    ds2 <- paste0(formatC(as.integer(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]])), width = 10), collapse='')
   } else {
-    ds2 <- c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]])
+    ds2 <- as.integer(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]]))
   }
   rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
@@ -1653,7 +1656,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
       nlst <- unname(ifelse(tv_parm[i], nrow(df)/obj$dimensions$instances[p_name], nrow(df)))
       
       # data set 3
-      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], nlst, ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  obj$dimensions$instances[p_name], ''), file=file)
+      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nlst), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$dimensions$instances[p_name]), ''), file=file)
       
       # time-varying
       if(tv_parm[i]){
@@ -1700,7 +1703,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
       np <- 0
     }
     
-    rmfi_write_variables(itmp, np, file=file, ...)
+    rmfi_write_variables(itmp, np, file=file, integer = TRUE, ...)
     
     # data set 6
     if(itmp > 0){
@@ -1737,6 +1740,9 @@ rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', app
   n <- length(varnames) - naux
   col_names <- c('k', 'i', 'j', varnames)
   df <- df[,col_names]
+  df$k <- as.integer(df$k)
+  df$i <- as.integer(df$i)
+  df$j <- as.integer(df$j)
 
   if(format == 'fixed') {
     fmt <- paste0(c(rep('%10i', 3), rep('%10g', n), rep('%10g', naux)), collapse = '')
@@ -1751,13 +1757,21 @@ rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', app
 #' Write modflow variables
 #' Internal function used in the write_* functions for writing single line datasets
 #' @param format either \code{'fixed'} or \code{'free'}. Fixed format assumes 10 character spaces for each value
+#' @param integer logical; should all values be converted to integers? MODFLOW does not allow for exponents in integer values
 #' @keywords internal
-rmfi_write_variables <- function(..., file, append=TRUE, format = 'free') {
-  arg <- unlist(list(...))
-  arg <- arg[nchar(arg) > 0] # removes empty elements
+rmfi_write_variables <- function(..., file, append=TRUE, format = 'free', integer = FALSE) {
+  arg <- list(...)
+  arg <- arg[vapply(arg, function(i) all(nchar(i) > 0), TRUE)] # removes empty elements
+  if(integer) arg <- lapply(arg, as.integer)
+  
+  # sets integers in proper format since Type is converted to double when vectorized
   if(format == 'free') {
-    cat(paste0(paste(arg, sep=' ',collapse=' '), '\n'), file=file, append=append)
+    arg <- lapply(arg, formatC)
+    arg <- unlist(arg)
+    cat(paste0(paste(arg, sep = ' ', collapse = ' '), '\n'), file=file, append=append)
   } else if(format == 'fixed') { # optional items are always free format so no need to adjust code for characters
-    cat(paste0(paste0(formatC(arg, width=10),collapse=''), '\n'), file=file, append=append)
-  } 
+    arg <- lapply(arg, formatC, width = 10)
+    arg <- unlist(arg)
+    cat(paste0(paste0(arg, collapse = ''), '\n'), file=file, append=append)
+  }
 }

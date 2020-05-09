@@ -349,7 +349,7 @@ rmf_write_hob <- function(hob,
   cat(paste('#', comment(hob)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(hob$dimensions$nh, hob$dimensions$mobs, hob$dimensions$maxm, hob$iuhobsv, hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
+  rmfi_write_variables(as.integer(hob$dimensions$nh), as.integer(hob$dimensions$mobs), as.integer(hob$dimensions$maxm), as.integer(hob$iuhobsv), hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
   
   # data set 2
   # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh) || is.null(hob$env),1,hob$evh), file=file) # MODFLOW-2000
@@ -359,24 +359,24 @@ rmf_write_hob <- function(hob,
   i <- 1
   while(i <= hob$dimensions$nh) {
     # data set 3
-    rmfi_write_variables(hob$data$obsnam[i], ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1), hob$data$row[i], hob$data$column[i],
-                         ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i]), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
+    rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1)), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
+                         as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
                          file=file)
     
     # data set 4
     if(length(hob$data$layer[[i]]) > 1) {
-      rmfi_write_variables(paste(hob$data$layer[[i]], hob$data$pr[[i]], collapse = ' '), file = file)
+      rmfi_write_variables(paste(as.integer(hob$data$layer[[i]]), hob$data$pr[[i]], collapse = ' '), file = file)
     }
     
     # data set 5 - 6
     if(hob$data$nrefsp[i] > 1) {
       # data set 5
-      rmfi_write_variables(hob$data$itt[i], file = file)
+      rmfi_write_variables(hob$data$itt[i], file = file, integer = TRUE)
       
       for(j in 1:hob$data$nrefsp[i]) {
         # data set 6
         id <- i + j - 1
-        rmfi_write_variables(hob$data$obsnam[id], hob$data$irefsp[id],  hob$data$toffset[id],  hob$data$hobs[id], file = file)
+        rmfi_write_variables(hob$data$obsnam[id], as.integer(hob$data$irefsp[id]),  hob$data$toffset[id],  hob$data$hobs[id], file = file)
       }
       i <- i + hob$data$nrefsp[i]
     } else {

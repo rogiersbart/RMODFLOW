@@ -410,32 +410,34 @@ rmf_write_lpf <- function(lpf,
                           iprn = -1,
                           ...) {
   
+  iprn <- as.integer(iprn)
+  
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Layer-Property Flow Package created by RMODFLOW, version',v,'\n'), file = file)
   cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(lpf$ilpfcb,lpf$hdry,lpf$nplpf,ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
+  rmfi_write_variables(as.integer(lpf$ilpfcb),lpf$hdry,as.integer(lpf$nplpf),ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
   
   # data set 2
-  rmfi_write_variables(lpf$laytyp, file = file)
+  rmfi_write_variables(lpf$laytyp, file = file, integer = TRUE)
   
   # data set 3
-  rmfi_write_variables(lpf$layavg, file = file)
+  rmfi_write_variables(lpf$layavg, file = file, integer = TRUE)
   
   # data set 4
-  rmfi_write_variables(lpf$chani, file = file)
+  rmfi_write_variables(lpf$chani, file = file, integer = TRUE)
   
   # data set 5
-  rmfi_write_variables(lpf$layvka, file = file)
+  rmfi_write_variables(lpf$layvka, file = file, integer = TRUE)
   
   # data set 6
-  rmfi_write_variables(lpf$laywet, file = file)
+  rmfi_write_variables(lpf$laywet, file = file, integer = TRUE)
   
   # data set 7
   if(any(lpf$laywet != 0)) {
-    rmfi_write_variables(lpf$wetfct, lpf$iwetit, lpf$ihdwet, file = file)
+    rmfi_write_variables(lpf$wetfct, as.integer(lpf$iwetit), as.integer(lpf$ihdwet), file = file)
   }
   
   # data set 8-9
@@ -443,9 +445,9 @@ rmf_write_lpf <- function(lpf,
   if(lpf$nplpf > 0) {
     for(i in 1:lpf$nplpf) {
       types <- append(types, attr(lpf$parameters[[i]], 'partyp'))
-      rmfi_write_variables(attr(lpf$parameters[[i]], 'parnam'), attr(lpf$parameters[[i]], 'partyp'),attr(lpf$parameters[[i]], 'parval'),length(attr(lpf$parameters[[i]], 'mlt')), file = file)
+      rmfi_write_variables(attr(lpf$parameters[[i]], 'parnam'), attr(lpf$parameters[[i]], 'partyp'),attr(lpf$parameters[[i]], 'parval'),as.integer(length(attr(lpf$parameters[[i]], 'mlt'))), file = file)
       for(j in 1:length(attr(lpf$parameters[[i]], 'mlt'))) {
-        rmfi_write_variables(attr(lpf$parameters[[i]], 'layer')[j],attr(lpf$parameters[[i]], 'mlt')[j], attr(lpf$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(lpf$parameters[[i]], 'zon')[j] == "ALL", NULL, attr(lpf$parameters[[i]], 'iz')[[j]]), file=file)
+        rmfi_write_variables(as.integer(attr(lpf$parameters[[i]], 'layer')[j]),attr(lpf$parameters[[i]], 'mlt')[j], attr(lpf$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(lpf$parameters[[i]], 'zon')[j] == "ALL", NULL, as.integer(attr(lpf$parameters[[i]], 'iz')[[j]])), file=file)
       } 
     }
   }
