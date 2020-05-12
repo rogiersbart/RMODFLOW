@@ -228,6 +228,8 @@ rmf_as_array.stars <- function(obj,
       ar <- t(obj[[select]]) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
     }
+    # reverse rows
+    ar <- ar[rev(seq_len(dim(ar)[1])),]
     
   } else if(ndim == 3) {
     # 3D
@@ -244,6 +246,8 @@ rmf_as_array.stars <- function(obj,
       ar <- aperm(obj[[select]], c(2,1,3)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
     }
+    # reverse rows
+    ar <- ar[rev(seq_len(dim(ar)[1])),,]
     
   } else if(ndim == 4) {
     # 4D
@@ -261,6 +265,8 @@ rmf_as_array.stars <- function(obj,
       ar <- aperm(obj[[select]], c(2,1,3,4)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
     }
+    # reverse rows
+    ar <- ar[rev(seq_len(dim(ar)[1])),,,]
   }
   
   return(ar)
@@ -512,7 +518,7 @@ rmf_as_stars <- function(...) {
 rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
-  m <- t(as.matrix(array))
+  m <- t(as.matrix(array[rev(seq_len(dim(array)[1])),])) # stars origin will be bottomleft instead of R topleft, so reverse row order
   dim(m) <- c(x = dim(m)[1], y = dim(m)[2]) # named dim
   
   # origin
