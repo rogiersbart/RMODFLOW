@@ -31,9 +31,11 @@ Imports:
     tidyr,
     abind,
     ggquiver,
-    magrittr
+    magrittr,
+    stars
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
+Encoding: UTF-8
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,

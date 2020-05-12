@@ -1,22 +1,32 @@
 
-## SPATIAL --> RMODFLOW
-##
+# SPATIAL to RMODFLOW ----
 
-#' Title
+#' Convert a simple features object to rmf_list
 #'
-#' @param obj 
-#' @param dis 
-#' @param select 
-#' @param prj 
-#' @param kper 
-#' @param op 
-#' @param k 
-#' @param ... 
-#'
-#' @return
+#' @param obj \code{sf} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param select integer or character specifying columns from \code{obj} to select. Defaults to all columns
+#' @param prj \code{RMODFLOW} prj object
+#' @param k optional integer vector of length \code{nrow(obj)} specifying the layer index for each feature. If not present, all features are assumed to be in layer 1.
+#' @param kper optional integers specifying the stress-periods during which this rmf_list is active
+#' @param op geometric operator to use in the spatial join. Defaults to \code{sf::st_intersects}. See details.
+#' @param ... additional arguments passed to \code{sf::st_join}
+#' 
+#' @details A spatial join between the MODFLOW grid (as polygons) and \code{obj} is performed using \code{sf::st_join(left = FALSE, op = op)}.
+#' The geometric operator \code{op} can be any kind described in the \code{sf} help pages. See \code{?sf::st_intersects}.
+#' 
+#' @return a \code{RMODFLOW} rmf_list object
 #' @export
 #'
 #' @examples
+#' sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+#' obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
+#' dis <- rmf_create_dis()
+#' rmf_as_list(obj, dis)
+#' rmf_as_list(obj, dis, k = c(2, 2, 3))
+#' 
+#' prj <- rmf_create_prj(rotation = 12)
+#' rmf_as_list(obj, dis, prj = prj)
 rmf_as_list.sf <- function(obj,
                            dis,
                            select = colnames(sf::st_set_geometry(obj, NULL)), 
@@ -57,54 +67,78 @@ rmf_as_list.sf <- function(obj,
   return(rlst)
 }
 
-
-#' Title
+#' Convert a simple features object to a rmf_array (rasterize)
 #'
-#' @param obj 
-#' @param dis 
-#' @param select 
-#' @param k 
-#' @param prj 
-#' @param sparse 
-#' @param op 
-#' @param kper 
-#' @param ... 
+#' @param obj \code{sf} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param select integer or character specifying which column from \code{obj} to rasterize
+#' @param na_value value of the cells in the array which are not specified in obj; defaults to 0
+#' @param prj \code{RMODFLOw} prj object
+#' @param sparse logical; should a 2d (TRUE; default) or 3d (FALSE) array be returned
+#' @param kper optional integers specifying the stress-periods during which this array is active
+#' @param ... additional arguments passed to \code{stars::st_rasterize}
 #'
-#' @return
+#' @details \code{stars::st_rasterize} is used to rasterize \code{obj} to the MODFLOW grid which calls GDALRasterize.
+#'  Alternatively, the user can call \code{rmf_as_list} on \code{obj} and \code{rmf_as_array} on the resulting \code{rmf_list}. Results may differ.
+#'
+#' @return a \code{rmf_2d_array} if \code{sparse = TRUE}; a \code{rmf_3d_array} if \code{sparse = FALSE}
 #' @export
 #'
 #' @examples
+#' sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+#' obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
+#' dis <- rmf_create_dis()
+#' rmf_as_array(obj, dis = dis, select = 'q')
+#' rmf_as_array(obj, dis = dis, select = 'q', options = c('MERGE_ALG=ADD'))
+#' 
+#' # alternative
+#' rmf_as_list(obj, dis = dis, select = 'q') %>%
+#'   rmf_as_array(dis = dis)
 rmf_as_array.sf <- function(obj, 
                             dis,
                             select,
-                            k = NULL,
+                            na_value = 0,
                             prj = rmf_get_prj(dis),
                             sparse = TRUE,
-                            op = sf::st_intersects,
                             kper = attr(obj, 'kper'),
                             ...) {
   
-  ar <- rmf_as_list(obj, dis = dis, select = select, prj = prj, k = k, op = op, ...) %>%
-    rmf_as_array(dis = dis, select = 4, sparse = sparse, kper = kper, ...)
+  select <- select
+
+  target <- rmf_as_stars(rmf_create_array(na_value, dim = c(dis$nrow, dis$ncol)), dis = dis, prj = prj, id = FALSE)
+  s <- stars::st_rasterize(obj[select], template = target, ...)
+  ar <- rmf_as_array(s, dis = dis, prj = prj, select = 1, resample = FALSE, kper = kper)
+  if(!sparse) ar <- rmf_create_array(ar, dim = c(dis$nrow, dis$ncol, dis$nlay))
+    
+  # ar <- rmf_as_list(obj, dis = dis, select = select, prj = prj, k = k, op = op, ...) %>%
+  #   rmf_as_array(dis = dis, select = 4, sparse = sparse, kper = kper, ...)
+  
   return(ar)
   
 }
 
-#' Title
+#' Convert a stars object to rmf_list
 #'
-#' @param obj 
-#' @param dis 
-#' @param select
-#' @param k  
-#' @param prj 
-#' @param kper 
-#' @param op 
-
-#'
-#' @return
+#' @param obj \code{stars} object
+#' @param dis \code{RMODFLOW} list object
+#' @param select integer or character vector denoting the variables to select from \code{obj}. Defaults to all variables.
+#' @param k optional integer specifying the layer index for each feature. If not present, all features are assumed to be in layer 1.
+#' @param prj \code{RMODFLOW} prj object
+#' @param kper optional integers specifying the stress-periods during which this rmf_list is active
+#' @param op geometric operator to use in the spatial join. Defaults to \code{sf::st_intersects}. See details.
+#' @param ... additional arguments passed to \code{rmf_as_list.sf}
+#' 
+#' @details \code{obj} is converted to \code{sf} using \code{sf::st_as_sf}. \code{rmf_as_list} is then called on the resulting \code{sf} object.
+#' This function is intended for \code{stars} objects with geometry dimensions (e.g. \code{sf} objects).
+#' @return a \code{rmf_list} object
 #' @export
 #'
 #' @examples
+#' sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+#' obj <- sf::st_sf(q = c(-500, -400, -300), m = 2, geom = sfc)
+#' s <- stars::st_as_stars(obj)
+#' dis <- rmf_create_dis()
+#' rmf_as_list(s, dis)
 rmf_as_list.stars <- function(obj,
                               dis,
                               select = names(obj),
@@ -120,22 +154,35 @@ rmf_as_list.stars <- function(obj,
   return(lst)
 }
 
-#' Title
+#' Convert a stars object to rmf_array
 #'
-#' @param obj 
-#' @param dis 
-#' @param select 
-#' @param kper 
-#' @param prj 
-#' @param crs 
-#' @param resample 
-#' @param method 
+#' @param obj \code{stars} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param select integer or character specifying which variable from \code{obj} to select
+#' @param kper optional integers specifying the stress-periods during which this array is active
+#' @param prj \code{RMODFLOW} prj object
+#' @param resample logical specifying if \code{obj} should be resampled to the MODFLOW grid. Defaults to TRUE.
+#' @param method character specifying the resampling method when \code{resample = TRUE}. Defaults to 'bilinear'. See details.
 #' @param ... ignored
 #'
-#' @return
+#' @details If \code{resample = TRUE}, \code{stars::st_warp} is called with the specified method. For possible \code{method} values, see \code{?stars::st_warp}.
+#'  If \code{resample = FALSE}, the array is pulled directly from \code{obj}. The latter will fail when the dimensions and crs of \code{obj} and the MODFLOW grid are 
+#'  not exactly the same. In that case, the user should consider setting \code{resample = TRUE}.
+#'  
+#'  \code{rmf_as_array} currently can not handle \code{obj} or \code{prj} without defined crs.
+#'  
+#'  This function is intended for use with 2D \code{stars} objects with dimensions X & Y, 3D \code{stars} objects with dimensions 
+#'  X, Y and \code{dis$nlay} or 4D \code{stars} objects with dimensions X, Y, \code{dis$nlay} and \code{sum(dis$nstp)}.
+#'
+#' @return a \code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} depending on the number of dimensions in \code{obj}
 #' @export
 #'
 #' @examples
+#' dis <- rmf_create_dis()
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' s <- rmf_as_stars(r, dis = dis)
+#' 
+#' rmf_as_array(s, dis = dis, resample = FALSE)
 rmf_as_array.stars <- function(obj,
                                dis, 
                                prj = rmf_get_prj(dis),
@@ -148,6 +195,8 @@ rmf_as_array.stars <- function(obj,
   dims <- stars::st_dimensions(obj)
   ndim <- length(dims)
   
+  # TODO stars::st_warp does not work when objects don't have crs defined. Perhaps use sf::st_interpolate_aw ?
+  
   # TODO check if obj projection == dis projection
 
   if(ndim > 4) stop('Support for obj with more than 4 dimensions not implemented', call. = FALSE)
@@ -157,12 +206,14 @@ rmf_as_array.stars <- function(obj,
   
   if(resample) {
     # st_warp doesn't work when objects don't have crs
+    # no problem if crs are different since st_warp will transform to destination crs
     if(is.null(prj) || is.na(sf::st_crs(prj$crs)) || is.na(sf::st_crs(obj))) {
       stop('obj crs and/or prj are missing. Consider setting resample = FALSE', call. = FALSE)
     }
   } else {
-    # error out if obj dimensions do not coincide with dis domain
-    if(!identical(sf::st_bbox(obj), sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
+    # error out if obj dimensions do not coincide with dis domain or if crs are different
+    if(sf::st_crs(obj) != sf::st_crs(target)) stop('crs of obj and prj differ', call. = FALSE)
+    if(!all(sf::st_bbox(obj) == sf::st_bbox(target))) stop('Spatial extents of obj and dis do not coincide. Consider setting resample = TRUE', call. = FALSE)
     if(!identical(setNames(dim(obj)[1:2], NULL), setNames(dim(target), NULL))) stop('Spatial resolution of obj and dis are not the same. Consider setting resample = TRUE', call. = FALSE)
   }
   
@@ -177,8 +228,6 @@ rmf_as_array.stars <- function(obj,
       ar <- t(obj[[select]]) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol), kper = kper)
     }
-    # TODO remove when deltay is negative
-    ar <- ar[rev(1:dim(ar)[1]),]
     
   } else if(ndim == 3) {
     # 3D
@@ -195,8 +244,6 @@ rmf_as_array.stars <- function(obj,
       ar <- aperm(obj[[select]], c(2,1,3)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay), kper = kper)
     }
-    # TODO remove when deltay is negative
-    ar <- ar[rev(1:dim(ar)[1]),,]
     
   } else if(ndim == 4) {
     # 4D
@@ -214,59 +261,92 @@ rmf_as_array.stars <- function(obj,
       ar <- aperm(obj[[select]], c(2,1,3,4)) %>% c() %>%
         rmf_create_array(dim = c(dis$nrow, dis$ncol, nnlay, sum(dis$nstp)), kper = kper)
     }
-    # TODO remove when deltay is negative
-    ar <- ar[rev(1:dim(ar)[1]),,,]
   }
   
   return(ar)
 }
 
-#' Title
+#' Convert a raster object to rmf_array
 #'
-#' @param obj 
-#' @param dis 
-#' @param ... 
+#' @param obj object of class \code{RasterLayer}, \code{RasterStack} or \code{RasterBrick}
+#' @param dis \code{RMODFLOW} object
+#' @param ... additional arguments passed to \code{\link{rmf_as_array.stars}}
 #'
-#' @return
+#' @details \code{obj} is first converted to \code{stars} using \code{stars::st_as_stars}. \code{rmf_as_array.stars} is called on the resulting \code{stars} object.
+#'
+#' @return a \code{rmf_2d_array} or \code{rmf_3d_array} depending on the dimensions of \code{obj}
 #' @export
 #'
 #' @examples
+#' dis <- rmf_create_dis()
+#' r <- raster::raster(matrix(1:prod(dis$nrow, dis$ncol), 10, 10),
+#'                     xmx = sum(dis$delr), ymx = sum(dis$delc))
+#' rmf_as_array(r, dis, resample = FALSE)
 rmf_as_array.Raster <- function(obj, 
                                 dis,
                                 ...) {
   rmf_as_array(stars::st_as_stars(obj), dis = dis, ...)
 }
 
-## RMODFLOW --> SPATIAL
-##
 
 
-#' Generic function to convert rmf_array objects to simple features
+# RMODFLOW to SPATIAL ----
+
+
+#' Functions to convert rmf_array and rmf_list objects to simple features
+#' 
+#' @param array \code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} object
+#' @param obj \code{rmf_list} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param mask a 2d array when \code{array} is 2d or a 3d array when \code{array} is 3d or 4d that can be coerced to logical. Used to specify which cells to convert to sf. Defaults to all cells.
+#' @param prj \code{RMODFLOW} prj object
+#' @param name character specifying the name of the resulting variable in the sf object. Defaults to \code{'value'}
+#' @param as_points logical; should returned sf object represent cell-centered nodal points (TRUE) or cell polygons (FALSE, default)
+#' @param id either \code{'r'} (default) or \code{'modflow'}. Specifies which type of cell id is returned. R uses column-major array ordering whereas MODFLOW uses row-major ordering.
+#' @param ... additional arguments passed to \code{rmf_as_tibble} when converting a \code{rmf_list} object. Otherwise, ignored.
+#' 
+#' @details The returned z coordinate when \code{as_points = TRUE} reflects the cell node.
+#' The crs is taken from the \code{prj} argument.
+#'  
+#' @return A \code{sf} object with point geometries representing the cell-centered nodes when \code{as_points = TRUE}. When \code{as_points = FALSE},
+#' the geometries are polygons representing the entire cell. 
+#' When converting a \code{rmf_array}, the \code{sf} object has following variables: one with the array values per cell/node, 
+#' one containing the cell id (when \code{id} is \code{'r'} or \code{'modflow'}), top and bottom of the cells when the array is 3d or 4d plus the z value of the node when \code{as_points = TRUE}.
+#' When a 4d array is converted, an additional time column is added as well.
+#' 
+#' When converting a \code{rmf_list}, all variables in the \code{rmf_list} object are retained with the addition of the cell id column (when \code{id} is \code{'r'} or \code{'modflow'}) and
+#' top and bottom columns if \code{as_points = FALSE} or a z column when \code{as_points = TRUE}.
 #' 
 #' @rdname rmf_as_sf
 #' @export
+#' @examples
+#' dis <- rmf_create_dis()
+#' 
+#' # 2d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' rmf_as_sf(r, dis = dis)
+#' rmf_as_sf(r, dis = dis, as_points = TRUE)
+#' 
+#' # 3d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+#' rmf_as_sf(r, dis = dis, id = 'modflow')
+#' rmf_as_sf(r, dis = dis, as_points = TRUE)
+#' 
+#' # 4d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 2), dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+#' rmf_as_sf(r, dis = dis, id = FALSE)
+#' 
+#' # rmf_list
+#' l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(3, 2), q = c(-500, -400)))
+#' rmf_as_sf(l, dis = dis)
+#' 
 rmf_as_sf <- function(...) {
   UseMethod('rmf_as_sf')
 }
 
-#' Title
-#'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#' @param name 
-#' @param as_points 
-#' @param ... ignored
-#'
-#' @details returned z coordinate when as_points = TRUE reflects cell node 
-#'
-#' @return
 #' @export
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_2d_array
-#' @examples
 rmf_as_sf.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
   
   # faster to convert to stars and then to sf than to manually create sf object
@@ -384,34 +464,51 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), as_points = FAL
   return(s)
 }
 
-#' Title
+#' Functions to convert rmf_array and rmf_list objects to stars objects
 #'
-#' @param ... 
+#' @param array \code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} object
+#' @param obj \code{rmf_list} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param mask a 2d array when \code{array} is 2d or a 3d array when \code{array} is 3d or 4d that can be coerced to logical. Used to specify which cells to convert. Defaults to all cells.
+#' @param prj \code{RMODFLOW} prj object
+#' @param name character specifying the name of the resulting variable in the stars object. Defaults to \code{'value'}
+#' @param id either \code{'r'} (default) or \code{'modflow'}. Specifies which type of cell id is returned. R uses column-major array ordering whereas MODFLOW uses row-major ordering.
+#' @param select integer or character specifying which column of the \code{rmf_list} object to convert to \code{stars} variable.
+#' @param ... additional arguments passed to \code{rmf_as_array} when converting a \code{rmf_list} object. Otherwise, ignored.
 #'
-#' @return
+#' @details The crs is taken from the \code{prj} argument.
+#'
+#' @return a \code{stars} object with x and y dimensions when \code{array} is 2d, x, y and layer (integer representing MODFLOW layer; similar to bands) when \code{array} is 3d,
+#' x, y, layer and time dimensions when \code{array} is 4d. When converting a \code{rmf_list} object, it is first converted to a \code{rmf_array} using \code{rmf_as_array}.
+#' Two variables are present in the returned \code{stars} object, one with the array values and on with the cell id (when \code{id} is \code{'r'} or \code{'modflow'}).
+#' 
 #' @export
-#'
 #' @examples
+#' dis <- rmf_create_dis()
+#'
+#' # 2d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' rmf_as_stars(r, dis = dis)
+#' 
+#' # 3d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+#' rmf_as_stars(r, dis = dis, id = 'modflow')
+#' 
+#' # 4d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 2), dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+#' rmf_as_stars(r, dis = dis, id = FALSE)
+#' 
+#' # rmf_list
+#' l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(3, 2), q = c(-500, -400), d = 35))
+#' rmf_as_stars(l, dis = dis, select = 'q')
+#' 
 rmf_as_stars <- function(...) {
   UseMethod('rmf_as_stars')
 }
 
-
-#' Title
-#'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#' @param name 
-#' @param ... ignored
-#'
-#' @return
-#' @export
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_2d_array
-#' @examples
+#' @export
 rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   array[which(mask^2 != 1)] <- NA
@@ -530,20 +627,55 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
 #' @rdname rmf_as_stars
 #' @method rmf_as_stars rmf_list
 #' @export
-rmf_as_stars.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), ...) {
+rmf_as_stars.rmf_list <- function(obj, dis, select, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
-  rmf_as_array(obj, dis = dis, ...) %>% rmf_as_stars(dis = dis, prj = prj, ...)
+  rmf_as_array(obj, dis = dis, select = select, ...) %>% rmf_as_stars(dis = dis, prj = prj, name = name, id = id, ...)
   
 }
 
-#' Title
+#' Functions to convert rmf_array and rmf_list objects to raster objects
+#' 
+#' @param array \code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} object
+#' @param obj \code{rmf_list} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj \code{RMODFLOW} prj object
+#' @param l integer specifying which dimension of a 4d array to convert to raster.
+#' @param select integer or character specifying which column of the \code{rmf_list} object to convert to \code{raster} object variable.
+#' @param ... additional arguments passed to \code{rmf_as_stars}
 #'
-#' @param ... 
+#' @details the objects are first converted to \code{stars} using \code{rmf_as_stars}.
+#'  Conversions to \code{raster} objects will fail when arrays are rectilinear or rotated.
 #'
-#' @return
+#' @return an object of class \code{RasterLayer} if array is 2d, or \code{RasterBrick} when array is 3d or 4d with the bands representing the MODFLOW layers.
+#'  The variable values are obtained from the array or from the \code{select} column for \code{rmf_list} objects.
+#' 
 #' @export
-#'
+#' @seealso \code{\link{rmf_as_stars}}
 #' @examples
+#' dis <- rmf_create_dis()
+#' 
+#' # 2d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' rmf_as_raster(r, dis = dis)
+#' 
+#' # 3d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+#' rmf_as_raster(r, dis = dis, id = 'modflow')
+#' 
+#' # 4d array
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 2), dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+#' rmf_as_raster(r, dis = dis, l = 2)
+#' 
+#' # rmf_list
+#' l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(2, 2), q = c(-500, -400), d = 35))
+#' rmf_as_raster(l, dis = dis, select = 'q')
+#' 
+#' # rotated grids can not be converted to raster
+#' \dontrun{
+#' prj <- rmf_create_prj(rotation = 12)
+#' rmf_as_raster(r, dis = dis, l = 2, prj = prj)
+#' }
+#' 
 rmf_as_raster <- function(...) {
   UseMethod('rmf_as_raster')
 }
@@ -573,31 +705,41 @@ rmf_as_raster.rmf_4d_array <- function(array, dis, l = NULL, prj = rmf_get_prj(d
 #' @rdname rmf_as_raster
 #' @method rmf_as_raster rmf_list
 #' @export
-rmf_as_raster.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), ...) {
-  rmf_as_stars(obj, dis = dis, prj = prj, ...) %>% as('Raster')
+rmf_as_raster.rmf_list <- function(obj, dis, select, prj = rmf_get_prj(dis), ...) {
+  rmf_as_stars(obj, dis = dis, prj = prj, select = select, ...) %>% as('Raster')
 }
 
-## Projection 
-##
+# PROJECTION ----
 
-#' Title
+#' Create a RMODFLOW projection object
 #'
-#' @param origin in length units of crs
-#' @param rotation 
-#' @param crs 
-#' @param ulcoordinate 
-#' @param nodecoord 
-#' @param dis 
+#' @param origin numeric vector with the x & y (and optionally z) coordinates of the origin which by default is the lowerleft corner of the model. Defaults to \code{c(0, 0, 0)}.
+#' @param rotation numeric; counterclockwise rotation angle (in degrees). Rotation is around the lowerleft corner of the model. Defaults to 0.
+#' @param crs coordinate reference system of the model. Any values accepted by \code{sf::st_crs} may be defined. Defaults to \code{NA}.
+#' @param ulcoordinate logical; if \code{TRUE}, \code{origin} refers to the upperleft cell instead of the lowerleft.
+#' @param nodecoordinate logical; if \code{TRUE}, \code{origin} refers to the cell center instead of the cell corner.
+#' @param dis \code{RMODFLOW} dis object. Only required when \code{uulcoordinate} or \code{nodecoordinate} is TRUE. 
 #'
-#' @return
+#' @details \code{origin} should be specified in the length units defined by \code{crs}.
+#' If no z coordinate is specified in \code{origin}, it is set to zero.
+#' \code{crs} is set by a call to \code{sf::st_crs}.
+#' Rotation is around the lowerleft corner of the model.
+#'
+#' @return an object of class \code{prj} which is a list with the (1) origin vector containing x, y and z coordinates of the lowerleft corner,
+#'  (2) the rotation angle in degrees counterclockwise and (3) the coordinate reference system as an \code{sf crs} object
 #' @export
 #'
 #' @examples
+#' rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)
+#' 
+#' dis <- rmf_create_dis()
+#' rmf_create_prj(origin = c(120, 300, 13), ulcoordinate = TRUE, dis = dis)
+#' 
 rmf_create_prj <- function(origin = c(0, 0, 0), 
                            rotation = 0, 
                            crs = NA,
                            ulcoordinate = FALSE,
-                           nodecoord = FALSE,
+                           nodecoordinate = FALSE,
                            dis = NULL) {
   
   crs <- sf::st_crs(crs)
@@ -607,7 +749,7 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
     if(is.null(dis)) stop('Please provide a dis object when ulcoordinate = TRUE', call. = FALSE)
     length_mlt <- rmfi_prj_length_multiplier(dis, prj = list(crs = crs), to = 'xyz')
     
-    if(nodecoord) { # set origin as corner coordinate
+    if(nodecoordinate) { # set origin as corner coordinate
       origin[1] <- origin[1] - ((dis$delr[1]/2) * length_mlt)
       origin[2] <- origin[2] + ((dis$delc[1]/2) * length_mlt)
     } 
@@ -624,9 +766,9 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
     origin[1] <- xRot
     origin[2] <- yRot
     
-  } else if(nodecoord) {
+  } else if(nodecoordinate) {
     # set origin as corner coordinate
-    if(is.null(dis)) stop('Please provide a dis object when nodecoord = TRUE', call. = FALSE)
+    if(is.null(dis)) stop('Please provide a dis object when nodecoordinate = TRUE', call. = FALSE)
     length_mlt <- rmfi_prj_length_multiplier(dis, prj = list(crs = crs), to = 'xyz')
     
     origin[1] <- origin[1] - ((dis$delr[dis$nrow]/2) * length_mlt)
@@ -671,7 +813,7 @@ print.prj <- function(prj) {
 #' @param modflow \code{RMODFLOW} modflow object
 #' @param prj \code{RMODFLOW} prj object
 #' @param file path to discretization file; typically "*.dis"
-#' @param crs crs to transform to. Input for \code{sf::st_crs}.
+#' @param crs coordinate reference system to transform to. Input for \code{sf::st_crs}.
 #' 
 #' @name prj_auxiliary
 NULL
@@ -681,6 +823,15 @@ NULL
 #' @export
 #' @rdname prj_auxiliary
 #' @examples
+#' dis <- rmf_read_dis(rmf_example_file('water-supply-problem.dis'))
+#' rmf_get_prj(dis)
+#' 
+#' m <- rmf_read(rmf_example_file('example-model.nam'), verbose = FALSE)
+#' rmf_get_prj(m)
+#' 
+#' # return NULL
+#' rmf_get_prj(rmf_create_dis())
+#' 
 rmf_get_prj <- function(...) {
   UseMethod('rmf_get_prj')
 }
@@ -713,6 +864,10 @@ rmf_get_prj.modflow <- function(modflow) {
 #' @export
 #' @rdname prj_auxiliary
 #' @examples
+#' rmf_has_prj(dis)
+#' rmf_has_prj(m)
+#' rmf_has_prj(rmf_create_dis())
+#' 
 rmf_has_prj <- function(...) {
   UseMethod('rmf_has_prj')
 }
@@ -732,10 +887,21 @@ rmf_has_prj.modflow <- function(modflow) {
 }
 
 #'
-#' @return \code{rmf_set_prj} returns either a \code{RMODFLOW} dis or modflow object with the prj set or nothing when writing directly to a file 
+#' @return \code{rmf_set_prj} returns either a \code{RMODFLOW} dis or modflow object with the prj set or nothing when writing directly to a file.
+#' @details If \code{prj} information is already present, a warnings is raised when overwriting.
 #' @export
 #' @rdname prj_auxiliary
 #' @examples
+#' dis <- rmf_create_dis()
+#' prj <- rmf_create_prj(origin = c(100, -150))
+#' rmf_set_prj(dis, prj)
+#' 
+#' # write directly to header comments of file
+#' f <- tempfile()
+#' rmf_write_dis(dis, file = f)
+#' rmf_set_prj(f, dis, prj)
+#' rmf_read_dis(f)
+#' 
 rmf_set_prj <- function(...) {
   UseMethod('rmf_set_prj')
 }
@@ -787,10 +953,21 @@ rmf_set_prj.modflow <- function(modflow, prj) {
 
 #'
 #' @return \code{rmf_transform_prj} returns an \code{RMODFLOW} prj object with transformed crs
-#' @details \code{rmf_transform_prj} transforms the origin coordinates to the new crs.
+#' @details \code{rmf_transform_prj} transforms the origin coordinates to the new crs. If no \code{prj} was set, an error is raised.
 #' @export
 #' @rdname prj_auxiliary
 #' @examples
+#' prj <- rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)
+#' dis <- rmf_create_dis(prj = prj)
+#' 
+#' rmf_transform_prj(prj, crs = 4326)
+#' rmf_transform_prj(dis, crs = 3044)
+#' 
+#' # error when no prj is present
+#' \dontrun{
+#' rmf_transform_prj(rmf_create_dis(), 3044)
+#' }
+#' 
 rmf_transform_prj <- function(...) {
   UseMethod('rmf_transform_prj')
 }
@@ -815,7 +992,7 @@ rmf_transform_prj.prj <- function(prj, crs) {
 rmf_transform_prj.dis <- function(dis, crs) {
   if(!rmf_has_prj(dis)) stop('dis object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(dis)
-  prj <- rmf_transform(prj, crs)
+  prj <- rmf_transform_prj(prj, crs)
   return(prj)
 }
 
@@ -825,16 +1002,65 @@ rmf_transform_prj.dis <- function(dis, crs) {
 rmf_transform_prj.modflow <- function(modflow, crs) {
   if(!rmf_has_prj(modflow)) stop('modflow object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(modflow)
-  prj <- rmf_transform(prj, crs)
+  prj <- rmf_transform_prj(prj, crs)
   return(prj)
 }
 
-#' Title
+#' Read RMODFLOW projection information from a USGS model reference file
 #'
-#' @param prj 
-#' @param file 
+#' @param file path to the USGS model reference file; typically "usgs.model.reference"
+#' @param dis \code{RMODFLOW} dis object
 #'
-#' @return
+#' @return a \code{prj} object
+#' @export
+rmf_read_usgs_model_reference <- function(file = {cat('Please select usgs.model.reference file ...\n'); file.choose()},
+                                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}) {
+  
+  lines <- readr::read_lines(file)
+  
+  # remove commented lines
+  comments <- which(substr(lines, 1, 1) == "#")
+  if(length(comments) > 0) lines <- lines[-comments]
+  
+  # origin
+  xul <- grep('xul', lines, ignore.case = TRUE)
+  yul <- grep('yul', lines, ignore.case = TRUE)
+  x <- as.numeric(rmfi_parse_variables(lines[xul])$variables[2])
+  y <- as.numeric(rmfi_parse_variables(lines[yul])$variables[2])
+  origin <- c(x, y)
+  
+  # rotation
+  rot <- grep('rotation', lines, ignore.case = TRUE)
+  rotation <- as.numeric(rmfi_parse_variables(lines[rot])$variables[2])
+  
+  # crs
+  epsg <- grep('epsg', lines, ignore.case = TRUE)
+  prj4 <- grep('proj4', lines, ignore.case = TRUE)
+  
+  if(length(epsg) > 0) {
+    crs <- as.numeric(rmfi_parse_variables(lines[epsg])$variables[2])
+  } else if(length(prj4) > 0) {
+    crs <- sub('proj4', '', lines[prj4], ignore.case = TRUE)
+  } else {
+    crs <- NA
+  }
+  
+  prj <- rmf_create_prj(origin = origin, rotation = rotation, crs = crs, ulcoordinate = TRUE, dis = dis)
+  return(prj)
+}
+
+# INTERNALS -----
+
+#' Write prj object information to file header
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj \code{RMODFLOW} prj object
+#' @param file character with path of file to write to. Typically the discretization file.
+#' @details Writes RMODFLOW projection information into the header of a file, typically the discretization file. All lines start with "#".
+#' This information consists of a starter line, the coordinates of the 4 model corners, the grid rotation angle in degrees counterclockwise,
+#' the z coordinate of the lower left corner and the crs description. This might be a EPSG code, a proj4string, or a wkt string. 
+#' A ending line specifies the end of the RMODFLOW projection information.
+#' @return \code{NULL}
 #' @keywords internal
 rmfi_write_prj <- function(dis, prj, file) {
   
@@ -869,11 +1095,12 @@ rmfi_write_prj <- function(dis, prj, file) {
  
 } 
 
-#' Title
+#' Read RMODFLOW projection information from header comments
 #'
-#' @param comments 
-#'
-#' @return
+#' @param comments strings possibly containing RMODFLOW projection information.
+#' @details \code{comments} is typically the output of \code{rmfi_parse_comments} as called from when reading the discretization file. 
+#' RMODFLOW projection is typically present in the header comments of the discretization file.
+#' @return a list with a \code{prj} object and the remaining comments
 #' @keywords internal
 rmfi_parse_prj <- function(comments) {
   
@@ -953,89 +1180,6 @@ rmfi_parse_prj <- function(comments) {
   return(list(prj = prj, remaining_comments = comments))
 }
 
-
-#' Title
-#'
-#' @param file 
-#' @param dis 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-rmf_read_usgs_model_reference <- function(file = {cat('Please select usgs.model.reference file ...\n'); file.choose()},
-                                          dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}) {
-  
-  lines <- readr::read_lines(file)
-  
-  # remove commented lines
-  comments <- which(substr(lines, 1, 1) == "#")
-  if(length(comments) > 0) lines <- lines[-comments]
-  
-  # origin
-  xul <- grep('xul', lines, ignore.case = TRUE)
-  yul <- grep('yul', lines, ignore.case = TRUE)
-  x <- as.numeric(rmfi_parse_variables(lines[xul])$variables[2])
-  y <- as.numeric(rmfi_parse_variables(lines[yul])$variables[2])
-  origin <- c(x, y)
-  
-  # rotation
-  rot <- grep('rotation', lines, ignore.case = TRUE)
-  rotation <- as.numeric(rmfi_parse_variables(lines[rot])$variables[2])
-  
-  # crs
-  epsg <- grep('epsg', lines, ignore.case = TRUE)
-  prj4 <- grep('proj4', lines, ignore.case = TRUE)
-  
-  if(length(epsg) > 0) {
-    crs <- as.numeric(rmfi_parse_variables(lines[epsg])$variables[2])
-  } else if(length(prj4) > 0) {
-    crs <- sub('proj4', '', lines[prj4], ignore.case = TRUE)
-  } else {
-    crs <- NA
-  }
-  
-  prj <- rmf_create_prj(origin = origin, rotation = rotation, crs = crs, ulcoordinate = TRUE, dis = dis)
-  return(prj)
-}
-
-
-
-# TODO add to utils
-
-#' Title
-#'
-#' @param dis 
-#' @param prj 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-rmf_extent <- function(dis, prj = rmf_get_prj(dis)) {
-  
-  corners <- data.frame(x = rep(c(0, sum(dis$delr)), each = 2), y = c(0, sum(dis$delc), sum(dis$delc), 0))
-  row.names(corners) <- c('ll', 'ul', 'ur', 'lr')
-  
-  if(!is.null(prj)) {
-    coords <- rmf_convert_grid_to_xyz(x = corners$x,
-                                      y = corners$y,
-                                      prj = prj,
-                                      dis = dis)
-    corners <- structure(coords, row.names = row.names(corners))
-  } 
-  
-  bbox <- sf::st_bbox(c(xmin = min(corners$x),
-                        xmax = max(corners$x),
-                        ymin = min(corners$y),
-                        ymax = max(corners$y)),
-                      crs = ifelse(is.null(prj), NA, prj$crs))
-
-  return(list(corners = corners, bbox = bbox))
-}
-
-
-
 #' Obtain a multiplier to convert MODFLOW length units to projection length units
 #'
 #' @param dis \code{RMODFLOW} dis object
@@ -1071,3 +1215,40 @@ rmfi_prj_length_multiplier <- function(dis, prj, to) {
   return(mlt)
 }
 
+# UTILS ----
+
+#' Obtain the corners and bounding box of the MODFLOW grid
+#'
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj optional \code{RMODFLOW} prj object
+#'
+#' @return a list with (1) the coordinates of the grid corners as a data.frame and (2) the bounding box of the grid as 
+#' a \code{sf bbox} object
+#' @export
+#'
+#' @examples
+#' dis <- rmf_create_dis()
+#' prj <- rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)
+#' rmf_extent(dis, prj)
+#' 
+rmf_extent <- function(dis, prj = rmf_get_prj(dis)) {
+  
+  corners <- data.frame(x = rep(c(0, sum(dis$delr)), each = 2), y = c(0, sum(dis$delc), sum(dis$delc), 0))
+  row.names(corners) <- c('ll', 'ul', 'ur', 'lr')
+  
+  if(!is.null(prj)) {
+    coords <- rmf_convert_grid_to_xyz(x = corners$x,
+                                      y = corners$y,
+                                      prj = prj,
+                                      dis = dis)
+    corners <- structure(coords, row.names = row.names(corners))
+  } 
+  
+  bbox <- sf::st_bbox(c(xmin = min(corners$x),
+                        xmax = max(corners$x),
+                        ymin = min(corners$y),
+                        ymax = max(corners$y)),
+                      crs = rmfi_ifelse0(is.null(prj), NA, prj$crs))
+
+  return(list(corners = corners, bbox = bbox))
+}
