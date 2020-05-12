@@ -4,8 +4,15 @@
 \alias{rmf_create_sip}
 \title{Create an \code{RMODFLOW} sip object.}
 \usage{
-rmf_create_sip(mxiter = 50, nparm = 5, accl = 1, hclose = 0.01,
-  ipcalc = 1, wseed = 0, iprsip = 0)
+rmf_create_sip(
+  mxiter = 50,
+  nparm = 5,
+  accl = 1,
+  hclose = 0.01,
+  ipcalc = 1,
+  wseed = 0,
+  iprsip = 0
+)
 }
 \arguments{
 \item{mxiter}{maximum number of iterations in one time step attempting to solve the equations; defaults to 50}

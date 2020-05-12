@@ -4,9 +4,19 @@
 \alias{rmf_plot.ghb}
 \title{Plot a RMODFLOW ghb object}
 \usage{
-\method{rmf_plot}{ghb}(ghb, dis, kper = NULL, variable = "id",
-  i = NULL, j = NULL, k = NULL, active_only = TRUE,
-  fun = ifelse(variable == "bhead", mean, sum), ...)
+\method{rmf_plot}{ghb}(
+  ghb,
+  dis,
+  kper = NULL,
+  variable = "id",
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  active_only = TRUE,
+  fun = ifelse(variable == "bhead", mean, sum),
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{ghb}{an \code{RMODFLOW} ghb object}
@@ -26,6 +36,8 @@
 \item{active_only}{logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.}
 
 \item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variable 'bhead' and sum for variable 'cond'.}
+
+\item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
 
 \item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
 }

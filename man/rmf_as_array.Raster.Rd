@@ -2,17 +2,29 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_array.Raster}
 \alias{rmf_as_array.Raster}
-\title{Title}
+\title{Convert a raster object to rmf_array}
 \usage{
 \method{rmf_as_array}{Raster}(obj, dis, ...)
 }
 \arguments{
-\item{obj}{}
+\item{obj}{object of class \code{RasterLayer}, \code{RasterStack} or \code{RasterBrick}}
 
-\item{dis}{}
+\item{dis}{\code{RMODFLOW} object}
 
-\item{...}{}
+\item{...}{additional arguments passed to \code{\link{rmf_as_array.stars}}}
+}
+\value{
+a \code{rmf_2d_array} or \code{rmf_3d_array} depending on the dimensions of \code{obj}
 }
 \description{
-Title
+Convert a raster object to rmf_array
+}
+\details{
+\code{obj} is first converted to \code{stars} using \code{stars::st_as_stars}. \code{rmf_as_array.stars} is called on the resulting \code{stars} object.
+}
+\examples{
+dis <- rmf_create_dis()
+r <- raster::raster(matrix(1:prod(dis$nrow, dis$ncol), 10, 10),
+                    xmx = sum(dis$delr), ymx = sum(dis$delc))
+rmf_as_array(r, dis, resample = FALSE)
 }

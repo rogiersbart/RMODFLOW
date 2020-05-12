@@ -2,25 +2,53 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_list.sf}
 \alias{rmf_as_list.sf}
-\title{Title}
+\title{Convert a simple features object to rmf_list}
 \usage{
-\method{rmf_as_list}{sf}(obj, dis,
-  select = colnames(sf::st_set_geometry(obj, NULL)), prj = NULL,
-  k = NULL, kper = attr(obj, "kper"), op = sf::st_intersects)
+\method{rmf_as_list}{sf}(
+  obj,
+  dis,
+  select = colnames(sf::st_set_geometry(obj, NULL)),
+  prj = rmf_get_prj(dis),
+  k = NULL,
+  kper = attr(obj, "kper"),
+  op = sf::st_intersects,
+  ...
+)
 }
 \arguments{
-\item{obj}{}
+\item{obj}{\code{sf} object}
 
-\item{dis}{}
+\item{dis}{\code{RMODFLOW} dis object}
 
-\item{select}{}
+\item{select}{integer or character specifying columns from \code{obj} to select. Defaults to all columns}
 
-\item{prj}{}
+\item{prj}{\code{RMODFLOW} prj object}
 
-\item{kper}{}
+\item{k}{optional integer vector of length \code{nrow(obj)} specifying the layer index for each feature. If not present, all features are assumed to be in layer 1.}
 
-\item{op}{}
+\item{kper}{optional integers specifying the stress-periods during which this rmf_list is active}
+
+\item{op}{geometric operator to use in the spatial join. Defaults to \code{sf::st_intersects}. See details.}
+
+\item{...}{additional arguments passed to \code{sf::st_join}}
+}
+\value{
+a \code{RMODFLOW} rmf_list object
 }
 \description{
-Title
+Convert a simple features object to rmf_list
+}
+\details{
+A spatial join between the MODFLOW grid (as polygons) and \code{obj} is performed using \code{sf::st_join(left = FALSE, op = op)}.
+The geometric operator \code{op} can be any kind described in the \code{sf} help pages. See \code{?sf::st_intersects}.
+}
+\examples{
+sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
+dis <- rmf_create_dis()
+rmf_as_list(obj, dis)
+rmf_as_list(obj, dis, k = c(2, 2, 3))
+
+prj <- rmf_create_prj(rotation = 12)
+rmf_as_list(obj, dis, prj = prj)
 }

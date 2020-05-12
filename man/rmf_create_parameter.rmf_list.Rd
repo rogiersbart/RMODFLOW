@@ -4,8 +4,13 @@
 \alias{rmf_create_parameter.rmf_list}
 \title{Create a List Data input parameter}
 \usage{
-\method{rmf_create_parameter}{rmf_list}(rmf_list, parnam, parval = 1,
-  instnam = NULL, kper = attr(rmf_list, "kper"))
+\method{rmf_create_parameter}{rmf_list}(
+  rmf_list,
+  parnam,
+  parval = 1,
+  instnam = NULL,
+  kper = attr(rmf_list, "kper")
+)
 }
 \arguments{
 \item{rmf_list}{a rmf_list object}

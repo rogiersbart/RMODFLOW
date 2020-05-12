@@ -4,10 +4,16 @@
 \alias{rmf_convert_huf_to_lpf}
 \title{Convert a huf to a lpf object}
 \usage{
-rmf_convert_huf_to_lpf(huf, dis, mask = NULL,
-  vka = ifelse(all(huf$hguvani == 0), "VK", "VANI"), averaging = c(HK =
-  "arithmetic", HANI = "arithmetic", VK = "harmonic", VANI = "arithmetic",
-  SS = "arithmetic", SY = "arithmetic"), pvl = NULL, ...)
+rmf_convert_huf_to_lpf(
+  huf,
+  dis,
+  mask = NULL,
+  vka = ifelse(all(huf$hguvani == 0), "VK", "VANI"),
+  averaging = c(HK = "arithmetic", HANI = "arithmetic", VK = "harmonic", VANI =
+    "arithmetic", SS = "arithmetic", SY = "arithmetic"),
+  pvl = NULL,
+  ...
+)
 }
 \arguments{
 \item{huf}{\code{RMODFLOW} huf object}

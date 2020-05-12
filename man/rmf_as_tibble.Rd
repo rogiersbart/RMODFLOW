@@ -2,10 +2,222 @@
 % Please edit documentation in R/utils.R
 \name{rmf_as_tibble}
 \alias{rmf_as_tibble}
-\title{Generic function to convert rmf_array objects to tibbles}
+\alias{rmf_as_tibble.cbc}
+\alias{rmf_as_tibble.ddn}
+\alias{rmf_as_tibble.hed}
+\alias{rmf_as_tibble.rmf_2d_array}
+\alias{rmf_as_tibble.rmf_3d_array}
+\alias{rmf_as_tibble.rmf_4d_array}
+\alias{rmf_as_tibble.rmf_list}
+\title{Generic function to convert RMODFLOW objects to tibbles}
 \usage{
 rmf_as_tibble(...)
+
+\method{rmf_as_tibble}{cbc}(
+  cbc,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  mask = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  ijk = NULL,
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  as_points = FALSE,
+  id = "r",
+  fluxes = "all",
+  ts_time = TRUE,
+  ...
+)
+
+\method{rmf_as_tibble}{ddn}(
+  ddn,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  as_points = FALSE,
+  ...
+)
+
+\method{rmf_as_tibble}{hed}(
+  hed,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  as_points = FALSE,
+  ...
+)
+
+\method{rmf_as_tibble}{rmf_2d_array}(
+  array,
+  dis,
+  mask = array(1, dim = dim(array)),
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+
+\method{rmf_as_tibble}{rmf_3d_array}(
+  array,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  mask = array * 0 + 1,
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+
+\method{rmf_as_tibble}{rmf_4d_array}(
+  array,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  mask = array(1, dim = dim(array)[1:3]),
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  as_points = FALSE,
+  id = "r",
+  ts_time = TRUE,
+  ...
+)
+
+\method{rmf_as_tibble}{rmf_list}(
+  obj,
+  dis,
+  ijk = NULL,
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+}
+\arguments{
+\item{...}{arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.}
+
+\item{cbc}{\code{RMODFLOW} cbc object}
+
+\item{dis}{\code{RMODFLOW} dis object}
+
+\item{i}{optional row number to subset}
+
+\item{j}{optional column number to subset}
+
+\item{k}{optional layer number to subset}
+
+\item{l}{optional time step number to subet}
+
+\item{mask}{a 3d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active}
+
+\item{ijk}{optional; a data.frame with i, j and k columns used to select the cells in the final tibble.}
+
+\item{prj}{optional; a projection object}
+
+\item{crs}{optional; a crs object}
+
+\item{as_points}{logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE.}
+
+\item{id}{either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.}
+
+\item{fluxes}{character; denotes which fluxes to read. Defaults to reading all fluxes. See details.}
+
+\item{ts_time}{logical; should the returned time column represent the cumulative modelled time or the time step numbers. See details. Defaults to TRUE (cumulative modelled time)}
+
+\item{ddn}{\code{RMODFLOW} ddn object}
+
+\item{hed}{\code{RMODFLOW} hed object}
+
+\item{array}{a \code{rmf_3d_array} object}
+
+\item{obj}{\code{RMODFLOW} rmf_list object}
+}
+\value{
+\code{rmf_as_tibble.cbc} returns a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
+
+\code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+ If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+
+\code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+ If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+
+\code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
+x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+
+\code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+
+Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+Providing \code{i or j} can be used for subsetting a cross-section through the array.
+
+\code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+
+Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+Providing \code{i or j} can be used for subsetting a cross-section through the array.
+
+If \code{i, j and k} are provided, a \code{tibble} of a single cell time series is returned.
+If \code{l} is not provided but \code{i, j or k} is, a \code{tibble} with a time series of the subsetted array according to \code{i, j or k} is returned.
+
+\code{rmf_as_tibble.rmf_list} returns a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
+x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
 }
 \description{
-Generic function to convert rmf_array objects to tibbles
+Generic function to convert RMODFLOW objects to tibbles
+}
+\details{
+Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+\code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
+
+The time steps (\code{nstp} column) are numbered from 1 to \code{dim(array)[4]}. Since in some cases, the \code{rmf_4d_array} does not represent all time steps of the simulation,
+(e.g. output is only written during certain time steps), the \code{nstp} value might not correspond to the true time step number for which output was written.
+In those cases, the \code{time} column might not give the correct cumulative time values if \code{ts_time = TRUE}. A warning will be thrown and the user should consider setting \code{ts_time = FALSE}
+and calculate the exact cumulative modelled time with e.g. \code{\link{rmf_time_steps}}.
+}
+\examples{
+m <- rmf_read(rmf_example_file('example-model.nam'), output = TRUE, verbose = FALSE)
+
+# cbc
+rmf_as_tibble(m$cbc, m$dis, fluxes = c('wells', 'flow_right_face'))
+
+# ddn
+rmf_as_tibble(m$drawdown, m$dis, k = 1)
+
+# hed
+rmf_as_tibble(m$head, m$dis, i = 2, as_points = TRUE)
+
+# 2d array
+rmf_as_tibble(m$dis$top, m$dis, id = FALSE)
+
+# 3d array
+rmf_as_tibble(m$lpf$hk, m$dis)
+rmf_as_tibble(m$lpf$hk, m$dis, as_points = TRUE, i = 5)
+
+# 4d array
+r <- rmf_create_array(1:prod(dim(m$head)), dim = dim(m$head))
+rmf_as_tibble(r, m$dis)
+rmf_as_tibble(r, m$dis, time = 1)
+
+# rmf_list
+l <- m$chd$data
+rmf_as_tibble(l, m$dis)
+rmf_as_tibble(l, m$dis, as_points = TRUE)
+
 }

@@ -22,7 +22,6 @@ Imports:
     rgdal,
     animation,
     tools,
-    lubridate,
     xml2,
     rvest,
     sf,
@@ -32,11 +31,12 @@ Imports:
     abind,
     ggquiver,
     magrittr,
+    processx,
     stars
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown,

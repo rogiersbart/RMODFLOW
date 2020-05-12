@@ -2,22 +2,26 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_huf_to_grid}
 \alias{rmf_convert_huf_to_grid}
-\alias{convert_huf_to_grid}
 \title{Convert a parameter defined on the HUF grid to the numerical grid}
 \usage{
-rmf_convert_huf_to_grid(huf, dis, parameters = huf$parameters,
-  values = NULL, grid = "dis", mask = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), type = ifelse(partyp == "VK",
-  "harmonic", "arithmetic"), partyp = "HK", pvl = NULL)
-
-convert_huf_to_grid(...)
+rmf_convert_huf_to_grid(
+  huf,
+  dis,
+  parameters = huf$parameters,
+  values = NULL,
+  grid = "dis",
+  mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  type = ifelse(partyp == "VK", "harmonic", "arithmetic"),
+  partyp = "HK",
+  pvl = NULL
+)
 }
 \arguments{
 \item{huf}{huf object}
 
 \item{dis}{dis object}
 
-\item{parameters}{either a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.}
+\item{parameters}{a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.}
 
 \item{values}{vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.}
 
@@ -25,9 +29,9 @@ convert_huf_to_grid(...)
 
 \item{mask}{masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells}
 
-\item{type}{type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric}
+\item{type}{type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').}
 
-\item{partyp}{which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').}
+\item{partyp}{which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP' and 'KDEP'}. Only used with \code{parameters}.}
 
 \item{pvl}{optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied}
 }
@@ -42,8 +46,3 @@ Either \code{parameters} or \code{values} should be supplied. The former is used
      The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
      Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_huf_to_grid}: Deprecated function name
-}}
-

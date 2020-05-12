@@ -72,7 +72,7 @@ rmf_read_ghb <-  function(file = {cat('Please select general-head boundary file 
 #' @param ghb an \code{RMODFLOW} ghb object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.ghb'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @export

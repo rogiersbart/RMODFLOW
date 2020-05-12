@@ -2,24 +2,27 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_xyz_to_grid}
 \alias{rmf_convert_xyz_to_grid}
-\alias{convert_xyz_to_grid}
 \title{Convert real world coordinates to modflow coordinates}
 \usage{
-rmf_convert_xyz_to_grid(x, y, prj = NULL, z = NULL, dis = NULL,
-  output = "xyz")
-
-convert_xyz_to_grid(...)
+rmf_convert_xyz_to_grid(
+  dis,
+  x,
+  y,
+  z = NULL,
+  prj = rmf_get_prj(dis),
+  output = "xyz"
+)
 }
 \arguments{
+\item{dis}{\code{RMODFLOW} dis object}
+
 \item{x}{real world x coordinate}
 
 \item{y}{real world y coordinate}
 
-\item{prj}{prj object}
-
 \item{z}{real world z coordinate; optional}
 
-\item{dis}{dis object; optional}
+\item{prj}{optional \code{RMODFLOW} prj object}
 
 \item{output}{character; containing 'xyz','ijk' and/or 'off' for the return of x, y, z, i, j, k, roff, coff and loff modflow coordinates}
 }
@@ -30,13 +33,12 @@ data frame with modflow coordinates
 Convert real world coordinates to modflow coordinates
 }
 \details{
-If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
+If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
+If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
 If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned. 
 
 If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_xyz_to_grid}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_convert_grid_to_xyz}}
+}

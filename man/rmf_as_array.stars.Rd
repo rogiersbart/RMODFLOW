@@ -2,29 +2,56 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_array.stars}
 \alias{rmf_as_array.stars}
-\title{Title}
+\title{Convert a stars object to rmf_array}
 \usage{
-\method{rmf_as_array}{stars}(obj, dis, prj = NULL, crs = NULL,
-  select = 1, resample = TRUE, method = "bilinear",
-  kper = attr(obj, "kper"))
+\method{rmf_as_array}{stars}(
+  obj,
+  dis,
+  prj = rmf_get_prj(dis),
+  select = 1,
+  resample = TRUE,
+  method = "bilinear",
+  kper = attr(obj, "kper"),
+  ...
+)
 }
 \arguments{
-\item{obj}{}
+\item{obj}{\code{stars} object}
 
-\item{dis}{}
+\item{dis}{\code{RMODFLOW} dis object}
 
-\item{prj}{}
+\item{prj}{\code{RMODFLOW} prj object}
 
-\item{crs}{}
+\item{select}{integer or character specifying which variable from \code{obj} to select}
 
-\item{select}{}
+\item{resample}{logical specifying if \code{obj} should be resampled to the MODFLOW grid. Defaults to TRUE.}
 
-\item{resample}{}
+\item{method}{character specifying the resampling method when \code{resample = TRUE}. Defaults to 'bilinear'. See details.}
 
-\item{method}{}
+\item{kper}{optional integers specifying the stress-periods during which this array is active}
 
-\item{kper}{}
+\item{...}{ignored}
+}
+\value{
+a \code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} depending on the number of dimensions in \code{obj}
 }
 \description{
-Title
+Convert a stars object to rmf_array
+}
+\details{
+If \code{resample = TRUE}, \code{stars::st_warp} is called with the specified method. For possible \code{method} values, see \code{?stars::st_warp}.
+ If \code{resample = FALSE}, the array is pulled directly from \code{obj}. The latter will fail when the dimensions and crs of \code{obj} and the MODFLOW grid are 
+ not exactly the same. In that case, the user should consider setting \code{resample = TRUE}.
+ 
+ \code{rmf_as_array} currently can not handle \code{obj} or \code{prj} without defined crs.
+ 
+ This function is intended for use with 2D \code{stars} objects with dimensions X & Y, 3D \code{stars} objects with dimensions 
+ X, Y and \code{dis$nlay} or 4D \code{stars} objects with dimensions X, Y, \code{dis$nlay} and \code{sum(dis$nstp)}.
+}
+\examples{
+dis <- rmf_create_dis()
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+s <- rmf_as_stars(r, dis = dis)
+
+rmf_as_array(s, dis = dis, resample = FALSE)
 }

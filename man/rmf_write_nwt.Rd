@@ -4,9 +4,13 @@
 \alias{rmf_write_nwt}
 \title{Write a MODFLOW Newton solver package file}
 \usage{
-rmf_write_nwt(nwt, file = {    
-  cat("Please select nwt file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_nwt(
+  nwt,
+  file = {    
+    cat("Please select nwt file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{nwt}{an \code{\link{RMODFLOW}} nwt object}

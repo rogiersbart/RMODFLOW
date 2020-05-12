@@ -4,9 +4,19 @@
 \alias{rmf_plot.chd}
 \title{Plot a RMODFLOW chd object}
 \usage{
-\method{rmf_plot}{chd}(chd, dis, kper = NULL, variable = "id",
-  i = NULL, j = NULL, k = NULL, active_only = TRUE, fun = mean,
-  ...)
+\method{rmf_plot}{chd}(
+  chd,
+  dis,
+  kper = NULL,
+  variable = "id",
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  active_only = TRUE,
+  fun = mean,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{chd}{an \code{RMODFLOW} chd object}
@@ -26,6 +36,8 @@
 \item{active_only}{logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to TRUE.}
 
 \item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to mean for variables 'shead' & 'ehead'.}
+
+\item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
 
 \item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
 }

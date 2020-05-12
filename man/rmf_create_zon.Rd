@@ -4,8 +4,11 @@
 \alias{rmf_create_zon}
 \title{Create an \code{RMODFLOW} zon object}
 \usage{
-rmf_create_zon(nzn = length(zonnam), zonnam = "ZONE",
-  izon = rmf_create_array(1L, dim = c(10, 10)))
+rmf_create_zon(
+  nzn = length(zonnam),
+  zonnam = "ZONE",
+  izon = rmf_create_array(1L, dim = c(10, 10))
+)
 }
 \arguments{
 \item{nzn}{number of zone arrays to be defined; defaults to the length of zonnam}

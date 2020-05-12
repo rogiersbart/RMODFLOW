@@ -3,19 +3,23 @@
 #' \code{run_modflow} runs a MODFLOW model.
 #' 
 #' @param file path to name file; typically '*.nam'
-#' @param version MODFLOW version to use; 2005 (default) is currently the only option
 #' @param executable name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname
+#' @param version MODFLOW version to use; 2005 (default) is currently the only option
 #' @param par vector of parameter value file parameter values to run the model with
-#' 
+#' @param verbose logical; should the terminal output be printed to the R console? Defaults to TRUE
+#' @param convergence logical; should convergence be checked? If TRUE (default), a logical is returned
+#' @param cvg_message character denoting the message in the terminal output used to check for convergence
+#' @return if convergence = TRUE, a logical depending on whether the model converged. Otherwise NULL.
 #' @rdname rmf_run_modflow
 #' @method rmf_run_modflow character
 #' @export
 rmf_run_modflow.character <- function(file,
-                                      version = 2005,
                                       executable = NULL,
-                                      par = NULL) {
-  
-  # add argument intern = FALSE, so it can be set to TRUE for printing MODFLOW terminal output in vignettes
+                                      version = 2005,
+                                      par = NULL,
+                                      verbose = TRUE,
+                                      convergence = TRUE,
+                                      cvg_message = 'Normal termination') {
   
   # select appropriate executable
     if(is.null(executable)) {
@@ -37,8 +41,11 @@ rmf_run_modflow.character <- function(file,
     }
     
   # run modflow
-    if(Sys.info()['sysname']=='Linux') system(paste('cd',dir,'&',executable,file))
-    if(Sys.info()['sysname']=='Windows') shell(paste('cd',dir,'&',executable,file),mustWork=TRUE) # , intern=TRUE
+    out <- processx::run(executable, file, wd = dir, echo = verbose)
+    if(convergence) {
+      cvg <- grepl(cvg_message, out$stdout)
+      return(cvg)
+    }
 }
 
 #' Run a MODFLOW model
@@ -46,16 +53,16 @@ rmf_run_modflow.character <- function(file,
 #' \code{run_modflow} runs a MODFLOW model.
 #' 
 #' @param modflow modflow object
-#' @param version MODFLOW version to use; 2005 (default) is currently the only option
 #' @param executable name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname
+#' @param version MODFLOW version to use; 2005 (default) is currently the only option
 #' @param par vector of parameter value file parameter values to run the model with
 #' 
 #' @rdname rmf_run_modflow
 #' @method rmf_run_modflow modflow
 #' @export
 rmf_run_modflow.modflow <- function(modflow,
-                                    version = 2005,
                                     executable = NULL,
+                                    version = 2005,
                                     par = NULL) {
   
   # temporary directory
@@ -88,13 +95,6 @@ rmf_run_modflow.modflow <- function(modflow,
 #' @export
 rmf_run_modflow <- function(...) {
   UseMethod('rmf_run_modflow')
-}
-
-#' @describeIn rmf_run_modflow Deprecated function name
-#' @export
-run_modflow <- function(...) {
-  .Deprecated(new = "rmf_run_modflow", old = "run_modflow")
-  rmf_run_modflow(...)
 }
 
 #' Run a MODFLOW model optimization, based on the parameter value file
@@ -179,13 +179,6 @@ rmf_run_opt <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
   return(opt)
 }
 
-#' @describeIn rmf_run_opt Deprecated function name
-#' @export
-run_opt <- function(...) {
-  .Deprecated(new = "rmf_run_opt", old = "run_opt")
-  rmf_run_opt(...)
-}
-
 #' Run a MODFLOW model response surface mapping
 #' 
 #' \code{run_modflow_rsm} runs a MODFLOW response surface mapping.
@@ -250,13 +243,6 @@ rmf_run_rsm <- function(file,executable='mf2005',par=NULL,include=NULL, trans=NU
   return(rsm)
 }
 
-#' @describeIn rmf_run_rsm Deprecated function name
-#' @export
-run_rsm <- function(...) {
-  .Deprecated(new = "rmf_run_rsm", old = "run_rsm")
-  rmf_run_rsm(...)
-}
-
 #' Run a MODFLOW model sensitivity analysis, based on the parameter value file
 #' 
 #' \code{run_modflow_sen} performs a MODFLOW model sensitivity analysis.
@@ -300,13 +286,6 @@ rmf_run_sen <- function(file,executable='mf2005',par=NULL,include=NULL)
   sens$parnam <- pvl$parnam
   class(sens) <- 'sen'
   return(sens)
-}
-
-#' @describeIn rmf_run_sen Deprecated function name
-#' @export
-run_sen <- function(...) {
-  .Deprecated(new = "rmf_run_sen", old = "run_sen")
-  rmf_run_sen(...)
 }
 
 #' Find paths to executables

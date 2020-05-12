@@ -49,7 +49,7 @@ rmf_create_oc <- function(dis,
                           cboufm = NA,
                           ibouun = 668,
                           compact_budget = TRUE,
-                          aux = FALSE,
+                          aux = TRUE,
                           head_label = TRUE,
                           drawdown_label = TRUE,
                           ibound_label = TRUE,
@@ -159,13 +159,6 @@ rmf_create_oc <- function(dis,
   return(oc)
 }
 
-#' @describeIn rmf_create_oc Deprecated function name
-#' @export
-create_oc <- function(...) {
-  .Deprecated(new = "rmf_create_oc", old = "create_oc")
-  rmf_create_oc(...)
-}
-
 #' Read a MODFLOW output control option file
 #' 
 #' \code{read_oc} reads in a MODFLOW output control option file and returns it as an \code{\link{RMODFLOW}} oc object.
@@ -184,11 +177,11 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   # data set 0
   data_set_0 <- rmfi_parse_comments(oc_lines)
   comment(oc) <- data_set_0$comments
-  oc_lines <- data_set_0$remaining_lines
+  oc_lines <- toupper(data_set_0$remaining_lines)
   rm(data_set_0)
   
   # OC using words
-  if(toupper(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1]) %in% c('HEAD','DRAWDOWN','IBOUND','COMPACT','PERIOD')) {
+  if(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[1] %in% c('HEAD','DRAWDOWN','IBOUND','COMPACT','PERIOD')) {
     
     # data set 1
     oc$ihedfm <- oc$chedfm <- oc$ihedun <- oc$iddnfm <- oc$cddnfm <- oc$iddnun <- oc$cboufm <- oc$ibouun <- NA
@@ -413,13 +406,6 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
   return(oc)
 }
 
-#' @describeIn rmf_read_oc Deprecated function name
-#' @export
-read_oc <- function(...) {
-  .Deprecated(new = "rmf_read_oc", old = "read_oc")
-  rmf_read_oc(...)
-}
-
 #' Write a MODFLOW output control option file
 #' 
 #' \code{rmf_write_oc} writes a MODFLOW output control option file based on an \code{\link{RMODFLOW}} oc object.
@@ -441,24 +427,24 @@ rmf_write_oc <- function(oc,
   if(is.null(oc$incode)) { # words
     
     # data set 1
-    if(!is.na(oc$ihedfm)) cat(paste('HEAD PRINT FORMAT', oc$ihedfm, '\n'), file=file, append=TRUE)
+    if(!is.na(oc$ihedfm)) cat(paste('HEAD PRINT FORMAT', as.integer(oc$ihedfm), '\n'), file=file, append=TRUE)
     if(!is.na(oc$chedfm)) cat(paste('HEAD SAVE FORMAT', oc$chedfm, ifelse(oc$head_label,'LABEL',''), '\n'), file=file, append=TRUE)
-    if(!is.na(oc$ihedun)) cat(paste('HEAD SAVE UNIT', oc$ihedun, '\n'), file=file, append=TRUE)
-    if(!is.na(oc$iddnfm)) cat(paste('DRAWDOWN PRINT FORMAT', oc$iddnfm, '\n'), file=file, append=TRUE)
+    if(!is.na(oc$ihedun)) cat(paste('HEAD SAVE UNIT', as.integer(oc$ihedun), '\n'), file=file, append=TRUE)
+    if(!is.na(oc$iddnfm)) cat(paste('DRAWDOWN PRINT FORMAT', as.integer(oc$iddnfm), '\n'), file=file, append=TRUE)
     if(!is.na(oc$cddnfm)) cat(paste('DRAWDOWN SAVE FORMAT', oc$cddnfm, ifelse(oc$drawdown_label,'LABEL',''), '\n'), file=file, append=TRUE)
-    if(!is.na(oc$iddnun)) cat(paste('DRAWDOWN SAVE UNIT', oc$iddnun, '\n'), file=file, append=TRUE)
+    if(!is.na(oc$iddnun)) cat(paste('DRAWDOWN SAVE UNIT', as.integer(oc$iddnun), '\n'), file=file, append=TRUE)
     if(!is.na(oc$cboufm)) cat(paste('IBOUND SAVE FORMAT', oc$cboufm, ifelse(oc$ibound_label,'LABEL',''), '\n'), file=file, append=TRUE)
-    if(!is.na(oc$ibouun)) cat(paste('IBOUND SAVE UNIT', oc$ibouun, '\n'), file=file, append=TRUE)
+    if(!is.na(oc$ibouun)) cat(paste('IBOUND SAVE UNIT', as.integer(oc$ibouun), '\n'), file=file, append=TRUE)
     if(oc$compact_budget) cat(paste('COMPACT BUDGET',ifelse(oc$aux,'AUX',''), '\n'), file=file, append=TRUE)
     
     # data set 2
     for(i in 1:length(oc$iperoc)) {
-      rmfi_write_variables(paste('PERIOD',oc$iperoc[i],'STEP',oc$itsoc[i]),file = file)
+      rmfi_write_variables(paste('PERIOD',as.integer(oc$iperoc[i]),'STEP',as.integer(oc$itsoc[i])),file = file)
       if(is.matrix(oc$print_head)) {
         if(all(oc$print_head[,i])) {
           rmfi_write_variables('PRINT HEAD', file = file)
         } else if(any(oc$print_head[,i])) {
-          rmfi_write_variables('PRINT HEAD', which(oc$print_head[,i]),file = file)
+          rmfi_write_variables('PRINT HEAD', as.integer(which(oc$print_head[,i])),file = file)
         }
       } else {
         if(oc$print_head[i]) rmfi_write_variables('PRINT HEAD', file = file)
@@ -468,7 +454,7 @@ rmf_write_oc <- function(oc,
         if(all(oc$print_drawdown[,i])) {
           rmfi_write_variables('PRINT DRAWDOWN', file = file)
         } else if(any(oc$print_drawdown[,i])) {
-          rmfi_write_variables('PRINT DRAWDOWN', which(oc$print_drawdown[,i]),file = file)
+          rmfi_write_variables('PRINT DRAWDOWN', as.integer(which(oc$print_drawdown[,i])),file = file)
         }
       } else {
         if(oc$print_drawdown[i]) rmfi_write_variables('PRINT DRAWDOWN', file = file)
@@ -480,7 +466,7 @@ rmf_write_oc <- function(oc,
         if(all(oc$save_head[,i])) {
           rmfi_write_variables('SAVE HEAD', file = file)
         } else if(any(oc$save_head[,i])) {
-          rmfi_write_variables('SAVE HEAD', which(oc$save_head[,i]),file = file)
+          rmfi_write_variables('SAVE HEAD', as.integer(which(oc$save_head[,i])),file = file)
         }
       } else {
         if(oc$save_head[i]) rmfi_write_variables('SAVE HEAD', file = file)
@@ -490,7 +476,7 @@ rmf_write_oc <- function(oc,
         if(all(oc$save_drawdown[,i])) {
           rmfi_write_variables('SAVE DRAWDOWN', file = file)
         } else if(any(oc$save_drawdown[,i])) {
-          rmfi_write_variables('SAVE DRAWDOWN', which(oc$save_drawdown[,i]),file = file)
+          rmfi_write_variables('SAVE DRAWDOWN', as.integer(which(oc$save_drawdown[,i])),file = file)
         }
       } else {
         if(oc$save_drawdown[i]) rmfi_write_variables('SAVE DRAWDOWN', file = file)
@@ -500,7 +486,7 @@ rmf_write_oc <- function(oc,
         if(all(oc$save_ibound[,i])) {
           rmfi_write_variables('SAVE IBOUND', file = file)
         } else if(any(oc$save_ibound[,i])) {
-          rmfi_write_variables('SAVE IBOUND', which(oc$save_ibound[,i]),file = file)
+          rmfi_write_variables('SAVE IBOUND', as.integer(which(oc$save_ibound[,i])),file = file)
         }
       } else {
         if(oc$save_ibound[i]) rmfi_write_variables('SAVE IBOUND', file = file)
@@ -511,11 +497,11 @@ rmf_write_oc <- function(oc,
     
   } else { # numeric codes
     # data set 1
-    rmfi_write_variables(oc$ihedfm, oc$iddnfm, oc$ihedun, oc$iddnun, file = file, ...)
+    rmfi_write_variables(oc$ihedfm, oc$iddnfm, oc$ihedun, oc$iddnun, file = file, integer = TRUE, ...)
     
     for(i in 1:length(oc$incode)) {
       # data set 2
-      rmfi_write_variables(oc$incode[i], oc$ihddfl[i], oc$ibudfl[i], oc$icbcfl[i], file = file, ...)
+      rmfi_write_variables(oc$incode[i], oc$ihddfl[i], oc$ibudfl[i], oc$icbcfl[i], file = file, integer = TRUE, ...)
       
       # data set 3
       if(oc$incode[i] == 0) {
@@ -527,11 +513,4 @@ rmf_write_oc <- function(oc,
       }
     }
   }
-}
-
-#' @describeIn rmf_write_oc Deprecated function name
-#' @export
-write_oc <- function(...) {
-  .Deprecated(new = "rmf_write_oc", old = "write_oc")
-  rmf_write_oc(...)
 }

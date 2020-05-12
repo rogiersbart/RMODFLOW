@@ -69,7 +69,7 @@ rmf_read_chd <-  function(file = {cat('Please select time-variant specified-head
 #' @param chd an \code{RMODFLOW} chd object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.chd'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @export

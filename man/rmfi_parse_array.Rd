@@ -4,9 +4,20 @@
 \alias{rmfi_parse_array}
 \title{Get an array specified by a control record from the text lines analyzed in an \code{\link{RMODFLOW}} \code{read.*} function}
 \usage{
-rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
-  fmt = NULL, skip_header = FALSE, nam = NULL,
-  precision = "single", file = NULL, integer = FALSE, ...)
+rmfi_parse_array(
+  remaining_lines,
+  nrow,
+  ncol,
+  nlay,
+  ndim,
+  fmt = NULL,
+  skip_header = FALSE,
+  nam = NULL,
+  precision = "single",
+  file = NULL,
+  integer = FALSE,
+  ...
+)
 }
 \arguments{
 \item{remaining_lines}{lines to read the array from}
@@ -17,7 +28,7 @@ rmfi_parse_array(remaining_lines, nrow, ncol, nlay, ndim = NULL,
 
 \item{nlay}{number of layers in the array that should be read}
 
-\item{ndim}{optional; dimensions of the array to read}
+\item{ndim}{dimensions of the array to read; either 1, 2 or 3. Denotes the if the returned array should be 1D, 2D or 3D.}
 
 \item{fmt}{optional; character with a proper FORTRAN format enclosed in parentheses. Only used when skip_header = TRUE and a fixed-format array needs to be read, i.e. output arrays.}
 

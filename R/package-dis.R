@@ -74,20 +74,13 @@ rmf_create_dis <- function(nlay = 3,
     dis$perlen <- perlen
     dis$nstp <- nstp
     dis$tsmult <- tsmult
-    dis$sstr <- sstr
+    dis$sstr <- toupper(sstr)
     
     # prj
     dis$prj <- rmfi_ifelse0(inherits(prj, 'prj'), prj, NULL)
 
   class(dis) <- c('dis','rmf_package')
   return(dis)
-}
-
-#' @describeIn rmf_create_dis Deprecated function name
-#' @export
-create_dis <- function(...) {
-  .Deprecated(new = "rmf_create_dis", old = "create_dis")
-  rmf_create_dis(...)
 }
 
 #' Read a MODFLOW discretization file
@@ -163,7 +156,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   rm(data_set_5)
   
   # data set 6
-  data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+length(which(dis$laycbd != 0)), file = file, ...)
+  data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+length(which(dis$laycbd != 0)), ndim = 3, file = file, ...)
   dis_lines <- data_set_6$remaining_lines
   dis$botm <- rmf_create_array(data_set_6$array, dim = c(dis$nrow, dis$ncol, dis$nlay+length(which(dis$laycbd != 0))))
   rm(data_set_6)
@@ -174,7 +167,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     dis$perlen[i] <- as.numeric(data_set_7$variables[1])
     dis$nstp[i] <- as.numeric(data_set_7$variables[2])
     dis$tsmult[i] <- as.numeric(data_set_7$variables[3])
-    dis$sstr[i] <- data_set_7$variables[4]
+    dis$sstr[i] <- toupper(data_set_7$variables[4])
     dis_lines <- data_set_7$remaining_lines
     rm(data_set_7)
   }
@@ -192,13 +185,6 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   
   class(dis) <- c('dis','rmf_package')
   return(dis)
-}
-
-#' @describeIn rmf_read_dis Deprecated function name
-#' @export
-read_dis <- function(...) {
-  .Deprecated(new = "rmf_read_dis", old = "read_dis")
-  rmf_read_dis(...)
 }
 
 #' Write a MODFLOW discretization file
@@ -225,11 +211,11 @@ rmf_write_dis <- function(dis,
   if(rmf_has_prj(dis)) rmfi_write_prj(dis, prj = rmf_get_prj(dis), file = file)
   
   # data set 1
-  rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file)
+  rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file, integer = TRUE)
   #  cat(paste(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni, '\n', sep=' '), file=file, append=TRUE)
   
   # data set 2
-  rmfi_write_variables(dis$laycbd,file=file)
+  rmfi_write_variables(dis$laycbd,file=file, integer = TRUE)
   #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
   # data set 3
@@ -246,13 +232,6 @@ rmf_write_dis <- function(dis,
   
   # data set 7
   for(i in 1:dis$nper) {
-    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],dis$sstr[i], file=file)  
+    rmfi_write_variables(dis$perlen[i],as.integer(dis$nstp[i]),dis$tsmult[i],toupper(dis$sstr[i]), file=file)  
   }
-}
-
-#' @describeIn rmf_write_dis Deprecated function name
-#' @export
-write_dis <- function(...) {
-  .Deprecated(new = "rmf_write_dis", old = "write_dis")
-  rmf_write_dis(...)
 }

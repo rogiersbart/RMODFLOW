@@ -4,10 +4,12 @@
 \alias{rmf_create_lvda}
 \title{Create an \code{RMODFLOW} lvda object}
 \usage{
-rmf_create_lvda(parameters)
+rmf_create_lvda(parameters, dis)
 }
 \arguments{
 \item{parameters}{either a single \code{rmf_parameter} or a list of \code{rmf_parameters} specifying the angle between the grid axis and the principal direction of horizontal hydraulic conductivity. See details.}
+
+\item{dis}{\code{RMODFLOW} dis object}
 }
 \value{
 a \code{RMODFLOW} lvda object
@@ -18,6 +20,7 @@ a \code{RMODFLOW} lvda object
 \details{
 All parameters should have a layer attribute and their partyp attribute set to 'LVDA'.
          The LVDA package can only be used in conjunction with the HUF package.
+         Note that the parameters are defined on the numerical grid, not the HUF grid
 }
 \seealso{
 \code{\link{rmf_read_lvda}}, \code{\link{rmf_write_lvda}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lvda.htm}

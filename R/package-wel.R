@@ -71,7 +71,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
 #' @param wel an \code{RMODFLOW} wel object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.wel'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 
 #' @return \code{NULL}
 #' @export

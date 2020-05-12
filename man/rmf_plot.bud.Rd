@@ -4,8 +4,15 @@
 \alias{rmf_plot.bud}
 \title{Plot a MODFLOW volumetric budget}
 \usage{
-\method{rmf_plot}{bud}(bud, dis, what = "rates", fluxes = "all",
-  net = FALSE, type = "area", timesteps = NULL)
+\method{rmf_plot}{bud}(
+  bud,
+  dis,
+  what = "rates",
+  fluxes = "all",
+  net = FALSE,
+  type = "area",
+  timesteps = NULL
+)
 }
 \arguments{
 \item{bud}{\code{RMODFLOW} bud object}

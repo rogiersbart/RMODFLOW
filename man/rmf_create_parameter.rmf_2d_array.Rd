@@ -4,9 +4,16 @@
 \alias{rmf_create_parameter.rmf_2d_array}
 \title{Concise function for creating a 2D-array parameter.}
 \usage{
-\method{rmf_create_parameter}{rmf_2d_array}(array, parnam, parval = 1,
-  kper = attr(array, "kper"), layer = NULL, partyp = NULL,
-  mltnam = parnam, instnam = NULL)
+\method{rmf_create_parameter}{rmf_2d_array}(
+  array,
+  parnam,
+  parval = 1,
+  kper = attr(array, "kper"),
+  layer = NULL,
+  partyp = NULL,
+  mltnam = parnam,
+  instnam = NULL
+)
 }
 \arguments{
 \item{array}{a \code{rmf_2d_array} object}

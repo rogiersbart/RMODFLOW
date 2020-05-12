@@ -4,8 +4,21 @@
 \alias{rmf_plot.hed}
 \title{Plot a MODFLOW head file object}
 \usage{
-\method{rmf_plot}{hed}(hed, dis, i = NULL, j = NULL, k = NULL,
-  l = NULL, kper = NULL, kstp = NULL, saturated = FALSE, ...)
+\method{rmf_plot}{hed}(
+  hed,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  kper = NULL,
+  kstp = NULL,
+  saturated = FALSE,
+  type = "fill",
+  gridlines = FALSE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hed}{\code{RMODFLOW} hed object}

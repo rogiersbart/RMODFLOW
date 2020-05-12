@@ -2,14 +2,22 @@
 % Please edit documentation in R/package-pcg.R
 \name{rmf_create_pcg}
 \alias{rmf_create_pcg}
-\alias{create_pcg}
 \title{Create an \code{RMODFLOW} pcg object}
 \usage{
-rmf_create_pcg(mxiter = 20, iter1 = 30, npcond = 1, ihcofadd = 0,
-  hclose = 0.001, rclose = 0.001, relax = 1, nbpol = 1,
-  iprpcg = 1, mutpcg = 0, damppcg = 1, damppcgt = 1)
-
-create_pcg(...)
+rmf_create_pcg(
+  mxiter = 20,
+  iter1 = 30,
+  npcond = 1,
+  ihcofadd = 0,
+  hclose = 0.001,
+  rclose = 0.001,
+  relax = 1,
+  nbpol = 1,
+  iprpcg = 1,
+  mutpcg = 0,
+  damppcg = 1,
+  damppcgt = 1
+)
 }
 \arguments{
 \item{mxiter}{maximum number of outer iterations; defaults to 20}
@@ -42,11 +50,6 @@ Object of class pcg
 \description{
 \code{rmf_create_pcg} creates an \code{RMODFLOW} pcg object.
 }
-\section{Functions}{
-\itemize{
-\item \code{create_pcg}: Deprecated function name
-}}
-
 \seealso{
-\code{\link{read_pcg}}, \code{\link{write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+\code{\link{rmf_read_pcg}}, \code{\link{rmf_write_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 }

@@ -4,8 +4,13 @@
 \alias{rmf_time_steps}
 \title{Calculate the internal time step sequence of a transient MODFLOW model}
 \usage{
-rmf_time_steps(dis = NULL, perlen = NULL, tsmult = NULL,
-  nstp = NULL, incl_ss = T)
+rmf_time_steps(
+  dis = NULL,
+  perlen = NULL,
+  tsmult = NULL,
+  nstp = NULL,
+  incl_ss = TRUE
+)
 }
 \arguments{
 \item{dis}{optional, an \code{RMODFLOW} dis object}

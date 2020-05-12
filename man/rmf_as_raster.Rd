@@ -2,13 +2,74 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_raster}
 \alias{rmf_as_raster}
-\title{Title}
+\alias{rmf_as_raster.rmf_2d_array}
+\alias{rmf_as_raster.rmf_3d_array}
+\alias{rmf_as_raster.rmf_4d_array}
+\alias{rmf_as_raster.rmf_list}
+\title{Functions to convert rmf_array and rmf_list objects to raster objects}
 \usage{
 rmf_as_raster(...)
+
+\method{rmf_as_raster}{rmf_2d_array}(array, dis, prj = rmf_get_prj(dis), ...)
+
+\method{rmf_as_raster}{rmf_3d_array}(array, dis, prj = rmf_get_prj(dis), ...)
+
+\method{rmf_as_raster}{rmf_4d_array}(array, dis, l = NULL, prj = rmf_get_prj(dis), ...)
+
+\method{rmf_as_raster}{rmf_list}(obj, dis, select, prj = rmf_get_prj(dis), ...)
 }
 \arguments{
-\item{...}{}
+\item{...}{additional arguments passed to \code{rmf_as_stars}}
+
+\item{array}{\code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} object}
+
+\item{dis}{\code{RMODFLOW} dis object}
+
+\item{prj}{\code{RMODFLOW} prj object}
+
+\item{l}{integer specifying which dimension of a 4d array to convert to raster.}
+
+\item{obj}{\code{rmf_list} object}
+
+\item{select}{integer or character specifying which column of the \code{rmf_list} object to convert to \code{raster} object variable.}
+}
+\value{
+an object of class \code{RasterLayer} if array is 2d, or \code{RasterBrick} when array is 3d or 4d with the bands representing the MODFLOW layers.
+ The variable values are obtained from the array or from the \code{select} column for \code{rmf_list} objects.
 }
 \description{
-Title
+Functions to convert rmf_array and rmf_list objects to raster objects
+}
+\details{
+the objects are first converted to \code{stars} using \code{rmf_as_stars}.
+ Conversions to \code{raster} objects will fail when arrays are rectilinear or rotated.
+}
+\examples{
+dis <- rmf_create_dis()
+
+# 2d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+rmf_as_raster(r, dis = dis)
+
+# 3d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+rmf_as_raster(r, dis = dis, id = 'modflow')
+
+# 4d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 2), dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+rmf_as_raster(r, dis = dis, l = 2)
+
+# rmf_list
+l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(2, 2), q = c(-500, -400), d = 35))
+rmf_as_raster(l, dis = dis, select = 'q')
+
+# rotated grids can not be converted to raster
+\dontrun{
+prj <- rmf_create_prj(rotation = 12)
+rmf_as_raster(r, dis = dis, l = 2, prj = prj)
+}
+
+}
+\seealso{
+\code{\link{rmf_as_stars}}
 }

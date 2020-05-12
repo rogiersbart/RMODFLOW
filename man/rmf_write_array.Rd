@@ -4,9 +4,18 @@
 \alias{rmf_write_array}
 \title{Write a MODFLOW array to a separate file.}
 \usage{
-rmf_write_array(array, file, append = FALSE, binary = FALSE,
-  header = ifelse(binary, TRUE, FALSE), dis = NULL, desc = "HEAD",
-  precision = "single", xsection = FALSE)
+rmf_write_array(
+  array,
+  file,
+  append = FALSE,
+  binary = FALSE,
+  header = binary,
+  dis = NULL,
+  desc = "HEAD",
+  precision = "single",
+  integer = FALSE,
+  xsection = FALSE
+)
 }
 \arguments{
 \item{array}{a 2D, 3D or 4D \code{rmf_array} to write.}
@@ -17,13 +26,15 @@ rmf_write_array(array, file, append = FALSE, binary = FALSE,
 
 \item{binary}{logical; should the array be written to a binary file}
 
-\item{header}{logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.}
+\item{header}{logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.}
 
 \item{dis}{optional \code{RMODFLOW} dis object. Used when \code{KPER}, \code{PERTIM} and \code{TOTIM} in the header should be exact.}
 
 \item{desc}{character of maximum 16 characters. Used to set the \code{desc} element in the header. Default to \code{'HEAD'}}
 
 \item{precision}{character; either \code{'single'} or \code{'double'}. Denotes the precision of the binary file.}
+
+\item{integer}{logical; does the binary array contain integer values? Defaults to FALSE}
 
 \item{xsection}{logical; does the array represent a NLAY x NCOL cross-section. See 'Details'.}
 }
@@ -46,7 +57,7 @@ the header file consists of the following elements:
  
  \code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
   \code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to 
-  set the \desc(ILAY) argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
+  set the \code{ILAY} argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
   \code{xsection} does not affect simulation results (assuming the array dimensions are correct)
 }
 \seealso{

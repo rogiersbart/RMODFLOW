@@ -2,24 +2,50 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_list.stars}
 \alias{rmf_as_list.stars}
-\title{Title}
+\title{Convert a stars object to rmf_list}
 \usage{
-\method{rmf_as_list}{stars}(obj, dis, select = names(obj), k = NULL,
-  prj = NULL, kper = attr(obj, "kper"), op = sf::st_intersects)
+\method{rmf_as_list}{stars}(
+  obj,
+  dis,
+  select = names(obj),
+  k = NULL,
+  prj = rmf_get_prj(dis),
+  kper = attr(obj, "kper"),
+  op = sf::st_intersects,
+  ...
+)
 }
 \arguments{
-\item{obj}{}
+\item{obj}{\code{stars} object}
 
-\item{dis}{}
+\item{dis}{\code{RMODFLOW} list object}
 
-\item{k}{}
+\item{select}{integer or character vector denoting the variables to select from \code{obj}. Defaults to all variables.}
 
-\item{prj}{}
+\item{k}{optional integer specifying the layer index for each feature. If not present, all features are assumed to be in layer 1.}
 
-\item{kper}{}
+\item{prj}{\code{RMODFLOW} prj object}
 
-\item{op}{}
+\item{kper}{optional integers specifying the stress-periods during which this rmf_list is active}
+
+\item{op}{geometric operator to use in the spatial join. Defaults to \code{sf::st_intersects}. See details.}
+
+\item{...}{additional arguments passed to \code{rmf_as_list.sf}}
+}
+\value{
+a \code{rmf_list} object
 }
 \description{
-Title
+Convert a stars object to rmf_list
+}
+\details{
+\code{obj} is converted to \code{sf} using \code{sf::st_as_sf}. \code{rmf_as_list} is then called on the resulting \code{sf} object.
+This function is intended for \code{stars} objects with geometry dimensions (e.g. \code{sf} objects).
+}
+\examples{
+sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+obj <- sf::st_sf(q = c(-500, -400, -300), m = 2, geom = sfc)
+s <- stars::st_as_stars(obj)
+dis <- rmf_create_dis()
+rmf_as_list(s, dis)
 }

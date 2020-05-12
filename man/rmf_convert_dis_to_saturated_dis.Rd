@@ -2,26 +2,22 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_dis_to_saturated_dis}
 \alias{rmf_convert_dis_to_saturated_dis}
-\alias{convert_dis_to_saturated_dis}
 \title{Convert a dis object to correspond to the saturated volume}
 \usage{
-rmf_convert_dis_to_saturated_dis(dis, hed, l = NULL)
-
-convert_dis_to_saturated_dis(...)
+rmf_convert_dis_to_saturated_dis(dis, hed, l = NULL, na_values = NULL)
 }
 \arguments{
 \item{dis}{dis object}
 
 \item{hed}{hed object}
+
+\item{l}{integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used}
+
+\item{na_values}{optional; specifies which \code{hed} values should be set to \code{NA}}
 }
 \value{
-dis object
+\code{RMODFLOW} dis object corresponding to the saturated domain.
 }
 \description{
 Convert a dis object to correspond to the saturated volume
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_dis_to_saturated_dis}: Deprecated function name
-}}
-

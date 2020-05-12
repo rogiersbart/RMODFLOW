@@ -2,15 +2,14 @@
 % Please edit documentation in R/package-bas.R
 \name{rmf_read_bas}
 \alias{rmf_read_bas}
-\alias{read_bas}
 \title{Read a MODFLOW basic file}
 \usage{
-rmf_read_bas(file = {     cat("Please select bas file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
-
-read_bas(...)
+rmf_read_bas(
+  file = {     cat("Please select bas file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.bas'}
@@ -25,11 +24,6 @@ object of class bas
 \description{
 \code{rmf_read_bas} reads in a MODFLOW basic file and returns it as an \code{\link{RMODFLOW}} bas object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_bas}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_write_bas}}, \code{\link{rmf_create_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas6.htm}
 }

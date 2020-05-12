@@ -94,7 +94,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
       
       if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn)){
         # data set 3
-        data_set_3 <- rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+        data_set_3 <- rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
         mlt$rmlt[[i]] <- data_set_3$array
         names(mlt$rmlt)[i] <- mlt$mltnam[i]
         mlt_lines <- data_set_3$remaining_lines
@@ -117,13 +117,6 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
  
   class(mlt) <- c('mlt','rmf_package')
   return(mlt)
-}
-
-#' @describeIn rmf_read_mlt Deprecated function name
-#' @export
-read_mlt <- function(...) {
-  .Deprecated(new = "rmf_read_mlt", old = "read_mlt")
-  rmf_read_mlt(...)
 }
 
 #' Write a MODFLOW multiplier file
@@ -150,7 +143,7 @@ rmf_write_mlt <-  function(mlt,
   cat(paste('#', comment(mlt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(mlt$nml, file=file)
+  rmfi_write_variables(mlt$nml, file=file, integer = TRUE)
   
   for (i in 1:mlt$nml){
     

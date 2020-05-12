@@ -54,7 +54,7 @@ rmf_create_lpf <- function(dis,
                            hani = rmfi_ifelse0(all(chani <= 0), hk*0 + 1, NULL),
                            vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
                            ss = rmfi_ifelse0('TR' %in% dis$sstr, hk*0 + 1e-5, NULL),
-                           sy = rmfi_ifelse0('TR' %in% dis$sstr && all(laytyp > 0), hk*0 + 0.15, NULL),
+                           sy = rmfi_ifelse0('TR' %in% dis$sstr && any(laytyp > 0), hk*0 + 0.15, NULL),
                            vkcb = NULL,
                            wetdry = NULL) {
     
@@ -129,7 +129,7 @@ rmf_create_lpf <- function(dis,
     # to prevent false positive since last layer can not have a confining bed
     if('VKCB' %in% names(layer_check)) layer_check[['VKCB']] <- append(layer_check[['VKCB']], dis$nlay)
     
-    layer_check <- structure(vapply(seq_along(layer_check), function(i) isTRUE(all.equal(sort(layer_check[[i]]), 1:dis$nlay)), TRUE), names = names(layer_check))
+    layer_check <- structure(vapply(seq_along(layer_check), function(i) !anyNA(match(1:dis$nlay, sort(layer_check[[i]]))), TRUE), names = names(layer_check))
     if(any(!layer_check)) stop(paste('Parameters are used to define ', names(layer_check)[!layer_check],', but not all layers are defined through parameters.'), call. = FALSE)
     
   } 
@@ -168,13 +168,6 @@ rmf_create_lpf <- function(dis,
   return(lpf)
 }
 
-#' @describeIn rmf_create_lpf Deprecated function name
-#' @export
-create_lpf <- function(...) {
-  .Deprecated(new = "rmf_create_lpf", old = "create_lpf")
-  rmf_create_lpf(...)
-}
-
 #' Read a MODFLOW layer-property flow file
 #' 
 #' \code{read_lpf} reads in a MODFLOW layer property file and returns it as an \code{\link{RMODFLOW}} lpf object.
@@ -208,12 +201,12 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   lpf$ilpfcb <- as.numeric(data_set_1$variables[1])
   lpf$hdry <- as.numeric(data_set_1$variables[2])
   lpf$nplpf <- as.numeric(data_set_1$variables[3])
-  lpf$storagecoefficient <- 'STORAGECOEFFICIENT' %in% data_set_1$variables
-  lpf$constantcv <- 'CONSTANTCV' %in% data_set_1$variables
-  lpf$thickstrt <- 'THICKSTRT' %in% data_set_1$variables
-  lpf$nocvcorrection <- 'NOCVCORRECTION' %in% data_set_1$variables
-  lpf$novfc <- 'NOVFC' %in% data_set_1$variables
-  lpf$noparcheck <- 'NOPARCHECK' %in% data_set_1$variables
+  lpf$storagecoefficient <- 'STORAGECOEFFICIENT' %in% toupper(data_set_1$variables)
+  lpf$constantcv <- 'CONSTANTCV' %in% toupper(data_set_1$variables)
+  lpf$thickstrt <- 'THICKSTRT' %in% toupper(data_set_1$variables)
+  lpf$nocvcorrection <- 'NOCVCORRECTION' %in% toupper(data_set_1$variables)
+  lpf$novfc <- 'NOVFC' %in% toupper(data_set_1$variables)
+  lpf$noparcheck <- 'NOPARCHECK' %in% toupper(data_set_1$variables)
   lpf_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -280,7 +273,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
         ds9$mltarr[j] <- data_set_9$variables[2]
         ds9$zonarr[j] <- data_set_9$variables[3]
         # zero or character entry terminates IZ
-        if(ds9$zonarr[j] == 'ALL') {
+        if(toupper(ds9$zonarr[j]) == 'ALL') {
           ds9$iz[[j]] <- NULL
         } else {
           iz <- suppressWarnings(as.numeric(data_set_9$variables[4:length(data_set_9$variables)]))
@@ -313,7 +306,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   if(!('HK' %in% types)) lpf$hk <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(any(lpf$chani <= 0) && !('HANI' %in% types)) lpf$hani <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   if(!('VK' %in% lpf$partyp || 'VANI' %in% types))lpf$vka <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
-  if(any(dis$sstr == 'TR')) {
+  if(any(toupper(dis$sstr) == 'TR')) {
     if(!('SS' %in% types)) lpf$ss <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
     if(any(lpf$laytyp != 0) && !('SY' %in% types)) lpf$sy <- rmf_create_array(dim=c(dis$nrow, dis$ncol, dis$nlay))
   }     
@@ -326,7 +319,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     if('HK' %in% types) {
       lpf_lines <- lpf_lines[-1]  
     } else {
-      data_set_10 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_10 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       lpf_lines <- data_set_10$remaining_lines
       lpf$hk[,,k] <- data_set_10$array
       rm(data_set_10)
@@ -337,7 +330,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
       if('HANI' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {
-        data_set_11 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_11 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         lpf_lines <- data_set_11$remaining_lines
         lpf$hani[,,k] <- data_set_11$array
         rm(data_set_11)
@@ -348,18 +341,18 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     if('VK' %in% types || 'VANI' %in% types) {
       lpf_lines <- lpf_lines[-1]  
     } else {
-      data_set_12 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_12 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       lpf_lines <- data_set_12$remaining_lines
       lpf$vka[,,k] <- data_set_12$array
       rm(data_set_12)
     }
     
     # data set 13
-    if('TR' %in% dis$sstr) {
+    if('TR' %in% toupper(dis$sstr)) {
       if('SS' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {
-        data_set_13 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_13 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         lpf_lines <- data_set_13$remaining_lines
         lpf$ss[,,k] <- data_set_13$array
         rm(data_set_13)
@@ -367,11 +360,11 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     }
     
     # data set 14
-    if('TR' %in% dis$sstr && lpf$laytyp[k] != 0) {
+    if('TR' %in% toupper(dis$sstr) && lpf$laytyp[k] != 0) {
       if('SY' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {
-        data_set_14 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_14 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         lpf_lines <- data_set_14$remaining_lines
         lpf$sy[,,k] <- data_set_14$array
         rm(data_set_14)
@@ -383,7 +376,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
       if('VKCB' %in% types) {
         lpf_lines <- lpf_lines[-1]  
       } else {
-        data_set_15 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_15 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         lpf_lines <- data_set_15$remaining_lines
         lpf$vkcb[,,k] <- data_set_15$array
         rm(data_set_15)
@@ -392,7 +385,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
     
     # data set 16
     if(lpf$laywet[k] != 0 && lpf$laytyp[k] != 0) {
-      data_set_16 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_16 <- rmfi_parse_array(lpf_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       lpf_lines <- data_set_16$remaining_lines
       lpf$wetdry[,,k] <- data_set_16$array
       rm(data_set_16)
@@ -402,15 +395,6 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
   class(lpf) <- c('lpf','rmf_package')
   return(lpf)
 }
-
-#' @describeIn rmf_read_lpf Deprecated function name
-#' @export
-read_lpf <- function(...) {
-  .Deprecated(new = "rmf_read_lpf", old = "read_lpf")
-  rmf_read_lpf(...)
-}
-
-
 
 #' Write a MODFLOW layer-property flow file
 #' 
@@ -426,32 +410,34 @@ rmf_write_lpf <- function(lpf,
                           iprn = -1,
                           ...) {
   
+  iprn <- as.integer(iprn)
+  
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Layer-Property Flow Package created by RMODFLOW, version',v,'\n'), file = file)
   cat(paste('#', comment(lpf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(lpf$ilpfcb,lpf$hdry,lpf$nplpf,ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
+  rmfi_write_variables(as.integer(lpf$ilpfcb),lpf$hdry,as.integer(lpf$nplpf),ifelse(lpf$storagecoefficient,'STORAGECOEFFICIENT',''),ifelse(lpf$constantcv,'CONSTANTCV',''),ifelse(lpf$thickstrt,'THICKSTRT',''),ifelse(lpf$nocvcorrection,'NOCVCORRECTION',''),ifelse(lpf$novfc,'NOVFC',''),ifelse(lpf$noparcheck,'NOPARCHECK',''), file=file)
   
   # data set 2
-  rmfi_write_variables(lpf$laytyp, file = file)
+  rmfi_write_variables(lpf$laytyp, file = file, integer = TRUE)
   
   # data set 3
-  rmfi_write_variables(lpf$layavg, file = file)
+  rmfi_write_variables(lpf$layavg, file = file, integer = TRUE)
   
   # data set 4
-  rmfi_write_variables(lpf$chani, file = file)
+  rmfi_write_variables(lpf$chani, file = file, integer = TRUE)
   
   # data set 5
-  rmfi_write_variables(lpf$layvka, file = file)
+  rmfi_write_variables(lpf$layvka, file = file, integer = TRUE)
   
   # data set 6
-  rmfi_write_variables(lpf$laywet, file = file)
+  rmfi_write_variables(lpf$laywet, file = file, integer = TRUE)
   
   # data set 7
   if(any(lpf$laywet != 0)) {
-    rmfi_write_variables(lpf$wetfct, lpf$iwetit, lpf$ihdwet, file = file)
+    rmfi_write_variables(lpf$wetfct, as.integer(lpf$iwetit), as.integer(lpf$ihdwet), file = file)
   }
   
   # data set 8-9
@@ -459,9 +445,9 @@ rmf_write_lpf <- function(lpf,
   if(lpf$nplpf > 0) {
     for(i in 1:lpf$nplpf) {
       types <- append(types, attr(lpf$parameters[[i]], 'partyp'))
-      rmfi_write_variables(attr(lpf$parameters[[i]], 'parnam'), attr(lpf$parameters[[i]], 'partyp'),attr(lpf$parameters[[i]], 'parval'),length(attr(lpf$parameters[[i]], 'mlt')), file = file)
+      rmfi_write_variables(attr(lpf$parameters[[i]], 'parnam'), attr(lpf$parameters[[i]], 'partyp'),attr(lpf$parameters[[i]], 'parval'),as.integer(length(attr(lpf$parameters[[i]], 'mlt'))), file = file)
       for(j in 1:length(attr(lpf$parameters[[i]], 'mlt'))) {
-        rmfi_write_variables(attr(lpf$parameters[[i]], 'layer')[j],attr(lpf$parameters[[i]], 'mlt')[j], attr(lpf$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(lpf$parameters[[i]], 'zon')[j] == "ALL", NULL, attr(lpf$parameters[[i]], 'iz')[[j]]), file=file)
+        rmfi_write_variables(as.integer(attr(lpf$parameters[[i]], 'layer')[j]),attr(lpf$parameters[[i]], 'mlt')[j], attr(lpf$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(lpf$parameters[[i]], 'zon')[j] == "ALL", NULL, as.integer(attr(lpf$parameters[[i]], 'iz')[[j]])), file=file)
       } 
     }
   }
@@ -524,11 +510,4 @@ rmf_write_lpf <- function(lpf,
       rmfi_write_array(lpf$wetdry[,,k], file = file, iprn = iprn, ...)
     }     
   }
-}
-
-#' @describeIn rmf_write_lpf Deprecated function name
-#' @export
-write_lpf <- function(...) {
-  .Deprecated(new = "rmf_write_lpf", old = "write_lpf")
-  rmf_write_lpf(...)
 }

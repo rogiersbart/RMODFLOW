@@ -2,12 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_huf_to_mask}
 \alias{rmf_convert_huf_to_mask}
-\alias{convert_huf_to_mask}
 \title{Convert a huf to a mask object}
 \usage{
 rmf_convert_huf_to_mask(huf, dis, bas = NULL)
-
-convert_huf_to_mask(...)
 }
 \arguments{
 \item{huf}{huf object}
@@ -22,8 +19,3 @@ mask rmf_3d_array
 \description{
 Convert a huf to a mask object
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_huf_to_mask}: Deprecated function name
-}}
-

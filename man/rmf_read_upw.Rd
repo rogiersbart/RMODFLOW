@@ -4,10 +4,14 @@
 \alias{rmf_read_upw}
 \title{Read a MODFLOW-NWT Upstream Weighting file}
 \usage{
-rmf_read_upw(file = {     cat("Please select upw file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, mlt = NULL, zon = NULL, ...)
+rmf_read_upw(
+  file = {     cat("Please select upw file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  mlt = NULL,
+  zon = NULL,
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.upw'}
