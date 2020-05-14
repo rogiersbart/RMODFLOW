@@ -470,7 +470,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
     if(length(nnlay) > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
     
     mask[which(mask == 0)] <- NA
-    tbl$value <- c(array*mask^2)
+    tbl$value <- c(c(array)*rep(c(mask), each = ifelse(as_points, 1, 4))^2)
     tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
     if(as_points) tbl$z <- center[tbl$id] + z_ref
     
