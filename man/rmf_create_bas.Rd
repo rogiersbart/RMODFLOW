@@ -13,7 +13,7 @@ rmf_create_bas(
   showprogress = FALSE,
   stoperror = FALSE,
   stoper = 1,
-  ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  ibound = 1,
   hnoflo = -999,
   strt = rmf_create_array(dis$top, dim = c(dis$nrow, dis$ncol, dis$nlay))
 )

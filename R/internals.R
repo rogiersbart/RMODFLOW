@@ -191,7 +191,8 @@ rmfi_create_bc_array <- function(arg, dis) {
 #' @param dis dis object. If not explicitely suplied, the function will look in the arg argument for an object of class 'dis'.
 #' @param varnames character vector with the names of the variables starting from the 4th column (so after ijk)
 #' @param aux optional character vector with the names of the auxiliary variables
-#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
+#' @details typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. All elements should have corresponding columns.
+#' 
 #' @return list with the data, possible parameter values, dimensions and the kper data.frame
 #' @keywords internal
 #' @seealso \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}
@@ -219,9 +220,12 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   #                                             i) )
   
   # check if all varnames are present (partial string matching)
-  nms_check <- lapply(arg, function(i) pmatch(colnames(i)[var_cols], varnames))
-  if(any(vapply(nms_check, function(i) any(is.na(i)), TRUE))) stop('Please make sure all rmf_list objects have columns k, i, j, ', paste(varnames, collapse = ', '), call. = FALSE)
-  arg <- lapply(seq_along(arg), function(i) setNames(arg[[i]], replace(colnames(arg[[i]]), var_cols, varnames[nms_check[[i]]])))
+  nms_check <- lapply(arg, function(i) pmatch(colnames(i), c('k', 'i', 'j', varnames)))
+  if(any(vapply(nms_check, function(i) sum(!is.na(i)) != c(3 + length(varnames)), TRUE))) stop('Please make sure all rmf_list objects have columns k, i, j, ', paste(varnames, collapse = ', '), call. = FALSE)
+  arg <- lapply(seq_along(arg), function(i) {x <- arg[[i]][,order(nms_check[[i]])];
+                                             attributes(x) <- c(attributes(x), attributes(arg[[i]])[which(!(names(attributes(arg[[i]])) %in% names(attributes(x))))])
+                                             x}) # re-order; reset dropped attributes
+  arg <- lapply(seq_along(arg), function(i) setNames(arg[[i]], replace(colnames(arg[[i]]), var_cols, varnames)))
   
   # check for parameters and/or lists and name them
   parameters <- arg[vapply(arg, function(i) inherits(i, 'rmf_parameter'), TRUE)]
@@ -285,7 +289,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     
     #check aux
     if(!is.null(aux)) {
-      all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), TRUE))
+      all_aux <- all(vapply(lists, function(i) all(aux %in% colnames(i)), TRUE))
       if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
@@ -293,9 +297,6 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
       instnam <- attr(i, 'instnam')
       i$parameter <- TRUE
       i$name <- attr(i, 'parnam')
-      i <- i[c('k', 'i', 'j',varnames,if(!is.null(aux)){aux},"parameter","name")]
-      colnames(i)[var_cols] <-  varnames
-      if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux
       return(structure(i, instnam = instnam))
     }
     
@@ -303,7 +304,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     parameters <- lapply(parameters, set_parm)
     
     # time-varying
-    if(any(vapply(parameters, function(i) !is.null(attr(i, 'instnam')), T))) {
+    if(any(vapply(parameters, function(i) !is.null(attr(i, 'instnam')), TRUE))) {
       parameters <- lapply(parameters, function(i) {rmfi_ifelse0(is.null(attr(i, 'instnam')), i$instance <-  NA, i$instance <-  attr(i, 'instnam')); i} )
     }
     
@@ -316,7 +317,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     
     #check aux
     if(!is.null(aux)) {
-      all_aux <- all(vapply(lists, function(i) ncol(i) > 3+length(varnames), T))
+      all_aux <- all(vapply(lists, function(i) all(aux %in% colnames(i)), TRUE))
       if(!all_aux) stop('Please make sure all AUX variables are defined in each rmf_list', call. = FALSE)
     }
     
@@ -324,11 +325,7 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
     itmp <- structure(vapply(lists, nrow, 1), names = names(lists))
     
     # set lists df
-    lists <- lapply(lists, function(i) {i <- i[c('k', 'i', 'j',varnames,if(!is.null(aux)){aux})];
-    colnames(i)[var_cols] <-  varnames;
-    if(!is.null(aux)) colnames(i)[(3+length(varnames)+1):(3+length(varnames)+length(aux))] <-  aux;
-    i$parameter <-  FALSE;
-    i})
+    lists <- lapply(lists, function(i) {i$parameter = FALSE; i})
     lists <- lapply(seq_along(lists), function(i) {lists[[i]]$name <- names(lists)[[i]]; lists[[i]]})
     lists <- do.call(rbind, unname(lists))
     if(length(parameters) > 0 && 'instance' %in% colnames(parameters))  lists$instance <-  NA
