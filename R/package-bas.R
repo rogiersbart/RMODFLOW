@@ -23,7 +23,7 @@ rmf_create_bas <- function(dis,
                            showprogress = FALSE,
                            stoperror = FALSE,
                            stoper = 1,
-                           ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                           ibound = 1,
                            hnoflo = -999,
                            strt = rmf_create_array(dis$top, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
       
@@ -43,7 +43,7 @@ rmf_create_bas <- function(dis,
     bas$stoper <- stoper
     
   # data set 2
-    bas$ibound <- rmf_create_array(apply(ibound, MARGIN = 1:length(dim(ibound)), function(i) as.integer(i)),
+    bas$ibound <- rmf_create_array(as.integer(ibound),
                                    dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
                                    dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   
