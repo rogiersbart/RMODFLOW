@@ -254,3 +254,23 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     
   }
 }
+
+
+rmf_write_vtk.rmf_4d_array <- function(array, 
+                                       dis, 
+                                       file,
+                                       mask = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                                       title = 'array',
+                                       as_points = FALSE,
+                                       binary = FALSE) {
+  
+  dir <- dirname(file)
+  base <- basename(file)
+  
+  for(l in 1:dim(array)[4]) {
+    
+    f <- file.path(dir, paste(l, base, sep = '_'))
+    rmf_write_vtk(array[,,,l], dis = dis, file = f, mask = mask, title = title, as_points = as_points, binary = binary)
+  }
+}
+
