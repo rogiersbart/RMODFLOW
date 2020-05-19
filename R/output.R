@@ -1302,11 +1302,15 @@ rmf_read_budget <- function(...) {
 #' @return object of class hpr
 #' @export
 rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choose()}) {
-  # TODO use readr
-  hpr <- read.table(file, header = TRUE, stringsAsFactors = FALSE)
+  
+  hpr <- readr::read_table(file = file,
+                           col_names = FALSE, skip = 1,
+                           col_types = readr::cols(readr::col_double(), readr::col_double(), readr::col_character()))
   colnames(hpr) <- c('simulated', 'observed', 'name')
   hpr$residual <- hpr$simulated - hpr$observed
-  class(hpr) <- c('hpr','data.frame')
+  hpr <- as.data.frame(hpr)
+  attr(hpr, 'spec') <- NULL
+  class(hpr) <- c('hpr', class(hpr))
   return(hpr)
 }
 
