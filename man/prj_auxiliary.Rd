@@ -22,7 +22,7 @@ rmf_get_prj(...)
 
 \method{rmf_get_prj}{dis}(dis)
 
-\method{rmf_get_prj}{dis}(modflow)
+\method{rmf_get_prj}{modflow}(modflow)
 
 rmf_has_prj(...)
 
@@ -106,8 +106,8 @@ dis <- rmf_create_dis(prj = prj)
 rmf_transform_prj(prj, crs = 4326)
 rmf_transform_prj(dis, crs = 3044)
 
-# error when no prj is present
 \dontrun{
+# error when no prj is present
 rmf_transform_prj(rmf_create_dis(), 3044)
 }
 
