@@ -10,6 +10,15 @@ rmf_as_array <- function(...) {
   UseMethod('rmf_as_array')
 }
 
+#' @export
+rmf_as_array.rmf_2d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_3d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_4d_array <- function(x, ...) x
+
 #'
 #' Convert a rmf_list to a RMODFLOW array
 #' 
@@ -68,6 +77,9 @@ rmf_as_array.rmf_list <- function(obj,
 rmf_as_list <- function(...) {
   UseMethod('rmf_as_list')
 }
+
+#' @export
+rmf_as_list.rmf_list <- function(x, ...) x
 
 #'
 #' Converts a rmf_2d_array or rmf_3d_array to a rmf_list
