@@ -186,7 +186,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     prj <- prj_header$prj
     comment(dis) <- prj_header$remaining_comments
   } else if(!is.null(prj)){ # prj from data set 1
-    prj <- rmf_create_prj(origin = prj$origin, rotation = prj$rotation, ulcoordinate = prj$ulcoordinate, nodecoord = prj$nodecoord, dis = dis)
+    prj <- rmf_create_prj(origin = prj$origin, rotation = prj$rotation, ulcoordinate = prj$ulcoordinate, nodecoordinate = prj$nodecoord, dis = dis)
   }
   dis$prj <- prj
   

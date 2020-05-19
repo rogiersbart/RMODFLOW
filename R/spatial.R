@@ -856,7 +856,7 @@ rmf_get_prj.dis <- function(dis) {
 #'
 #' @export
 #' @rdname prj_auxiliary
-#' @method rmf_get_prj dis
+#' @method rmf_get_prj modflow
 rmf_get_prj.modflow <- function(modflow) {
   if(rmf_has_prj(modflow)) {
     return(modflow$dis$prj)
@@ -969,8 +969,8 @@ rmf_set_prj.modflow <- function(modflow, prj) {
 #' rmf_transform_prj(prj, crs = 4326)
 #' rmf_transform_prj(dis, crs = 3044)
 #' 
-#' # error when no prj is present
 #' \dontrun{
+#' # error when no prj is present
 #' rmf_transform_prj(rmf_create_dis(), 3044)
 #' }
 #' 
