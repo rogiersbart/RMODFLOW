@@ -3,11 +3,12 @@
 #' \code{rmf_create_nam} creates an \code{RMODFLOW} nam object.
 #' 
 #' @param ... RMODFLOW objects to be included in the nam file
+#' @param basename character specifying the basename of the files. The default (\code{NULL}) sets input basenames to 'input' and output to 'output'.
 #' @return Object of class nam
 #' @details if a \code{RMODFLOW nam} object is present, it is recreated.
 #' @export
 #' @seealso \code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
-rmf_create_nam <- function(...) {
+rmf_create_nam <- function(..., basename = NULL) {
   
   fobjects <- list(...)
   if(length(fobjects) == 1 && inherits(fobjects[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(fobjects[[1]]))) fobjects <- unclass(fobjects[[1]])
@@ -28,13 +29,20 @@ rmf_create_nam <- function(...) {
     classes <- classes[-which(classes == 'nam')]
   }
   
-  nam <- data.frame(ftype = c('LIST',rep(NA, length(fobjects))),
+  if(is.null(basename)) {
+    input <- 'input'
+    output <- 'output'
+  } else {
+    input <- output <- basename
+  }
+  
+  nam <- data.frame(ftype = c('LIST', rep(NA, length(fobjects))),
                     nunit = c(700, 700 + seq_along(fobjects)),
-                    fname = c('output.lst',rep(NA, length(fobjects))),
-                    options = rep(NA, 1 + length(fobjects)), stringsAsFactors = FALSE)
+                    fname = c(paste(output, 'lst', sep = '.'), rep(NA, length(fobjects))),
+                    options = c('REPLACE', rep(NA, length(fobjects))), stringsAsFactors = FALSE)
   
   for(i in seq_along(fobjects)) {
-    nam$fname[i+1] <- paste0('input.',classes[i])
+    nam$fname[i+1] <- paste(input, classes[i], sep = '.')
     nam$ftype[i+1] <- df$ftype[classes[i] == df$rmf]
   }
   
@@ -43,21 +51,21 @@ rmf_create_nam <- function(...) {
   if('HOB' %in% nam$ftype) {
     hob <- fobjects[[which(nam$ftype=='HOB')-1]]
     if(hob$iuhobsv != 0) {
-      nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = hob$iuhobsv, fname = 'output.hpr', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = hob$iuhobsv, fname = paste(output, 'hpr', sep = '.'), options = 'REPLACE'))  
     }
   }
   if('OC' %in% nam$ftype) {
     oc <-  fobjects[[which(nam$ftype=='OC')-1]]
     if(!is.null(oc$ihedun) && !is.na(oc$ihedun)) {
       type <- rmfi_ifelse0(is.null(oc$chedfm) || is.na(oc$chedfm), 'DATA(BINARY)', "DATA")
-      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$ihedun, fname = 'output.hed', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$ihedun, fname = paste(output, 'hed', sep = '.'), options = 'REPLACE'))  
     } 
     if(!is.null(oc$iddnun) && !is.na(oc$iddnun)) {
       type <- rmfi_ifelse0(is.null(oc$cddnfm) || is.na(oc$cddnfm), 'DATA(BINARY)', "DATA")
-      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$iddnun, fname = 'output.ddn', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = type, nunit = oc$iddnun, fname = paste(output, 'ddn', sep = '.'), options = 'REPLACE'))  
     } 
     if(!is.null(oc$ibouun) && !is.na(oc$ibouun)) {
-      nam <- rbind(nam, data.frame(ftype = "DATA", nunit = oc$ibouun, fname = 'output.ibound', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = "DATA", nunit = oc$ibouun, fname = paste(output, 'ibound', sep = '.'), options = 'REPLACE'))  
     }
     
     #CBC
@@ -73,10 +81,10 @@ rmf_create_nam <- function(...) {
     }
     cbcnum <-  unique(cbcnum[cbcnum > 0])
     if(length(cbcnum) == 1) {
-      nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum, fname = 'output.cbc', options = NA)  )
+      nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum, fname = paste(output, 'cbc', sep = '.'), options = 'REPLACE')  )
     } else if(length(cbcnum) > 1){
       for(i in 1:length(cbcnum)) {
-        nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste0('output_',i,'.cbc'), options = NA))  
+        nam <- rbind(nam, data.frame(ftype = "DATA(BINARY)", nunit = cbcnum[i], fname = paste(paste(output, i, sep = '_'), 'cbc', sep = '.'), options = 'REPLACE'))  
       }
     }
   }
@@ -85,7 +93,7 @@ rmf_create_nam <- function(...) {
   if(gmg_type$ftype %in% nam$ftype) {
     gmg <- fobjects[[which(nam$ftype == gmg_type$ftype) - 1]]
     if(gmg$iunitmhc > 0) {
-      nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = gmg$iunitmhc, fname = 'output.mhc', options = NA))  
+      nam <- rbind(nam, data.frame(ftype = 'DATA', nunit = gmg$iunitmhc, fname = paste(output, 'mhc', sep = '.'), options = 'REPLACE'))  
     }
   }
   
@@ -97,10 +105,6 @@ rmf_create_nam <- function(...) {
       stop('lmt intfl number is already occupied by the ', df$rmf[which(df$ftype %in% nam$ftype[which(nam$nunit == lmt$inftl)])], ' package. Please change the inftl value in the lmt object.', call. = FALSE)
     }
   }
-  
-  # set REPLACE option for output files 
-  output <- grep('output', basename(nam$fname))
-  nam$options[output] <- 'REPLACE'
   
   attr(nam, 'dir') <- nam_path
   class(nam) <- c('nam','rmf_package','data.frame')
