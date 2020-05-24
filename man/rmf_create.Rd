@@ -4,7 +4,7 @@
 \alias{rmf_create}
 \title{Create an \code{RMODFLOW} modflow object}
 \usage{
-rmf_create(..., cbc = NULL, recreate_nam = FALSE)
+rmf_create(..., cbc = NULL, recreate_nam = FALSE, basename = NULL)
 }
 \arguments{
 \item{...}{(list of) \code{RMODFLOW} objects of class \code{rmf_package} to be included in the modflow object. If a nam object is not provided, it is added automatically.}
@@ -12,6 +12,8 @@ rmf_create(..., cbc = NULL, recreate_nam = FALSE)
 \item{cbc}{optional integer; sets the flag and unit number for writing cell-by-cell flow data. Overwrites the values set in the objects. Defaults to NULL.}
 
 \item{recreate_nam}{logical; if a nam object is supplied, should it be recreated from scratch ? Defaults to FALSE}
+
+\item{basename}{character specifying the basename of the files if the nam object is (re)created. The default (\code{NULL}) sets input basenames to 'input' and output to 'output'.}
 }
 \value{
 a \code{modflow} object which is a list containing all MODFLOW packages

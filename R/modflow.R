@@ -6,10 +6,11 @@
 #' @param ... (list of) \code{RMODFLOW} objects of class \code{rmf_package} to be included in the modflow object. If a nam object is not provided, it is added automatically.
 #' @param cbc optional integer; sets the flag and unit number for writing cell-by-cell flow data. Overwrites the values set in the objects. Defaults to NULL.
 #' @param recreate_nam logical; if a nam object is supplied, should it be recreated from scratch ? Defaults to FALSE
+#' @param basename character specifying the basename of the files if the nam object is (re)created. The default (\code{NULL}) sets input basenames to 'input' and output to 'output'.
 #' @return a \code{modflow} object which is a list containing all MODFLOW packages
 #' @export
 #' @seealso \code{\link{rmf_read}}, \code{\link{rmf_write}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html}
-rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE) {
+rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE, basename = NULL) {
   
   modflow <- list(...)
   if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
@@ -38,9 +39,9 @@ rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE) {
   
   # find nam object; if not present or recreate_nam = TRUE, create one. If present, check if all packages are also in nam
   if(!('nam' %in% ftype)) {
-    modflow$nam <- rmf_create_nam(modflow)
+    modflow$nam <- rmf_create_nam(modflow, basename = basename)
   } else if(recreate_nam) {
-    modflow$nam <- rmf_create_nam(modflow[-which(names(modflow) == 'nam')])
+    modflow$nam <- rmf_create_nam(modflow[-which(names(modflow) == 'nam')], basename = basename)
   } else {  
     df <- rmfi_list_packages(type = 'all')
     mf_types <- df$ftype[which(df$rmf %in% ftype)]

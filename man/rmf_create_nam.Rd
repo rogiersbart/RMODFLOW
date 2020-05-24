@@ -4,10 +4,12 @@
 \alias{rmf_create_nam}
 \title{Create an \code{RMODFLOW} nam object}
 \usage{
-rmf_create_nam(...)
+rmf_create_nam(..., basename = NULL)
 }
 \arguments{
 \item{...}{RMODFLOW objects to be included in the nam file}
+
+\item{basename}{character specifying the basename of the files. The default (\code{NULL}) sets input basenames to 'input' and output to 'output'.}
 }
 \value{
 Object of class nam
