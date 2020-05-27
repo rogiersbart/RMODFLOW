@@ -28,7 +28,7 @@
   alpha = 1,
   plot3d = FALSE,
   height = NULL,
-  crop = FALSE,
+  crop = TRUE,
   vecsize = NULL,
   uvw = NULL,
   legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE),
@@ -74,7 +74,7 @@
 
 \item{height}{2D array for specifying the 3D plot z coordinate}
 
-\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE}
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE}
 
 \item{vecsize}{vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.}
 
