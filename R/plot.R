@@ -1010,7 +1010,7 @@ rmf_plot.riv <- function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param vecsize vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.
 #' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
@@ -1039,7 +1039,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  crop = FALSE,
+                                  crop = TRUE,
                                   vecsize = NULL,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
@@ -1282,7 +1282,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
 #' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
@@ -1312,7 +1312,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  crop = FALSE,
+                                  crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
                                   binwidth = pretty(diff(zlim)/20, 1)[1],

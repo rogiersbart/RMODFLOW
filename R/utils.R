@@ -490,7 +490,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         dis$center <- botm
         for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
         tops <- dis$top
-        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       } else {
         if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
         dis$thck <- rmf_calculate_thickness(dis)
@@ -499,7 +499,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
         tops <- dis$top
         botm <- dis$botm
-        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       }
       
       if(is.null(i) & !is.null(j)) {
