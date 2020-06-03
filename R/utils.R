@@ -1772,7 +1772,7 @@ rmf_convert_huf_to_grid <- function(huf,
       if(length(hgunam) > 0) hgu_array[,,hgunam] <- unlist(lapply(huf$hgunam, get_array))
       
       # if partyp is HANI, VANI and not everything is supplied by parameters: get information from HGUHANI/HGUVANI
-      hgu_todo <- c(1:huf$nhuf)[-hgunam]
+      hgu_todo <- rmfi_ifelse0(length(hgunam) > 0, c(1:huf$nhuf)[-hgunam], 1:huf$nhuf)
       if(length(hgu_todo) > 0) {
         if(partyp == 'HANI') {
           # hgu_todo <- which(huf$hguhani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
@@ -1780,7 +1780,7 @@ rmf_convert_huf_to_grid <- function(huf,
           hgu_array[,,hgu_todo] <- rep(abs(huf$hguhani[hgu_todo]), each = dis$nrow, dis$ncol)
         }
         if(partyp == 'VANI') {
-          hgu_todo <- which(huf$hguvani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
+          hgu_todo <- which(huf$hguvani > 0 & (c(1:huf$nhuf) %in% hgu_todo))
           hgu_array[,,hgu_todo] <- rep(huf$hguvani[hgu_todo], each = dis$nrow, dis$ncol)
         }
       }
@@ -1818,12 +1818,21 @@ rmf_convert_huf_to_grid <- function(huf,
       thck <- pmin(huf$top[iCell,jCell,],cell_top) - pmax(huf$botm[iCell,jCell,],cell_botm)
       thck[which(thck < 0)] <- 0
       
-      if(is.null(values)) values <- hgu_array[iCell,jCell,]
+      if(is.null(values)) {
+        vls <- hgu_array[iCell,jCell,]
+      } else {
+        vls <- values
+      }
       
-      if(type=='arithmetic') return(weighted.mean(values,thck))
-      if(type=='harmonic') return(rmfi_weighted_harmean(values,thck))
-      if(type=='geometric') return(rmfi_weighted_geomean(values,thck))
+      if(type=='arithmetic') wght_vl <- weighted.mean(vls,thck)
+      if(type=='harmonic') wght_vl <- rmfi_weighted_harmean(vls,thck)
+      if(type=='geometric') wght_vl <- rmfi_weighted_geomean(vls,thck)
+      
+      if(is.na(wght_vl)) wght_vl <- 0
+      return(wght_vl)
+      
     }
+    
     # TODO speed up
     weighted_means <- vapply(which(mask!=0),get_weighted_mean, 1.0)
     num_grid_array[which(mask!=0)] <- weighted_means
