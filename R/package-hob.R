@@ -220,7 +220,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   while(nr <= hob$dimensions$nh) {
     
     # data set 3
-    data_set_3 <- rmfi_parse_variables(hob_lines)
+    data_set_3 <- rmfi_parse_variables(hob_lines, character = TRUE)
     obsnam <- as.character(data_set_3$variables[1])
     obsloc <- obsnam
     layer <- as.numeric(data_set_3$variables[2])
@@ -260,8 +260,8 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
         mlay[layerNr] <- data_set_4$variables[(2*layerNr)-1]
         pr[layerNr] <- data_set_4$variables[2*layerNr]
       }
-      df$mlay[[nr]] <- mlay
-      df$pr[[nr]] <- pr
+      df$mlay[[nr]] <- mlay[1:abs(layer)]
+      df$pr[[nr]] <- pr[1:abs(layer)]
       hob_lines <- data_set_4$remaining_lines
       rm(data_set_4)
     }
@@ -279,7 +279,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
       for(ntime in 1:abs(irefsp)) {
         df$nrefsp[nr] <- abs(irefsp)
         df$itt[nr] <- itt
-        data_set_6 <- rmfi_parse_variables(hob_lines)
+        data_set_6 <- rmfi_parse_variables(hob_lines, character = TRUE)
         df$obsnam[nr] <- as.character(data_set_6$variables[1])
         df$obsloc[nr] <- obsloc
         df$irefsp[nr] <- as.numeric(data_set_6$variables[2])
@@ -290,8 +290,8 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
         df$statflag[nr] <- as.numeric(data_set_6$variables[7])
         df$plotsymbol[nr] <- as.numeric(data_set_6$variables[8]) 
         if(layer < 0) {
-          df$mlay[[nr]] <- mlay
-          df$pr[[nr]] <- pr
+          df$mlay[[nr]] <- mlay[1:abs(layer)]
+          df$pr[[nr]] <- pr[1:abs(layer)]
         }
         df$statistic[nr] <- statistic
         df$layer[nr] <- layer
