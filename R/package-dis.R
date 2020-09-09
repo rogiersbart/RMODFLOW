@@ -139,7 +139,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   rm(data_set_5)
   
   # data set 6
-  data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+length(which(dis$laycbd != 0)), file = file, ...)
+  data_set_6 <- rmfi_parse_array(dis_lines,dis$nrow,dis$ncol,dis$nlay+length(which(dis$laycbd != 0)), ndim = 3, file = file, ...)
   dis_lines <- data_set_6$remaining_lines
   dis$botm <- rmf_create_array(data_set_6$array, dim = c(dis$nrow, dis$ncol, dis$nlay+length(which(dis$laycbd != 0))))
   rm(data_set_6)
@@ -179,11 +179,11 @@ rmf_write_dis <- function(dis,
   cat(paste('#', comment(dis)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file)
+  rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file, integer = TRUE)
   #  cat(paste(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni, '\n', sep=' '), file=file, append=TRUE)
   
   # data set 2
-  rmfi_write_variables(dis$laycbd,file=file)
+  rmfi_write_variables(dis$laycbd,file=file, integer = TRUE)
   #  cat(paste(paste(dis$laycbd, collapse=' '), '\n', sep=' '), file=file, append=TRUE)
   
   # data set 3
@@ -200,6 +200,6 @@ rmf_write_dis <- function(dis,
   
   # data set 7
   for(i in 1:dis$nper) {
-    rmfi_write_variables(dis$perlen[i],dis$nstp[i],dis$tsmult[i],toupper(dis$sstr[i]), file=file)  
+    rmfi_write_variables(dis$perlen[i],as.integer(dis$nstp[i]),dis$tsmult[i],toupper(dis$sstr[i]), file=file)  
   }
 }

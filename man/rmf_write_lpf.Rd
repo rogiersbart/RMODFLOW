@@ -2,16 +2,18 @@
 % Please edit documentation in R/package-lpf.R
 \name{rmf_write_lpf}
 \alias{rmf_write_lpf}
-\alias{write_lpf}
 \title{Write a MODFLOW layer-property flow file}
 \usage{
-rmf_write_lpf(lpf, file = {    
-  cat("Please select lpf file to overwrite or provide new filename ...\\n")
-      file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, iprn = -1, ...)
-
-write_lpf(...)
+rmf_write_lpf(
+  lpf,
+  file = {    
+    cat("Please select lpf file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{lpf}{an \code{\link{RMODFLOW}} lpf object}
@@ -28,8 +30,3 @@ write_lpf(...)
 \description{
 Write a MODFLOW layer-property flow file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_lpf}: Deprecated function name
-}}
-

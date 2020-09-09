@@ -2,15 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_cbc_to_darcy}
 \alias{rmf_convert_cbc_to_darcy}
-\alias{convert_bud_to_darcy}
-\alias{rmf_convert_bud_to_darcy}
 \title{Convert cbc object fluxes to darcy velocities}
 \usage{
 rmf_convert_cbc_to_darcy(cbc, dis, hed = NULL, porosity = NULL)
-
-convert_bud_to_darcy(...)
-
-rmf_convert_bud_to_darcy(...)
 }
 \arguments{
 \item{cbc}{\code{RMODFLOW} cbc object}
@@ -19,18 +13,11 @@ rmf_convert_bud_to_darcy(...)
 
 \item{hed}{\code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used}
 
-\item{porosity}{optional 3d array with porosity values. If used, the groundwater velocities are returned.}
+\item{porosity}{optional 3d array with porosity values. If used, the average linear groundwater flow velocities are returned.}
 }
 \value{
-list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities (or groundwater velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
+list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent Darcy velocities (or average linear groundwater flow velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 }
 \description{
 Convert cbc object fluxes to darcy velocities
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_bud_to_darcy}: Deprecated function name
-
-\item \code{rmf_convert_bud_to_darcy}: Deprecated function name
-}}
-

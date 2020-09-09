@@ -7,12 +7,25 @@
 \usage{
 rmf_animate(...)
 
-\method{rmf_animate}{rmf_4d_array}(array, i = NULL, j = NULL,
-  k = NULL, l = 1:dim(array)[4], title = "totim_unit", dis = dis,
-  ..., file = "rmf_animation.gif", type = tools::file_ext(file),
-  plot_type = "fill", width = c(600, 600, 8)[type == c("gif", "html",
-  "pdf")], height = width, clean = TRUE, interval = 0.5,
-  overlay = NULL, background = NULL)
+\method{rmf_animate}{rmf_4d_array}(
+  array,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = 1:dim(array)[4],
+  title = "totim_unit",
+  dis = dis,
+  ...,
+  file = "rmf_animation.gif",
+  type = tools::file_ext(file),
+  plot_type = "fill",
+  width = c(600, 600, 8)[type == c("gif", "html", "pdf")],
+  height = width,
+  clean = TRUE,
+  interval = 0.5,
+  overlay = NULL,
+  background = NULL
+)
 }
 \arguments{
 \item{...}{other parameters passed to plot.rmf_4d_array}

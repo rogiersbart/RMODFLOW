@@ -2,15 +2,16 @@
 % Please edit documentation in R/package-lpf.R
 \name{rmf_read_lpf}
 \alias{rmf_read_lpf}
-\alias{read_lpf}
 \title{Read a MODFLOW layer-property flow file}
 \usage{
-rmf_read_lpf(file = {     cat("Please select lpf file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, mlt = NULL, zon = NULL, ...)
-
-read_lpf(...)
+rmf_read_lpf(
+  file = {     cat("Please select lpf file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  mlt = NULL,
+  zon = NULL,
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.lpf'.}
@@ -29,11 +30,6 @@ object of class lpf
 \description{
 \code{read_lpf} reads in a MODFLOW layer property file and returns it as an \code{\link{RMODFLOW}} lpf object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_lpf}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_write_lpf}}, \code{\link{rmf_create_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 }

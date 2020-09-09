@@ -2,13 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_xyz_to_grid}
 \alias{rmf_convert_xyz_to_grid}
-\alias{convert_xyz_to_grid}
 \title{Convert real world coordinates to modflow coordinates}
 \usage{
-rmf_convert_xyz_to_grid(x, y, prj = NULL, z = NULL, dis = NULL,
-  output = "xyz")
-
-convert_xyz_to_grid(...)
+rmf_convert_xyz_to_grid(x, y, prj = NULL, z = NULL, dis = NULL, output = "xyz")
 }
 \arguments{
 \item{x}{real world x coordinate}
@@ -35,8 +31,3 @@ If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices 
 
 If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_xyz_to_grid}: Deprecated function name
-}}
-

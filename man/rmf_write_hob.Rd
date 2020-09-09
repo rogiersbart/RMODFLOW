@@ -2,17 +2,18 @@
 % Please edit documentation in R/package-hob.R
 \name{rmf_write_hob}
 \alias{rmf_write_hob}
-\alias{write_hob}
 \title{Write a MODFLOW head observations file}
 \usage{
-rmf_write_hob(hob, file = {    
-  cat("Please select hob file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
-
-write_hob(...)
+rmf_write_hob(
+  hob,
+  file = {    
+    cat("Please select hob file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
-\item{hob}{an \code{\link{RMODFLOW}} hob object}
+\item{hob}{a \code{\link{RMODFLOW}} hob object}
 
 \item{file}{filename to write to; typically '*.hob'}
 
@@ -24,8 +25,6 @@ write_hob(...)
 \description{
 Write a MODFLOW head observations file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_hob}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_create_hob}}, \code{\link{rmf_read_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
+}

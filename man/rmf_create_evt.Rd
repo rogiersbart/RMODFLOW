@@ -4,8 +4,16 @@
 \alias{rmf_create_evt}
 \title{Create an \code{RMODFLOW} evt object.}
 \usage{
-rmf_create_evt(..., dis, nevtop = 3, ievtcb = 0, surf, exdp,
-  ievt = NULL, ievtpf = -1)
+rmf_create_evt(
+  ...,
+  dis,
+  nevtop = 3,
+  ievtcb = 0,
+  surf,
+  exdp,
+  ievt = NULL,
+  ievtpf = -1
+)
 }
 \arguments{
 \item{...}{\code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.}

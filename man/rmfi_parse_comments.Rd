@@ -12,6 +12,6 @@ Read comments
 Internal function used in the read_* functions to read comments
 }
 \details{
-prevents copying of RMODFLOW header comment
+removes empty comments and prevents copying of RMODFLOW header comment
 }
 \keyword{internal}

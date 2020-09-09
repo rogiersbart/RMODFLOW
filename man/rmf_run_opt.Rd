@@ -2,14 +2,20 @@
 % Please edit documentation in R/execute.R
 \name{rmf_run_opt}
 \alias{rmf_run_opt}
-\alias{run_opt}
 \title{Run a MODFLOW model optimization, based on the parameter value file}
 \usage{
-rmf_run_opt(file, executable = "mf2005", par = NULL, include = NULL,
-  trans = NULL, method = "Nelder-Mead", lower = -Inf, upper = Inf,
-  control = list(), ...)
-
-run_opt(...)
+rmf_run_opt(
+  file,
+  executable = "mf2005",
+  par = NULL,
+  include = NULL,
+  trans = NULL,
+  method = "Nelder-Mead",
+  lower = -Inf,
+  upper = Inf,
+  control = list(),
+  ...
+)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
@@ -38,8 +44,3 @@ run_opt(...)
 \description{
 \code{run_modflow_opt} runs a MODFLOW optimization.
 }
-\section{Functions}{
-\itemize{
-\item \code{run_opt}: Deprecated function name
-}}
-

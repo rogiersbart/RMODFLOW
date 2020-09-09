@@ -2,14 +2,15 @@
 % Please edit documentation in R/package-nam.R
 \name{rmf_write_nam}
 \alias{rmf_write_nam}
-\alias{write_nam}
 \title{Write a MODFLOW name file}
 \usage{
-rmf_write_nam(nam, file = {    
-  cat("Please select nam file to overwrite or provide new filename ...\\n")
-      file.choose() }, exclude = NULL)
-
-write_nam(...)
+rmf_write_nam(
+  nam,
+  file = {    
+    cat("Please select nam file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  exclude = NULL
+)
 }
 \arguments{
 \item{nam}{an \code{\link{RMODFLOW}} nam object}
@@ -24,8 +25,6 @@ write_nam(...)
 \description{
 \code{rmf_write_nam} writes a MODFLOW name file based on an \code{\link{RMODFLOW}} nam object.
 }
-\section{Functions}{
-\itemize{
-\item \code{write_nam}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_read_nam}}, \code{\link{rmf_write_nam}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?name_file.htm}
+}

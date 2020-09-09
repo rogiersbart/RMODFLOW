@@ -2,10 +2,14 @@
 % Please edit documentation in R/output.R
 \name{rmf_read_bud}
 \alias{rmf_read_bud}
+\alias{rmf_read_budget}
 \title{Reads the volumetric budget from a MODFLOW listing file}
 \usage{
-rmf_read_bud(file = {     cat("Please select listing file ...\\n")    
-  file.choose() })
+rmf_read_bud(
+  file = {     cat("Please select listing file ...\\n")     file.choose() }
+)
+
+rmf_read_budget(...)
 }
 \arguments{
 \item{file}{path to the listing file; typically '*.lst'}

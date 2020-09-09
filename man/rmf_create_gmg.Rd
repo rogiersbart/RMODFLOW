@@ -4,10 +4,22 @@
 \alias{rmf_create_gmg}
 \title{Create an \code{RMODFLOW} gmg object}
 \usage{
-rmf_create_gmg(rclose = 0.001, iiter = 100, hclose = 0.001,
-  mxiter = 50, damp = 0.5, iadamp = 1, ioutgmg = 1, iunitmhc = 0,
-  ism = 0, isc = 0, dup = 0.5, dlow = 0.01, chglimit = 0.001,
-  relax = 1)
+rmf_create_gmg(
+  rclose = 0.001,
+  iiter = 100,
+  hclose = 0.001,
+  mxiter = 50,
+  damp = 0.5,
+  iadamp = 1,
+  ioutgmg = 1,
+  iunitmhc = 0,
+  ism = 0,
+  isc = 0,
+  dup = 0.5,
+  dlow = 0.01,
+  chglimit = 0.001,
+  relax = 1
+)
 }
 \arguments{
 \item{rclose}{residual convergence criterion for the inner iteration; defaults to 0.001}

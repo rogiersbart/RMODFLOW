@@ -4,10 +4,12 @@
 \alias{rmf_read_bcf}
 \title{Read a MODFLOW bcf file}
 \usage{
-rmf_read_bcf(file = {     cat("Please select bcf file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, ...)
+rmf_read_bcf(
+  file = {     cat("Please select bcf file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*_bcf'}

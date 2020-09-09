@@ -146,13 +146,13 @@ rmf_write_gmg <- function(gmg,
   cat(paste('#', comment(gmg)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(gmg$rclose, gmg$iiter, gmg$hclose, gmg$mxiter, file=file)
+  rmfi_write_variables(gmg$rclose, as.integer(gmg$iiter), gmg$hclose, as.integer(gmg$mxiter), file=file)
   
   # data set 2
-  rmfi_write_variables(gmg$damp, gmg$iadamp, gmg$ioutgmg, gmg$iunitmhc, file = file)
+  rmfi_write_variables(gmg$damp, as.integer(gmg$iadamp), as.integer(gmg$ioutgmg), as.integer(gmg$iunitmhc), file = file)
   
   # data set 3
-  rmfi_write_variables(gmg$ism, gmg$isc, rmfi_ifelse0(gmg$iadamp == 2, c(gmg$dup, gmg$dflow, gmg$chglimit), ''), file = file)
+  rmfi_write_variables(as.integer(gmg$ism), as.integer(gmg$isc), rmfi_ifelse0(gmg$iadamp == 2, c(gmg$dup, gmg$dflow, gmg$chglimit), ''), file = file)
   
   # data set 4
   if(gmg$isc == 4) {

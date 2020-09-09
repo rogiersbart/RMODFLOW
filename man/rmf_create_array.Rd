@@ -2,13 +2,14 @@
 % Please edit documentation in R/utils.R
 \name{rmf_create_array}
 \alias{rmf_create_array}
-\alias{create_rmodflow_array}
 \title{Add rmf array class to object based on object dimensions}
 \usage{
-rmf_create_array(obj = NA, dim = NULL, kper = attr(obj, "kper"),
-  dimlabels = attr(obj, "dimlabels"))
-
-create_rmodflow_array(...)
+rmf_create_array(
+  obj = NA,
+  dim = NULL,
+  kper = attr(obj, "kper"),
+  dimlabels = attr(obj, "dimlabels")
+)
 }
 \arguments{
 \item{obj}{object to add class to}
@@ -32,8 +33,3 @@ subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the obje
          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
 }
-\section{Functions}{
-\itemize{
-\item \code{create_rmodflow_array}: Deprecated function name
-}}
-

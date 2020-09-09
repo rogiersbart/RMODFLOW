@@ -122,7 +122,7 @@ rmf_plot(hed, dis = dis, j = 5)
 ```
 
 ```{r}
-df <- rmf_as_tibble(hed, dis = dis, k = 1)
+df <- rmf_as_tibble(hed, dis = dis, k = 1, l = 1)
 ggplot(df, aes(x, y, fill = value, group = id)) +
   geom_polygon() +
   scale_fill_gradientn(colours = rev(rainbow(7))) +

@@ -4,8 +4,7 @@
 \alias{rmf_plot.rch}
 \title{Plot a RMODFLOW rch object}
 \usage{
-\method{rmf_plot}{rch}(rch, dis, kper = NULL, variable = "recharge",
-  ...)
+\method{rmf_plot}{rch}(rch, dis, kper = NULL, variable = "recharge", ...)
 }
 \arguments{
 \item{rch}{an \code{RMODFLOW} rch object}

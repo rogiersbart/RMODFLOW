@@ -114,9 +114,9 @@ rmf_write_de4 <- function(de4, file={cat('Please choose de4 file to overwrite or
   cat(paste('#', comment(de4)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(de4$itmx, de4$mxup, de4$mxlow, de4$mxbw, file=file)
+  rmfi_write_variables(de4$itmx, de4$mxup, de4$mxlow, de4$mxbw, file=file, integer = TRUE)
   
   # data set 2
-  rmfi_write_variables(de4$ifreq, de4$mutd4, de4$accl, de4$hclose, de4$iprd4, file=file)
+  rmfi_write_variables(as.integer(de4$ifreq), as.integer(de4$mutd4), de4$accl, de4$hclose, as.integer(de4$iprd4), file=file)
   
 }

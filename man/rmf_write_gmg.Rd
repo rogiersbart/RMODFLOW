@@ -4,9 +4,13 @@
 \alias{rmf_write_gmg}
 \title{Write a MODFLOW Geometric Multigrid Solver file}
 \usage{
-rmf_write_gmg(gmg, file = {    
-  cat("Please select gmg file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_gmg(
+  gmg,
+  file = {    
+    cat("Please select gmg file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{gmg}{an \code{\link{RMODFLOW}} gmg object}

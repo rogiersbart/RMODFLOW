@@ -4,8 +4,13 @@
 \alias{rmfi_convert_coordinates}
 \title{Convert data frame coordinates to another coordinate reference system}
 \usage{
-rmfi_convert_coordinates(dat, from, to, names_from = c("x", "y"),
-  names_to = names_from)
+rmfi_convert_coordinates(
+  dat,
+  from,
+  to,
+  names_from = c("x", "y"),
+  names_to = names_from
+)
 }
 \arguments{
 \item{dat}{data frame with x and y coordinates}

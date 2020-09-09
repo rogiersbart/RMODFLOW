@@ -8,21 +8,16 @@
 \usage{
 \method{rmf_cell_coordinates}{dis}(dis, include_faces = FALSE)
 
-\method{rmf_cell_coordinates}{huf}(huf, dis = NULL,
-  include_faces = FALSE)
+\method{rmf_cell_coordinates}{huf}(huf, dis = NULL, include_faces = FALSE)
 
 rmf_cell_coordinates(...)
 }
 \arguments{
-\item{dis}{dis object}
+\item{dis}{dis object, corresponding to the huf object}
 
 \item{include_faces}{logical; should face coordinates be included?}
 
 \item{huf}{huf object}
-
-\item{dis}{dis object, corresponding to the huf object}
-
-\item{include_faces}{logical; should face coordinates be included?}
 }
 \value{
 list with with cell coordinate 3d arrays

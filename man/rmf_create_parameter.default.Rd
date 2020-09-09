@@ -4,10 +4,21 @@
 \alias{rmf_create_parameter.default}
 \title{Create an array parameter}
 \usage{
-\method{rmf_create_parameter}{default}(dis, kper = NULL, layer = NULL,
-  parnam, parval = 1, mltnam = "NONE", zonnam = "ALL", iz = NULL,
-  partyp = NULL, mlt = NULL, zon = NULL, instnam = NULL,
-  hgunam = NULL)
+\method{rmf_create_parameter}{default}(
+  dis,
+  kper = NULL,
+  layer = NULL,
+  parnam,
+  parval = 1,
+  mltnam = "NONE",
+  zonnam = "ALL",
+  iz = NULL,
+  partyp = NULL,
+  mlt = NULL,
+  zon = NULL,
+  instnam = NULL,
+  hgunam = NULL
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object. Used to dimension the final array.}
@@ -32,7 +43,7 @@
 
 \item{zon}{\code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}}
 
-\item{instnam}{optional character specying the instance name of the parameter is to be time-varying; defaults to NULL}
+\item{instnam}{optional character specying the instance name if the parameter is to be time-varying; defaults to NULL}
 
 \item{hgunam}{character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.}
 }

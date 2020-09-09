@@ -4,11 +4,16 @@
 \alias{rmf_write_upw}
 \title{Write a MODFLOW-NWT upstream weighting file}
 \usage{
-rmf_write_upw(upw, file = {    
-  cat("Please select upw file to overwrite or provide new filename ...\\n")
-      file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, iprn = -1, ...)
+rmf_write_upw(
+  upw,
+  file = {    
+    cat("Please select upw file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{upw}{an \code{\link{RMODFLOW}} upw object}

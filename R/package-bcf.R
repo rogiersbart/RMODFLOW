@@ -160,7 +160,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 4
     if('TR' %in% toupper(dis$sstr)){
-      data_set_4 <- rmfi_parse_array(bcf_lines, nrow=dis$nrow, ncol = dis$ncol, nlay=1, file = file, ...)
+      data_set_4 <- rmfi_parse_array(bcf_lines, nrow=dis$nrow, ncol = dis$ncol, nlay=1, ndim = 2, file = file, ...)
       bcf$sf1[,,i] <- data_set_4$array
       bcf_lines <- data_set_4$remaining_lines
       rm(data_set_4)
@@ -168,7 +168,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 5
     if(bcf$laycon[i] %in% c(0,2)){
-      data_set_5 <- rmfi_parse_array(bcf_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, file = file, ...)
+      data_set_5 <- rmfi_parse_array(bcf_lines, nrow=dis$nrow, ncol=dis$ncol, nlay=1, ndim = 2, file = file, ...)
       bcf$tran[,,i] <- data_set_5$array
       bcf_lines <- data_set_5$remaining_lines
       rm(data_set_5)
@@ -176,7 +176,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 6
     if(bcf$laycon[i] %in% c(1,3)){
-      data_set_6 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+      data_set_6 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
       bcf$hy[,,i] <- data_set_6$array
       bcf_lines <- data_set_6$remaining_lines
       rm(data_set_6)
@@ -184,7 +184,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 7
     if(i != dis$nlay){
-      data_set_7 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+      data_set_7 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
       bcf$vcont[,,i] <- data_set_7$array
       bcf_lines <- data_set_7$remaining_lines
       rm(data_set_7)
@@ -192,7 +192,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 8
     if(('TR' %in% toupper(dis$sstr)) && bcf$laycon[i] %in% c(2,3)){
-      data_set_8 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+      data_set_8 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
       bcf$sf2[,,i] <- data_set_8$array
       bcf_lines <- data_set_8$remaining_lines
       rm(data_set_8)
@@ -200,7 +200,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
     
     # data set 9
     if((bcf$iwdflg != 0) && (bcf$laycon[i] %in% c(1,3))){
-      data_set_9 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, file = file, ...)
+      data_set_9 <- rmfi_parse_array(bcf_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
       bcf$wetdry[,,i] <- data_set_9$array
       bcf_lines <- data_set_9$remaining_lines
       rm(data_set_9)
@@ -245,11 +245,11 @@ rmf_write_bcf <- function(bcf,
   # cat(paste('#', comment(bcf)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(bcf$ibcfcb, bcf$hdry, bcf$iwdflg, bcf$wetfct, bcf$iwetit, bcf$ihdwet, file = file, ...)
+  rmfi_write_variables(as.integer(bcf$ibcfcb), bcf$hdry, as.integer(bcf$iwdflg), bcf$wetfct, as.integer(bcf$iwetit), as.integer(bcf$ihdwet), file = file, ...)
   
   # data set 2 - should write 40 characters if format is fixed
   fmt <- ifelse('format' %in% names(list(...)), list(...)[['format']], 'free')
-  ltype <- paste(bcf$layavg, bcf$laycon, sep='')
+  ltype <- paste(as.integer(bcf$layavg), as.integer(bcf$laycon), sep='')
   
   if(fmt == 'free') {
     rmfi_write_variables(ltype, file=file)

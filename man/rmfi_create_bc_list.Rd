@@ -22,7 +22,7 @@ list with the data, possible parameter values, dimensions and the kper data.fram
 Set list input for a MODFLOW boundary condition package
 }
 \details{
-typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. When data.frame elements are present, they are coerced to rmf_list which is active for all stress-periods with a warning
+typically, \code{arg} is \code{list(...)} where the ellipsis contains all the input \code{rmf_lists} for the \code{rmf_create_*} function. All elements should have corresponding columns.
 }
 \seealso{
 \code{\link{rmfi_create_bc_array}}, \code{\link{rmfi_write_bc_list}}, \code{\link{rmfi_parse_bc_list}}

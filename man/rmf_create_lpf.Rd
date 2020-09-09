@@ -2,24 +2,35 @@
 % Please edit documentation in R/package-lpf.R
 \name{rmf_create_lpf}
 \alias{rmf_create_lpf}
-\alias{create_lpf}
 \title{Create an \code{RMODFLOW} lpf object}
 \usage{
-rmf_create_lpf(dis, ilpfcb = 0, hdry = -888,
-  storagecoefficient = FALSE, constantcv = FALSE, thickstrt = FALSE,
-  nocvcorrection = FALSE, novfc = FALSE, noparcheck = FALSE,
+rmf_create_lpf(
+  dis,
+  ilpfcb = 0,
+  hdry = -888,
+  storagecoefficient = FALSE,
+  constantcv = FALSE,
+  thickstrt = FALSE,
+  nocvcorrection = FALSE,
+  novfc = FALSE,
+  noparcheck = FALSE,
   laytyp = rmfi_ifelse0(dis$nlay == 1, 1, c(1, rep(0, dis$nlay - 1))),
-  layavg = rep(0, dis$nlay), chani = rep(1, dis$nlay),
-  layvka = rep(0, dis$nlay), laywet = rep(0, dis$nlay), wetfct = 0.1,
-  iwetit = 1, ihdwet = 0, parameters = NULL,
+  layavg = rep(0, dis$nlay),
+  chani = rep(1, dis$nlay),
+  layvka = rep(0, dis$nlay),
+  laywet = rep(0, dis$nlay),
+  wetfct = 0.1,
+  iwetit = 1,
+  ihdwet = 0,
+  parameters = NULL,
   hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
   hani = rmfi_ifelse0(all(chani <= 0), hk * 0 + 1, NULL),
   vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
   ss = rmfi_ifelse0("TR" \%in\% dis$sstr, hk * 0 + 1e-05, NULL),
-  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && all(laytyp > 0), hk * 0 +
-  0.15, NULL), vkcb = NULL, wetdry = NULL)
-
-create_lpf(...)
+  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && any(laytyp > 0), hk * 0 + 0.15, NULL),
+  vkcb = NULL,
+  wetdry = NULL
+)
 }
 \arguments{
 \item{dis}{RMODFLOW dis object}
@@ -82,11 +93,6 @@ Object of class lpf
 Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters or by using direct array input.
          When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
 }
-\section{Functions}{
-\itemize{
-\item \code{create_lpf}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_create_parameter}}, \code{\link{rmf_read_lpf}}, \code{\link{rmf_write_lpf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 }

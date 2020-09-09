@@ -21,7 +21,7 @@ rmfi_write_bc_list(file, obj, dis, varnames, header, package, partyp, ...)
 
 \item{partyp}{character; specifies the parameter type}
 
-\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file}
+\item{...}{arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

@@ -2,48 +2,56 @@
 % Please edit documentation in R/package-hob.R
 \name{rmf_create_hob}
 \alias{rmf_create_hob}
-\alias{create_hob}
 \title{Create an \code{RMODFLOW} hob object}
 \usage{
-rmf_create_hob(locations, time_series, dis,
-  hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol,
-  dis$nlay)), iuhobsv = 0, hobdry = -888, noprint = FALSE,
-  tomulth = 1, itt = 1, unique_obsnam = FALSE, prj = NULL)
-
-create_hob(...)
+rmf_create_hob(
+  locations,
+  time_series,
+  dis,
+  hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  prj = NULL,
+  iuhobsv = 665,
+  hobdry = -888,
+  noprint = FALSE,
+  tomulth = 1,
+  itt = 1,
+  unique_obsnam = FALSE
+)
 }
 \arguments{
-\item{locations}{data.frame with the name, x and y coordinates, and top and bottom of the monitoring well filter}
+\item{locations}{data.frame or \code{sf POINT} object with the name, x and y coordinates (if data.frame), and top and bottom of the monitoring well filter}
 
 \item{time_series}{data.frame with the name of the monitoring well filter and the observation time and head}
 
 \item{dis}{RMODFLOW dis object}
 
-\item{hydraulic_conductivity}{3d array with hydraulic conductivity values, for calculating the weights for a multilayer observation}
+\item{hydraulic_conductivity}{3d array with hydraulic conductivity values, for calculating the weights for a multilayer observations}
 
-\item{iuhobsv}{file unit for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 0 (\emph{i.e.} no observation output file will be written)}
+\item{prj}{RMODFLOW prj object; provide if coordinates in \code{locations} are real world coordinates}
+
+\item{iuhobsv}{file unit (> 0) for saving observation data in a file; the file unit should be included as DATA type in the name file; defaults to 665}
 
 \item{hobdry}{value of the simulated equivalent for a dry cell used in the observation output file}
 
 \item{noprint}{logical; if TRUE, the input and output are not printed in the listing file}
 
+\item{itt}{integer flag, either a single value or a value for every observation well as defined in \code{locations}. Identifies whether hydraulic heads (1; default) or changes in hydraulic heads (2) are used as observations. See details.}
+
 \item{unique_obsnam}{logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.}
 
-\item{prj}{RMODFLOW prj object; provide if coordinates in locations are real world coordinates}
-
-\item{TOMULT}{time offset multiplier, to convert the time unit in time_series to the MODFLOW time unit}
+\item{tomult}{time offset multiplier, to convert the time unit in \code{time_series} to the MODFLOW time unit}
 }
 \value{
-RMODFLOW hob object
+Object of class hob
 }
 \description{
 \code{rmf_create_hob} creates an RMODFLOW hob object
 }
-\section{Functions}{
-\itemize{
-\item \code{create_hob}: Deprecated function name
-}}
-
+\details{
+Regardless of the value of \code{itt}, observed heads should be specified in \code{time_series}. MODFLOW will calculate the changes in hydraulic head internally.
+The \code{locations} data.frame must have columns named \code{name, x, y, top, bottom}.
+The \code{time_series} data.frame must have columns named \code{name, time, head}.
+}
 \seealso{
-\code{\link{read.hob}} and \code{\link{write.hob}}
+\code{\link{rmf_read_hob}}, \code{\link{rmf_write_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 }

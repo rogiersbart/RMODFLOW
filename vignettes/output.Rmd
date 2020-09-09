@@ -188,6 +188,7 @@ By default, an OC object created by RMODFLOW specifies the following:
 - The head file is specified as binary
 - Labels are written to the corresponding output files
 - The compact budget option for the cbc file is active
+- The aux option for compact budget is active
 
 Remember that the cbc file is always binary.
 
