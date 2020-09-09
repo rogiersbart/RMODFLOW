@@ -7,9 +7,13 @@
   )
   toset <- !(names(opts.RMODFLOW) %in% names(opts))
   if(any(toset)) options(opts.RMODFLOW[toset])
-  ui_alert("{.pkg RMODFLOW} is still in its experimental lifecycle stage.")
-  ui_alert("Use at your own risk, and submit issues here:")
-  ui_alert("{.url https://github.com/rogiersbart/RMODFLOW/issues}")
+  invisible()
+}
+
+.onAttach <- function(libname, pkgname) {
+  rui::alert("{.strong RMODFLOW} is still in its experimental lifecycle stage.")
+  rui::alert("Use at your own risk, and submit issues here:")
+  rui::alert("{.url https://github.com/rogiersbart/RMODFLOW/issues}")
   invisible()
 }
 

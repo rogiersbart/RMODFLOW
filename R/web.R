@@ -10,10 +10,10 @@
 rmf_browse <- function() {
   # TODO add external code webpages with similar shortcuts as above. For
   # instance for MODFLOW variants.
-  ui_start("Launching")
+  rui::begin("Launching")
   Sys.sleep(.1) # NOTE status bar doesn't appear otherwise
   browseURL("https://rogiersbart.github.io/RMODFLOW/")
-  ui_end_done()
+  rui::succeed()
   invisible()
 }
 
@@ -37,12 +37,12 @@ rmf_browse <- function() {
 #' rmf_guide("name_file") # Launches the "name_file.htm" page.
 #' rmf_guide("nam") # Launches the same page using the "nam" shortcut.
 rmf_guide <- function(name = NULL) {
-  ui_start("Launching")
+  rui::begin("Launching")
   Sys.sleep(.1) # NOTE status bar doesn't appear otherwise
   online_guide_url <- "https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/"
   if (!is.null(name)) online_guide_url <- rmfi_guide_url(name)
   online_guide_url %>% browseURL()
-  ui_end_done()
+  rui::succeed()
   invisible()
 }
 

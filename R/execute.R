@@ -11,7 +11,8 @@
 #'   PVAL file.
 #' @param convergence Character. The message in the terminal output used
 #'   to check for convergence.
-#' @return Invisible logical indicating normal termination, when done for an on
+#' @return Invisible list with start and end time, elapsed run time, a logical
+#'   indicating normal termination, and the stdout output, when done for an on
 #'   disk model. Full `modflow` object including all results otherwise (in
 #'   memory model).
 #' @export
@@ -35,7 +36,7 @@ rmf_execute.character <- function(
   convergence = "Normal termination"
 ) {
   # TODO check if convergence argument is required - seems ok for all versions?
-  # Or is this for custom executables?
+  # Or is this aimed at custom executables?
   code <- rmfi_find(code)
   
   # get directory and filename
@@ -56,7 +57,7 @@ rmf_execute.character <- function(
         
       rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
     } else {
-      ui_warn('Model does not have pval input file. Ignoring evaluate argument.')
+      rui::warn('Model does not have pval input file. Ignoring evaluate argument.')
     }
   }
   
@@ -67,7 +68,29 @@ rmf_execute.character <- function(
     code, file, wd = dir,
     stdout_line_callback = if (mf_stdout) rmfi_line_callback else NULL
   )
-  invisible(grepl(convergence, out$stdout))
+  out$stdout <- out$stdout %>%
+    stringr::str_split("\\r\\n") %>%
+    purrr::pluck(1)
+  rmf_execute <- list(
+    start = out$stdout %>%
+      stringr::str_subset("Run start date and time") %>%
+      stringr::str_extract("(?<=: ).*") %>% 
+      readr::parse_datetime(format = "%Y/%m/%d %H:%M:%S",
+                            locale = readr::locale(tz = Sys.timezone())),
+    end = out$stdout %>%
+      stringr::str_subset("Run start date and time") %>%
+      stringr::str_extract("(?<=: ).*") %>% 
+      readr::parse_datetime(format = "%Y/%m/%d %H:%M:%S",
+                            locale = readr::locale(tz = Sys.timezone())),
+    time = out$stdout %>%
+      stringr::str_subset("Elapsed run time") %>%
+      stringr::str_extract("(?<=: ).*") %>%
+      tolower() %>%
+      lubridate::duration(),
+    normal_termination = any(grepl(convergence, out$stdout)),
+    stdout = out$stdout
+  )
+  invisible(rmf_execute)
 }
 
 #' @rdname rmf_execute
@@ -79,6 +102,7 @@ rmf_execute.modflow <- function(
   evaluate = NULL
 ) {
   # TODO change class and top-level S3 to "rmf_model" instead of modflow
+  # TODO append rmf_execute results to top level list?
   code <- rmfi_find(code)
   
   # temporary directory
@@ -129,8 +153,6 @@ rmf_execute.modflow <- function(
 #'   to `FALSE`.
 #' @param visualize Logical. Should the results be visualized during the
 #'   analysis? Defaults to `TRUE` in an interactive session; `FALSE` otherwise.
-#' @param control List of control options for the sensitivity estimation.
-#'   Currently without any implementation.
 #' @param ... Optional arguments passed to [rmf_execute()].
 #' @return An `rmf_analyze` object, which is a list with dimensionless scaled
 #'   sensitivities (dss) and composite scaled sensitivies (css).
@@ -146,11 +168,9 @@ rmf_analyze <- function(path,
                         backup = TRUE,
                         restore = FALSE,
                         visualize = interactive(),
-                        control = list(),
                         ...) {
-  # TODO allow for controlling some settings for the gradient approximation
-  # like the step size and one/two-sided approximation etc, through control
-  # argument, similar to rmf_optimize?
+  # allow for controlling some settings for the gradient approximation
+  # like the step size and one/two-sided approximation etc?
   # TODO consider parallel options here when rmf_execute.modflow works
   # TODO better include restoring in on.exit?
   code <- rmfi_find(code)
@@ -162,17 +182,17 @@ rmf_analyze <- function(path,
   
   # read pval and hob
   if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
-    ui_alert("{.fun rmf_analyze} only works with PVAL and HOB file types.")
-    ui_stop("Issue with model structure.")
+    rui::alert("{.fun rmf_analyze} only works with PVAL and HOB file types.")
+    rui::stop("Issue with model structure.")
   }
   pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
   hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
   if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
-    ui_alert("{.fun rmf_analyze} only works with a HOB output file.",
+    rui::alert("{.fun rmf_analyze} only works with a HOB output file.",
              "This can be created by setting {.arg iuhobsv} of the HOB file to",
              "a non-zero value, and including a corresponding DATA type entry",
              "in the NAM file.")
-    ui_stop('Issue with model structure.')
+    rui::stop('Issue with model structure.')
   }
   
   # evaluate, include, transform
@@ -191,21 +211,18 @@ rmf_analyze <- function(path,
   }
   if(!is.null(transform)) {
     if (!all(transform %in% "log")) {
-      ui_alert('Use {.val "log"} in {.arg transform} for logarithmic',
+      rui::alert('Use {.val "log"} in {.arg transform} for logarithmic',
                "transformations. Other options are not available yet.")
-      ui_stop("Issue with transformation definition.")
+      rui::stop("Issue with transformation definition.")
     }
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
     transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
     evaluate[transform] <- log(evaluate[transform])
-    if("parscale" %in% names(control)) {
-      control$parscale[which(transform[include])] <- log(control$parscale[which(transform[include])])
-    }
   }
   
   # analyze
-  ui_start("Analyzing")
+  rui::begin("Analyzing")
   
   # initial run
   pval$parval <- evaluate
@@ -240,17 +257,19 @@ rmf_analyze <- function(path,
     
     # visualize
     if (visualize) {
-      print(rmf_plot.rmf_analyze(rmf_analyze))
+      print(rmf_plot.rmf_analyze(rmf_analyze) +
+              ggplot2::labs(subtitle = "RMODFLOW progress visualization ...",
+                            caption = "This plot reflects a temporary state during analysis."))
     }
   }
-  ui_end_done()
+  rui::succeed()
   
   # restore original pval
   if (restore) {
-    ui_start("Restoring")
+    rui::begin("Restoring")
     rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
     rmf_execute(path = path, code = code, ...)
-    ui_end_done()
+    rui::succeed()
   }
 
   class(rmf_analyze) <- c("rmf_analyze", class(rmf_analyze))
@@ -263,7 +282,7 @@ rmf_analyze <- function(path,
 #'
 #' Only works with models using MODFLOW parameters and having a head
 #' predictions output file as defined in the HOB object The only method
-#' currently available is "L-BFGS-B". See \code{\link{optim}}
+#' currently available is "Nelder-Mead". See \code{\link{optim}}
 #' 
 #' @inheritParams rmf_execute
 #' @inheritParams rmf_analyze
@@ -274,8 +293,13 @@ rmf_analyze <- function(path,
 #'   parameter names. Parameters that are not mentioned take the starting value
 #'   from the PVAL file, and/or have no constraints. If NULL (default), no
 #'   values are changed in the original PVAL file, and/or no constraints are
-#'   imposed.
-#' @param control List of control arguments for [optim()].
+#'   imposed. `lower` and `upper` also take named lists of functions and/or
+#'   numeric values, where the functions are then applied to the `start` or
+#'   original PVAL values. Note support for lower and upper limits is achieved
+#'   with the Nelder and Mead method by pretending the model cannot be evaluated
+#'   when violating them.
+#' @param iterate Integer. Maximum number of iterations.
+#' @param tolerate Double. Relative convergence tolerance.
 #' @param cost Character. The performance measure that should be used as the
 #'   cost function. Possible values are those supported by [rmf_performance()].
 #'   Defaults to `"ssq"`.
@@ -300,7 +324,8 @@ rmf_optimize <- function(
   restore = FALSE,
   visualize = interactive(),
   export = NULL,
-  control = list(),
+  iterate = 50,
+  tolerate = 1E-4,
   ...
 ) {
   # TODO add api for choosing which observation file to use
@@ -310,22 +335,22 @@ rmf_optimize <- function(
   nam <- rmf_read_nam(path)
   
   # pval file backup
-    if (backup) rmfi_backup_pval(dir, nam)
-    
+  if (backup) rmfi_backup_pval(dir, nam)
+  
   # read pval and hob
-    if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
-      ui_alert("{.fun rmf_optimize} only works with PVAL and HOB file types.")
-      ui_stop("Issue with model structure.")
-    }
-    pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
-    hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
-    if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
-      ui_alert("{.fun rmf_optimize} only works with a HOB output file.",
-               "This can be created by setting {.arg iuhobsv} of the HOB file to",
-               "a non-zero value, and including a corresponding DATA type entry",
-               "in the NAM file.")
-      ui_stop('Issue with model structure.')
-    }
+  if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
+    rui::alert("{.fun rmf_optimize} only works with PVAL and HOB file types.")
+    rui::stop("Issue with model structure.")
+  }
+  pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
+  hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
+  if(hob$iuhobsv == 0 || toupper(nam$ftype[which(nam$nunit == hob$iuhobsv)]) != 'DATA') {
+    rui::alert("{.fun rmf_optimize} only works with a HOB output file.",
+             "This can be created by setting {.arg iuhobsv} of the HOB file to",
+             "a non-zero value, and including a corresponding DATA type entry",
+             "in the NAM file.")
+    rui::stop('Issue with model structure.')
+  }
   
   # start, include, transform, lower, upper
   if (is.null(start)) {
@@ -341,111 +366,148 @@ rmf_optimize <- function(
     include <- rep(FALSE, pval$np)
     include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
   }
-  if (length(lower) == 1 & is.infinite(lower[1])) {
+  if (is.list(lower)) {
+    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, pval$np), lower,
+                                    start = start)
+  } else if (length(lower) == 1 & is.infinite(lower[1])) {
     lower <- rep(lower, pval$np)
   } else {
     lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, pval$np), lower)
   }
-  if (length(upper) == 1 & is.infinite(upper[1])) {
+  if (is.list(upper)) {
+    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, pval$np), upper,
+                                    start = start)
+  } else if (length(upper) == 1 & is.infinite(upper[1])) {
     upper <- rep(upper, pval$np)
   } else {
     upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, pval$np), upper)
   }
   if(!is.null(transform)) {
-    if (!all(transform %in% "log")) ui_stop("Only logarithmic transforms are currently implemented.")
+    if (!all(transform %in% "log")) rui::stop("Only logarithmic transforms are currently implemented.")
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
     transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
     start[transform] <- log(start[transform])
     lower[transform] <- log(lower[transform])
     upper[transform] <- log(upper[transform])
-    if("parscale" %in% names(control)) {
-      control$parscale[which(transform[include])] <- log(control$parscale[which(transform[include])])
-    }
   }
   
   # optimize
-  ui_start("Optimizing")
+  rui::begin("Optimizing")
   run <- 0
   optimization_history <- matrix(ncol = pval$np + 1, nrow = 0)
   optim_modflow <- function(included_parval) {
     run <<- run + 1
-    # adjust values
-      pval$parval <- start
-      pval$parval[which(include)] <- included_parval
-      if(!is.null(transform)) {
-        pval$parval[which(transform)] <- exp(pval$parval[which(transform)])
-      } 
     
-    # write values
+    # adjust values
+    pval$parval <- start
+    pval$parval[include] <- included_parval
+    if (any(lower > upper)) {
+      rui::alert("{.arg lower} contains values larger than {.arg upper}.")
+      rui::stop("Issue with bounds.")
+    }
+    
+    # check bounds and run modflow
+    out_of_bounds <- FALSE
+    if (any(pval$parval > upper) | any(pval$parval < lower)) out_of_bounds <- TRUE
+    if(!is.null(transform)) {
+      pval$parval[transform] <- exp(pval$parval[transform])
+    } 
+    if (out_of_bounds) {
+      converged <- FALSE
+    } else {
+      # write values
       rmf_write_pval(pval,
                      file = rmfi_look_for_path(dir, nam, "pval"))
+      converged <- rmf_execute(path = path, code = code,
+                               ui = "none", ...)$normal_termination
+    }
     
-    # run modflow
-      converged <- rmf_execute(path = path, code = code, ui = "none", ...)
-
     # get cost
-      if(converged) {
-        hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
-        cost_value <- rmf_performance(hob_out)[[cost]]
-      } else { # return large cost when not converging
-        cost_value <- ifelse(!is.null(control$fnscale) && control$fnscale < 0,
-                             -1e100, 1e100) # maximization/minimization
-        # TODO check best approach here; other algorithms allow for returning NA?
-      }
+    if (converged) {
+      hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
+      cost_value <- rmf_performance(hob_out)[[cost]]
+    } else { # return large cost when not converging
+      cost_value <- Inf
+    }
     
-    new_step <- (run + sum(include)*2)%%(sum(include)*2 +1) == 0
+    # keep new step, export, visualize
+    new_step <- TRUE # (run + sum(include)*2)%%(sum(include)*2 +1) == 0
     if (new_step) {
       optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$parval))
       # print 
-      ui_info(
-        paste(stringr::str_to_upper(cost),
-              format(cost_value, scientific = TRUE, digits = 4),
-              ifelse(converged, "Converged.", "No convergence."))
-      )
+      if (! visualize) {
+        rui::inform(
+          paste(stringr::str_to_upper(cost),
+                format(cost_value, scientific = TRUE, digits = 4),
+                ifelse(converged, "Converged.", "No convergence."))
+        )
+      }
     }
-    
-    
     if (!is.null(export)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(converged), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = export, append = TRUE)
     if (visualize & new_step) {
       optimization_history <- as.data.frame(optimization_history)
-      names(optimization_history) <- c(cost, pval$parnam)
-      print(
-        optimization_history %>%
-          dplyr::mutate(run = 1:nrow(.)) %>% 
-          dplyr::mutate_at(pval$parnam[transform], log10) %>% 
-          tidyr::gather("parameter", "value", -run, -1) %>% 
-          ggplot2::ggplot() +
-          ggplot2::aes(run, value) +
-          ggplot2::geom_point() +
-          # ggplot2::geom_line() +
-          ggplot2::facet_wrap(parameter~., scales = "free_y")
-      )
+      names(optimization_history) <- c("cost", pval$parnam)
+      p <- optimization_history %>% 
+        dplyr::mutate(run = 1:nrow(.)) %>% 
+        dplyr::mutate_at(pval$parnam[transform], log) %>% 
+        tidyr::gather("parameter", "value", -run, -1) %>% 
+        dplyr::filter(parameter %in% pval$parnam[include]) %>% 
+        dplyr::mutate(parameter = ifelse(parameter %in% pval$parnam[transform],
+                                         paste0("log(", parameter, ")"),
+                                         parameter)) %>% 
+        ggplot2::ggplot() +
+        ggplot2::aes(run, value) +
+        (if (run > 1) ggplot2::geom_line(colour = "grey90") else NULL) +
+        ggplot2::geom_point(ggplot2::aes(colour = cost), size = 3) +
+        ggplot2::facet_grid(rows = vars(parameter), scales = "free_y") +
+        ui_theme() +
+        ui_colour_c("cold", rev = TRUE)
+      print(ui_plot(p) +
+              ggplot2::labs(
+                title = "Optimization trace",
+                subtitle = "RMODFLOW progress visualization ...",
+                caption = "This plot reflects a temporary state during optimization.",
+                x = "Iteration number",
+                y = "Parameter value",
+                colour = paste0("Cost\n(", toupper(cost), ")")))
       # TODO think of including local sensitivity based on sensitivity runs
+      # TODO rethink use of ui_plot for non-S3 methods
     }
-    return(cost_value)
+    
+    cost_value
   }
   rmf_optimize <- optim(start[include],
-               optim_modflow,
-               method = 'L-BFGS-B',
-               lower = lower[include],
-               upper = upper[include],
-               control = control)
+                        optim_modflow,
+                        method = 'Nelder-Mead',
+                        control = list(maxit = iterate,
+                                       reltol = tolerate))
   rmf_optimize$included <- include
-  switch(rmf_optimize$convergence + 1, ui_end_fail(), ui_end_done())
-  if (rmf_optimize$convergence == 0) {
-    ui_alert("Optimization has not converged in {.arg maxit} iterations!")
-    ui_warn("Issue with optimization.")
+  rmf_optimize$parnam <- pval$parnam
+  rmf_optimize$parval <- start
+  rmf_optimize$parval[include] <- rmf_optimize$par
+  if (!is.null(transform)) {
+    rmf_optimize$parval[transform] <- exp(rmf_optimize$parval[transform])
+    # TODO include lower, upper etc.? with correct backtransform?
   }
-    
+  rmf_optimize$trace <- optimization_history %>% 
+    tibble::as_tibble() %>%
+    purrr::set_names(c("cost", pval$parnam)) %>% 
+    dplyr::mutate(run = 1:nrow(.))
+  switch(rmf_optimize$convergence + 1, rui::succeed(), rui::fail())
+  if (rmf_optimize$convergence == 1) {
+    rui::alert("Optimization has not converged in {.arg maxit} iterations!")
+    rui::warn("Issue with optimization.")
+  }
+  
   # restore original pval
   if (restore) {
-    ui_start("Restoring")
+    rui::begin("Restoring")
     rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
     rmf_execute(path = path, code = code, ...)
-    ui_end_done()
+    rui::succeed()
   }
-
+  
   invisible(rmf_optimize)
 }
 
@@ -481,7 +543,7 @@ rmfi_find <- function(
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        ui_stop("Path to {code} executable not found.")
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(paste0(folder, executable))
@@ -496,7 +558,7 @@ rmfi_find <- function(
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        ui_stop("Path to {code} executable not found.")
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(paste0(folder, executable))
@@ -511,7 +573,7 @@ rmfi_find <- function(
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        ui_stop("Path to {code} executable not found.")
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(paste0(folder, executable))
@@ -526,7 +588,7 @@ rmfi_find <- function(
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        ui_stop("Path to {code} executable not found.")
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(paste0(folder, executable))
@@ -535,20 +597,21 @@ rmfi_find <- function(
     code <- "MODFLOW-CFP"
     executable <- "mf2005cfp.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code, "/")
+    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
+                                     "/bin/")
     if (!file.exists(executable)) {
       if (file.exists(paste0(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        ui_stop("Path to {code} executable not found.")
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(paste0(folder, executable))
   }
-  ui_alert("Finding paths to the executables of codes other than ",
+  rui::alert("Finding paths to the executables of codes other than ",
            "MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or ",
            "MODFLOW-CFP is currently not supported.")
-  ui_stop("Issue with code path.")
+  rui::stop("Issue with code path.")
 }
 
 #' Look for a file path in a NAM file
@@ -565,8 +628,8 @@ rmfi_look_for_path <- function(dir, nam, type = NULL, unit = NULL) {
   if (!is.null(unit)) {
     return(file.path(dir, nam$fname[which(nam$nunit == unit)]))
   }
-  ui_alert("Either {.arg type} or {.arg unit} should be provided.")
-  ui_stop("Issue with arguments.")
+  rui::alert("Either {.arg type} or {.arg unit} should be provided.")
+  rui::stop("Issue with arguments.")
 }
 
 rmfi_line_callback <- function(line, process) {
@@ -574,42 +637,56 @@ rmfi_line_callback <- function(line, process) {
   if (line == "") return(invisible())
   if (line %in% c("MODFLOW-2005", "MODFLOW-LGR2", "MODFLOW-NWT-SWR1",
                   "OWHM 1.0")) {
-    ui_title(line)
+    rui::title(line)
     return(invisible())
   }
   if (grepl("Normal termination of simulation", line)) {
-    ui_done(line)
+    rui::approve(line)
     return(invisible())
   }
   if (grepl("FAILED TO MEET SOLVER CONVERGENCE CRITERIA", line)) {
-    ui_fail(line)
+    rui::disapprove(line)
     return(invisible())
   }
-  ui_info(line)
+  rui::inform(line)
   invisible()
 }
 
 #' Replace values in a vector with corresponding parameter names
 #' 
 #' This function is a helper for processing the arguments of [rmf_execute()],
-#' [rmf_analyze()] and [rmf_optimize()] that can be named vectors.
+#' [rmf_analyze()] and [rmf_optimize()] that can be named vectors, a named
+#' lists of functions.
 #'
 #' @param parnam Character vector of parameter names from a PVAL file.
 #' @param parval Vector of values. Can be numeric as in PVAL file, but also
 #'   character for *e.g.* the transformation. 
-#' @param new Named vector.
+#' @param new Named numeric vector, or named list of functions and/or numeric
+#'   values.
 #' @return
-rmfi_replace_in_vector <- function(parnam, parval, new) {
-  if (is.null(names(new)) & length(new) == length(parnam)) return(parval)
+rmfi_replace_in_vector <- function(parnam, parval, new, start = parval) {
+  if (is.null(names(new)) & length(new) == length(parnam)) return(new)
   if (!is.null(names(new))) {
-    for (i in 1:length(new)) {
-      parval[grepl(names(new)[i], parnam)] <- new[i]
+    if (is.list(new)) {
+      for (i in 1:length(new)) {
+        if (is.function(new[[i]])) {
+          parval[grepl(names(new)[i], parnam)] <- new[[i]](
+            start[grepl(names(new)[i], parnam)])
+        } else {
+          parval[grepl(names(new)[i], parnam)] <- new[[i]]
+        }
+      }
+      return(parval)
+    } else {
+      for (i in 1:length(new)) {
+        parval[grepl(names(new)[i], parnam)] <- new[i]
+      }
+      return(parval)
     }
-    return(parval)
   }
-  ui_alert("Length of one of the vector arguments does not equal the number of",
+  rui::alert("Length of one of the vector arguments does not equal the number of",
            "parameters in the PVAL file, and the vector is not named.")
-  ui_stop("Issue with the function arguments.")
+  rui::stop("Issue with the function arguments.")
 }
 
 #' Backup a PVAL file
@@ -617,7 +694,7 @@ rmfi_replace_in_vector <- function(parnam, parval, new) {
 #' @inheritParams rmfi_look_for_path
 rmfi_backup_pval <- function(dir, nam) {
   if (file.exists(paste0(rmfi_look_for_path(dir, nam, "pval"), ".old"))) {
-    ui_warn("Backup of the original PVAL file is already there.")
+    rui::warn("Backup of the original PVAL file is already there.")
   } else {
     path <- rmfi_look_for_path(dir, nam, "pval")
     file.copy(

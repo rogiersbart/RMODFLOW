@@ -1126,11 +1126,11 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
 #' @keywords internal
 rmfi_performance_measures <- function(observations, predictions,print=F,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
   gof <- hydroGOF::gof(predictions, observations, ...)
-  name <- c('Mean error', 'Mean absolute error', 'Mean square error', 'Root mean square error', 'Normalized root mean square error',
-            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standars deviations', 'Nash-Sutcliffe efficiency', 
+  name <- c('Mean error', 'Mean absolute error', 'Mean squared error', 'Root mean squared error', 'Normalized root mean squared error',
+            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standard deviations', 'Nash-Sutcliffe efficiency', 
             'Modified Nash-Sutcliffe efficiency', 'Relative Nash-Sutcliffe efficiency','Index of agreement', 'Modified index of agreement', 
             'Relative index of agreement', 'Coefficient of persistance', 'Pearson product-moment correlation coefficient', 'Coefficient of determination',
-            'R2 multiplied with slope of linear regressions between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
+            'R2 multiplied with slope of linear regression between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
   gof <- data.frame(measure = rownames(gof), value = c(gof), name = name)
   gof <- rbind(gof, data.frame(measure = 'SSQ', value = sum((predictions - observations)^2), name ='Sum of squared errors'))
   measures <- tolower(measures)

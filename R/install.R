@@ -36,10 +36,10 @@ rmf_install <- function(code = "all", overwrite = NULL) {
   codes <- rmfd_supported_codes %>% c(stringr::str_remove(., "MODFLOW-"))
   code <- stringr::str_remove(toupper(code), "MODFLOW-")
   if (!all(code %in% codes)) {
-    ui_alert("Installing codes other than MODFLOW-2005, MODFLOW-OWHM,",
+    rui::alert("Installing codes other than MODFLOW-2005, MODFLOW-OWHM,",
              "MODFLOW-NWT, MODFLOW-LGR or MODFLOW-CFP is currently not",
              "supported.")
-    ui_stop("Issue with code name.")
+    rui::stop("Issue with code name.")
   }
   rmfi_install_code(code, overwrite = overwrite)
   invisible()
@@ -76,7 +76,7 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
       x <- "https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12.zip"
     } else {
       x <- "https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12u.zip"
-      ui_warn("Please make sure to compile {code} before running the",
+      rui::warn("Please make sure to compile {code} before running the",
               "executable.")
     }
     folder <- gsub('\\.zip', '', basename(x))
@@ -84,7 +84,7 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
     if(os == 'Windows') {
       x <- "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip"
     } else {
-      ui_stop("{code} is not available for your operating system.")
+      rui::stop("{code} is not available for your operating system.")
     }
     folder <- gsub('\\.zip', '', basename(x))
   } else if(code == 'MODFLOW-OWHM') {
@@ -92,7 +92,7 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
       x <- "https://ca.water.usgs.gov/modeling-software/one-water-hydrologic-model/MF_OWHM_v1_0_win.zip"
     } else {
       x <- "https://ca.water.usgs.gov/modeling-software/one-water-hydrologic-model/MF_OWHM_v1_0.zip"
-      ui_warn("Donwloaded pre-compiled binary of {code} might not work on",
+      rui::warn("Donwloaded pre-compiled binary of {code} might not work on",
               "all unix systems. If so, try re-compiling the code")
     }
     folder <- gsub('_win|\\.zip', '', basename(x))
@@ -100,14 +100,14 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
     if(os == 'Windows') {
       x <- "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
     } else {
-      ui_stop("{code} is not available for your operating system.")
+      rui::stop("{code} is not available for your operating system.")
     }
     folder <- 'mflgr.2_0'
   } else if(code == 'MODFLOW-CFP') {
     if(os == 'Windows') {
       x <- "https://water.usgs.gov/water-resources/software/CFP/CFPv1.8.00-rel20110223.zip"
     } else {
-      ui_stop("{code} is not available for your operating system.")
+      rui::stop("{code} is not available for your operating system.")
     }
     # NOTE CFP download does not contain top-level folder or bin folder
     folder <- NULL 
@@ -117,10 +117,10 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
   # install, if already installed ask what to do
   if(dir.exists(mf_dir)) {
     if(is.null(overwrite) & interactive()) {
-      ui_alert("You have already installed {code} in {mf_dir}")
-      install <- ui_ask("Do you want to reinstall?")
+      rui::alert("You have already installed {code} in {mf_dir}")
+      install <- rui::ask("Do you want to reinstall?")
     } else if (is.null(overwrite)) {
-      ui_stop(c("{code} version already exists in {mf_dir}.",
+      rui::stop(c("{code} version already exists in {mf_dir}.",
                 "Set overwrite to TRUE if you want replace it."))
     } else if (overwrite) {
       install <- TRUE
@@ -133,9 +133,9 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
   if(install) {
     if(dir.exists(mf_dir)) unlink(mf_dir, recursive = TRUE, force = TRUE)
     temp <- tempfile()
-    ui_start("Downloading")
+    rui::begin("Downloading {code}")
     download.file(x, temp, quiet = TRUE)
-    ui_update("Installing")
+    rui::update("Installing {code}")
     unzip(temp, exdir = ifelse(code == 'MODFLOW-CFP', mf_dir, dir))
     unlink(temp, force = TRUE)
     if(code == 'MODFLOW-CFP') {
@@ -148,10 +148,10 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
     } else {
       fs::file_move(file.path(dir, folder), mf_dir)
     }
-    ui_end_done()
-    ui_info("You can find {code} at: {mf_dir}")
+    rui::succeed()
+    rui::inform("You can find {code} at: {.path {mf_dir}}")
   } else {
-    ui_fail("Aborting install of {code}")
+    rui::disapprove("Aborting install of {code}")
   }
   invisible()
 }
