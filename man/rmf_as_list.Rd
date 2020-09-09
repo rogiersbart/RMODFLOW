@@ -9,8 +9,14 @@
 \usage{
 rmf_as_list(...)
 
-\method{rmf_as_list}{rmf_3d_array}(obj, dis, name = "value", mask = 1 +
-  obj * 0, ijk = NULL, kper = attr(obj, "kper"))
+\method{rmf_as_list}{rmf_3d_array}(
+  obj,
+  dis,
+  name = "value",
+  mask = 1 + obj * 0,
+  ijk = NULL,
+  kper = attr(obj, "kper")
+)
 
 \method{rmf_as_list}{rmf_2d_array}(obj, ...)
 

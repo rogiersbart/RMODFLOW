@@ -4,8 +4,7 @@
 \alias{rmf_plot.hpr}
 \title{Plot a MODFLOW head predictions file}
 \usage{
-\method{rmf_plot}{hpr}(hpr, type = "scatter", hobdry = -888,
-  bins = NULL)
+\method{rmf_plot}{hpr}(hpr, type = "scatter", hobdry = -888, bins = NULL)
 }
 \arguments{
 \item{hpr}{head predictions file object}

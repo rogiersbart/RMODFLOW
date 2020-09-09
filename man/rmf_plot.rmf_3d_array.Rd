@@ -4,23 +4,44 @@
 \alias{rmf_plot.rmf_3d_array}
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
-\method{rmf_plot}{rmf_3d_array}(array, i = NULL, j = NULL, k = NULL,
-  dis, bas = NULL, mask = rmfi_ifelse0(is.null(bas), array * 0 + 1,
-  rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1)), bas$ibound)),
+\method{rmf_plot}{rmf_3d_array}(
+  array,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  bas = NULL,
+  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, rmfi_ifelse0(bas$xsection,
+    aperm(bas$ibound, c(3, 2, 1)), bas$ibound)),
   zlim = range(array[rmfi_ifelse0(is.null(i), c(1:dim(array)[1]), i),
-  rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
-  c(1:dim(array)[3]), k)][as.logical(mask[rmfi_ifelse0(is.null(i),
-  c(1:dim(array)[1]), i), rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j),
-  rmfi_ifelse0(is.null(k), c(1:dim(array)[3]), k)])], finite = TRUE),
+    rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
+    c(1:dim(array)[3]), k)][as.logical(mask[rmfi_ifelse0(is.null(i), c(1:dim(array)[1]),
+    i), rmfi_ifelse0(is.null(j), c(1:dim(array)[2]), j), rmfi_ifelse0(is.null(k),
+    c(1:dim(array)[3]), k)])], finite = TRUE),
   colour_palette = ifelse(type \%in\% c("contour", "vector"), "black",
-  rmfi_rev_rainbow), nlevels = 7, type = "fill", levels = NULL,
-  gridlines = FALSE, add = FALSE, crop = TRUE, hed = NULL,
-  l = NULL, binwidth = ceiling(diff(zlim)/20), label = TRUE,
-  prj = NULL, crs = NULL, vecint = 1, uvw = NULL,
-  legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE), ...)
+    rmfi_rev_rainbow),
+  nlevels = 7,
+  type = "fill",
+  levels = NULL,
+  gridlines = FALSE,
+  add = FALSE,
+  crop = TRUE,
+  hed = NULL,
+  l = NULL,
+  binwidth = pretty(diff(zlim)/20, 1)[1],
+  label = TRUE,
+  prj = NULL,
+  crs = NULL,
+  vecsize = NULL,
+  uvw = NULL,
+  legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE),
+  ...
+)
 }
 \arguments{
 \item{array}{an object of class rmf_3d_array}
+
+\item{dis}{discretization file object}
 
 \item{i}{row number to plot}
 
@@ -28,15 +49,13 @@
 
 \item{k}{layer number to plot}
 
-\item{dis}{discretization file object}
-
 \item{bas}{basic file object; optional}
 
 \item{mask}{a 3D array with 0 or F indicating inactive cells optional; defaults to having all cells active or, if bas is provided, bas$ibound}
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 
-\item{colour_palette}{a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.}
+\item{colour_palette}{a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used.}
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 
@@ -60,7 +79,7 @@
 
 \item{crs}{coordinate reference system for the plot}
 
-\item{vecint}{positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing}
+\item{vecsize}{vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.}
 
 \item{uvw}{optional named list with u, v and w vectors or 3d arrays specifying the vector components in the x, y and z direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}}
 

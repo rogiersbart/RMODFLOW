@@ -120,8 +120,8 @@ rmf_write_pcg <- function(pcg,
   cat(paste('#', comment(pcg)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(pcg$mxiter, pcg$iter1, pcg$npcond, ifelse(is.na(pcg$ihcofadd),'',pcg$ihcofadd),file=file, ...)
+  rmfi_write_variables(as.integer(pcg$mxiter), as.integer(pcg$iter1), as.integer(pcg$npcond), ifelse(is.na(pcg$ihcofadd),'',as.integer(pcg$ihcofadd)),file=file, ...)
   
   # data set 2
-  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, pcg$nbpol, pcg$iprpcg, pcg$mutpcg, pcg$damppcg, ifelse(is.na(pcg$damppcgt) || is.null(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
+  rmfi_write_variables(pcg$hclose, pcg$rclose, pcg$relax, as.integer(pcg$nbpol), as.integer(pcg$iprpcg), as.integer(pcg$mutpcg), pcg$damppcg, ifelse(is.na(pcg$damppcgt) || is.null(pcg$damppcgt),'',pcg$damppcgt), file = file, ...)
 }

@@ -4,9 +4,14 @@
 \alias{rmf_write_riv}
 \title{Write a MODFLOW river file}
 \usage{
-rmf_write_riv(riv, dis = rmf_read_dis(), file = {    
-  cat("Please choose riv file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_riv(
+  riv,
+  dis = rmf_read_dis(),
+  file = {    
+    cat("Please choose riv file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{riv}{an \code{RMODFLOW} riv object}
@@ -15,7 +20,7 @@ rmf_write_riv(riv, dis = rmf_read_dis(), file = {
 
 \item{file}{filename to write to; typically '*.riv'}
 
-\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
+\item{...}{arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

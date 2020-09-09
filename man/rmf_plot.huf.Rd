@@ -4,11 +4,22 @@
 \alias{rmf_plot.huf}
 \title{Plot a 2D section through a MODFLOW 3D array}
 \usage{
-\method{rmf_plot}{huf}(huf, dis, i = NULL, j = NULL, k = NULL,
-  hgu = NULL, bas = NULL, mask = rmf_convert_huf_to_mask(huf = huf,
-  dis = dis, bas = bas), colour_palette = rmfi_rev_rainbow,
-  nlevels = 7, levels = setNames(huf$hgunam, 1:huf$nhuf),
-  type = "factor", gridlines = FALSE, ...)
+\method{rmf_plot}{huf}(
+  huf,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  hgu = NULL,
+  bas = NULL,
+  mask = rmf_convert_huf_to_mask(huf = huf, dis = dis, bas = bas),
+  colour_palette = rmfi_rev_rainbow,
+  nlevels = 7,
+  levels = setNames(huf$hgunam, 1:huf$nhuf),
+  type = "factor",
+  gridlines = FALSE,
+  ...
+)
 }
 \arguments{
 \item{huf}{an object of class huf}
@@ -27,7 +38,7 @@
 
 \item{mask}{a 3D array with 0 or F indicating inactive cells optional;}
 
-\item{colour_palette}{a colour palette for imaging the array values}
+\item{colour_palette}{a colour palette for imaging continuous array values.}
 
 \item{nlevels}{number of levels for the colour scale; defaults to 7}
 

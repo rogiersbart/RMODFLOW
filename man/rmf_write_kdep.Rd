@@ -4,9 +4,14 @@
 \alias{rmf_write_kdep}
 \title{Write a MODFLOW hydraulic conductivity depth-dependence capability file}
 \usage{
-rmf_write_kdep(kdep, file = {    
-  cat("Please select kdep file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
+rmf_write_kdep(
+  kdep,
+  file = {    
+    cat("Please select kdep file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{kdep}{an \code{RMODFLOW} kdep object}

@@ -4,8 +4,7 @@
 \alias{rmf_calculate_array}
 \title{Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values}
 \usage{
-rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL,
-  parval = 1)
+rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL, parval = 1)
 }
 \arguments{
 \item{dis}{dis object; used to set the dimensions of the array}

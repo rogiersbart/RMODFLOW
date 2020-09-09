@@ -4,8 +4,19 @@
 \alias{rmfi_plot_bc}
 \title{Plot a RMODFLOW list-directed boundary condition object}
 \usage{
-rmfi_plot_bc(obj, dis, kper = NULL, variable = "id", i = NULL,
-  j = NULL, k = NULL, active_only = FALSE, fun = sum, ...)
+rmfi_plot_bc(
+  obj,
+  dis,
+  kper = NULL,
+  variable = "id",
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  active_only = FALSE,
+  fun = sum,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{obj}{a \code{RMODFLOW} list-directed boundary condition object, i.e. riv, chd, wel, drn, ghb, and derivatives}
@@ -25,6 +36,8 @@ rmfi_plot_bc(obj, dis, kper = NULL, variable = "id", i = NULL,
 \item{active_only}{logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.}
 
 \item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.}
+
+\item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
 
 \item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
 }

@@ -4,10 +4,15 @@
 \alias{rmf_write}
 \title{Write a MODFLOW model}
 \usage{
-rmf_write(modflow, file = {    
-  cat("Please select nam file to overwrite or provide new filename ...\\n")
-      file.choose() }, exclude = NULL, suppress = FALSE,
-  verbose = TRUE)
+rmf_write(
+  modflow,
+  file = {    
+    cat("Please select nam file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  exclude = NULL,
+  suppress = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{modflow}{\code{RMODFLOW} modflow object}

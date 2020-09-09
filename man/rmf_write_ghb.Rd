@@ -4,9 +4,14 @@
 \alias{rmf_write_ghb}
 \title{Write a MODFLOW general-head boundary file}
 \usage{
-rmf_write_ghb(ghb, dis = rmf_read_dis(), file = {    
-  cat("Please choose ghb file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_ghb(
+  ghb,
+  dis = rmf_read_dis(),
+  file = {    
+    cat("Please choose ghb file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{ghb}{an \code{RMODFLOW} ghb object}
@@ -15,7 +20,7 @@ rmf_write_ghb(ghb, dis = rmf_read_dis(), file = {
 
 \item{file}{filename to write to; typically '*.ghb'}
 
-\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
+\item{...}{arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

@@ -4,9 +4,18 @@
 \alias{rmf_read_array}
 \title{Read a MODFLOW array from a separate file.}
 \usage{
-rmf_read_array(file, nrow = NULL, ncol = NULL, nlay = 1, nstp = 1,
-  binary = F, integer = F, header = ifelse(binary, TRUE, FALSE),
-  precision = "single")
+rmf_read_array(
+  file,
+  nrow = NULL,
+  ncol = NULL,
+  nlay = 1,
+  nstp = 1,
+  binary = FALSE,
+  kper = NULL,
+  integer = FALSE,
+  header = binary,
+  precision = "single"
+)
 }
 \arguments{
 \item{file}{filename to read the array from}
@@ -21,9 +30,11 @@ rmf_read_array(file, nrow = NULL, ncol = NULL, nlay = 1, nstp = 1,
 
 \item{binary}{logical; is the array read from a binary file.}
 
+\item{kper}{integer vector specifying the stress periods in which the array is active. Defaults to \code{NULL}}
+
 \item{integer}{logical; does the array hold integer values. Only used for binary files. Might not work optimally.}
 
-\item{header}{logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.}
+\item{header}{logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.}
 
 \item{precision}{character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of the binary file.}
 }

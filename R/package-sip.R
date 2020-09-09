@@ -107,9 +107,9 @@ rmf_write_sip <- function(sip, file = {cat('Please choose sip file to overwrite 
   cat(paste('#', comment(sip)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(sip$mxiter, sip$nparm, file=file, ...)
+  rmfi_write_variables(sip$mxiter, sip$nparm, file=file, integer = TRUE, ...)
   
   # data set 2
-  rmfi_write_variables(sip$accl, sip$hclose, sip$ipcalc, sip$wseed, sip$iprsip, file=file, ...)
+  rmfi_write_variables(sip$accl, sip$hclose, as.integer(sip$ipcalc), sip$wseed, as.integer(sip$iprsip), file=file, ...)
   
 }

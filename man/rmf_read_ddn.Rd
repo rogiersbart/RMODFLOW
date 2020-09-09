@@ -2,13 +2,22 @@
 % Please edit documentation in R/output.R
 \name{rmf_read_ddn}
 \alias{rmf_read_ddn}
+\alias{rmf_read_drawdown}
 \title{Read a MODFLOW drawdown file}
 \usage{
-rmf_read_ddn(file = {     cat("Please select ddn file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, oc = NULL, bas = NULL,
-  binary = TRUE, precision = "single", timesteps = NULL)
+rmf_read_ddn(
+  file = {     cat("Please select ddn file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  oc = NULL,
+  bas = NULL,
+  hdry = NULL,
+  binary = TRUE,
+  precision = "single",
+  timesteps = NULL
+)
+
+rmf_read_drawdown(...)
 }
 \arguments{
 \item{file}{filename; typically '*.ddn'}
@@ -18,6 +27,8 @@ rmf_read_ddn(file = {     cat("Please select ddn file ...\\n")
 \item{oc}{oc object; optional. See details.}
 
 \item{bas}{bas object; optional. If supplied, is used to set the hnoflo values to NA.}
+
+\item{hdry}{numeric value as set by the flow package (bcf, lpf, huf or upw). If supplied, cells with this value are dry and their values are set to NA. Defaults to NULL}
 
 \item{binary}{logical; is the file binary?}
 

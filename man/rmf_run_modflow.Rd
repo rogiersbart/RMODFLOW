@@ -6,30 +6,39 @@
 \alias{rmf_run_modflow}
 \title{Run a MODFLOW model}
 \usage{
-\method{rmf_run_modflow}{character}(file, version = 2005,
-  executable = NULL, par = NULL)
+\method{rmf_run_modflow}{character}(
+  file,
+  executable = NULL,
+  version = 2005,
+  par = NULL,
+  verbose = TRUE,
+  convergence = TRUE,
+  cvg_message = "Normal termination"
+)
 
-\method{rmf_run_modflow}{modflow}(modflow, version = 2005,
-  executable = NULL, par = NULL)
+\method{rmf_run_modflow}{modflow}(modflow, executable = NULL, version = 2005, par = NULL)
 
 rmf_run_modflow(...)
 }
 \arguments{
 \item{file}{path to name file; typically '*.nam'}
 
-\item{version}{MODFLOW version to use; 2005 (default) is currently the only option}
-
 \item{executable}{name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname}
 
+\item{version}{MODFLOW version to use; 2005 (default) is currently the only option}
+
 \item{par}{vector of parameter value file parameter values to run the model with}
+
+\item{verbose}{logical; should the terminal output be printed to the R console? Defaults to TRUE}
+
+\item{convergence}{logical; should convergence be checked? If TRUE (default), a logical is returned}
+
+\item{cvg_message}{character denoting the message in the terminal output used to check for convergence}
 
 \item{modflow}{modflow object}
-
-\item{version}{MODFLOW version to use; 2005 (default) is currently the only option}
-
-\item{executable}{name of the MODFLOW executable to use; if not provided, the executable distributed with RMODFLOW is used, corresponding to version, machine and sysname}
-
-\item{par}{vector of parameter value file parameter values to run the model with}
+}
+\value{
+if convergence = TRUE, a logical depending on whether the model converged. Otherwise NULL.
 }
 \description{
 \code{run_modflow} runs a MODFLOW model.

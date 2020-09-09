@@ -4,9 +4,14 @@
 \alias{rmf_create_mlt}
 \title{Create an \code{RMODFLOW} mlt object}
 \usage{
-rmf_create_mlt(nml = length(mltnam), mltnam = "MULT", functn = NULL,
-  rmlt = rmf_create_array(1, dim = c(10, 10)), operators = NULL,
-  iprn = NULL)
+rmf_create_mlt(
+  nml = length(mltnam),
+  mltnam = "MULT",
+  functn = NULL,
+  rmlt = rmf_create_array(1, dim = c(10, 10)),
+  operators = NULL,
+  iprn = NULL
+)
 }
 \arguments{
 \item{nml}{number of multiplier arrays to be defined; defaults to the length of mltnam}

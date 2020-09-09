@@ -4,9 +4,22 @@
 \alias{rmf_plot.cbc}
 \title{Plot a flux component of a cell-by-cell budget object}
 \usage{
-\method{rmf_plot}{cbc}(cbc, dis, i = NULL, j = NULL, k = NULL,
-  l = NULL, flux = NULL, type = "fill", kper = NULL, kstp = NULL,
-  active_only = FALSE, hed = NULL, porosity = NULL, ...)
+\method{rmf_plot}{cbc}(
+  cbc,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  flux = NULL,
+  type = "fill",
+  kper = NULL,
+  kstp = NULL,
+  active_only = FALSE,
+  hed = NULL,
+  porosity = NULL,
+  ...
+)
 }
 \arguments{
 \item{cbc}{a \code{RMODFLOW} cell-by-cell budget object}
@@ -31,9 +44,9 @@
 
 \item{active_only}{logical; indicating if only the active cells should be plotted for list-directed components of the cbc object. Non-active cells are set to NA. Defaults to FALSE.}
 
-\item{hed}{optional hed object for only plotting the saturated part of the grid; possibly subsetted with time step number. Also used in \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'.}
+\item{hed}{optional hed object for only plotting the saturated part of the grid; possibly subsetted with time step number. Also used in \code{\link{rmf_convert_cbc_to_darcy}} when \code{flux = 'darcy'} and \code{type = 'vector'}.}
 
-\item{porosity}{optional 3d array with porosity values passed to \code{\link{rmf_convert_cbc_to_darcy}} when flux = 'darcy' and type = 'vector'.}
+\item{porosity}{optional 3d array with porosity values passed to \code{\link{rmf_convert_cbc_to_darcy}} when \code{flux = 'darcy'} and \code{type = 'vector'}.}
 
 \item{...}{additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}} or \code{\link{rmf_plot.rmf_list}}}
 }

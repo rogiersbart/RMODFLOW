@@ -102,7 +102,7 @@ rmf_create_upw <- function(dis,
     # to prevent false positive since last layer can not have a confining bed
     if('VKCB' %in% names(layer_check)) layer_check[['VKCB']] <- append(layer_check[['VKCB']], dis$nlay)
     
-    layer_check <- structure(vapply(seq_along(layer_check), function(i) isTRUE(all.equal(sort(layer_check[[i]]), 1:dis$nlay)), TRUE), names = names(layer_check))
+    layer_check <- structure(vapply(seq_along(layer_check), function(i) !anyNA(match(1:dis$nlay, sort(layer_check[[i]]))), TRUE), names = names(layer_check))
     if(any(!layer_check)) stop(paste('Parameters are used to define ', names(layer_check)[!layer_check],', but not all layers are defined through parameters.'), call. = FALSE)
     
   } 
@@ -276,7 +276,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     if('HK' %in% types) {
       upw_lines <- upw_lines[-1]  
     } else {
-      data_set_10 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_10 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       upw_lines <- data_set_10$remaining_lines
       upw$hk[,,k] <- data_set_10$array
       rm(data_set_10)
@@ -287,7 +287,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('HANI' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_11 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_11 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_11$remaining_lines
         upw$hani[,,k] <- data_set_11$array
         rm(data_set_11)
@@ -298,7 +298,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
     if('VK' %in% types || 'VANI' %in% types) {
       upw_lines <- upw_lines[-1]  
     } else {
-      data_set_12 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+      data_set_12 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
       upw_lines <- data_set_12$remaining_lines
       upw$vka[,,k] <- data_set_12$array
       rm(data_set_12)
@@ -309,7 +309,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('SS' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_13 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_13 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_13$remaining_lines
         upw$ss[,,k] <- data_set_13$array
         rm(data_set_13)
@@ -321,7 +321,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('SY' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_14 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_14 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_14$remaining_lines
         upw$sy[,,k] <- data_set_14$array
         rm(data_set_14)
@@ -333,7 +333,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
       if('VKCB' %in% types) {
         upw_lines <- upw_lines[-1]  
       } else {
-        data_set_15 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, file = file, ...)
+        data_set_15 <- rmfi_parse_array(upw_lines,dis$nrow,dis$ncol,1, ndim = 2, file = file, ...)
         upw_lines <- data_set_15$remaining_lines
         upw$vkcb[,,k] <- data_set_15$array
         rm(data_set_15)
@@ -361,37 +361,39 @@ rmf_write_upw <- function(upw,
                           iprn=-1, 
                           ...) {
   
+  iprn <- as.integer(iprn)
+  
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Upstream Weighting Package created by RMODFLOW, version',v,'\n'), file = file)
   cat(paste('#', comment(upw)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(upw$iupwcb,upw$hdry,upw$npupw, ifelse(upw$iphdry, 1, 0), file=file)
+  rmfi_write_variables(as.integer(upw$iupwcb),upw$hdry,as.integer(upw$npupw), ifelse(upw$iphdry, 1L, 0L), file=file)
   
   # data set 2
-  rmfi_write_variables(upw$laytyp, file = file)
+  rmfi_write_variables(upw$laytyp, file = file, integer = TRUE)
   
   # data set 3
-  rmfi_write_variables(upw$layavg, file = file)
+  rmfi_write_variables(upw$layavg, file = file, integer = TRUE)
   
   # data set 4
-  rmfi_write_variables(upw$chani, file = file)
+  rmfi_write_variables(upw$chani, file = file, integer = TRUE)
   
   # data set 5
-  rmfi_write_variables(upw$layvka, file = file)
+  rmfi_write_variables(upw$layvka, file = file, integer = TRUE)
   
   # data set 6
-  rmfi_write_variables(upw$laywet, file = file)
+  rmfi_write_variables(upw$laywet, file = file, integer = TRUE)
   
   # data set 7-8
   types <- NULL
   if(upw$npupw > 0) {
     for(i in 1:upw$npupw) {
       types <- append(types, attr(upw$parameters[[i]], 'partyp'))
-      rmfi_write_variables(attr(upw$parameters[[i]], 'parnam'), attr(upw$parameters[[i]], 'partyp'),attr(upw$parameters[[i]], 'parval'),length(attr(upw$parameters[[i]], 'mlt')), file = file)
+      rmfi_write_variables(attr(upw$parameters[[i]], 'parnam'), attr(upw$parameters[[i]], 'partyp'),attr(upw$parameters[[i]], 'parval'),as.integer(length(attr(upw$parameters[[i]], 'mlt'))), file = file)
       for(j in 1:length(attr(upw$parameters[[i]], 'mlt'))) {
-        rmfi_write_variables(attr(upw$parameters[[i]], 'layer')[j],attr(upw$parameters[[i]], 'mlt')[j], attr(upw$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(upw$parameters[[i]], 'zon')[j] == "ALL", NULL, attr(upw$parameters[[i]], 'iz')[[j]]), file=file)
+        rmfi_write_variables(as.integer(attr(upw$parameters[[i]], 'layer')[j]),attr(upw$parameters[[i]], 'mlt')[j], attr(upw$parameters[[i]], 'zon')[j], rmfi_ifelse0(attr(upw$parameters[[i]], 'zon')[j] == "ALL", NULL, as.integer(attr(upw$parameters[[i]], 'iz')[[j]])), file=file)
       } 
     }
   }

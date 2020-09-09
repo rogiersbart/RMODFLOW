@@ -2,14 +2,21 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_grid_to_xyz}
 \alias{rmf_convert_grid_to_xyz}
-\alias{convert_grid_to_xyz}
 \title{Convert modflow coordinates to real world coordinates}
 \usage{
-rmf_convert_grid_to_xyz(x = NULL, y = NULL, z = NULL, i = NULL,
-  j = NULL, k = NULL, roff = NULL, coff = NULL, loff = NULL,
-  prj = NULL, dis = NULL)
-
-convert_grid_to_xyz(...)
+rmf_convert_grid_to_xyz(
+  x = NULL,
+  y = NULL,
+  z = NULL,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  roff = NULL,
+  coff = NULL,
+  loff = NULL,
+  prj = NULL,
+  dis = NULL
+)
 }
 \arguments{
 \item{x}{modflow x coordinate}
@@ -49,8 +56,3 @@ Provide either xyz or ijk
   k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
   set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_grid_to_xyz}: Deprecated function name
-}}
-

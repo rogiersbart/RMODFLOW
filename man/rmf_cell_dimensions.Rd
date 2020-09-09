@@ -6,11 +6,20 @@
 \alias{rmf_cell_dimensions}
 \title{Get cell dimensions from a dis object}
 \usage{
-\method{rmf_cell_dimensions}{dis}(dis, hed = NULL,
-  include_volume = FALSE, include_faces = FALSE)
+\method{rmf_cell_dimensions}{dis}(
+  dis,
+  hed = NULL,
+  include_volume = FALSE,
+  include_faces = FALSE
+)
 
-\method{rmf_cell_dimensions}{huf}(huf, dis = NULL, hed = NULL,
-  include_volume = FALSE, include_faces = FALSE)
+\method{rmf_cell_dimensions}{huf}(
+  huf,
+  dis = NULL,
+  hed = NULL,
+  include_volume = FALSE,
+  include_faces = FALSE
+)
 
 rmf_cell_dimensions(...)
 }
@@ -24,8 +33,6 @@ rmf_cell_dimensions(...)
 \item{include_faces}{logical; should face areas be included?}
 
 \item{huf}{huf object}
-
-\item{hed}{hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned}
 }
 \value{
 list with cell dimension 3d arrays

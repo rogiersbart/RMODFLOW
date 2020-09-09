@@ -2,14 +2,16 @@
 % Please edit documentation in R/package-bas.R
 \name{rmf_write_bas}
 \alias{rmf_write_bas}
-\alias{write_bas}
 \title{Write a MODFLOW basic file}
 \usage{
-rmf_write_bas(bas, file = {    
-  cat("Please select bas file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
-
-write_bas(...)
+rmf_write_bas(
+  bas,
+  file = {    
+    cat("Please select bas file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{bas}{an \code{\link{RMODFLOW}} bas object}
@@ -26,8 +28,6 @@ write_bas(...)
 \description{
 \code{rmf_write_bas} writes a MODFLOW basic file based on an \code{\link{RMODFLOW}} bas object.
 }
-\section{Functions}{
-\itemize{
-\item \code{write_bas}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_read_bas}}, \code{\link{rmf_create_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas6.htm}
+}

@@ -2,12 +2,9 @@
 % Please edit documentation in R/internals.R
 \name{rmfi_convert_huf_to_nlay}
 \alias{rmfi_convert_huf_to_nlay}
-\alias{convert_huf_to_nlay}
 \title{Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit}
 \usage{
 rmfi_convert_huf_to_nlay(huf, dis, bas = NULL)
-
-convert_huf_to_nlay(...)
 }
 \arguments{
 \item{huf}{huf object}
@@ -22,9 +19,4 @@ nlay rmf_3d_array
 \description{
 Convert a huf object to an rmf_3d_array with the number of numerical layers per hydrogeological unit
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_huf_to_nlay}: Deprecated function name
-}}
-
 \keyword{internal}
