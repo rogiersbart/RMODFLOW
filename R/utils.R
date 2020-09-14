@@ -508,7 +508,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$nrow), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$nrow))
         
         # x-values
-        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis)$x
+        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis, prj = NULL)$x
         
         if(as_points) {
           positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]), z = cst_values)
@@ -555,7 +555,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$ncol), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$ncol))
         
         # y-values
-        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis)$y
+        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis, prj = NULL)$y
         
         if(as_points) {
           positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]), z = cst_values)
@@ -780,7 +780,7 @@ rmf_as_tibble.rmf_list <- function(obj,
       if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
       coords_prj <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
       coords$x <- coords_prj$x
-      coords_y <- coords_prj$y
+      coords$y <- coords_prj$y
     }
     df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r'))
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
@@ -788,7 +788,7 @@ rmf_as_tibble.rmf_list <- function(obj,
     
   } else {
 
-    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = NULL)
     ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     xWidth <- dis$delr[obj$j]
     yWidth <- dis$delc[obj$i]
