@@ -2316,10 +2316,12 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
 #'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
+#'          \code{dimnames} are dropped. 
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
 rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dimlabels = attr(obj, 'dimlabels')) {
+  attr(obj, 'dimnames') <- NULL
   if(!is.null(dim)) {
     att <- attributes(obj)
     obj <- array(obj, dim = dim)
@@ -2343,6 +2345,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_4d_array" <-  function(x, i, j, k, l, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k) && missing(l)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1, missing(l) || length(l) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2386,6 +2389,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_3d_array" <-  function(x, i, j, k, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2416,6 +2420,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_2d_array" <-  function(x, i, j, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
