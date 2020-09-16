@@ -1291,7 +1291,6 @@ rmfi_prj_length_multiplier <- function(dis, prj, to) {
     mlt <- 1
   } else {
     
-    # TODO set this in data-raw
     # units in m
     unit_df <- rmfd_supported_length_units
     prj_un <- prj$crs$units
