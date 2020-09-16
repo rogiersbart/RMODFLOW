@@ -1293,12 +1293,7 @@ rmfi_prj_length_multiplier <- function(dis, prj, to) {
     
     # TODO set this in data-raw
     # units in m
-    unit <- c('km','m','dm','cm','mm','kmi','in','ft','yd','mi','fath','ch',
-            'link','us-in','us-ft','us-yd','us-ch','us-mi','ind-yd','ind-ft') 
-    conv <- c(1000,1,0.1,0.01,0.001,1852,0.0254,0.3048,0.9144,1609.344,1.828804,20.11684,
-              0.2011684,0.02540005,0.3048006,0.9144018,20.116840234,1609.347,0.9143988,0.3047996)
-    unit_df <- data.frame(unit = unit, conv = conv)
-    
+    unit_df <- rmfd_supported_length_units
     prj_un <- prj$crs$units
     
     # convert prj units & mf units to meter

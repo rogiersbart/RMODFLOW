@@ -18,7 +18,6 @@ Imports:
     rgdal,
     animation,
     tools,
-    lubridate,
     xml2,
     rvest,
     sf,

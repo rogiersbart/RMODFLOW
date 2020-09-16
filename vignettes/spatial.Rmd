@@ -10,6 +10,7 @@ vignette: >
 ---
 
 ```{r setup, echo = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
 knitr::opts_chunk$set(
   echo = TRUE,
   collapse = TRUE,
