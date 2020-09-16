@@ -35,7 +35,7 @@ Imports:
     spectralscale,
     rui
 Remotes:
-    rogiersbart/spectralscale
+    rogiersbart/spectralscale,
     rogiersbart/rui
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
