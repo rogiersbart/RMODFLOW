@@ -605,7 +605,7 @@ rmf_as_stars <- function(...) {
 #' @export
 rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
-  array[which(mask^2 != 1)] <- NA
+  array[which(mask == 0)] <- NA
   m <- t(as.matrix(array[rev(seq_len(dim(array)[1])),])) # stars origin will be bottomleft instead of R topleft, so reverse row order
   dim(m) <- c(x = dim(m)[1], y = dim(m)[2]) # named dim
   
@@ -663,7 +663,7 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
 #' @export
 rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
-  array[which(mask^2 != 1)] <- NA
+  array[which(mask == 0)] <- NA
   
   s <- rmf_as_stars(array[,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
   if(id %in% c('r', 'modflow')) ids <- c(s$id) + c(rep(0, prod(dis$nrow, dis$ncol)), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = prod(dis$nrow, dis$ncol)))
@@ -690,7 +690,7 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
 rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = rmf_get_prj(dis), name = 'value', id = 'r', ...) {
   
   mask <- array(mask, dim = c(dim(mask), dim(array)[4]))
-  array[which(mask^2 != 1)] <- NA
+  array[which(mask == 0)] <- NA
   
   s <- rmf_as_stars(array[,,,1], dis = dis, prj = prj, name = 'layer_1', id = id)
   if(id %in% c('r', 'modflow')) ids <- c(s$id) 
@@ -1291,21 +1291,29 @@ rmfi_prj_length_multiplier <- function(dis, prj, to) {
     mlt <- 1
   } else {
     
+    # TODO set this in data-raw
     # units in m
-    un <- c('km','m','dm','cm','mm','kmi','in','ft','yd','mi','fath','ch',
+    unit <- c('km','m','dm','cm','mm','kmi','in','ft','yd','mi','fath','ch',
             'link','us-in','us-ft','us-yd','us-ch','us-mi','ind-yd','ind-ft') 
     conv <- c(1000,1,0.1,0.01,0.001,1852,0.0254,0.3048,0.9144,1609.344,1.828804,20.11684,
               0.2011684,0.02540005,0.3048006,0.9144018,20.116840234,1609.347,0.9143988,0.3047996)
+    unit_df <- data.frame(unit = unit, conv = conv)
+    
     prj_un <- prj$crs$units
     
     # convert prj units & mf units to meter
-    prj_to_meter <- conv[which(un == prj_un)]
-    mf_to_meter <- switch(as.character(dis$lenuni),
-                          '1' = conv[which(un == 'ft')],
-                          '2' = conv[which(un == 'm')],
-                          '3' = conv[which(un == 'cm')])
-    
-    mlt <- mf_to_meter / prj_to_meter
+    if(!(prj_un %in% unit_df$unit)) {
+      stop('Length unit not supported. Please check RMODFLOW:::rmfd_supported_length_units for supported length units.', call. = FALSE)
+    } else {
+      prj_to_meter <- unit_df$conv[which(unit_df$unit == prj_un)]
+      mf_to_meter <- switch(as.character(dis$lenuni),
+                            '1' = unit_df$conv[which(unit_df$unit == 'ft')],
+                            '2' = unit_df$conv[which(unit_df$unit == 'm')],
+                            '3' = unit_df$conv[which(unit_df$unit == 'cm')])
+      
+      mlt <- mf_to_meter / prj_to_meter
+    }
+
   }
   mlt <- ifelse(to == 'grid', 1/mlt, mlt)
   return(mlt)
