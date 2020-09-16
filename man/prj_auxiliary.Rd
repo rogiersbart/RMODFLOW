@@ -70,7 +70,7 @@ rmf_transform_prj(...)
 Functions to get, set, transform and check presence of prj objects
 }
 \details{
-If \code{prj} information is already present, a warnings is raised when overwriting.
+If \code{prj} information is already present, a warning is raised when overwriting.
 
 \code{rmf_set_prj.character} writes the projection information of \code{prj} directly into the header comments of the discretization file
 

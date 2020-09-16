@@ -43,12 +43,96 @@ A spatial join between the MODFLOW grid (as polygons) and \code{obj} is performe
 The geometric operator \code{op} can be any kind described in the \code{sf} help pages. See \code{?sf::st_intersects}.
 }
 \examples{
-sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
-obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
 dis <- rmf_create_dis()
-rmf_as_list(obj, dis)
-rmf_as_list(obj, dis, k = c(2, 2, 3))
+
+# point
+pts <- sf::st_sfc(list(sf::st_point(c(150, 312)), sf::st_point(c(500, 500)), sf::st_point(c(850, 566))))
+obj <- sf::st_sf(q = c(-500, -400, -300), geom = pts)
+
+(rlst <- rmf_as_list(obj, dis))
+
+# 4 cells selected for second point on cell edges
+rmf_plot(rlst, dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
 
 prj <- rmf_create_prj(rotation = 12)
-rmf_as_list(obj, dis, prj = prj)
+rmf_as_list(obj, dis, prj = prj, k = c(2, 2, 3))
+
+# multipoint
+mp <- sf::st_multipoint(rbind(c(150,312), c(500, 500), c(850, 566)))
+obj <- sf::st_sf(q = -500, geom = sf::st_sfc(mp))
+
+rmf_as_list(obj, dis)
+
+# linestring
+s1 <- rbind(c(150,312), c(500, 500), c(850, 566))
+ls1 <- sf::st_linestring(s1)
+s2 <- rbind(c(100,100), c(500, 555))
+ls2 <- sf::st_linestring(s2)
+
+obj <- sf::st_sf(conductance = 500, quality = c('good', 'poor'), geom = sf::st_sfc(ls1, ls2))
+
+rmf_as_list(obj, dis, select = 'conductance')
+
+# multilinestring
+mls <- sf::st_multilinestring(list(s1, s2))
+
+obj <- sf::st_sf(conductance = 500, quality = 'mixed', geom =   sf::st_sfc(mls))
+
+rmf_as_list(obj, dis) \%>\% 
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
+
+# op = sf::st_crosses
+rmf_as_list(obj, dis, op = sf::st_crosses) \%>\% 
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
+
+# polygon
+p1 <- rbind(c(120, 120), c(120, 760), c(800, 800), c(120, 120))
+pol1 <- sf::st_polygon(list(p1))
+
+obj <- sf::st_sf(head = 15, geom = sf::st_sfc(pol1))
+
+# op = sf::st_intersects
+rmf_as_list(obj, dis) \%>\%
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+# op = sf::st_covers
+rmf_as_list(obj, dis, op = sf::st_covers) \%>\%
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+p2 <- rbind(c(410, 125), c(812, 133), c(902, 488), c(410, 125))
+pol2 <- sf::st_polygon(list(p1, p2))
+
+(obj <- sf::st_sf(head = 15, geom = sf::st_sfc(pol2)))
+
+rmf_as_list(obj, dis) \%>\%
+  rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+pol2 <- sf::st_polygon(list(p2))
+(obj <- sf::st_sf(head = c(15, 12), geom = sf::st_sfc(pol1, pol2)))
+
+rmf_as_list(obj, dis) \%>\%
+  rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+# multipolygon
+p3 <- rbind(c(150, 960), c(440, 960), c(440, 875), c(150, 875), c(150, 960))
+mpol <- sf::st_multipolygon(list(list(p1, p2), list(p3)))
+
+(obj <- sf::st_sf(head = 15, geom = sf::st_sfc(mpol)))
+
+rmf_as_list(obj, dis) \%>\%
+  rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+# geometry collection
+gc <- sf::st_geometrycollection(list(mp, mpol, ls1))
+
+(obj <- sf::st_sf(head = 15, geom = sf::st_sfc(gc)))
+
 }

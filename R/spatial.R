@@ -489,7 +489,7 @@ rmf_as_sf.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_get
 #' @rdname rmf_as_sf
 #' @method rmf_as_sf rmf_4d_array
 #' @export
-rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)), prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
+rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[1:3]), prj = rmf_get_prj(dis), name = 'value', as_points = FALSE, id = 'r', ...) {
 
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, as_points = as_points, id = 'r') %>%
     subset(select = 'id')

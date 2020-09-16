@@ -24,7 +24,7 @@ rmf_create_prj(
 
 \item{nodecoordinate}{logical; if \code{TRUE}, \code{origin} refers to the cell center instead of the cell corner.}
 
-\item{dis}{\code{RMODFLOW} dis object. Only required when \code{uulcoordinate} or \code{nodecoordinate} is TRUE.}
+\item{dis}{\code{RMODFLOW} dis object. Only required when \code{ulcoordinate} or \code{nodecoordinate} is TRUE.}
 }
 \value{
 an object of class \code{prj} which is a list with the (1) origin vector containing x, y and z coordinates of the lowerleft corner,
@@ -38,6 +38,7 @@ Create a RMODFLOW projection object
 If no z coordinate is specified in \code{origin}, it is set to zero.
 \code{crs} is set by a call to \code{sf::st_crs}.
 Rotation is around the lowerleft corner of the model.
+\code{RMODFLOW} does not work optimally for geographic coordinate systems.
 }
 \examples{
 rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)

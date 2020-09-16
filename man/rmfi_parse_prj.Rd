@@ -16,7 +16,7 @@ a list with a \code{prj} object and the remaining comments
 Read RMODFLOW projection information from header comments
 }
 \details{
-\code{comments} is typically the output of \code{rmfi_parse_comments} as called from when reading the discretization file.
+\code{comments} is typically the output of \code{rmfi_parse_comments} as called when reading the discretization file.
 RMODFLOW projection is typically present in the header comments of the discretization file.
 }
 \keyword{internal}

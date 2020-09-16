@@ -35,7 +35,7 @@ rmf_as_sf(...)
 \method{rmf_as_sf}{rmf_4d_array}(
   array,
   dis,
-  mask = array(1, dim = dim(array)),
+  mask = array(1, dim = dim(array)[1:3]),
   prj = rmf_get_prj(dis),
   name = "value",
   as_points = FALSE,
