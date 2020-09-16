@@ -12,7 +12,7 @@ rmf_example_file <- function(filename = NULL) {
     rmf_example_files() %>%
       return()
   } else {
-    filename <- system.file(paste0("extdata/", filename), package = "RMODFLOW")
+    filename <- system.file(file.path("extdata", filename), package = "RMODFLOW")
     if(filename[1] == "") {
       stop("Example file not found. Please check the list of example files with rmf_example_files().")
     } else {
@@ -97,8 +97,8 @@ rmf_example <- function(name = NULL, code = NULL) {
     if (name %in% rmf_example_files()) return(rmf_example_file(name))
   }
   if (grepl("2005", code)) {
-    example_files <- fs::dir_ls(paste0(getOption("RMODFLOW.path"),
-                                       "/MODFLOW-2005"), regexp = "MODFLOW-2005/test-",
+    example_files <- fs::dir_ls(file.path(getOption("RMODFLOW.path"),
+                                       "MODFLOW-2005"), regexp = "MODFLOW-2005/test-",
                                 type = "file",
                                 recurse = TRUE)
     if (is.null(name)) {

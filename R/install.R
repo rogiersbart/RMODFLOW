@@ -11,8 +11,8 @@
 #' folder names are modified in order to have more consistency.
 #' 
 #' ## Installation location
-#' The default installation location is `paste0(system.file(package =
-#' "RMODFLOW"), "/code")`, but it can be altered by setting option
+#' The default installation location is `file.path(system.file(package =
+#' "RMODFLOW"), "code")`, but it can be altered by setting option
 #' `RMODFLOW.path`.
 #'
 #' @param code Character vector with the codes to install, or `"all"` (default).

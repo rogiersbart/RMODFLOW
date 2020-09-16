@@ -26,6 +26,10 @@ rmf_execute <- function(...) {
 
 #' @rdname rmf_execute
 #' @param path Path to the NAM file. Typically with extension `.nam`.
+#' @param backup Logical. Should a backup (with `.old` suffix) of the original
+#'   PVAL file be created? Defaults to `FALSE`.
+#' @param ui If NULL (default), MODFLOW output is shown in the R console. If
+#'   `"none"`, the output is suppressed.
 #' @export
 rmf_execute.character <- function(
   path,
@@ -35,8 +39,7 @@ rmf_execute.character <- function(
   ui = NULL,
   convergence = "Normal termination"
 ) {
-  # TODO check if convergence argument is required - seems ok for all versions?
-  # Or is this aimed at custom executables?
+  # NOTE The convergence argument was foreseen for custom executables.
   code <- rmfi_find(code)
   
   # get directory and filename
@@ -110,6 +113,7 @@ rmf_execute.modflow <- function(
   on.exit(setwd(old), add = TRUE)
   
   # write all files
+  # TODO replace code below with rmf_write()
   rmf_write_nam(modflow$nam, file = 'input.nam')
   for(i in 1:nrow(modflow$nam)) {
     if(modflow$nam$ftype[i] %in% c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF')) {
@@ -537,76 +541,76 @@ rmfi_find <- function(
     code <- "MODFLOW-2005"
     executable <- ifelse(precision == "single", "mf2005.exe", "mf2005dbl.exe")
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
-                                     "/bin/")
+    rmf_install_bin_folder <- file.path(getOption("RMODFLOW.path"), code,
+                                     "bin")
     if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
+      if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
         rui::stop("Path to {code} executable not found.")
       }
     }
-    return(paste0(folder, executable))
+    return(file.path(folder, executable))
   }
   if (grepl("owhm", code, ignore.case = TRUE)) {
     code <- "MODFLOW-OWHM"
     executable <- "MF_OWHM.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
-                                     "/bin/")
+    rmf_install_bin_folder <- file.path(getOption("RMODFLOW.path"), code,
+                                     "bin")
     if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
+      if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
         rui::stop("Path to {code} executable not found.")
       }
     }
-    return(paste0(folder, executable))
+    return(file.path(folder, executable))
   }
   if (grepl("nwt", code, ignore.case = TRUE)) {
     code <- "MODFLOW-NWT"
     executable <- "MODFLOW-NWT_64.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
-                                     "/bin/")
+    rmf_install_bin_folder <- file.path(getOption("RMODFLOW.path"), code,
+                                     "bin")
     if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
+      if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
         rui::stop("Path to {code} executable not found.")
       }
     }
-    return(paste0(folder, executable))
+    return(file.path(folder, executable))
   } 
   if (grepl("lgr", code, ignore.case = TRUE)) {
     code <- "MODFLOW-LGR"
     executable <- "mflgr.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
-                                     "/bin/")
+    rmf_install_bin_folder <- file.path(getOption("RMODFLOW.path"), code,
+                                     "bin")
     if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
+      if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
         rui::stop("Path to {code} executable not found.")
       }
     }
-    return(paste0(folder, executable))
+    return(file.path(folder, executable))
   } 
   if (grepl("cfp", code, ignore.case = TRUE)) {
     code <- "MODFLOW-CFP"
     executable <- "mf2005cfp.exe"
     folder <- ""
-    rmf_install_bin_folder <- paste0(getOption("RMODFLOW.path"), "/", code,
-                                     "/bin/")
+    rmf_install_bin_folder <- file.path(getOption("RMODFLOW.path"), code,
+                                     "bin")
     if (!file.exists(executable)) {
-      if (file.exists(paste0(rmf_install_bin_folder, executable))) {
+      if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
         rui::stop("Path to {code} executable not found.")
       }
     }
-    return(paste0(folder, executable))
+    return(file.path(folder, executable))
   }
   rui::alert("Finding paths to the executables of codes other than ",
            "MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or ",
@@ -646,6 +650,16 @@ rmfi_line_callback <- function(line, process) {
   }
   if (grepl("FAILED TO MEET SOLVER CONVERGENCE CRITERIA", line)) {
     rui::disapprove(line)
+    return(invisible())
+  }
+  if (grepl("Can't find name file", line)) {
+    rui::alert(line)
+    rui::stop("Issue with the name file path.")
+    return(invisible())
+  }
+  if (grepl("NAME FILE IS EMPTY", line)) {
+    rui::alert(line)
+    rui::stop("Issue with the name file.")
     return(invisible())
   }
   rui::inform(line)

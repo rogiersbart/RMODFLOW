@@ -464,12 +464,10 @@ rmfi_ifelse0 <- function(test, yes, no) {
 #' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
 rmfi_list_packages <- function(type = 'all') {
   
-  # update these two vectors everytime a new package is supported
+  # update rmfd_supported_packages in /data-raw/ when a new package is supported
   # NAM file is not in here but is supported
-  pack_names <- c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF','RCH','CHD','BCF6','HFB6','RIV','DRN','EVT','SIP','DE4','NWT','UPW','LVDA','GMG', 'LMT6')
-  rmf_names  <- c('hob','pvl', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda','gmg', 'lmt')
-  
-  df <- data.frame(ftype = pack_names, rmf = rmf_names, stringsAsFactors = FALSE)
+
+  df <- rmfd_supported_packages
   
   # Below is an exhaustive overview of all packages in MODFLOW-2005 & variants
   # basic
