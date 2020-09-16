@@ -19,14 +19,98 @@
 #' @export
 #'
 #' @examples
-#' sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
-#' obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
 #' dis <- rmf_create_dis()
-#' rmf_as_list(obj, dis)
-#' rmf_as_list(obj, dis, k = c(2, 2, 3))
+#' 
+#' # point
+#' pts <- sf::st_sfc(list(sf::st_point(c(150, 312)), sf::st_point(c(500, 500)), sf::st_point(c(850, 566))))
+#' obj <- sf::st_sf(q = c(-500, -400, -300), geom = pts)
+#' 
+#' (rlst <- rmf_as_list(obj, dis))
+#' 
+#' # 4 cells selected for second point on cell edges
+#' rmf_plot(rlst, dis, k = 1, grid = TRUE) +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
 #' 
 #' prj <- rmf_create_prj(rotation = 12)
-#' rmf_as_list(obj, dis, prj = prj)
+#' rmf_as_list(obj, dis, prj = prj, k = c(2, 2, 3))
+#' 
+#' # multipoint
+#' mp <- sf::st_multipoint(rbind(c(150,312), c(500, 500), c(850, 566)))
+#' obj <- sf::st_sf(q = -500, geom = sf::st_sfc(mp))
+#' 
+#' rmf_as_list(obj, dis)
+#' 
+#' # linestring
+#' s1 <- rbind(c(150,312), c(500, 500), c(850, 566))
+#' ls1 <- sf::st_linestring(s1)
+#' s2 <- rbind(c(100,100), c(500, 555))
+#' ls2 <- sf::st_linestring(s2)
+#' 
+#' obj <- sf::st_sf(conductance = 500, quality = c('good', 'poor'), geom = sf::st_sfc(ls1, ls2))
+#' 
+#' rmf_as_list(obj, dis, select = 'conductance')
+#' 
+#' # multilinestring
+#' mls <- sf::st_multilinestring(list(s1, s2))
+#' 
+#' obj <- sf::st_sf(conductance = 500, quality = 'mixed', geom =   sf::st_sfc(mls))
+#' 
+#' rmf_as_list(obj, dis) %>% 
+#'   rmf_plot(dis, k = 1, grid = TRUE) +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
+#' 
+#' # op = sf::st_crosses
+#' rmf_as_list(obj, dis, op = sf::st_crosses) %>% 
+#'   rmf_plot(dis, k = 1, grid = TRUE) +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
+#' 
+#' # polygon
+#' p1 <- rbind(c(120, 120), c(120, 760), c(800, 800), c(120, 120))
+#' pol1 <- sf::st_polygon(list(p1))
+#' 
+#' obj <- sf::st_sf(head = 15, geom = sf::st_sfc(pol1))
+#' 
+#' # op = sf::st_intersects
+#' rmf_as_list(obj, dis) %>%
+#'   rmf_plot(dis, k = 1, grid = TRUE) +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+#' 
+#' # op = sf::st_covers
+#' rmf_as_list(obj, dis, op = sf::st_covers) %>%
+#'   rmf_plot(dis, k = 1, grid = TRUE) +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+#' 
+#' p2 <- rbind(c(410, 125), c(812, 133), c(902, 488), c(410, 125))
+#' pol2 <- sf::st_polygon(list(p1, p2))
+#' 
+#' (obj <- sf::st_sf(head = 15, geom = sf::st_sfc(pol2)))
+#' 
+#' rmf_as_list(obj, dis) %>%
+#'   rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+#' 
+#' pol2 <- sf::st_polygon(list(p2))
+#' (obj <- sf::st_sf(head = c(15, 12), geom = sf::st_sfc(pol1, pol2)))
+#' 
+#' rmf_as_list(obj, dis) %>%
+#'   rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+#' 
+#' # multipolygon
+#' p3 <- rbind(c(150, 960), c(440, 960), c(440, 875), c(150, 875), c(150, 960))
+#' mpol <- sf::st_multipolygon(list(list(p1, p2), list(p3)))
+#' 
+#' (obj <- sf::st_sf(head = 15, geom = sf::st_sfc(mpol)))
+#' 
+#' rmf_as_list(obj, dis) %>%
+#'   rmf_plot(dis, k = 1, grid = TRUE, variable = 'head', type = 'factor') +
+#'   ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+#' 
+#' # geometry collection
+#' gc <- sf::st_geometrycollection(list(mp, mpol, ls1))
+#' 
+#' (obj <- sf::st_sf(head = 15, geom = sf::st_sfc(gc)))
+#' 
 rmf_as_list.sf <- function(obj,
                            dis,
                            select = colnames(sf::st_set_geometry(obj, NULL)), 
@@ -40,13 +124,16 @@ rmf_as_list.sf <- function(obj,
   target <- rmf_as_sf(dis$top, dis = dis, prj = prj, id = 'r', name = '.v')
   
   # spatial join
-  obj$.unq_id <- seq_len(nrow(obj))
-  ints <- sf::st_join(obj, target, join = op, left = FALSE, ...) # TODO should left be user-specified?
+  # obj$.unq_id <- seq_len(nrow(obj))
+  ints <- sf::st_join(obj, target, join = op, left = FALSE, ...)
   
-  # remove duplicate geometries caused by feature located on cell boundary
-  ints <- ints[!duplicated(ints$.unq_id), ]
-  ints$.unq_id <- NULL
-  obj$.unq_id <- NULL
+  # TODO remove duplicate geometries caused by feature located on cell boundary
+  # code below does not work properly as it removes all extra copies of the same *feature* 
+  # as e.g. in a MULTI* or LINESTRING/POLYGON feature
+  #
+  # ints <- ints[!duplicated(ints$.unq_id), ]
+  # ints$.unq_id <- NULL
+  # obj$.unq_id <- NULL
   
   ijk <- rmf_convert_id_to_ijk(id = ints$id, dis = dis, type = 'r')
   
@@ -63,6 +150,7 @@ rmf_as_list.sf <- function(obj,
   
   rlst <- cbind(ijk, sf::st_set_geometry(ints, NULL)[select]) %>%
     rmf_create_list(kper = kper)
+  rownames(rlst) <- 1:nrow(rlst)
   
   return(rlst)
 }
@@ -724,12 +812,13 @@ rmf_as_raster.rmf_list <- function(obj, dis, select, prj = rmf_get_prj(dis), ...
 #' @param crs coordinate reference system of the model. Any values accepted by \code{sf::st_crs} may be defined. Defaults to \code{NA}.
 #' @param ulcoordinate logical; if \code{TRUE}, \code{origin} refers to the upperleft cell instead of the lowerleft.
 #' @param nodecoordinate logical; if \code{TRUE}, \code{origin} refers to the cell center instead of the cell corner.
-#' @param dis \code{RMODFLOW} dis object. Only required when \code{uulcoordinate} or \code{nodecoordinate} is TRUE. 
+#' @param dis \code{RMODFLOW} dis object. Only required when \code{ulcoordinate} or \code{nodecoordinate} is TRUE. 
 #'
 #' @details \code{origin} should be specified in the length units defined by \code{crs}.
 #' If no z coordinate is specified in \code{origin}, it is set to zero.
 #' \code{crs} is set by a call to \code{sf::st_crs}.
 #' Rotation is around the lowerleft corner of the model.
+#' \code{RMODFLOW} does not work optimally for geographic coordinate systems. 
 #'
 #' @return an object of class \code{prj} which is a list with the (1) origin vector containing x, y and z coordinates of the lowerleft corner,
 #'  (2) the rotation angle in degrees counterclockwise and (3) the coordinate reference system as an \code{sf crs} object
@@ -749,6 +838,7 @@ rmf_create_prj <- function(origin = c(0, 0, 0),
                            dis = NULL) {
   
   crs <- sf::st_crs(crs)
+  if(!is.na(crs) && sf::st_is_longlat(crs)) warning("RMODFLOW does not work optimally for geographic coordinates. Please consider using a projected crs.", call. = FALSE)
   origin <- unlist(origin)
   
   if(ulcoordinate) {
@@ -894,7 +984,7 @@ rmf_has_prj.modflow <- function(modflow) {
 
 #'
 #' @return \code{rmf_set_prj} returns either a \code{RMODFLOW} dis or modflow object with the prj set or nothing when writing directly to a file.
-#' @details If \code{prj} information is already present, a warnings is raised when overwriting.
+#' @details If \code{prj} information is already present, a warning is raised when overwriting.
 #' @export
 #' @rdname prj_auxiliary
 #' @examples
@@ -1082,7 +1172,7 @@ rmfi_write_prj <- function(dis, prj, file) {
     cat('#', 'Grid angle (in degrees counterclockwise):', ifelse(is.null(prj), 0, prj$rotation), '\n', file = file, append = TRUE)
     cat('#', 'Z coordinate lower left corner:', ifelse(is.null(prj) || is.na(prj$origin[3]), 0, prj$origin[3]), '\n', file=file, append = TRUE)
     
-    if(is.null(prj) || is.na(prj$crs)) {
+    if(is.null(prj$crs) || is.na(prj$crs)) {
       cat('#', 'proj4string:', 'NA', '\n', file = file, append = TRUE)
     } else { # if crs is present it should have either epsg, proj4string or wkt (for sf >= 0.9)
       if(!is.na(prj$crs$epsg)) {
@@ -1104,7 +1194,7 @@ rmfi_write_prj <- function(dis, prj, file) {
 #' Read RMODFLOW projection information from header comments
 #'
 #' @param comments strings possibly containing RMODFLOW projection information.
-#' @details \code{comments} is typically the output of \code{rmfi_parse_comments} as called from when reading the discretization file. 
+#' @details \code{comments} is typically the output of \code{rmfi_parse_comments} as called when reading the discretization file. 
 #' RMODFLOW projection is typically present in the header comments of the discretization file.
 #' @return a list with a \code{prj} object and the remaining comments
 #' @keywords internal

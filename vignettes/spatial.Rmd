@@ -1,0 +1,41 @@
+---
+title: "Spatial functions"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Spatial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(RMODFLOW)
+```
+
+RMODFLOW has several functions to handle conversions from and to spatial objects. Spatial data in MODFLOW comes in two forms, discrete and continuous. This resembles the two major types of geographic data: vector and raster. RMODFLOW supports the conversion from and to `sf`, `stars` and `raster` objects. RMODFLOW uses a `prj` object to define the origin, rotation and coordinate reference system of the model and uses this object in spatial functions.
+
+# The RMODFLOW projection object
+If the MODFLOW model represents a real-world area (i.e. it is not a purely hypothetical model), it should be georeferenced. This is done in RMODFLOW with the `prj` object. In essence, the `prj` object is a list with three components:
+
+1. The origin: the real-world XY(Z) coordinates of the bottomleft corner of the model
+2. The rotation angle around this corner
+3. The coordinate reference system in which these coordinates are defined
+
+You can create a `prj` object from scratch using `rmf_create_prj()`. It needs three arguments: `origin` is a numeric vector with the X, Y and Z coordinates of the bottomleft corner. If no Z coordinate is supplied, it is set to zero. The default is `c(0, 0, 0)`. Note that these coordinates should be in length units defined in the `crs` argument (see below). The second argument is the rotation angle, specified in degrees counterclockwise around the bottomleft corner. It defaults to 0. The third argument is `crs`, which sets the coordinate reference system. It can take any value supported by `sf::st_crs`, e.g. EPSG codes, proj4string or WKT formats. If no crs is defined, it should be set to `NA` (the default). In addition to those three arguments, `rmf_create_prj()` has a `ulcoordinate` argument which is a logical specifying that `origin` represents the topleft corner instead of the bottomleft (default is FALSE), and `nodecoordinate` which if set to TRUE specifies that the origin represents the coordinates of the *nodal cell center* instead of the *cell corner* as it is by default. Note that if any of these two arguments are set to TRUE, a `dis` object needs to be supplied as well to convert `origin` to the bottomleft corner. 
+
+```{r}
+rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)
+```
+
+
+# Conversion to spatial objects
+
+# Conversion to RMODFLOW objects
+
+# Utility functions
