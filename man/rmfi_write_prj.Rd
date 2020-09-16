@@ -22,7 +22,7 @@ Write prj object information to file header
 \details{
 Writes RMODFLOW projection information into the header of a file, typically the discretization file. All lines start with "#".
 This information consists of a starter line, the coordinates of the 4 model corners, the grid rotation angle in degrees counterclockwise,
-the z coordinate of the lower left corner and the crs description. This might be a EPSG code, a proj4string, or a wkt string. 
+the z coordinate of the lower left corner and the crs description. This might be a EPSG code, a proj4string, or a wkt string.
 A ending line specifies the end of the RMODFLOW projection information.
 }
 \keyword{internal}

@@ -1935,24 +1935,43 @@ rmf_plot.rmf_list <- function(obj,
 
 #' Plot a MODFLOW sensitivity analysis object
 #' 
-#' @param sen sensitivity analysis object
-#' @param plot type: 'css' or 'dss'
-#' @method rmf_plot sen
+#' @param analysis sensitivity analysis object from [rmf_analyze]
+#' @param type plot type: 'css' or 'dss'
 #' @export
-rmf_plot.sen <- function(sen,type='css')
-{
-  if(type=='css')
-  {
-    dat <- data.frame(parnam=sen$parnam,css=sen$css)
-    dat$parnam <- factor(as.character(dat$parnam),levels=dat$parnam[order(dat$css,decreasing=TRUE)])
-    return(  ggplot2::ggplot(dat,ggplot2::aes(x=parnam,y=css))+
-               ggplot2::geom_bar(stat='identity')
-    )
-  } else if(type=='dss')
-  {
-    stop('dss plotting not implemented yet', call. = FALSE)
+rmf_plot.rmf_analyze <- function(analysis, type = "css") {
+  if(type=='css') {
+    p <- tibble::tibble(parnam = analysis$parnam,
+                        css = analysis$css) %>%
+      na.omit() %>% 
+      ggplot2::ggplot() +
+      ggplot2::aes(css,
+                   parnam %>% forcats::fct_reorder(css),
+                   fill = css) +
+      ggplot2::geom_col()  +
+      ggplot2::labs(y = "Parameter name",
+                    x = "Composite scaled sensitivity",
+                    title = "Composite scaled sensitivities") +
+      ggplot2::guides(fill = "none") +
+      ui_theme(panel.grid.major.y = ggplot2::element_blank()) +
+      ui_fill_c(trans = "log10")
+  } else if(type=='dss') {
+    p <- tibble::as_tibble(analysis$dss) %>%
+      setNames(analysis$parnam) %>%
+      dplyr::mutate(id = 1:nrow(.)) %>% 
+      tidyr::gather("parnam", "dss", -id) %>% 
+      dplyr::group_by(parnam) %>% 
+      dplyr::filter(!all(is.na(dss))) %>% 
+      ggplot2::ggplot() +
+      ggplot2::aes(id, parnam, fill = dss) +
+      ggplot2::geom_raster() +
+      ggplot2::labs(x = "Observation ID",
+                    y = "Parameter name",
+                    fill = "DSS",
+                    title = "Dimensionless scaled sensitivities") +
+      ui_theme() +
+      ui_fill_c("div")
   }
-  
+  ui_plot(p, type, "rmf_analyze")
 }
 
 #' Plot a RMODFLOW wel object

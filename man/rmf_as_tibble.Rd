@@ -147,28 +147,28 @@ rmf_as_tibble(...)
 \value{
 \code{rmf_as_tibble.cbc} returns a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
 
-\code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+\code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
- If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 
-\code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+\code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
- If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 
 \code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
 x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 
-\code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+\code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 
-Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}.
 If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
 Providing \code{i or j} can be used for subsetting a cross-section through the array.
 
-\code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+\code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 
-Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}.
 If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
 Providing \code{i or j} can be used for subsetting a cross-section through the array.
 

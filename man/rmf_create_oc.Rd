@@ -103,9 +103,9 @@ Object of class oc
 }
 \details{
 if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
-         The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
-         A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
-          RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
+The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
+A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
+RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
 }
 \seealso{
 \code{\link{rmf_read_oc}}, \code{\link{rmf_write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}

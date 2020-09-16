@@ -28,8 +28,8 @@ an object of class \code{rmf_parameter} and \code{rmf_list}
 Create a parameter for List Data input used in MODFLOW boundary condition packages.
 }
 \details{
-the variable in the data.frame which is multiplied differs between boundary condition packages. 
-         if the parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name}
+the variable in the data.frame which is multiplied differs between boundary condition packages.
+if the parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name}
 }
 \seealso{
 \code{\link{rmf_create_list}}

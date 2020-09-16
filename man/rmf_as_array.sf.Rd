@@ -40,7 +40,7 @@ Convert a simple features object to a rmf_array (rasterize)
 }
 \details{
 \code{stars::st_rasterize} is used to rasterize \code{obj} to the MODFLOW grid which calls GDALRasterize.
- Alternatively, the user can call \code{rmf_as_list} on \code{obj} and \code{rmf_as_array} on the resulting \code{rmf_list}. Results may differ.
+Alternatively, the user can call \code{rmf_as_list} on \code{obj} and \code{rmf_as_array} on the resulting \code{rmf_list}. Results may differ.
 }
 \examples{
 sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))

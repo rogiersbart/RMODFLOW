@@ -12,7 +12,7 @@ rmf_extent(dis, prj = rmf_get_prj(dis))
 \item{prj}{optional \code{RMODFLOW} prj object}
 }
 \value{
-a list with (1) the coordinates of the grid corners as a data.frame and (2) the bounding box of the grid as 
+a list with (1) the coordinates of the grid corners as a data.frame and (2) the bounding box of the grid as
 a \code{sf bbox} object
 }
 \description{

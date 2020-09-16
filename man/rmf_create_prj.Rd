@@ -28,7 +28,7 @@ rmf_create_prj(
 }
 \value{
 an object of class \code{prj} which is a list with the (1) origin vector containing x, y and z coordinates of the lowerleft corner,
- (2) the rotation angle in degrees counterclockwise and (3) the coordinate reference system as an \code{sf crs} object
+(2) the rotation angle in degrees counterclockwise and (3) the coordinate reference system as an \code{sf crs} object
 }
 \description{
 Create a RMODFLOW projection object

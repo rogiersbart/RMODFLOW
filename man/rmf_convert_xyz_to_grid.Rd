@@ -35,7 +35,7 @@ Convert real world coordinates to modflow coordinates
 \details{
 If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
 If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
-If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned. 
+If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned.
 
 If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 }

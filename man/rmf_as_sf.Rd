@@ -66,8 +66,8 @@ rmf_as_sf(...)
 }
 \value{
 A \code{sf} object with point geometries representing the cell-centered nodes when \code{as_points = TRUE}. When \code{as_points = FALSE},
-the geometries are polygons representing the entire cell. 
-When converting a \code{rmf_array}, the \code{sf} object has following variables: one with the array values per cell/node, 
+the geometries are polygons representing the entire cell.
+When converting a \code{rmf_array}, the \code{sf} object has following variables: one with the array values per cell/node,
 one containing the cell id (when \code{id} is \code{'r'} or \code{'modflow'}), top and bottom of the cells when the array is 3d or 4d plus the z value of the node when \code{as_points = TRUE}.
 When a 4d array is converted, an additional time column is added as well.
 

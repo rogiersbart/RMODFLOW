@@ -35,14 +35,14 @@ rmf_as_raster(...)
 }
 \value{
 an object of class \code{RasterLayer} if array is 2d, or \code{RasterBrick} when array is 3d or 4d with the bands representing the MODFLOW layers.
- The variable values are obtained from the array or from the \code{select} column for \code{rmf_list} objects.
+The variable values are obtained from the array or from the \code{select} column for \code{rmf_list} objects.
 }
 \description{
 Functions to convert rmf_array and rmf_list objects to raster objects
 }
 \details{
 the objects are first converted to \code{stars} using \code{rmf_as_stars}.
- Conversions to \code{raster} objects will fail when arrays are rectilinear or rotated.
+Conversions to \code{raster} objects will fail when arrays are rectilinear or rotated.
 }
 \examples{
 dis <- rmf_create_dis()

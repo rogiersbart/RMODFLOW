@@ -329,7 +329,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
 #' @describeIn rmf_read_hob Compatible with default ModelMuse file extensions
 #' @export
 rmf_read_ob_hob <- function(...) {
-  rmf_read_hpr(...)
+  rmf_read_hob(...)
 }
 
 #' Write a MODFLOW head observations file

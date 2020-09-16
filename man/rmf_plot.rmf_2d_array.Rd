@@ -92,5 +92,5 @@ ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is 
 }
 \details{
 type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
-         For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
+For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 }

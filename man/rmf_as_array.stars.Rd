@@ -40,13 +40,13 @@ Convert a stars object to rmf_array
 }
 \details{
 If \code{resample = TRUE}, \code{stars::st_warp} is called with the specified method. For possible \code{method} values, see \code{?stars::st_warp}.
- If \code{resample = FALSE}, the array is pulled directly from \code{obj}. The latter will fail when the dimensions and crs of \code{obj} and the MODFLOW grid are 
- not exactly the same. In that case, the user should consider setting \code{resample = TRUE}.
- 
- \code{rmf_as_array} currently can not handle \code{obj} or \code{prj} without defined crs.
- 
- This function is intended for use with 2D \code{stars} objects with dimensions X & Y, 3D \code{stars} objects with dimensions 
- X, Y and \code{dis$nlay} or 4D \code{stars} objects with dimensions X, Y, \code{dis$nlay} and \code{sum(dis$nstp)}.
+If \code{resample = FALSE}, the array is pulled directly from \code{obj}. The latter will fail when the dimensions and crs of \code{obj} and the MODFLOW grid are
+not exactly the same. In that case, the user should consider setting \code{resample = TRUE}.
+
+\code{rmf_as_array} currently can not handle \code{obj} or \code{prj} without defined crs.
+
+This function is intended for use with 2D \code{stars} objects with dimensions X & Y, 3D \code{stars} objects with dimensions
+X, Y and \code{dis$nlay} or 4D \code{stars} objects with dimensions X, Y, \code{dis$nlay} and \code{sum(dis$nstp)}.
 }
 \examples{
 dis <- rmf_create_dis()
