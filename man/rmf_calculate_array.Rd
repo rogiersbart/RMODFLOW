@@ -4,8 +4,7 @@
 \alias{rmf_calculate_array}
 \title{Calculate a \code{rmf_2d_array} or \code{rmf_3d_array} from multiplier arrays, zone arrays and/or parameter values}
 \usage{
-rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL,
-  parval = 1)
+rmf_calculate_array(dis, layer = NULL, mltarr, zonarr, iz = NULL, parval = 1)
 }
 \arguments{
 \item{dis}{dis object; used to set the dimensions of the array}
@@ -28,7 +27,7 @@ Given a multiplier array and/or zone array with corresponding zone numbers, calc
 }
 \details{
 if mltarr (zonarr) is a list, certain elements are allowed to be set to \code{"NONE"} (\code{"ALL"}) indicating the multiplier (zone) array is not active for this cluster.
-         if mltarr is \code{"NULL"} and zonarr is \code{"ALL"}, all the cells in the returned array will be equal to the parameter value.
-         Multiple multiplier arrays, zone arrays and/or parameter values can be used to calculate the final values. Cells that correspond to multiple multiplier arrays, zone arrays and/or parameter values will be summed. Resulting arrays for the same layer will also be summed.
-         If more than 1 layer index is specified, a \code{rmf_3d_array} is returned
+if mltarr is \code{"NULL"} and zonarr is \code{"ALL"}, all the cells in the returned array will be equal to the parameter value.
+Multiple multiplier arrays, zone arrays and/or parameter values can be used to calculate the final values. Cells that correspond to multiple multiplier arrays, zone arrays and/or parameter values will be summed. Resulting arrays for the same layer will also be summed.
+If more than 1 layer index is specified, a \code{rmf_3d_array} is returned
 }

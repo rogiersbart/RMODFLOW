@@ -2,14 +2,15 @@
 % Please edit documentation in R/package-pcg.R
 \name{rmf_write_pcg}
 \alias{rmf_write_pcg}
-\alias{write_pcg}
 \title{Write a MODFLOW preconditioned conjugate-gradient package file}
 \usage{
-rmf_write_pcg(pcg, file = {    
-  cat("Please select pcg file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
-
-write_pcg(...)
+rmf_write_pcg(
+  pcg,
+  file = {    
+    cat("Please select pcg file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{pcg}{an \code{\link{RMODFLOW}} pcg object}
@@ -24,11 +25,6 @@ write_pcg(...)
 \description{
 Write a MODFLOW preconditioned conjugate-gradient package file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_pcg}: Deprecated function name
-}}
-
 \seealso{
-\code{\link{read_pcg}}, \code{\link{create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
+\code{\link{rmf_read_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 }

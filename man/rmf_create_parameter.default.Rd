@@ -4,10 +4,21 @@
 \alias{rmf_create_parameter.default}
 \title{Create an array parameter}
 \usage{
-\method{rmf_create_parameter}{default}(dis, kper = NULL, layer = NULL,
-  parnam, parval = 1, mltnam = "NONE", zonnam = "ALL", iz = NULL,
-  partyp = NULL, mlt = NULL, zon = NULL, instnam = NULL,
-  hgunam = NULL)
+\method{rmf_create_parameter}{default}(
+  dis,
+  kper = NULL,
+  layer = NULL,
+  parnam,
+  parval = 1,
+  mltnam = "NONE",
+  zonnam = "ALL",
+  iz = NULL,
+  partyp = NULL,
+  mlt = NULL,
+  zon = NULL,
+  instnam = NULL,
+  hgunam = NULL
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object. Used to dimension the final array.}
@@ -32,7 +43,7 @@
 
 \item{zon}{\code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}}
 
-\item{instnam}{optional character specying the instance name of the parameter is to be time-varying; defaults to NULL}
+\item{instnam}{optional character specying the instance name if the parameter is to be time-varying; defaults to NULL}
 
 \item{hgunam}{character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.}
 }
@@ -44,10 +55,10 @@ Create a parameter from multiplier and/or zone arrays used in MODFLOW boundary c
 }
 \details{
 A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
-         If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
-         Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
-         If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
-         If \code{hgunam} is specified, \code{layer} can not be specified.
+If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name}
+Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
+If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
+If \code{hgunam} is specified, \code{layer} can not be specified.
 }
 \seealso{
 \code{\link{rmf_create_array}}

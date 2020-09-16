@@ -4,15 +4,40 @@
 \alias{rmf_create_nwt}
 \title{Create an \code{RMODFLOW} nwt object}
 \usage{
-rmf_create_nwt(headtol = 0.001, fluxtol = 500, maxiterout = 100,
-  thickfact = 1e-05, linmeth = 2, iprnwt = 0, ibotav = 0,
-  options = "MODERATE", continue = TRUE, dbdtheta = 0.7,
-  dbdkappa = 0.001, dbdgamma = 0, momfact = 0.1, backflag = 0,
-  maxbackiter = 30, backtol = 2, backreduce = 0.99,
-  maxitinner = 50, ilumethod = 2, levfill = 1, stoptol = 1e-10,
-  msdr = 10, iacl = 2, norder = 1, level = 1, north = 2,
-  iredsys = 0, rrctols = 0, idroptol = 1, epsrn = 0.001,
-  hclosexmd = 1e-04, mxiterxmd = 50)
+rmf_create_nwt(
+  headtol = 0.001,
+  fluxtol = 500,
+  maxiterout = 100,
+  thickfact = 1e-05,
+  linmeth = 2,
+  iprnwt = 0,
+  ibotav = 0,
+  options = "MODERATE",
+  continue = TRUE,
+  dbdtheta = 0.7,
+  dbdkappa = 0.001,
+  dbdgamma = 0,
+  momfact = 0.1,
+  backflag = 0,
+  maxbackiter = 30,
+  backtol = 2,
+  backreduce = 0.99,
+  maxitinner = 50,
+  ilumethod = 2,
+  levfill = 1,
+  stoptol = 1e-10,
+  msdr = 10,
+  iacl = 2,
+  norder = 1,
+  level = 1,
+  north = 2,
+  iredsys = 0,
+  rrctols = 0,
+  idroptol = 1,
+  epsrn = 0.001,
+  hclosexmd = 1e-04,
+  mxiterxmd = 50
+)
 }
 \arguments{
 \item{headtol}{maximum head change between outer iterations for reaching convergence}
@@ -87,11 +112,11 @@ Object of class nwt
 }
 \details{
 the option keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If option = "SPECIFIED", the user specifies the values.
-  If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
-  If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
-  Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
-  
-  If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
+If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
+If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
+Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
+
+If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
 }
 \note{
 nwt must be used with the Upstream Weighting flow package. See also \code{\link{rmf_create_upw}}.

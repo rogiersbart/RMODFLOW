@@ -100,7 +100,10 @@ print.dis <- function(dis, n = 5) {
   # }
   
   # delr & delc
-  if(sum(dis$delr)/dis$ncol == dis$delr[1]) {
+  cnst_delr <- isTRUE(do.call(all.equal, as.list(range(dis$delr) / mean(dis$delr))))
+  cnst_delc <- isTRUE(do.call(all.equal, as.list(range(dis$delc) / mean(dis$delc))))
+  
+  if(cnst_delr) {
     delr <- c(dis$delr[1], '(constant)') 
   } else {
     if(dis$ncol > n) {
@@ -109,7 +112,7 @@ print.dis <- function(dis, n = 5) {
       delr <- dis$delr
     }
   }
-  if(sum(dis$delc)/dis$nrow == dis$delc[1]) {
+  if(cnst_delc) {
     delc <- c(dis$delc[1], '(constant)')
   } else {
     if(dis$nrow > n) {
@@ -152,7 +155,7 @@ print.dis <- function(dis, n = 5) {
   
   # stress periods
   sp_names <- setNames(c('Steady-state', 'Transient'), c('SS', 'TR'))
-  sp <- data.frame(kper = 1:dis$nper, perlen = dis$perlen, nstp = dis$nstp, tsmult = dis$tsmult, sstr = sp_names[dis$sstr])
+  sp <- data.frame(kper = 1:dis$nper, perlen = dis$perlen, nstp = dis$nstp, tsmult = dis$tsmult, sstr = sp_names[toupper(dis$sstr)])
   names(sp) <- c('Period', 'Length', 'Timesteps', 'Multiplier', 'Type')
   if(dis$nper > n) {
     cat('Information for', dis$nper, if(dis$nper > 1) 'stress-periods' else 'stress-period', '(first', n, 'shown):', '\n')
@@ -201,16 +204,16 @@ print.bas <- function(bas, n = 5) {
 }
 
 #' @export
-print.pvl <- function(pvl, n = 30) {
+print.pval <- function(pval, n = 30) {
   cat('RMODFLOW Parameter Value File object with:', '\n')
-  df <- data.frame(parnam = pvl$parnam, parval = pvl$parval)
+  df <- data.frame(parnam = pval$parnam, parval = pval$parval)
   
-  if(pvl$np > n) {
-    cat(pvl$np, 'parameter values', '(first', n, 'shown):', '\n')
+  if(pval$np > n) {
+    cat(pval$np, 'parameter values', '(first', n, 'shown):', '\n')
     nlay <- n
   } else {
-    cat(pvl$np, 'parameter values:', '\n')
-    nlay <- pvl$np
+    cat(pval$np, 'parameter values:', '\n')
+    nlay <- pval$np
   }   
   
   cat('\n')
@@ -364,7 +367,8 @@ print.huf <- function(huf, n = 5) {
 #' @export
 print.oc <- function(oc, n = 500) {
   
-  cat('RMODFLOW Output Control Option file', '\n')
+  cat('RMODFLOW Output Control Option file using:', '\n')
+  cat(ifelse(is.null(oc$incode), 'words', 'numeric codes'), 'to specify output', '\n')
   cat('\n')
   
   # words
@@ -845,7 +849,8 @@ print.lpf <- function(lpf, n = 5) {
 print.rch <- function(rch, n = 5) {
   
   cat('RMODFLOW Recharge Package object with:', '\n')
-  if(rch$dimensions$np > 0) cat(rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
+  cat(length(rch$recharge), 'recharge', ifelse(length(rch$recharge) > 1, 'arrays', 'array'), '\n')
+  if(rch$dimensions$np > 0) cat('including', rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, ifelse(rch$dimensions$np == 1, 'parameter', 'parameters'), '\n')
   if(rch$nrchop == 1) {
     nrchop <- 'the top grid layer'
   } else if(rch$nrchop == 2) {
@@ -858,18 +863,29 @@ print.rch <- function(rch, n = 5) {
   cat(rmfi_ifelse0(rch$irchcb == 0, 'RCH fluxes are not saved to a cell-by-cell flow budget file', c('RCH fluxes are saved to the cell-by-cell flow budget file on unit number', rch$irchcb)), '\n')
   cat('\n')
   
+  # for time-varing parameters
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(rch$recharge, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  
   # recharge
-  if(length(rch$recharge) > n) {
+  if(length(rmf_arrays) > n) {
     cat('Summary of recharge (first', n, 'arrays):', '\n')
     nlay <- n
   } else {
     cat('Summary of recharge arrays:', '\n')
-    nlay <- length(rch$recharge)
+    nlay <- length(rmf_arrays)
   }
   
-  abind::abind(rch$recharge, along = 3) %>%
+  abind::abind(rmf_arrays, along = 3) %>%
   apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
-    setNames(names(rch$recharge)) %>% subset(select = 1:nlay) %>% print()
+    setNames(names(rmf_arrays)) %>% subset(select = 1:nlay) %>% print()
   
   # irch
   if(rch$nrchop == 2) {
@@ -1123,7 +1139,8 @@ print.drn <- function(drn, n = 15) {
 print.evt <- function(evt, n = 5) {
   
   cat('RMODFLOW Evapotranspiration Package object with:', '\n')
-  if(evt$dimensions$np > 0) cat(evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, 'parameters', '\n')
+  cat(length(evt$evt), 'evapotranspiration', ifelse(length(evt$evt) > 1, 'arrays', 'array'), '\n')
+  if(evt$dimensions$np > 0) cat('including', evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, ifelse(evt$dimensions$np == 1, 'parameter', 'parameters'), '\n')
   if(evt$nevtop == 1) {
     nevtop <- 'the top grid layer'
   } else if(evt$nevtop == 2) {
@@ -1134,18 +1151,29 @@ print.evt <- function(evt, n = 5) {
   cat(rmfi_ifelse0(evt$ievtcb == 0, 'EVT fluxes are not saved to a cell-by-cell flow budget file', c('EVT fluxes are saved to the cell-by-cell flow budget file on unit number', evt$ievtcb)), '\n')
   cat('\n')
   
+  # for time-varing parameters
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(evt$evt, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  
   # evt
-  if(length(evt$evt) > n) {
+  if(length(rmf_arrays) > n) {
     cat('Summary of evapotranspiration (first', n, 'arrays):', '\n')
     nlay <- n
   } else {
     cat('Summary of evapotranspiration arrays:', '\n')
-    nlay <- length(evt$evt)
+    nlay <- length(rmf_arrays)
   }
   
-  abind::abind(evt$evt, along = 3) %>%
+  abind::abind(rmf_arrays, along = 3) %>%
     apply(3, function(i) summary(c(i))) %>% as.data.frame() %>% 
-    setNames(names(evt$evt)) %>% subset(select = 1:nlay) %>% print()
+    setNames(names(rmf_arrays)) %>% subset(select = 1:nlay) %>% print()
   cat('\n')
   
   # surf
@@ -1470,45 +1498,43 @@ print.lvda <- function(lvda, n = 10) {
   print(pdf[1:nlay,], row.names = FALSE)
   cat('\n')
   
+  # LVDA
+  if(dim(lvda$lvda)[3] > n) {
+    cat('Summary of LVDA (first', n, 'layers):', '\n')
+    nlay <- n
+  } else {
+    cat('Summary of LVDA:', '\n')
+    nlay <- dim(lvda$lvda)[3]
+  }
+  apply(lvda$lvda, 3, function(i) summary(c(i))) %>% as.data.frame() %>% 
+    setNames(paste('Layer', 1:dim(lvda$lvda)[3])) %>% subset(select = 1:nlay) %>% print()
+  cat('\n')
+  
 }
 
 #' @export
 print.hob <- function(hob, n = 15) {
   
   cat('RMODFLOW Head-Observation Package object with:', '\n')
-  cat(hob$nh, 'head observations of which', hob$mobs, 'are multilayer observations', '\n')
-  if(hob$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$maxm, '\n')
+  cat(hob$dimensions$nh, 'head observations of which', hob$dimensions$mobs, 'are multilayer observations', '\n')
+  if(hob$dimensions$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$dimensions$maxm, '\n')
   cat('\n')
   cat('Observed values and simulated equivalents are', ifelse(hob$iuhobsv == 0, 'not written to a head-prediction file', paste('written to the head-prediction file on unit number', hob$iuhobsv)), '\n')
   if(hob$iuhobsv > 0) cat('Simulated equivalents of dry cells are assigned a value of', hob$hobdry, 'in the head-prediction file', '\n')
-  cat('Input and output data is', ifelse(hob$noprint, 'printed', 'not printed'), 'to the listing file', '\n')
+  cat('Input and output data are', ifelse(hob$noprint, 'printed', 'not printed'), 'to the listing file', '\n')
   cat('Time-offset multiplier:', hob$tomulth, '\n')
   cat('\n')
   
-  layer <- as.list(hob$layer)
-  pr <- rep(1, hob$nh)
-  if(hob$mobs > 0) {
-    layer[[which(hob$layer < 0)]] <- hob$mlay[[which(hob$layer < 0)]]
-    pr[[which(hob$layer < 0)]] <- hob$pr[[which(hob$layer < 0)]]
-  }
-  
-  # Locations
-  loc <- data.frame(obsnam = hob$obsnam, layer = I(layer), pr = I(pr), row = hob$row, column = hob$column, irefsp = hob$irefsp,
-                    toffset = hob$toffset, roff = hob$roff, coff = hob$coff, hobs = hob$hobs, stringsAsFactors = FALSE)
-  if(nrow(loc) > n) {
-    # cat('Locations overview (first', n, 'records): ', '\n')
+  # Data
+  if(nrow(hob$data) > n) {
     cat('Observations overview (first', n, 'records): ', '\n')
     nlay <- n
   } else {
-    # cat('Locations overview:', '\n')
     cat('Observations overview:', '\n')
-    nlay <- nrow(loc)
+    nlay <- nrow(hob$data)
   }
-  print(loc[1:nlay,], row.names = TRUE)
+  print(hob$data[1:nlay,], row.names = TRUE)
   # cat('\n')
-  
-  # Observations
-  
   
 }
 
@@ -1619,7 +1645,7 @@ print.cbc <- function(cbc, n = 5, l = -1) {
         cat('Overview of', names(cbc)[i], 'for time step', paste0(ll, ':'), '\n')
         nlay <- nrow(df)
       }
-      print(df[1:nlay,], row.names = FALSE)
+      print(as.data.frame(df[1:nlay,]), row.names = FALSE)
       cat('\n')
     }
   }
@@ -1645,7 +1671,9 @@ print.hpr <- function(hpr, n = 20) {
   
   cat('Goodness-of-fit metrics:', '\n')
   metrics <- suppressWarnings(rmf_performance(hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
-  print(round(unlist(metrics), 2))
+  # pretty
+  metrics <- lapply(metrics, function(i) ifelse(i > 1e5, as.numeric(formatC(i, format = 'e', digits = 2)), round(i, 2)))
+  print(data.frame(metrics), row.names = FALSE)
    
 }
 
@@ -1673,7 +1701,7 @@ print.modflow <- function(modflow, n = 5) {
     cat('\n')
   }
   if(length(not_supported) > 0) {
-    cat(length(not_supported), 'not-supported', ifelse(length(not_supported) > 1, 'packages', 'package') ,'in nam object:', '\n')
+    cat(length(not_supported), ifelse(length(not_supported) > 1, 'packages', 'package') ,'not yet supported:', '\n')
     cat(' ', not_supported, '\n')
     cat('\n')
   }
@@ -1686,7 +1714,7 @@ print.modflow <- function(modflow, n = 5) {
   
   # TODO add other observations
   if('hob' %in% input) {
-    cat(modflow$hob$nh, ifelse(modflow$hob$nh > 1, 'head observations', 'head observation'), '\n')
+    cat(modflow$hob$dimensions$nh, ifelse(modflow$hob$dimensions$nh > 1, 'head observations', 'head observation'), '\n')
     cat('\n')
   }
   
@@ -1717,7 +1745,72 @@ print.modflow <- function(modflow, n = 5) {
   if('hpr' %in% output) {
     cat('Goodness-of-fit metrics (head observations):', '\n')
     metrics <- suppressWarnings(rmf_performance(modflow$hpr, measures = c('rmse', 'pbias', 'r2', 'kge', 'ssq')))
-    print(round(unlist(metrics), 2))
+    # pretty
+    metrics <- lapply(metrics, function(i) ifelse(i > 1e5, as.numeric(formatC(i, format = 'e', digits = 2)), round(i, 2)))
+    print(data.frame(metrics), row.names = FALSE)
   }
   
+}
+
+#' @export
+print.gmg <- function(gmg) {
+  
+  cat('RMODFLOW Geometric Multigrid Solver object with:', '\n')
+  cat('A maximum of', gmg$iiter, 'inner iterations with a residual convergence criterion of', gmg$rclose, '\n')
+  cat('A maximum of', gmg$mxiter, 'outer iterations with a head change convergence criterion of', gmg$hclose, '\n')
+  cat('\n')
+  if(gmg$iadamp == 0) {
+    cat('A constant damping parameter:', gmg$damp, '\n')
+  } else if(gmg$iadamp == 1) {
+    cat('Adaptive-damping using Cooley\'s method with initial damping value:', gmg$damp, '\n')
+  } else if(gmg$iadmap == 2) {
+    cat('Relative reduced residual damping with:', '\n')
+    cat('  Damping value:', gmg$damp, '\n')
+    cat('  Maximum damping value applied when solver is not oscillating:', gmg$dup, '\n')
+    cat('  Minimum damping value to be generated by the adaptive-damping:', gmg$dlow, '\n')
+    cat('  Maximum allowed head change between outer iterations:', gmg$chglimit, '\n')
+  }
+  cat('\n')
+  if(gmg$ioutgmg == 0) {
+    cat('Solver input is printed to the listing file', '\n')
+  } else if(gmg$ioutgmg == 1) {
+    cat('Detailed solver output is printed to the listing file for each linear solve', '\n')
+  } else if(gmg$ioutgmg == 2) {
+    cat('Basic solver solver output is printed to the listing file', '\n')
+  } else if(gmg$ioutgmg == 3) {
+    cat('Detailed solver output is printed to the terminal for each linear solve', '\n')
+  } else if(gmg$ioutgmg == 4) {
+    cat('Basic solver solver output is printed to the terminal', '\n')
+  }
+  if(gmg$iunitmhc > 0) cat('Maximum head change values are written to the file on unit number', gmg$iunitmhc, '\n')
+  cat('\n')
+  
+  if(gmg$ism == 0) {
+    cat('ILU(0) smoothing is implemented in the multigrid preconditioner', '\n')
+  } else if(gmg$ism == 1) {
+    cat('Symmetric Gauss-Seidel smoothing is implemented in the multigrid preconditioner', '\n')
+  }
+  
+  if(gmg$isc == 0) {
+    cat('Rows, columns and layers are coarsened in the multigrid preconditioner', '\n')
+  } else if(gmg$isc == 1) {
+    cat('Rows and columns (not layers) are coarsened in the multigrid preconditioner', '\n')
+  } else if(gmg$isc == 2) {
+    cat('Columns and layers (not rows) are coarsened in the multigrid preconditioner', '\n')
+  } else if(gmg$isc == 3) {
+    cat('Rows and layers (not columns) are coarsened in the multigrid preconditioner', '\n')
+  } else if(gmg$isc == 4) {
+    cat('There is no coarsening in the multigrid preconditioner', '\n')
+    cat('Relaxation parameter for the ILU preconditioner:', gmg$relax, '\n')
+  }
+
+}
+
+#' @export
+print.lmt <- function(lmt) {
+  cat('RMODFLOW Link-MT3DMS Package object:', '\n')
+  cat('Flow-transport link file:', lmt$fname, '\n')
+  cat('on unit number:', lmt$inftl, '\n')
+  cat('as', ifelse(lmt$formatted, 'a formatted', 'an unformatted'), 'file', 'using the', ifelse(lmt$extended, 'extended', 'standard'), 'header', '\n')
+  if(!is.null(lmt$package_flows)) cat('Package flows:', lmt$package_flows)
 }

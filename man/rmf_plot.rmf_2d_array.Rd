@@ -4,19 +4,36 @@
 \alias{rmf_plot.rmf_2d_array}
 \title{Plot a MODFLOW 2D array}
 \usage{
-\method{rmf_plot}{rmf_2d_array}(array, dis, bas = NULL,
-  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {     if (dis$nlay >
-  1)          warning("Using first ibound layer as mask.", call. = FALSE)  
-    rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1],
-  bas$ibound[, , 1]) }), colour_palette = ifelse(type \%in\% c("contour",
-  "vector"), "black", rmfi_rev_rainbow),
-  zlim = range(array[as.logical(mask)], finite = TRUE), nlevels = 7,
-  type = "fill", levels = NULL, gridlines = FALSE, add = FALSE,
-  height_exaggeration = 100, binwidth = ceiling(diff(zlim)/20),
-  label = TRUE, prj = NULL, crs = NULL, alpha = 1,
-  plot3d = FALSE, height = NULL, crop = TRUE, vecint = 1,
-  uvw = NULL, legend = ifelse(type \%in\% c("fill", "factor"), !add,
-  FALSE))
+\method{rmf_plot}{rmf_2d_array}(
+  array,
+  dis,
+  bas = NULL,
+  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {     if (dis$nlay > 1)         
+    warning("Using first ibound layer as mask.", call. = FALSE)    
+    rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1], bas$ibound[, , 1])
+    }),
+  colour_palette = ifelse(type \%in\% c("contour", "vector"), "black",
+    rmfi_rev_rainbow),
+  zlim = range(array[as.logical(mask)], finite = TRUE),
+  nlevels = 7,
+  type = "fill",
+  levels = NULL,
+  gridlines = FALSE,
+  add = FALSE,
+  height_exaggeration = 100,
+  binwidth = pretty(diff(zlim)/20, 1)[1],
+  label = TRUE,
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  alpha = 1,
+  plot3d = FALSE,
+  height = NULL,
+  crop = TRUE,
+  vecsize = NULL,
+  uvw = NULL,
+  legend = ifelse(type \%in\% c("fill", "factor"), !add, FALSE),
+  ...
+)
 }
 \arguments{
 \item{array}{an object of class rmf_2d_array}
@@ -27,7 +44,7 @@
 
 \item{mask}{a 2D array with 0 or F indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound}
 
-\item{colour_palette}{a colour palette for imaging the array values. If type = 'contour' or 'vector', a single character can also be used.}
+\item{colour_palette}{a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used.}
 
 \item{zlim}{vector of minimum and maximum value for the colour scale}
 
@@ -59,11 +76,13 @@
 
 \item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE}
 
-\item{vecint}{positive integer specifying the interval to smooth the appearance of the plot if type = 'vector'; defaults to 1 i.e. no smoothing}
+\item{vecsize}{vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.}
 
 \item{uvw}{optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}}
 
 \item{legend}{either a logical indicating if the legend is shown or a character indicating the legend title}
+
+\item{...}{ignored}
 }
 \value{
 ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
@@ -73,5 +92,5 @@ ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is 
 }
 \details{
 type = 'vector' assumes the array contains scalars and will calculate the gradient using \code{\link{rmf_gradient}} unless uvw is specified.
-         For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
+For types 'fill' and 'factor', the fill aesthetic is used. For types 'contour' and 'vector', the colour aesthetic is used.
 }

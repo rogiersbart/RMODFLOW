@@ -4,9 +4,14 @@
 \alias{rmf_write_zon}
 \title{Write a MODFLOW zone file}
 \usage{
-rmf_write_zon(zon, file = {    
-  cat("Please choose zon file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
+rmf_write_zon(
+  zon,
+  file = {    
+    cat("Please choose zon file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{zon}{an \code{RMODFLOW} zon object}

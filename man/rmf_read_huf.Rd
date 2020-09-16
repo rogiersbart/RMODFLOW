@@ -2,15 +2,16 @@
 % Please edit documentation in R/package-huf.R
 \name{rmf_read_huf}
 \alias{rmf_read_huf}
-\alias{read_huf}
 \title{Read a MODFLOW hydrogeologic unit flow file}
 \usage{
-rmf_read_huf(file = {     cat("Please select huf file ...\\n")    
-  file.choose() }, dis = {    
-  cat("Please select corresponding dis file ...\\n")    
-  rmf_read_dis(file.choose()) }, mlt = NULL, zon = NULL, ...)
-
-read_huf(...)
+rmf_read_huf(
+  file = {     cat("Please select huf file ...\\n")     file.choose() },
+  dis = {     cat("Please select corresponding dis file ...\\n")    
+    rmf_read_dis(file.choose()) },
+  mlt = NULL,
+  zon = NULL,
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.huf'}
@@ -29,8 +30,9 @@ object of class huf
 \description{
 \code{read_huf} reads in a MODFLOW hydrogeologic unit flow file and returns it as an \code{\link{RMODFLOW}} huf object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_huf}: Deprecated function name
-}}
-
+\details{
+\code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
+}
+\seealso{
+\code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_create_huf}}, \code{\link{rmf_write_huf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?huf.htm}
+}

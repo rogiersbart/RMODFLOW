@@ -4,8 +4,17 @@
 \alias{rmf_create_de4}
 \title{Create an \code{RMODFLOW} de4 object.}
 \usage{
-rmf_create_de4(itmx = 100, mxup = 0, mxlow = 0, mxbw = 0,
-  ifreq = 3, mutd4 = 0, accl = 1, hclose = 0.01, iprd4 = 1)
+rmf_create_de4(
+  itmx = 100,
+  mxup = 0,
+  mxlow = 0,
+  mxbw = 0,
+  ifreq = 3,
+  mutd4 = 0,
+  accl = 1,
+  hclose = 0.01,
+  iprd4 = 1
+)
 }
 \arguments{
 \item{itmx}{the maximum number of iterations in each time step; defaults to 100}

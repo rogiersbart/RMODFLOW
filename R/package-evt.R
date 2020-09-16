@@ -2,15 +2,15 @@
 #' 
 #' \code{rmf_create_evt} creates an \code{RMODFLOW} evt object
 #' 
-#' @param ... \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.
+#' @param ... \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.
 #' @param dis \code{RMODFLOW} dis object
 #' @param nevtop evapotranspiration (ET) option code; defaults to 3 (ET is applied to the highest active cell in each vertical column)
 #' @param ievtcb flag and unit number for writing cell-by-cell flow terms; defaults to 0 
-#' @param surf a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.
-#' @param exdp a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.
-#' @param ievt a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL
+#' @param surf a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.
+#' @param exdp a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.
+#' @param ievt a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL
 #' @param ievtpf numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{ET} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods
-#' @details the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
+#' @details the \code{rmf_2d_arrays} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 #' @return \code{RMODFLOW} evt object
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_write_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
@@ -69,6 +69,7 @@ rmf_create_evt <- function(...,
   if(nevtop == 2) {
     if(is.null(ievt)) stop('Please supply a ievt argument when nevtop = 2', call. = FALSE)
     if(!inherits(ievt, 'list')) ievt <- list(ievt)
+    ievt <- lapply(ievt, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
     obj$ievt <- ievt
     names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
     obj$kper$ievt <- NA_character_
@@ -119,7 +120,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   # data set 1
   data_set_1 <- rmfi_parse_variables(lines, character = TRUE)
   
-  if('PARAMETER' %in% data_set_1$variables) {
+  if('PARAMETER' %in% toupper(data_set_1$variables)) {
     np <-  as.numeric(data_set_1$variables[2])
     lines <-  data_set_1$remaining_lines
   }  else {
@@ -148,9 +149,9 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   # stress periods
   # function for setting kper attribute for parameters
   set_kper <- function(k, kper, p_name, i_name) {
-    if(!is.null(attr(k, 'parnam')) && attr(k, 'parnam') == p_name) {
+    if(!is.null(attr(k, 'parnam')) && toupper(attr(k, 'parnam')) == toupper(p_name)) {
       if(!is.null(i_name)) {
-        if(attr(k, "instnam") == i_name) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+        if(toupper(attr(k, "instnam")) == toupper(i_name)) attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       } else {
         attr(k, 'kper') <- c(attr(k, 'kper'), kper)
       }
@@ -160,9 +161,19 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
   
   # function for setting kper attribute of parameter the same as previous kper
   previous_kper <- function(k, kper) {
-    if(kper-1 %in% attr(k, 'kper')) {
-      attr(k, 'kper') <- c(attr(k, 'kper'), kper)
+    set_previous_kper <- function(kk, kper) {
+      if(!is.null(attr(kk, 'kper')) && kper-1 %in% attr(kk, 'kper')) {
+        attr(kk, 'kper') <- c(attr(kk, 'kper'), kper)
+      }
+      return(kk)
     }
+    
+    if(is.list(k) && !is.null(attr(k[[1]], 'instnam'))) {
+      k <- lapply(k, set_previous_kper, kper = kper)
+    } else {
+      k <- set_previous_kper(k, kper)
+    }
+    
     return(k)
   }
   
@@ -178,7 +189,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     
     # data set 6
     if(insurf >= 0) {
-      data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      data_set_6 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
       surf[[length(surf) + 1]] <- structure(data_set_6$array, kper = i)
       lines <- data_set_6$remaining_lines
       rm(data_set_6)
@@ -191,7 +202,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     if(np == 0) {
       
       if(inevtr >= 0) {
-        data_set_7 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+        data_set_7 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
         rmf_arrays[[length(rmf_arrays) + 1]] <- structure(data_set_7$array, kper = i)
         lines <- data_set_7$remaining_lines
         rm(data_set_7)
@@ -205,20 +216,21 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
           # data set 8
           data_set_8 <-  rmfi_parse_variables(lines, character = TRUE)
           p_name <-  as.character(data_set_8$variables[1])
-          if(!is.null(attr(rmf_arrays[[p_name]], 'instnam'))) {
+          if(is.list(rmf_arrays[[p_name]]) && !is.null(attr(rmf_arrays[[p_name]][[1]], 'instnam'))) {
             i_name <- data_set_8$variables[2]
             if(length(data_set_8$variables) > 2 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[3])))) {
               ievtpf[i] <- as.numeric(data_set_8$variables[3])
             }
-            
+            attr(rmf_arrays[[p_name]][[i_name]], 'kper') <- c(attr(rmf_arrays[[p_name]][[i_name]], 'kper'), i)
           } else {
             i_name <- NULL
             if(length(data_set_8$variables) > 1 && !is.na(suppressWarnings(as.numeric(data_set_8$variables[2])))) {
               ievtpf[i] <- as.numeric(data_set_8$variables[2])
             }
+            attr(rmf_arrays[[p_name]], 'kper') <- c(attr(rmf_arrays[[p_name]], 'kper'), i)
           }
           
-          rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
+          # rmf_arrays <- lapply(rmf_arrays, set_kper, p_name = p_name, i_name = i_name, kper = i)
           
           lines <- data_set_8$remaining_lines
           rm(data_set_8)
@@ -232,7 +244,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     
     # data set 9
     if(inexdp >= 0) {
-      data_set_9 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
+      data_set_9 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, ...)
       exdp[[length(exdp) + 1]] <- structure(data_set_9$array, kper = i)
       lines <- data_set_9$remaining_lines
       rm(data_set_9)
@@ -243,8 +255,8 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
     # data set 10
     if(nevtop == 2) {
       if(inievt >= 0) {
-        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, file = file, ...)
-        ievt[[length(ievt) + 1]] <- structure(data_set_10$array, kper = i)
+        data_set_10 <- rmfi_parse_array(lines, dis$nrow, dis$ncol, 1, ndim = 2, file = file, integer = TRUE, ...)
+        ievt[[length(ievt) + 1]] <- rmf_create_array(structure(apply(data_set_10$array, 1:length(dim(data_set_10$array)), function(i) as.integer(i)), kper = i))
         lines <- data_set_10$remaining_lines
         rm(data_set_10)
       } else if(inievt < 0 && i > 1) {
@@ -252,6 +264,17 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
       }
     }
   }
+  
+  list_arrays <- function(i) {
+    if(is.list(i) && !is.null(attr(i[[1]], 'instnam'))) {
+      return(i)
+    } else {
+      return(list(i))
+    }
+  }
+  rmf_arrays <- lapply(rmf_arrays, list_arrays)
+  rmf_arrays <- do.call(c, rmf_arrays)
+  rmf_arrays <- lapply(rmf_arrays, function(i) rmfi_ifelse0(is.null(attr(i, 'kper')), structure(i, kper = 0), i))
   
   evt <- rmf_create_evt(rmf_arrays, dis = dis, nevtop = nevtop, ievtcb = ievtcb, surf = surf, exdp = exdp, ievt = ievt, ievtpf = rmfi_ifelse0(is.null(ievtpf), -1, ievtpf))
   comment(evt) <- comments
@@ -272,7 +295,6 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
 #' @export
 #' @seealso \code{\link{rmf_read_evt}}, \code{\link{rmf_create_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}
 
-
 rmf_write_evt <-  function(evt, 
                            dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                            file={cat('Please choose evt file to overwrite or provide new filename ...\n'); file.choose()}, 
@@ -285,10 +307,10 @@ rmf_write_evt <-  function(evt,
   cat(paste('#', comment(evt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', evt$dimensions$np, file=file)
+  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(evt$dimensions$np), file=file)
   
   # data set 2
-  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, ...)
+  rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, integer = TRUE, ...)
   
   # parameters
   partyp <- 'EVT'
@@ -301,6 +323,11 @@ rmf_write_evt <-  function(evt,
   
   # stress periods
   for (i in 1:dis$nper){
+    
+    check_prev <- function(kper, i) {
+      df <- kper[c(i-1,i), -1, drop = FALSE]
+      identical(c(df[2,]), c(df[1,]))
+    }
     
     # data set 5
     # insurf
@@ -316,7 +343,7 @@ rmf_write_evt <-  function(evt,
     # inevtr
     drop_id <- which(colnames(evt$kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
     names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-drop_id]]
-    if(i > 1 && identical(names_act, colnames(evt$kper)[which(evt$kper[i-1,which(!is.na(evt$kper[i-1,]))] != FALSE)[-1]])) {
+    if(i > 1 && check_prev(evt$kper, i)) {
       inevtr <- -1
     } else {
       inevtr <- length(names_act)
@@ -353,7 +380,7 @@ rmf_write_evt <-  function(evt,
       np <- 0
     }
     
-    rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, ...)
+    rmfi_write_variables(insurf, inevtr, inexdp, ifelse(evt$nevtop == 2, inievt, ''), file=file, integer = TRUE, ...)
     
     # data set 6
     if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, iprn = iprn, ...)
@@ -364,7 +391,7 @@ rmf_write_evt <-  function(evt,
     # data set 8
     if(np > 0){
       for(j in 1:np){
-        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], evt$kper[i,parm_names_active[j]], ''), ifelse(length(evt$ievtpf) == 1, evt$ievtpf, evt$ievtpf[j]), file=file)
+        rmfi_write_variables(parm_names_active[j], ifelse(tv_parm[j], evt$kper[i,parm_names_active[j]], ''), as.integer(ifelse(length(evt$ievtpf) == 1, evt$ievtpf, evt$ievtpf[j])), file=file)
       }
     }
     

@@ -4,16 +4,19 @@
 \alias{rmf_read}
 \title{Read a MODFLOW model}
 \usage{
-rmf_read(file = {     cat("Please select nam file ...\\n")    
-  file.choose() }, output = FALSE, precision = "single",
-  verbose = TRUE)
+rmf_read(
+  file = {     cat("Please select nam file ...\\n")     file.choose() },
+  output = FALSE,
+  precision = "single",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{file}{NAME file; typically '*.nam'}
 
 \item{output}{logical; should output also be read. Defaults to FALSE.}
 
-\item{precision}{either \code{'single'} or \code{'double'}. Specifies the precision of binary output files if output is read. Defaults to \code{'single'}.}
+\item{precision}{either \code{'single'} or \code{'double'}. Specifies the precision of binary files. Defaults to \code{'single'}.}
 
 \item{verbose}{logical; should information on reading files be printed to the console ? Defaults to TRUE.}
 }

@@ -4,9 +4,14 @@
 \alias{rmf_write_wel}
 \title{Write a MODFLOW well file}
 \usage{
-rmf_write_wel(wel, dis = rmf_read_dis(), file = {    
-  cat("Please choose wel file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_wel(
+  wel,
+  dis = rmf_read_dis(),
+  file = {    
+    cat("Please choose wel file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{wel}{an \code{RMODFLOW} wel object}
@@ -15,7 +20,7 @@ rmf_write_wel(wel, dis = rmf_read_dis(), file = {
 
 \item{file}{filename to write to; typically '*.wel'}
 
-\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
+\item{...}{arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.}
 }
 \value{
 \code{NULL}

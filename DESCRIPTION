@@ -12,12 +12,8 @@ Imports:
     akima,
     rgl,
     readr,
-    hydroPSO,
     hydroGOF,
-    DEoptim,
     directlabels,
-    grid,
-    quadprog,
     sp,
     rgdal,
     animation,
@@ -28,18 +24,30 @@ Imports:
     sf,
     tibble,
     dplyr,
-    tidyr,
+    stringr,
+    purrr,
     abind,
     ggquiver,
     magrittr,
-    stars
+    stars,
+    fs,
+    processx,
+    tidyr,
+    spectralscale,
+    rui
+Remotes:
+    rogiersbart/spectralscale,
+    rogiersbart/rui
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     mapview
 VignetteBuilder: knitr
 ByteCompile: true
+Depends: 
+    R (>= 2.10)

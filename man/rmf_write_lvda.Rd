@@ -4,9 +4,13 @@
 \alias{rmf_write_lvda}
 \title{Write a MODFLOW model-layer variable-direction horizontal anisotropy capability file}
 \usage{
-rmf_write_lvda(lvda, file = {    
-  cat("Please select lvda file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_lvda(
+  lvda,
+  file = {    
+    cat("Please select lvda file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{lvda}{an \code{RMODFLOW} lvda object}

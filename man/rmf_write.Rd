@@ -4,10 +4,15 @@
 \alias{rmf_write}
 \title{Write a MODFLOW model}
 \usage{
-rmf_write(modflow, file = {    
-  cat("Please select nam file to overwrite or provide new filename ...\\n")
-      file.choose() }, exclude = NULL, suppress = FALSE,
-  verbose = TRUE)
+rmf_write(
+  modflow,
+  file = {    
+    cat("Please select nam file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  exclude = NULL,
+  suppress = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{modflow}{\code{RMODFLOW} modflow object}
@@ -28,8 +33,8 @@ rmf_write(modflow, file = {
 }
 \details{
 All arrays use free-format headers INTERNAL or CONSTANT
-         All packages will be written according to the filenames (fname) defined in the nam object.
-         To prevent any files being overwritten, it is best to write to an empty directory.
+All packages will be written according to the filenames (fname) defined in the nam object.
+To prevent any files being overwritten, it is best to write to an empty directory.
 }
 \seealso{
 \code{\link{rmf_create}}, \code{\link{rmf_write}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html}

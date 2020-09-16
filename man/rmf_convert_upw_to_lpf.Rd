@@ -4,10 +4,20 @@
 \alias{rmf_convert_upw_to_lpf}
 \title{Convert a upw to a lpf object}
 \usage{
-rmf_convert_upw_to_lpf(upw, storagecoefficient = FALSE,
-  constantcv = FALSE, thickstrt = FALSE, nocvcorrection = FALSE,
-  novfc = FALSE, noparcheck = FALSE, laywet = upw$laywet,
-  wetfct = 0.1, iwetit = 1, ihdwet = 0, wetdry = NULL)
+rmf_convert_upw_to_lpf(
+  upw,
+  storagecoefficient = FALSE,
+  constantcv = FALSE,
+  thickstrt = FALSE,
+  nocvcorrection = FALSE,
+  novfc = FALSE,
+  noparcheck = FALSE,
+  laywet = upw$laywet,
+  wetfct = 0.1,
+  iwetit = 1,
+  ihdwet = 0,
+  wetdry = NULL
+)
 }
 \arguments{
 \item{upw}{\code{RMODFLOW} upw object}

@@ -9,6 +9,7 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 ```{r setup, echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
 knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 library(RMODFLOW)
 ```
@@ -69,7 +70,7 @@ rmf_plot(dis$top, dis = dis, type = "contour", binwidth = 2, label = FALSE)
 ```
 
 #### Vector
-The `vector` type will calculate a gradient using `rmf_gradient()` and will plot the vector arrows using `ggquiver`. These can be smoothed by setting the vector interval `vecint` argument, which can be useful on larger domains (**note: this is not yet optimized**). Note that RMODFLOW assumes the array contains scalars to calculate the gradient. To supply your own vector values, you can set the `uvw` argument which is a named list with u and v components (and w for 3d) which are 2d (3d) arrays with the gradient values in the x and y (& z) directions.
+The `vector` type will calculate a gradient using `rmf_gradient()` and will plot the vector arrows using `ggquiver`. Note that RMODFLOW assumes the array contains scalars to calculate the gradient. To supply your own vector values, you can set the `uvw` argument which is a named list with u and v components (and w for 3d) which are 2d (3d) arrays with the gradient values in the x and y (& z) directions.
 ```{r}
 rmf_plot(dis$top, dis = dis, type = "vector")
 rmf_plot(dis$top, dis = dis, type = "vector", vecint = 3)

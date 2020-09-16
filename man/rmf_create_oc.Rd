@@ -2,20 +2,39 @@
 % Please edit documentation in R/package-oc.R
 \name{rmf_create_oc}
 \alias{rmf_create_oc}
-\alias{create_oc}
 \title{Create an \code{RMODFLOW} oc object}
 \usage{
-rmf_create_oc(dis, ihedfm = 0, chedfm = NA, ihedun = 666,
-  iddnfm = 0, cddnfm = NA, iddnun = 667, cboufm = NA,
-  ibouun = 668, compact_budget = TRUE, aux = FALSE,
-  head_label = TRUE, drawdown_label = TRUE, ibound_label = TRUE,
-  print_head = FALSE, print_drawdown = FALSE, print_budget = TRUE,
-  save_head = TRUE, save_drawdown = FALSE, save_ibound = FALSE,
-  save_budget = TRUE, incode = NULL, ihddfl = NULL, ibudfl = NULL,
-  icbcfl = NULL, hdpr = NULL, ddpr = NULL, hdsv = NULL,
-  ddsv = NULL)
-
-create_oc(...)
+rmf_create_oc(
+  dis,
+  ihedfm = 0,
+  chedfm = NA,
+  ihedun = 666,
+  iddnfm = 0,
+  cddnfm = NA,
+  iddnun = 667,
+  cboufm = NA,
+  ibouun = 668,
+  compact_budget = TRUE,
+  aux = TRUE,
+  head_label = TRUE,
+  drawdown_label = TRUE,
+  ibound_label = TRUE,
+  print_head = FALSE,
+  print_drawdown = FALSE,
+  print_budget = TRUE,
+  save_head = TRUE,
+  save_drawdown = FALSE,
+  save_ibound = FALSE,
+  save_budget = TRUE,
+  incode = NULL,
+  ihddfl = NULL,
+  ibudfl = NULL,
+  icbcfl = NULL,
+  hdpr = NULL,
+  ddpr = NULL,
+  hdsv = NULL,
+  ddsv = NULL
+)
 }
 \arguments{
 \item{dis}{\code{RMODFLOW} dis object}
@@ -84,15 +103,10 @@ Object of class oc
 }
 \details{
 if the \code{print_*} or \code{save_*} arguments are vectors of length 1, they are repeated for every time step.
-         The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
-         A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
-          RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
+The integer codes for specifying the printing formats can be found in the MODFLOW-2005 manual \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm}.
+A character code for specifying a saving format must be a valid FORTRAN format enclosed in parentheses and contain 20 characters or less. Alternatively,
+RMODFLOW allows the specification of the saving format through integer codes as used for the printing formats.
 }
-\section{Functions}{
-\itemize{
-\item \code{create_oc}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_read_oc}}, \code{\link{rmf_write_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 }

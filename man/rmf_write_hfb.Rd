@@ -4,9 +4,14 @@
 \alias{rmf_write_hfb}
 \title{Write a MODFLOW horizontal flow barrier file}
 \usage{
-rmf_write_hfb(hfb, dis = rmf_read_dis(), file = {    
-  cat("Please choose hfb file to overwrite or provide new filename ...\\n")
-      file.choose() }, ...)
+rmf_write_hfb(
+  hfb,
+  dis = rmf_read_dis(),
+  file = {    
+    cat("Please choose hfb file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  ...
+)
 }
 \arguments{
 \item{hfb}{an \code{RMODFLOW} hfb object}
@@ -15,7 +20,7 @@ rmf_write_hfb(hfb, dis = rmf_read_dis(), file = {
 
 \item{file}{filename to write to; typically '*.hfb'}
 
-\item{...}{arguments passed to \code{rmfi_write_variables} when writing a fixed format file.}
+\item{...}{ignored}
 }
 \value{
 \code{NULL}

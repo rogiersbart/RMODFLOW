@@ -9,38 +9,24 @@
 \usage{
 rmf_gradient(...)
 
-\method{rmf_gradient}{rmf_2d_array}(obj, dis, na_value = NULL,
-  mask = obj * 0 + 1)
+\method{rmf_gradient}{rmf_2d_array}(obj, dis, na_values = NULL, mask = obj * 0 + 1)
 
-\method{rmf_gradient}{rmf_3d_array}(obj, dis, na_value = NULL,
-  mask = obj * 0 + 1)
+\method{rmf_gradient}{rmf_3d_array}(obj, dis, na_values = NULL, mask = obj * 0 + 1)
 
 \method{rmf_gradient}{rmf_4d_array}(obj, dis, l, ...)
 }
 \arguments{
 \item{...}{additional arguments passed to \code{\link{rmf_gradient.rmf_3d_array}}}
 
-\item{obj}{2d array with the scalars}
-
-\item{dis}{\code{RMODFLOW} dis object}
-
-\item{na_value}{optional; sets these values in obj to 0; defaults to NULL}
-
-\item{mask}{logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active}
-
-\item{l}{integer index used to subset the 4th dimension of the 4d array}
-
-\item{obj}{3d array with the scalars}
-
-\item{dis}{\code{RMODFLOW} dis object}
-
-\item{na_value}{optional; sets these values in obj to 0; defaults to NULL}
-
-\item{mask}{logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active}
-
 \item{obj}{4d array with the scalars}
 
 \item{dis}{\code{RMODFLOW} dis object}
+
+\item{na_values}{optional; sets these values in obj to 0; defaults to NULL}
+
+\item{mask}{logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active}
+
+\item{l}{integer index used to subset the 4th dimension of the 4d array}
 }
 \value{
 a list with the x and y components of the gradient field as 2d arrays
@@ -58,8 +44,10 @@ a list with the x, y and z components of the gradient field as 3d arrays
 }
 \details{
 The gradient is evaluated in the direction of increasing x & y values.
+Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 
 The gradient is evaluated in the direction of increasing x, y & z values.
+Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 
 the 4d array is subsetted on the 4th dimension to a 3d array from which the gradient is calculated
 }

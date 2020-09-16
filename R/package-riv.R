@@ -71,7 +71,7 @@ rmf_read_riv <-  function(file = {cat('Please select river file ...\n'); file.ch
 #' @param riv an \code{RMODFLOW} riv object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.riv'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... arguments passed to \code{rmfi_write_variables} and \code{rmfi_write_list} when writing a fixed format file.
 #' 
 #' @return \code{NULL}
 #' @export

@@ -2,22 +2,26 @@
 % Please edit documentation in R/utils.R
 \name{rmf_convert_huf_to_grid}
 \alias{rmf_convert_huf_to_grid}
-\alias{convert_huf_to_grid}
 \title{Convert a parameter defined on the HUF grid to the numerical grid}
 \usage{
-rmf_convert_huf_to_grid(huf, dis, parameters = huf$parameters,
-  values = NULL, grid = "dis", mask = rmf_create_array(1, dim =
-  c(dis$nrow, dis$ncol, dis$nlay)), type = ifelse(partyp == "VK",
-  "harmonic", "arithmetic"), partyp = "HK", pvl = NULL)
-
-convert_huf_to_grid(...)
+rmf_convert_huf_to_grid(
+  huf,
+  dis,
+  parameters = huf$parameters,
+  values = NULL,
+  grid = "dis",
+  mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+  type = ifelse(partyp == "VK", "harmonic", "arithmetic"),
+  partyp = "HK",
+  pval = NULL
+)
 }
 \arguments{
 \item{huf}{huf object}
 
 \item{dis}{dis object}
 
-\item{parameters}{either a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.}
+\item{parameters}{a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.}
 
 \item{values}{vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.}
 
@@ -29,7 +33,7 @@ convert_huf_to_grid(...)
 
 \item{partyp}{which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').}
 
-\item{pvl}{optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied}
+\item{pval}{optional \code{RMODFLOW} pval object. Used to overwrite the parval attributes if \code{parameters} is supplied}
 }
 \value{
 rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'}
@@ -39,11 +43,6 @@ Convert a parameter defined on the HUF grid to the numerical grid
 }
 \details{
 Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.
-     The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
-     Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
+The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}.
+Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
 }
-\section{Functions}{
-\itemize{
-\item \code{convert_huf_to_grid}: Deprecated function name
-}}
-

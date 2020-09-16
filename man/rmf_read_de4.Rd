@@ -4,11 +4,15 @@
 \alias{rmf_read_de4}
 \title{Read a MODFLOW direct solver file}
 \usage{
-rmf_read_de4(file = {     cat("Please select direct solver file ...\\n") 
-     file.choose() })
+rmf_read_de4(
+  file = {     cat("Please select direct solver file ...\\n")     file.choose() },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*_de4'}
+
+\item{...}{ignored}
 }
 \value{
 \code{RMODFLOW} de4 object

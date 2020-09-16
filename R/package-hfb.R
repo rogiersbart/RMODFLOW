@@ -18,6 +18,7 @@ rmf_create_hfb <-  function(...,
                             noprint = FALSE
 ) {
   vars <- c('irow2', 'icol2', 'hydchr')
+  var_cols <- 4:(3+length(vars))
   
   # set kper and direction
   # find dis
@@ -41,9 +42,14 @@ rmf_create_hfb <-  function(...,
     }
   }
   
+  # check if all varnames are present (partial string matching)
+  nms_check <- lapply(arg, function(i) pmatch(colnames(i)[var_cols], vars))
+  if(any(vapply(nms_check, function(i) any(is.na(i)), TRUE))) stop('Please make sure all rmf_list objects have columns k, i, j, ', paste(vars, collapse = ', '), call. = FALSE)
+  arg <- lapply(seq_along(arg), function(i) setNames(arg[[i]], replace(colnames(arg[[i]]), var_cols, vars[nms_check[[i]]])))
+  
   set_hfb <- function(rmf_list) {
     if(is.null(attr(rmf_list, 'kper'))) {
-      warning('Missing kper argument for hfb input list. Assuming this list is not active', call. = FALSE)
+      warning('Missing kper argument for hfb input list. Assuming this list is active', call. = FALSE)
     } else if(!identical(as.numeric(attr(rmf_list, 'kper')), as.numeric(1:dis$nper))) {
       stop('Please make sure all hfb input lists have either a kper argument which is active for all stress periods or no kper argument at all.', call. = FALSE)
     }
@@ -92,8 +98,8 @@ rmf_create_hfb <-  function(...,
     parameters <- lapply(parameters, function(i) {i$parameter <-  TRUE;
                                                   i$name <-  attr(i, 'parnam');
                                                   i$active <- !is.null(attr(i,"kper"));
-                                                  i <- i[c("i","j","k",vars,'parameter','name','active')];
-                                                  colnames(i)[4:(3+length(vars))] <-  vars;
+                                                  i <- i[c('k', 'i', 'j',vars,'parameter','name','active')];
+                                                  colnames(i)[var_cols] <-  vars;
                                                   i})
     parameters <- do.call(rbind, unname(parameters))
 
@@ -102,8 +108,8 @@ rmf_create_hfb <-  function(...,
   # lists
   if(length(lists) > 0) {
     # set lists df
-    lists <- lapply(lists, function(i) {i <- i[c("i","j","k",vars)];
-                                        colnames(i)[4:(3+length(vars))] <-  vars;
+    lists <- lapply(lists, function(i) {i <- i[c('k', 'i', 'j',vars)];
+                                        colnames(i)[var_cols] <-  vars;
                                         i$parameter <-  FALSE;
                                         i$active <- is.null(attr(i,"kper"));
                                         i})
@@ -134,7 +140,7 @@ rmf_create_hfb <-  function(...,
 #'
 #' @param file filename; typically '*.hfb'
 #' @param dis an \code{RMODFLOW} dis object
-#' @param ... arguments passed to \code{rmfi_parse_variables} and \code{rmfi_parse_list}.
+#' @param ... arguments passed to \code{rmfi_parse_list}.
 #'  
 #' @return \code{RMODFLOW} hfb object
 #' @export
@@ -147,6 +153,9 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   option <- c('NOPRINT' = FALSE)
   lines <-  readr::read_lines(file)
   scalevar <- 6
+  
+  arg <- list(...)
+  arg$format <- 'free'
   
   rmf_lists <- list()
   
@@ -175,7 +184,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
       lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
-      data_set_3 <- rmfi_parse_list(lines, nlst = nlst, varnames = vars, scalevar = scalevar, file = file, ...)
+      data_set_3 <- do.call(rmfi_parse_list, c(list(remaining_lines = lines, nlst = nlst, varnames = vars, scalevar = scalevar, naux = 0, file = file), arg))
       rmf_lists[[length(rmf_lists)+1]] <- rmf_create_parameter(data_set_3$list, parnam = parnam, parval = parval)
       lines <- data_set_3$remaining_lines
       rm(data_set_3)
@@ -185,30 +194,34 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   
   # data set 4
   if(nnp > 0) {
-    data_set_4 <- rmfi_parse_list(lines, nlst = nnp, varnames = vars, scalevar = scalevar, file = file, ...)
+    data_set_4 <- do.call(rmfi_parse_list, c(list(remaining_lines = lines, nlst = nnp, varnames = vars, scalevar = scalevar, naux = 0, file = file), arg))
     rmf_lists[[length(rmf_lists)+1]] <- structure(data_set_4$list, kper = 1:dis$nper)
     lines <- data_set_4$remaining_lines
     rm(data_set_4)
   }
   
   # data set 5
+  # data set 5 does not have to be present (not stated in manual/online-help)
+  # source code states that data set 5 is only read when np (nphfb in src) > 0
   data_set_5 <- rmfi_parse_variables(lines)
-  nacthfb <- as.numeric(data_set_5$variables[1])
-  lines <- data_set_5$remaining_lines
-  rm(data_set_5)
-  
-  # data set 6
-  acthfb <- vector(mode = 'character', length = nacthfb)
-  for(i in 1:nacthfb) {
-    data_set_6 <- rmfi_parse_variables(lines)
-    acthfb[i] <- data_set_6$variables[1]
-    lines <- data_set_6$remaining_lines
-    rm(data_set_6)
+  if(np > 0) {
+    nacthfb <- as.numeric(data_set_5$variables[1])
+    lines <- data_set_5$remaining_lines
+    rm(data_set_5)
+    
+    # data set 6
+    acthfb <- vector(mode = 'character', length = nacthfb)
+    for(i in 1:nacthfb) {
+      data_set_6 <- rmfi_parse_variables(lines)
+      acthfb[i] <- toupper(data_set_6$variables[1])
+      lines <- data_set_6$remaining_lines
+      rm(data_set_6)
+    }
+    
+    # set kper for parameters
+    rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (toupper(attr(i, 'parnam')) %in% acthfb), structure(i, kper = 1:dis$nper), i))
   }
-  
-  # set kper for parameters
-  rmf_lists <- lapply(rmf_lists, function(i) rmfi_ifelse0(inherits(i, 'rmf_parameter') && (attr(i, 'parnam') %in% acthfb), structure(i, kper = 1:dis$nper), i))
-  
+
   # create hfb
   obj <- rmf_create_hfb(rmf_lists, dis = dis, noprint = unname(option['NOPRINT']))
   comment(obj) <- comments
@@ -222,12 +235,11 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
 #' @param hfb an \code{RMODFLOW} hfb object
 #' @param dis an \code{RMODFLOW} dis object
 #' @param file filename to write to; typically '*.hfb'
-#' @param ... arguments passed to \code{rmfi_write_variables} when writing a fixed format file.
+#' @param ... ignored
 #' 
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_hfb}}, \code{\link{rmf_create_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}
-
 
 rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hfb file to overwrite or provide new filename ...\n'); file.choose()}, ...){
   
@@ -242,7 +254,7 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   cat(paste('#', comment(hfb)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(hfb$dimensions$np, hfb$dimensions$mxl, hfb$dimensions$nnp, ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
+  rmfi_write_variables(as.integer(hfb$dimensions$np), as.integer(hfb$dimensions$mxl), as.integer(hfb$dimensions$nnp), ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
   
   # parameters
   if(hfb$dimensions$np > 0){
@@ -251,13 +263,15 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
     for (i in 1:hfb$dimensions$np){
       p_name <- parm_names[i]
       df <- subset(hfb$data, name == p_name)
-      nlst <- nrow(df)
+      df[[vars[1]]] <- as.integer(df[[vars[1]]])
+      df[[vars[2]]] <- as.integer(df[[vars[2]]])
+      nlst <- as.integer(nrow(df))
       
       # data set 2
       rmfi_write_variables(p_name, toupper(partyp), hfb$parameter_values[i], nlst, file=file)
       # data set 3
       for (k in 1:nlst){
-        rmfi_write_variables(df$k[k], df$i[k], df$j[k], df[k, vars], file=file)
+        rmfi_write_variables(as.integer(df$k[k]), as.integer(df$i[k]), as.integer(df$j[k]), df[k, vars], file=file)
       }
       rm(df)
     }
@@ -265,15 +279,16 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   
   # data set 4
   df <- subset(hfb$data, parameter == FALSE)
+  df[[vars[1]]] <- as.integer(df[[vars[1]]])
+  df[[vars[2]]] <- as.integer(df[[vars[2]]])
+  
   if(nrow(df) > 0) {
-    for(j in 1:nrow(df)){
-      rmfi_write_variables(df$k[j], df$i[j], df$j[j], df[j, vars], file=file)
-    }
+    rmfi_write_list(df, file = file, varnames = vars)
     rm(df)
   }
   
   # data set 5
-  rmfi_write_variables(hfb$dimensions$nacthfb, file = file)
+  rmfi_write_variables(as.integer(hfb$dimensions$nacthfb), file = file)
   
   # data set 6
   if(hfb$dimensions$nacthfb > 0){

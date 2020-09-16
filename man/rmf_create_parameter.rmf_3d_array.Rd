@@ -4,8 +4,15 @@
 \alias{rmf_create_parameter.rmf_3d_array}
 \title{Concise function for creating a 3D-array parameter.}
 \usage{
-\method{rmf_create_parameter}{rmf_3d_array}(array, parnam, parval = 1,
-  layer = 1:dim(array)[3], partyp, mltnam = parnam, instnam = NULL)
+\method{rmf_create_parameter}{rmf_3d_array}(
+  array,
+  parnam,
+  parval = 1,
+  layer = 1:dim(array)[3],
+  partyp,
+  mltnam = parnam,
+  instnam = NULL
+)
 }
 \arguments{
 \item{array}{a \code{rmf_3d_array} object}

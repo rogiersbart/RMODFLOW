@@ -4,8 +4,17 @@
 \alias{rmf_plot.ddn}
 \title{Plot a MODFLOW drawdown file object}
 \usage{
-\method{rmf_plot}{ddn}(ddn, dis, i = NULL, j = NULL, k = NULL,
-  l = NULL, kper = NULL, kstp = NULL, ...)
+\method{rmf_plot}{ddn}(
+  ddn,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  kper = NULL,
+  kstp = NULL,
+  ...
+)
 }
 \arguments{
 \item{ddn}{\code{RMODFLOW} ddn object}
@@ -33,10 +42,9 @@ ggplot2 object or layer
 Plot a MODFLOW drawdown file object
 }
 \details{
-There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
- The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
- A negative \code{kstp} will plot the final time step of the stress-period.
- 
- 
- If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number.
+The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+A negative \code{kstp} will plot the final time step of the stress-period.
+
+If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 }

@@ -2,13 +2,12 @@
 % Please edit documentation in R/package-dis.R
 \name{rmf_read_dis}
 \alias{rmf_read_dis}
-\alias{read_dis}
 \title{Read a MODFLOW discretization file}
 \usage{
-rmf_read_dis(file = {     cat("Please select dis file ...\\n")    
-  file.choose() }, ...)
-
-read_dis(...)
+rmf_read_dis(
+  file = {     cat("Please select dis file ...\\n")     file.choose() },
+  ...
+)
 }
 \arguments{
 \item{file}{filename; typically '*.dis'}
@@ -21,11 +20,6 @@ object of class dis
 \description{
 \code{rmf_read_dis} reads in a MODFLOW discretization file and returns it as an \code{\link{RMODFLOW}} dis object.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_dis}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_write_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 }

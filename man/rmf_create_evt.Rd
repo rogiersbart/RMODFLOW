@@ -4,11 +4,19 @@
 \alias{rmf_create_evt}
 \title{Create an \code{RMODFLOW} evt object.}
 \usage{
-rmf_create_evt(..., dis, nevtop = 3, ievtcb = 0, surf, exdp,
-  ievt = NULL, ievtpf = -1)
+rmf_create_evt(
+  ...,
+  dis,
+  nevtop = 3,
+  ievtcb = 0,
+  surf,
+  exdp,
+  ievt = NULL,
+  ievtpf = -1
+)
 }
 \arguments{
-\item{...}{\code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_array's} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.}
+\item{...}{\code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) or a single \code{list} with \code{rmf_2d_arrays} (possibly of class \code{rmf_parameter}) elements; defines the maximum evapotranspiration fluxes. See details.}
 
 \item{dis}{\code{RMODFLOW} dis object}
 
@@ -16,11 +24,11 @@ rmf_create_evt(..., dis, nevtop = 3, ievtcb = 0, surf, exdp,
 
 \item{ievtcb}{flag and unit number for writing cell-by-cell flow terms; defaults to 0}
 
-\item{surf}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.}
+\item{surf}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the elevation of the ET surface. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 surf array must be supplied.}
 
-\item{exdp}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.}
+\item{exdp}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the ET extinction depth as a distance from surf. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. At least 1 exdp array must be supplied.}
 
-\item{ievt}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_array's} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL}
+\item{ievt}{a single \code{rmf_2d_array} or a list of \code{rmf_2d_arrays} specifying the layer numbers defining in which layer ET is applied. The \code{'kper'} attribute of the arrays define the stress period in which the array is active, see details. Only used when \code{nevtop = 2}. Defaults to NULL}
 
 \item{ievtpf}{numeric of length 1 or length \code{dis$nper}; optional format code for printing the \code{ET} variable it has been defined by parameters; defaults to -1 (no printing) for all stress periods}
 }
@@ -31,7 +39,7 @@ rmf_create_evt(..., dis, nevtop = 3, ievtcb = 0, surf, exdp,
 \code{rmf_create_evt} creates an \code{RMODFLOW} evt object
 }
 \details{
-the \code{rmf_2d_array's} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
+the \code{rmf_2d_arrays} should have \code{kper} attributes specifying the stress period in which they are active. This is also true for the surf, exdp and ievt arrays. There can be only one non-parameter array active per stress periods. Multiple parameters are however allowed per stress period.
 }
 \seealso{
 \code{\link{rmf_read_evt}}, \code{\link{rmf_write_evt}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm}

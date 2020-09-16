@@ -5,8 +5,14 @@
 \title{Read modflow variables
 If all are numbers, returns numeric, otherwise returns character vector}
 \usage{
-rmfi_parse_variables(remaining_lines, n, nlay = NULL,
-  character = FALSE, format = "free", ...)
+rmfi_parse_variables(
+  remaining_lines,
+  n,
+  nlay = NULL,
+  character = FALSE,
+  format = "free",
+  ...
+)
 }
 \arguments{
 \item{n}{integer; number of variables to be returned. Only used when format is \code{'fixed'}.}

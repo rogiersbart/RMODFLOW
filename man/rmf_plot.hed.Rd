@@ -4,8 +4,21 @@
 \alias{rmf_plot.hed}
 \title{Plot a MODFLOW head file object}
 \usage{
-\method{rmf_plot}{hed}(hed, dis, i = NULL, j = NULL, k = NULL,
-  l = NULL, kper = NULL, kstp = NULL, saturated = FALSE, ...)
+\method{rmf_plot}{hed}(
+  hed,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  l = NULL,
+  kper = NULL,
+  kstp = NULL,
+  saturated = FALSE,
+  type = "fill",
+  gridlines = FALSE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hed}{\code{RMODFLOW} hed object}
@@ -35,12 +48,12 @@ ggplot2 object or layer
 Plot a MODFLOW head file object
 }
 \details{
-There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
- The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
- A negative \code{kstp} will plot the final time step of the stress-period.
- 
- If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful 
- for cross-sections with \code{grid = TRUE}.
- 
- If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number.
+The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+A negative \code{kstp} will plot the final time step of the stress-period.
+
+If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful
+for cross-sections with \code{grid = TRUE}.
+
+If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 }

@@ -10,12 +10,12 @@
 #' @param showprogress logical; should progress information be displayed?
 #' @param stoperror logical; should the model be stopped based on budget percent discrepancy?
 #' @param stoper numeric; threshold budget percent discrepancy
-#' @param ibound 3d array specifying active (1), inactive (0) or constant head (0) status of all cells
-#' @param strt 3d array specifying starting heads
+#' @param ibound 3d array specifying active (1), inactive (0) or constant head (-1) status of all cells; defaults to all cells active
+#' @param strt 3d array specifying starting heads; defaults to \code{dis$top} for all layers
 #' @return Object of class bas
 #' @export
 #' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_write_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas.htm}
-rmf_create_bas <- function(dis = rmf_create_dis(),
+rmf_create_bas <- function(dis,
                            xsection = FALSE,
                            chtoch = FALSE,
                            free = TRUE,
@@ -23,9 +23,9 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
                            showprogress = FALSE,
                            stoperror = FALSE,
                            stoper = 1,
-                           ibound = rmf_create_array(1L, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                           ibound = 1,
                            hnoflo = -999,
-                           strt = rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
+                           strt = rmf_create_array(dis$top, dim = c(dis$nrow, dis$ncol, dis$nlay))) {
       
   bas <- NULL
   
@@ -43,7 +43,7 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
     bas$stoper <- stoper
     
   # data set 2
-    bas$ibound <- rmf_create_array(apply(ibound, MARGIN = 1:length(dim(ibound)), function(i) as.integer(i)),
+    bas$ibound <- rmf_create_array(as.integer(ibound),
                                    dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
                                    dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   
@@ -56,13 +56,6 @@ rmf_create_bas <- function(dis = rmf_create_dis(),
   
   class(bas) <- c('bas','rmf_package')
   return(bas)
-}
-
-#' @describeIn rmf_create_bas Deprecated function name
-#' @export
-create_bas <- function(...) {
-  .Deprecated(new = "rmf_create_bas", old = "create_bas")
-  rmf_create_bas(...)
 }
 
 #' Read a MODFLOW basic file
@@ -90,18 +83,18 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   
   # data set 1
   data_set_1 <- rmfi_parse_variables(bas_lines, format = 'free')
-  bas$xsection <- 'XSECTION' %in% data_set_1$variables
-  bas$chtoch <- 'CHTOCH' %in% data_set_1$variables
-  bas$free <- 'FREE' %in% data_set_1$variables
-  bas$printtime <- 'PRINTTIME' %in% data_set_1$variables
-  bas$showprogress <- 'SHOWPROGRESS' %in% data_set_1$variables
-  bas$stoperror <- 'STOPERROR' %in% data_set_1$variables
+  bas$xsection <- 'XSECTION' %in% toupper(data_set_1$variables)
+  bas$chtoch <- 'CHTOCH' %in% toupper(data_set_1$variables)
+  bas$free <- 'FREE' %in% toupper(data_set_1$variables)
+  bas$printtime <- 'PRINTTIME' %in% toupper(data_set_1$variables)
+  bas$showprogress <- 'SHOWPROGRESS' %in% toupper(data_set_1$variables)
+  bas$stoperror <- 'STOPERROR' %in% toupper(data_set_1$variables)
   if(bas$stoperror) bas$stoper <- as.numeric(data_set_1$variables[match('stoperror',data_set_1$variables)+1]) else bas$stoper <- as.numeric(NA)
   bas_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
   # data set 2
-  data_set_2 <- rmfi_parse_array(bas_lines,nrow=ifelse(bas$xsection,dis$nlay,dis$nrow),ncol=dis$ncol,nlay=ifelse(bas$xsection,1,dis$nlay), file = file, integer = TRUE, ...)
+  data_set_2 <- rmfi_parse_array(bas_lines,nrow=ifelse(bas$xsection,dis$nlay,dis$nrow),ncol=dis$ncol,nlay=ifelse(bas$xsection,1,dis$nlay), ndim = 3, file = file, integer = TRUE, ...)
   bas$ibound <- rmf_create_array(apply(data_set_2$array, MARGIN = 1:length(dim(data_set_2$array)), function(i) as.integer(i)),
                                  dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
                                  dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
@@ -115,7 +108,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   rm(data_set_3)
   
   # data set 4
-  data_set_4 <- rmfi_parse_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay), file = file, ...)
+  data_set_4 <- rmfi_parse_array(bas_lines,ifelse(bas$xsection,dis$nlay,dis$nrow),dis$ncol,ifelse(bas$xsection,1,dis$nlay), ndim = 3, file = file, ...)
   bas$strt <- rmf_create_array(data_set_4$array, dim = rmfi_ifelse0(bas$xsection, c(dis$nlay, dis$ncol), c(dis$nrow, dis$ncol, dis$nlay)),
                                dimlabels = rmfi_ifelse0(bas$xsection, c("k", "j"), c("i", "j", "k")))
   bas_lines <- data_set_4$remaining_lines
@@ -123,13 +116,6 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
   
   class(bas) <- c('bas','rmf_package')
   return(bas)
-}
-
-#' @describeIn rmf_read_bas Deprecated function name
-#' @export
-read_bas <- function(...) {
-  .Deprecated(new = "rmf_read_bas", old = "read_bas")
-  rmf_read_bas(...)
 }
 
 #' Write a MODFLOW basic file
@@ -142,6 +128,7 @@ read_bas <- function(...) {
 #' @param ... arguments passed to \code{rmfi_write_array}. Can be ignored when arrays are INTERNAL or CONSTANT.
 #' @return \code{NULL}
 #' @export
+#' @seealso \code{\link{rmf_read_bas}}, \code{\link{rmf_create_bas}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?bas6.htm}
 rmf_write_bas <- function(bas,
                           file = {cat('Please select bas file to overwrite or provide new filename ...\n'); file.choose()},
                           iprn=-1, 
@@ -174,11 +161,4 @@ rmf_write_bas <- function(bas,
   # data set 4
   rmfi_write_array(bas$strt, file = file, iprn = iprn, xsection = bas$xsection, ...)
   
-}
-
-#' @describeIn rmf_write_bas Deprecated function name
-#' @export
-write_bas <- function(...) {
-  .Deprecated(new = "rmf_write_bas", old = "write_bas")
-  rmf_write_bas(...)
 }

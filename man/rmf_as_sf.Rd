@@ -2,10 +2,104 @@
 % Please edit documentation in R/spatial.R
 \name{rmf_as_sf}
 \alias{rmf_as_sf}
-\title{Generic function to convert rmf_array objects to simple features}
+\alias{rmf_as_sf.rmf_2d_array}
+\alias{rmf_as_sf.rmf_3d_array}
+\alias{rmf_as_sf.rmf_4d_array}
+\alias{rmf_as_sf.rmf_list}
+\title{Functions to convert rmf_array and rmf_list objects to simple features}
 \usage{
 rmf_as_sf(...)
+
+\method{rmf_as_sf}{rmf_2d_array}(
+  array,
+  dis,
+  mask = array * 0 + 1,
+  prj = rmf_get_prj(dis),
+  name = "value",
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+
+\method{rmf_as_sf}{rmf_3d_array}(
+  array,
+  dis,
+  mask = array * 0 + 1,
+  prj = rmf_get_prj(dis),
+  name = "value",
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+
+\method{rmf_as_sf}{rmf_4d_array}(
+  array,
+  dis,
+  mask = array(1, dim = dim(array)),
+  prj = rmf_get_prj(dis),
+  name = "value",
+  as_points = FALSE,
+  id = "r",
+  ...
+)
+
+\method{rmf_as_sf}{rmf_list}(obj, dis, prj = rmf_get_prj(dis), as_points = FALSE, id = "r", ...)
+}
+\arguments{
+\item{...}{additional arguments passed to \code{rmf_as_tibble} when converting a \code{rmf_list} object. Otherwise, ignored.}
+
+\item{array}{\code{rmf_2d_array}, \code{rmf_3d_array} or \code{rmf_4d_array} object}
+
+\item{dis}{\code{RMODFLOW} dis object}
+
+\item{mask}{a 2d array when \code{array} is 2d or a 3d array when \code{array} is 3d or 4d that can be coerced to logical. Used to specify which cells to convert to sf. Defaults to all cells.}
+
+\item{prj}{\code{RMODFLOW} prj object}
+
+\item{name}{character specifying the name of the resulting variable in the sf object. Defaults to \code{'value'}}
+
+\item{as_points}{logical; should returned sf object represent cell-centered nodal points (TRUE) or cell polygons (FALSE, default)}
+
+\item{id}{either \code{'r'} (default) or \code{'modflow'}. Specifies which type of cell id is returned. R uses column-major array ordering whereas MODFLOW uses row-major ordering.}
+
+\item{obj}{\code{rmf_list} object}
+}
+\value{
+A \code{sf} object with point geometries representing the cell-centered nodes when \code{as_points = TRUE}. When \code{as_points = FALSE},
+the geometries are polygons representing the entire cell.
+When converting a \code{rmf_array}, the \code{sf} object has following variables: one with the array values per cell/node,
+one containing the cell id (when \code{id} is \code{'r'} or \code{'modflow'}), top and bottom of the cells when the array is 3d or 4d plus the z value of the node when \code{as_points = TRUE}.
+When a 4d array is converted, an additional time column is added as well.
+
+When converting a \code{rmf_list}, all variables in the \code{rmf_list} object are retained with the addition of the cell id column (when \code{id} is \code{'r'} or \code{'modflow'}) and
+top and bottom columns if \code{as_points = FALSE} or a z column when \code{as_points = TRUE}.
 }
 \description{
-Generic function to convert rmf_array objects to simple features
+Functions to convert rmf_array and rmf_list objects to simple features
+}
+\details{
+The returned z coordinate when \code{as_points = TRUE} reflects the cell node.
+The crs is taken from the \code{prj} argument.
+}
+\examples{
+dis <- rmf_create_dis()
+
+# 2d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+rmf_as_sf(r, dis = dis)
+rmf_as_sf(r, dis = dis, as_points = TRUE)
+
+# 3d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+rmf_as_sf(r, dis = dis, id = 'modflow')
+rmf_as_sf(r, dis = dis, as_points = TRUE)
+
+# 4d array
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 2), dim = c(dis$nrow, dis$ncol, dis$nlay, 2))
+rmf_as_sf(r, dis = dis, id = FALSE)
+
+# rmf_list
+l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(3, 2), q = c(-500, -400)))
+rmf_as_sf(l, dis = dis)
+
 }

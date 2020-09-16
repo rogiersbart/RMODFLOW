@@ -4,21 +4,78 @@
 \alias{rmf_plot.rmf_list}
 \title{Plot a RMODFLOW list object}
 \usage{
-\method{rmf_plot}{rmf_list}(obj, dis, variable = "id",
-  active_only = FALSE, fun = sum, ...)
+\method{rmf_plot}{rmf_list}(
+  obj,
+  dis,
+  bas = NULL,
+  mask = NULL,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  variable = "id",
+  geom = "polygon",
+  type = "fill",
+  levels = NULL,
+  group = NULL,
+  active_only = FALSE,
+  fun = sum,
+  add = FALSE,
+  prj = rmf_get_prj(dis),
+  crs = NULL,
+  colour_palette = rmfi_rev_rainbow,
+  nlevels = 7,
+  legend = ifelse(variable == "id", FALSE, !add),
+  crop = FALSE,
+  gridlines = FALSE,
+  ...
+)
 }
 \arguments{
 \item{obj}{a \code{RMODFLOW} object of class \code{rmf_list}}
 
 \item{dis}{a \code{RMODFLOW} dis object}
 
+\item{bas}{a \code{RMODFLOW} dis object; optional. If present, mask will be set to bas$ibound.}
+
+\item{mask}{a 3D array with 0 or FALSE indicating inactive cells; optional; defaults to having all cells active or, if bas is provided, the first layer of bas$ibound}
+
+\item{i}{row number to plot}
+
+\item{j}{column number to plot}
+
+\item{k}{layer number to plot}
+
 \item{variable}{single character or numeric indicating which column in the \code{rmf_list} object to plot. Defaults to 'id', which plots the locations of the cells.}
+
+\item{geom}{either 'polygon' (default), 'line' or 'point'. Defines how the rmf_list features are plotted. See details.}
+
+\item{type}{plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'}
+
+\item{levels}{(named) character vector with labels for the factor legend. If not named, factor levels are sorted before being labelled. If NULL, the array factor levels are used}
+
+\item{group}{variable name or index in \code{obj} used to group the data when \code{geom = 'line'}. Passed to \code{ggplot2} aesthetics. Defaults to NULL.}
 
 \item{active_only}{logical; indicating if only the active cells should be plotted. Non-active cells are set to NA. Defaults to FALSE.}
 
 \item{fun}{function to compute values in the case multiple values are defined for the same MODFLOW cell. Typically either \code{mean} or \code{sum}. Defaults to sum.}
 
-\item{...}{additional arguments passed to \code{\link{rmf_plot.rmf_3d_array}}}
+\item{add}{logical; if TRUE, provide ggplot2 layers instead of object, or add 3D plot to existing rgl device; defaults to FALSE}
+
+\item{prj}{projection file object}
+
+\item{crs}{coordinate reference system for the plot}
+
+\item{colour_palette}{a colour palette for imaging continuous array values. If type = 'contour' or 'vector', a single character can also be used.}
+
+\item{nlevels}{number of levels for the colour scale; defaults to 7}
+
+\item{legend}{either a logical indicating if the legend is shown or a character indicating the legend title}
+
+\item{crop}{logical; should plot be cropped to the domain represented by the features; defaults to FALSE}
+
+\item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
+
+\item{...}{additional arguments passed to either \code{\link{rmf_plot.rmf_3d_array}} if \code{geom = 'polygon'}, \code{ggplot2::geom_point} if \code{geom = 'point'} or \code{ggplot2::geom_path} if \code{geom = 'line'}}
 }
 \value{
 ggplot2 object or layer
@@ -27,5 +84,7 @@ ggplot2 object or layer
 Plot a RMODFLOW list object
 }
 \details{
-the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+If \code{geom = 'polygon'}, the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
+If \code{geom = 'line'}, \code{ggplot2::geom_path} is used. If \code{geom = 'point'}, \code{ggplot2::geom_point} is used.
+\code{geom = 'line'} will only work optimally if the \code{group} argument is set.
 }

@@ -8,12 +8,20 @@
 \usage{
 rmf_performance(...)
 
-\method{rmf_performance}{default}(sim, obs, na_value = -888,
-  measures = c("ssq", "mse", "mae", "me", "r2", "nse", "rmse", "pbias",
-  "kge"), ...)
+\method{rmf_performance}{default}(
+  sim,
+  obs,
+  na_value = -888,
+  measures = c("ssq", "mse", "mae", "me", "r2", "nse", "rmse", "pbias", "kge"),
+  ...
+)
 
-\method{rmf_performance}{hpr}(hpr, hobdry = -888, measures = c("ssq",
-  "mse", "mae", "me", "r2", "nse", "rmse", "pbias", "kge"), ...)
+\method{rmf_performance}{hpr}(
+  hpr,
+  hobdry = -888,
+  measures = c("ssq", "mse", "mae", "me", "r2", "nse", "rmse", "pbias", "kge"),
+  ...
+)
 }
 \arguments{
 \item{...}{arguments passes to \code{\link{hydroGOF::gof}}}
@@ -29,10 +37,6 @@ rmf_performance(...)
 \item{hpr}{head predictions file object}
 
 \item{hobdry}{value used to flag dry cells; defaults to -888}
-
-\item{measures}{character vector with the required performance measures. Possible values are any of the measures present in \code{\link{hydroGOF::gof}} + 'ssq' (sum of squared errors)}
-
-\item{...}{arguments passes to \code{\link{hydroGOF::gof}}}
 }
 \value{
 data.frame with performance measures

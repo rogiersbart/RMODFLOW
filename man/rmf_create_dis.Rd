@@ -2,19 +2,28 @@
 % Please edit documentation in R/package-dis.R
 \name{rmf_create_dis}
 \alias{rmf_create_dis}
-\alias{create_dis}
 \title{Create an \code{RMODFLOW} dis object}
 \usage{
-rmf_create_dis(nlay = 3, nrow = 10, ncol = 10, nper = 1,
-  itmuni = 1, lenuni = 2, laycbd = rep(0, nlay), delr = 100,
-  delc = 100, top = matrix(0, nrow = nrow, ncol = ncol),
-  botm = array(rep(seq(0, -10 * (nlay + sum(laycbd != 0)), length = nlay
-  + sum(laycbd != 0) + 1)[2:(nlay + sum(laycbd != 0) + 1)], each = nrow *
-  ncol), dim = c(nrow, ncol, nlay + sum(laycbd != 0))), perlen = rep(1,
-  nper), nstp = rep(1, nper), tsmult = rep(1, nper), sstr = c("SS",
-  rep("TR", nper - 1)))
-
-create_dis(...)
+rmf_create_dis(
+  nlay = 3,
+  nrow = 10,
+  ncol = 10,
+  nper = 1,
+  itmuni = 1,
+  lenuni = 2,
+  laycbd = rep(0, nlay),
+  delr = 100,
+  delc = 100,
+  top = matrix(0, nrow = nrow, ncol = ncol),
+  botm = array(rep(seq(0, -10 * (nlay + sum(laycbd != 0)), length = nlay + sum(laycbd
+    != 0) + 1)[2:(nlay + sum(laycbd != 0) + 1)], each = nrow * ncol), dim = c(nrow, ncol,
+    nlay + sum(laycbd != 0))),
+  perlen = rep(1, nper),
+  nstp = rep(1, nper),
+  tsmult = rep(1, nper),
+  sstr = c("SS", rep("TR", nper - 1)),
+  prj = NULL
+)
 }
 \arguments{
 \item{nlay}{number of layers; defaults to 3}
@@ -46,6 +55,8 @@ create_dis(...)
 \item{tsmult}{vector of successive time step length multipliers}
 
 \item{sstr}{character vector with steady state ('SS') or transient ('TR') stress period indicator}
+
+\item{prj}{optional RMODFLOW prj object as created by \code{\link{rmf_create_prj}} to set the projection information. Defaults to NULL}
 }
 \value{
 Object of class dis
@@ -53,11 +64,6 @@ Object of class dis
 \description{
 \code{rmf_create_dis} creates an \code{RMODFLOW} dis object.
 }
-\section{Functions}{
-\itemize{
-\item \code{create_dis}: Deprecated function name
-}}
-
 \seealso{
 \code{\link{rmf_read_dis}}, \code{\link{rmf_write_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 }

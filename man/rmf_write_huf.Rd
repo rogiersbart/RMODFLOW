@@ -2,14 +2,16 @@
 % Please edit documentation in R/package-huf.R
 \name{rmf_write_huf}
 \alias{rmf_write_huf}
-\alias{write_huf}
 \title{Write a MODFLOW hydrogeologic unit flow file}
 \usage{
-rmf_write_huf(huf, file = {    
-  cat("Please select huf file to overwrite or provide new filename ...\\n")
-      file.choose() }, iprn = -1, ...)
-
-write_huf(...)
+rmf_write_huf(
+  huf,
+  file = {    
+    cat("Please select huf file to overwrite or provide new filename ...\\n")    
+    file.choose() },
+  iprn = -1,
+  ...
+)
 }
 \arguments{
 \item{huf}{an \code{\link{RMODFLOW}} huf object}
@@ -26,8 +28,6 @@ write_huf(...)
 \description{
 Write a MODFLOW hydrogeologic unit flow file
 }
-\section{Functions}{
-\itemize{
-\item \code{write_huf}: Deprecated function name
-}}
-
+\seealso{
+\code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_create_huf}}, \code{\link{rmf_read_huf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?huf.htm}
+}

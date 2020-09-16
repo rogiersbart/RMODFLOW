@@ -4,13 +4,32 @@
 \alias{rmf_create_huf}
 \title{Create an \code{RMODFLOW} huf object}
 \usage{
-rmf_create_huf(dis, ihufcb = 0, hdry = -888, nhuf, iohufheads = 0,
-  iohufflows = 0, lthuf = rmfi_ifelse0(dis$nlay == 1, 1, c(1, rep(0,
-  dis$nlay - 1))), laywt = rep(0, dis$nlay), wetfct = 0.1,
-  iwetit = 1, ihdwet = 0, wetdry = NULL, hgunam, top, thck,
-  hguhani = rep(1, nhuf), hguvani = rep(0, nhuf), parameters = NULL,
-  hk = rep(1e-04, nhuf), hani = rep(1, nhuf), vk = hk,
-  ss = rep(1e-05, nhuf), sy = rep(0.15, nhuf), sytp = NULL)
+rmf_create_huf(
+  dis,
+  ihufcb = 0,
+  hdry = -888,
+  nhuf,
+  iohufheads = 0,
+  iohufflows = 0,
+  lthuf = rmfi_ifelse0(dis$nlay == 1, 1, c(1, rep(0, dis$nlay - 1))),
+  laywt = rep(0, dis$nlay),
+  wetfct = 0.1,
+  iwetit = 1,
+  ihdwet = 0,
+  wetdry = NULL,
+  hgunam,
+  top,
+  thck,
+  hguhani = rep(1, nhuf),
+  hguvani = rep(0, nhuf),
+  parameters = NULL,
+  hk = rep(1e-04, nhuf),
+  hani = rep(1, nhuf),
+  vk = hk,
+  ss = rep(1e-05, nhuf),
+  sy = rep(0.15, nhuf),
+  sytp = NULL
+)
 }
 \arguments{
 \item{dis}{RMODFLOW dis object}
@@ -69,11 +88,12 @@ Object of class huf
 }
 \details{
 If iohufheads (iohufflows) > 0, heads (cell-by-cell flows)  will be interpolated to each hgu and saved, resulting in a single value per hgu at every row-column combination.
-         Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and SYTP}. Variables can be specified either through the use of parameters or direct vector input through hk, hani, vk, ss, sy and sytp arguments.
-         Specifying directly with parameters is useful if the parametrization is complex. If only a single value per hgu per partyp is needed, the direct vector input can be used.
-         If any parameters are specified, all flow variables have to be specified by parameters. If hk, hani, vk, ss, sy or sytp are not named, the hgu number will be added as a suffix to the type (e.g. 'HK_1'). 
-         Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI van not be specified, only VK. VANI can be set through hguvani.
+Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and SYTP}. Variables can be specified either through the use of parameters or direct vector input through hk, hani, vk, ss, sy and sytp arguments.
+Specifying directly with parameters is useful if the parametrization is complex. If only a single value per hgu per partyp is needed, the direct vector input can be used.
+If any parameters are specified, all flow variables have to be specified by parameters. If hk, hani, vk, ss, sy or sytp are not named, the hgu number will be added as a suffix to the type (e.g. 'HK_1').
+Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI van not be specified, only VK. VANI can be set through hguvani.\preformatted{     \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
+}
 }
 \seealso{
-\code{\link{rmf_create_parameter}}, \code{\link{rmf_read_huf}}, \code{\link{rmf_write_huf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?huf.htm}
+\code{\link{rmf_create_parameter}}, \code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_read_huf}}, \code{\link{rmf_write_huf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?huf.htm}
 }

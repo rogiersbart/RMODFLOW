@@ -4,16 +4,24 @@
 \alias{rmf_create_upw}
 \title{Create an \code{RMODFLOW} upw object}
 \usage{
-rmf_create_upw(dis, iupwcb = 0, hdry = -888, iphdry = TRUE,
-  noparcheck = FALSE, laytyp = rmfi_ifelse0(dis$nlay == 1, 1, c(1,
-  rep(0, dis$nlay - 1))), layavg = rep(0, dis$nlay), chani = rep(1,
-  dis$nlay), layvka = rep(0, dis$nlay), parameters = NULL,
+rmf_create_upw(
+  dis,
+  iupwcb = 0,
+  hdry = -888,
+  iphdry = TRUE,
+  noparcheck = FALSE,
+  laytyp = rmfi_ifelse0(dis$nlay == 1, 1, c(1, rep(0, dis$nlay - 1))),
+  layavg = rep(0, dis$nlay),
+  chani = rep(1, dis$nlay),
+  layvka = rep(0, dis$nlay),
+  parameters = NULL,
   hk = rmf_create_array(1e-04, dim = c(dis$nrow, dis$ncol, dis$nlay)),
   hani = rmfi_ifelse0(all(chani <= 0), hk * 0 + 1, NULL),
   vka = rmfi_ifelse0(all(layvka == 0), hk, NULL),
   ss = rmfi_ifelse0("TR" \%in\% dis$sstr, hk * 0 + 1e-05, NULL),
-  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && all(laytyp > 0), hk * 0 +
-  0.15, NULL), vkcb = NULL)
+  sy = rmfi_ifelse0("TR" \%in\% dis$sstr && all(laytyp > 0), hk * 0 + 0.15, NULL),
+  vkcb = NULL
+)
 }
 \arguments{
 \item{dis}{RMODFLOW dis object}
@@ -56,7 +64,7 @@ Object of class upw
 }
 \details{
 Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and VKCB}. A single variable can be specified either through the use of parameters or by using direct array input.
-         When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
+When a flow variable for a specific layer is specified using parameters, all flow variables of the type must be specified by parameters. E.g. if a flow parameter defines HK for layer 1, HK must be defined for all layers using flow parameters instead of direct array input.
 }
 \note{
 upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.

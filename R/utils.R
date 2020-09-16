@@ -10,6 +10,15 @@ rmf_as_array <- function(...) {
   UseMethod('rmf_as_array')
 }
 
+#' @export
+rmf_as_array.rmf_2d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_3d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_4d_array <- function(x, ...) x
+
 #'
 #' Convert a rmf_list to a RMODFLOW array
 #' 
@@ -68,6 +77,9 @@ rmf_as_array.rmf_list <- function(obj,
 rmf_as_list <- function(...) {
   UseMethod('rmf_as_list')
 }
+
+#' @export
+rmf_as_list.rmf_list <- function(x, ...) x
 
 #'
 #' Converts a rmf_2d_array or rmf_3d_array to a rmf_list
@@ -132,7 +144,7 @@ rmf_as_list.rmf_4d_array <- function(obj, l, ...) {
   rmf_as_list(obj[,,,l], ...)
 }
 
-#' Generic function to convert rmf_array objects to tibbles
+#' Generic function to convert RMODFLOW objects to tibbles
 #' 
 #' @rdname rmf_as_tibble
 #' @export
@@ -140,27 +152,205 @@ rmf_as_tibble <- function(...) {
   UseMethod('rmf_as_tibble')
 }
 
-#' Title
+#' @param cbc \code{RMODFLOW} cbc object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subset
+#' @param mask optional 3D array with 0 or F indicating inactive cells; defaults to having all cells active
+#' @param ijk optional; a data.frame with i, j and k columns used to select the cells for \code{rmf_list} objects in \code{cbc}
+#' @param prj optional projection file object
+#' @param crs optional coordinate reference system to transform to
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id type of id used; options are \code{'r'} or \code{'modflow'}. Defaults to \code{'r'}
+#' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
+#' @param ts_time logical passed to \code{rmf_as_tibble.rmf_4d_array}; should the returned time column represent the cumulative modelled time or the time step numbers. Defaults to TRUE (cumulative modelled time)
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#' @param as_points 
+#' @details Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
+#' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
 #'
-#' @return
+#' @return \code{rmf_as_tibble.cbc} returns a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
 #' @export
-#'
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble cbc
+#' 
 #' @examples
+#' m <- rmf_read(rmf_example_file('example-model.nam'), output = TRUE, verbose = FALSE)
+#' 
+#' # cbc
+#' rmf_as_tibble(m$cbc, m$dis, fluxes = c('wells', 'flow_right_face'))
+#' 
+rmf_as_tibble.cbc <- function(cbc,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              mask = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
+                              ijk = NULL,
+                              prj = rmf_get_prj(dis),
+                              crs = NULL, 
+                              as_points = FALSE,
+                              id = 'r',
+                              fluxes = 'all',
+                              ts_time = TRUE,
+                              ...) {
+  
+  if(length(fluxes) > 1 || fluxes != 'all') cbc <- cbc[which(names(cbc) %in% fluxes)]
+  
+  set_tbl <- function(obj, flux) {
+    if(inherits(obj, 'rmf_list')) {
+      tbl <- rmf_as_tibble(obj, dis = dis, ijk = ijk, prj = prj, crs = crs, as_points = as_points, id = id)
+      ntimes <- table(tbl$nstp)
+      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], times = ntimes)
+      if(!is.null(attr(obj, 'totim'))) tbl$time <- tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], times = ntimes)
+      if(!is.null(attr(obj, 'delt'))) tbl$delt <- rep(attr(obj, 'delt')[!is.na(attr(obj, 'delt'))], times = ntimes)
+      
+    } else {
+      if(inherits(obj, 'rmf_2d_array')) {
+        warning('Using first layer of mask', call. = FALSE)
+        tbl <- rmf_as_tibble(obj, dis = dis, mask = mask[,,1], prj = prj, crs = crs, as_points = as_points, id = id)
+      } else if(inherits(obj, 'rmf_3d_array')) {
+        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      } else if(inherits(obj, 'rmf_4d_array')) {
+        tbl <- rmf_as_tibble(obj, dis = dis, i = i, j = j, k = k, l = l, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id, ts_time = ts_time)
+      }
+      repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+      if(!is.null(attr(obj, 'nstp'))) tbl$nstp <- rep(attr(obj, 'nstp')[!is.na(attr(obj, 'nstp'))], each = repeats)
+      if(!is.null(attr(obj, 'totim'))) tbl$totim <- rep(attr(obj, 'totim')[!is.na(attr(obj, 'totim'))], each = repeats)
+      if(!is.null(attr(obj, 'pertim'))) tbl$pertim <- rep(attr(obj, 'pertim')[!is.na(attr(obj, 'pertim'))], each = repeats)
+      if(!is.null(attr(obj, 'kper'))) tbl$kper <- rep(attr(obj, 'kper')[!is.na(attr(obj, 'kper'))], each = repeats)
+      if(!is.null(attr(obj, 'kstp'))) tbl$kstp <- rep(attr(obj, 'kstp')[!is.na(attr(obj, 'kstp'))], each = repeats)
+    }
+    tbl$flux <- flux
+    return(tbl)
+  }
+  
+  set_empty_cols <- function(tbl) {
+    extra <- nms[which(!(nms %in% colnames(tbl)))]
+    if(length(extra) > 0) tbl[,extra] <- NA
+    return(tbl)
+  }
+  
+  tbls <- lapply(seq_along(cbc), function(i) set_tbl(cbc[[i]], names(cbc)[i]))
+  nms <- unique(unlist(lapply(tbls, colnames)))
+  tbls <- lapply(tbls, set_empty_cols)
+  
+  tbls <- do.call(rbind, tbls)
+  
+  return(tbls)
+}
+
+#' @param ddn \code{RMODFLOW} ddn object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subset
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
+#'
+#' @return \code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'
+#' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble ddn
+#' @examples
+#' # ddn
+#' rmf_as_tibble(m$drawdown, m$dis, k = 1)
+#' 
+rmf_as_tibble.ddn <- function(ddn,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              as_points = FALSE,
+                              ...) {
+  
+  tbl <- rmf_as_tibble(rmf_create_array(ddn), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+  if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[!is.na(attr(ddn, 'nstp'))], each = repeats)
+  if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[!is.na(attr(ddn, 'totim'))], each = repeats)
+  if(!is.null(attr(ddn, 'pertim'))) tbl$pertim <- rep(attr(ddn, 'pertim')[!is.na(attr(ddn, 'pertim'))], each = repeats)
+  if(!is.null(attr(ddn, 'kper'))) tbl$kper <- rep(attr(ddn, 'kper')[!is.na(attr(ddn, 'kper'))], each = repeats)
+  if(!is.null(attr(ddn, 'kstp'))) tbl$kstp <- rep(attr(ddn, 'kstp')[!is.na(attr(ddn, 'kstp'))], each = repeats)
+  
+  return(tbl)
+}
+
+#' @param hed \code{RMODFLOW} hed object
+#' @param dis \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subset
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
+#'
+#' @return \code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
+#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'
+#' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble hed
+#' @examples
+#' # hed
+#' rmf_as_tibble(m$head, m$dis, i = 2, as_points = TRUE)
+#' 
+rmf_as_tibble.hed <- function(hed,
+                              dis,
+                              i = NULL,
+                              j = NULL,
+                              k = NULL,
+                              l = NULL,
+                              as_points = FALSE,
+                              ...) {
+  
+  tbl <- rmf_as_tibble(rmf_create_array(hed), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
+  repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
+  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = repeats)
+  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = repeats)
+  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[!is.na(attr(hed, 'pertim'))], each = repeats)
+  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[!is.na(attr(hed, 'kper'))], each = repeats)
+  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[!is.na(attr(hed, 'kstp'))], each = repeats)
+  
+  return(tbl)
+}
+
+#' @param array a \code{rmf_2d_array} object
+#' @param dis \code{RMODFLOW} dis object
+#' @param mask a 2d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active
+#' @param prj optional; a projection object
+#' @param crs optional; a crs object
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
+#'
+#' @return \code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
+#' x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'  
+#' @export
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_2d_array
+#' @examples
+#' # 2d array
+#' rmf_as_tibble(m$dis$top, m$dis, id = FALSE)
+#' 
 rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
-                                       mask = array * 0 + 1,
+                                       mask = array(1, dim = dim(array)),
                                        prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
-                                       id = 'r') {
-  
+                                       id = 'r',
+                                       ...) {
+
   xy <- expand.grid(sum(dis$delc) - (cumsum(dis$delc) - dis$delc/2), cumsum(dis$delr) - dis$delr/2)
   names(xy) <- c('y','x')
   mask[which(mask == 0)] <- NA
@@ -203,6 +393,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   
   if(id == 'modflow') {
     tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+    tbl$id <- as.integer(tbl$id)
   } else if(id != 'r') {
     tbl$id <- NULL
   }
@@ -210,21 +401,33 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   return(tbl)
 }
 
-#' Title
+#' @param array a \code{rmf_3d_array} object
+#' @param dis a \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param mask a 3d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active
+#' @param prj optional; a projection object
+#' @param crs optional; a crs object
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
+#'  
+#' @return \code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#' @param i 
-#' @param j 
-#' @param k 
-#'
-#' @return
+#' Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+#' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+#' Providing \code{i or j} can be used for subsetting a cross-section through the array.
+#' 
 #' @export
-#'
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_3d_array
 #' @examples
+#' # 3d array
+#' rmf_as_tibble(m$lpf$hk, m$dis)
+#' rmf_as_tibble(m$lpf$hk, m$dis, as_points = TRUE, i = 5)
+#' 
 rmf_as_tibble.rmf_3d_array <- function(array,
                                        dis,
                                        i = NULL,
@@ -234,53 +437,51 @@ rmf_as_tibble.rmf_3d_array <- function(array,
                                        prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
-                                       id = 'r') {
+                                       id = 'r',
+                                       ...) {
   
+  if(any(length(i) > 1 || length(j) > 1 || length(k) > 1)) stop('i, j or k should be of length 1', call. = FALSE)
+  
+  # set 3d tops & botm
+  if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
+  cbd <- rmfi_confining_beds(dis)
+  nnlay <- which(!cbd)
+  tops <- dis$top
+  botm <- dis$botm[,,nnlay]
+  if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+  center <- botm + (tops - botm)/2
+  z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
+  
+  # return full array
   if(is.null(i) && is.null(j) && is.null(k)) {
     
     tbl <- rmf_as_tibble(array = array[,,1], dis = dis, prj = prj, crs = crs, as_points = as_points, id = 'r')
+    if(length(nnlay) > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
     
-    if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned top and botm only represent numerical layers.", call. = FALSE)
-    cbd <- rmfi_confining_beds(dis)
-    nnlay <- which(!cbd)
-    tops <- dis$top
-    botm <- dis$botm[,,nnlay]
-    
-    if(length(nnlay) > 1) {
-      tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
-      tbl <- tbl[rep(seq_len(nrow(tbl)), length(nnlay)), ]
-    } 
-    
-    length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
-    z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
-    center <- botm + (tops - botm)/2
     mask[which(mask == 0)] <- NA
-    tbl$value <- c(array*mask^2)
+    tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
     tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
     if(as_points) tbl$z <- (length_mlt * center[tbl$id]) + z_ref
     tbl$top <- (length_mlt * tops[tbl$id]) + z_ref
     tbl$botm <- (length_mlt * botm[tbl$id]) + z_ref
-
-    if(id == 'modflow') {
-      tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
-    } else if(id != 'r') {
-      tbl$id <- NULL
-    }
     
   } else {
     
     if(!is.null(k)) {
-      array <- array[,,k]
       mask <- mask[,,k]
-      tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
-    } else {
+      array <- array[,,k]
+      tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
+      tbl$id <- tbl$id + ((k -1) * prod(dis$nrow, dis$ncol))
+      if(as_points) tbl$z <- (length_mlt * center[tbl$id]) + z_ref
+      
+    } else { # cross-section
       xy <- NULL
       xy$x <- cumsum(dis$delr)-dis$delr/2
       xy$y <- rev(cumsum(dis$delc)-dis$delc/2)
       mask[which(mask==0)] <- NA
       
-      # reason for optionally explicitely representing confining bed thickness:
-      # this function might eventually replace code in rmf_plot functions and confining beds should explicitely be plotted
+      # confining beds should explicitely be plotted
       if(any(dis$laycbd != 0) && dim(array)[3] != dim(dis$botm)[3]) {
         warning('Quasi-3D confining beds detected. Adding their thicknesses to the overlying numerical layers. Otherwise make sure the array explicitly contains Quasi-3D confining beds.')
         dis$thck <- rmf_calculate_thickness(dis, collapse_cbd = TRUE)
@@ -288,25 +489,34 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         nnlay <- dis$nlay
         dis$center <- botm
         for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
+        tops <- dis$top
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       } else {
         if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
         dis$thck <- rmf_calculate_thickness(dis)
         nnlay <- dis$nlay + sum(dis$laycbd != 0)
         dis$center <- dis$botm
         for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
+        tops <- dis$top
+        botm <- dis$botm
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       }
       
       if(is.null(i) & !is.null(j)) {
+        # y-z 
         ids <- seq_len(dis$nrow) + (dis$nrow * (j-1))
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$nrow), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$nrow))
-          
+        
+        # x-values
+        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis, prj = NULL)$x
+        
         if(as_points) {
-          positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]))
+          positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]), z = cst_values)
           values <- data.frame(id = ids, value = c((array[,j,]*mask[,j,]^2)))
         } else {
           xWidth <- rep(rev(dis$delc),dis$nlay)
           yWidth <- dis$thck[,j,]
-          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4))
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$y,each=4),y=rep(dis$center[,j,],each=4),z=rep(cst_values, each = 4))
           positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
           positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
           positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
@@ -319,9 +529,10 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=positions$x,z=positions$y,prj=prj, dis=dis)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$z, y=positions$x, z=positions$y, prj=prj, dis = dis)
           positions$x <- new_positions$y
           positions$y <- new_positions$z
+          positions$z <- new_positions$x
           
           if(!is.null(crs)) {
             transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
@@ -333,17 +544,26 @@ rmf_as_tibble.rmf_3d_array <- function(array,
           stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
         
+        tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+        colnames(tbl) <- replace(colnames(tbl), match(c('x', 'y', 'z'), colnames(tbl)), c('y', 'z', 'x'))
+        tbl <- tbl[,c('id', 'value', 'x', 'y', 'z')]
+        # if(!as_points) tbl$x <- NULL 
+        
       } else if(!is.null(i) & is.null(j)) {
+        # x-z
         ids <- i + c(0, cumsum(rep(dis$nrow, dis$ncol))[-dis$ncol])
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$ncol), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$ncol))
         
+        # y-values
+        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis, prj = NULL)$y
+        
         if(as_points) {
-          positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]))
+          positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]), z = cst_values)
           values <- data.frame(id = ids, value = c((array[i,,]*mask[i,,]^2)))
         } else {
           xWidth <- rep(dis$delr,dis$nlay)
           yWidth <- dis$thck[i,,]
-          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4))
+          positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(dis$center[i,,],each=4),z=rep(cst_values, each=4))
           positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
           positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
           positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
@@ -356,9 +576,10 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=positions$y,prj=prj,dis=dis)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$z, z=positions$y, prj=prj, dis = dis)
           positions$x <- new_positions$x
           positions$y <- new_positions$z
+          positions$z <- new_positions$y
           
           if(!is.null(crs)) {
             transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
@@ -369,92 +590,174 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         } else if(!is.null(crs)) {
           stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
+        
+        tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
+        colnames(tbl) <- replace(colnames(tbl), match(c('x', 'y', 'z'), colnames(tbl)), c('x', 'z', 'y'))
+        tbl <- tbl[,c('id', 'value', 'x', 'y', 'z')]
+        # if(!as_points) tbl$y <- NULL
       }
-      
-      tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
-      
-      if(id == 'modflow') {
-        tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
-      } else if(id != 'r') {
-        tbl$id <- NULL
-      }
-      
+
     }
+    
+    # add top & botm
+    tbl$top <- (length_mlt * tops[tbl$id]) + z_ref
+    tbl$botm <- (length_mlt * botm[tbl$id]) + z_ref
   }
+  
+  # change id
+  if(id == 'modflow') {
+    tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+    tbl$id <- as.integer(tbl$id)
+  } else if(id != 'r') {
+    tbl$id <- NULL
+  }
+  
   return(tbl)
 }
 
-#' Title
+#' @param array a \code{rmf_3d_array} object
+#' @param dis a \code{RMODFLOW} dis object
+#' @param i optional row number to subset
+#' @param j optional column number to subset
+#' @param k optional layer number to subset
+#' @param l optional time step number to subet
+#' @param mask a 3d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active
+#' @param prj optional; a projection object
+#' @param crs optional; a crs object
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ts_time logical; should the returned time column represent the cumulative modelled time or the time step numbers. See details. Defaults to TRUE (cumulative modelled time)
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#' @param i 
-#' @param j 
-#' @param k 
+#' @return \code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' 
+#' Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
+#' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
+#' Providing \code{i or j} can be used for subsetting a cross-section through the array.
 #'
-#' @return
+#' If \code{i, j and k} are provided, a \code{tibble} of a single cell time series is returned.
+#' If \code{l} is not provided but \code{i, j or k} is, a \code{tibble} with a time series of the subsetted array according to \code{i, j or k} is returned.
+#'
+#' @details The time steps (\code{nstp} column) are numbered from 1 to \code{dim(array)[4]}. Since in some cases, the \code{rmf_4d_array} does not represent all time steps of the simulation,
+#' (e.g. output is only written during certain time steps), the \code{nstp} value might not correspond to the true time step number for which output was written.
+#' In those cases, the \code{time} column might not give the correct cumulative time values if \code{ts_time = TRUE}. A warning will be thrown and the user should consider setting \code{ts_time = FALSE}
+#' and calculate the exact cumulative modelled time with e.g. \code{\link{rmf_time_steps}}.
+#'
 #' @export
-#'
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_4d_array
 #' @examples
+#' # 4d array
+#' r <- rmf_create_array(1:prod(dim(m$head)), dim = dim(m$head))
+#' rmf_as_tibble(r, m$dis)
+#' rmf_as_tibble(r, m$dis, time = 1)
+#' 
 rmf_as_tibble.rmf_4d_array <- function(array,
                                        dis,
                                        i = NULL,
                                        j = NULL,
                                        k = NULL,
                                        l = NULL,
-                                       mask = array * 0 + 1,
+                                       mask = array(1, dim = dim(array)[1:3]),
                                        prj = rmf_get_prj(dis),
                                        crs = NULL, 
                                        as_points = FALSE,
-                                       id = 'r') {
+                                       id = 'r',
+                                       ts_time = TRUE,
+                                       ...) {
   
+  if(any(length(i) > 1 || length(j) > 1 || length(k) > 1 || length(l) > 1)) stop('i, j, k or l should be of length 1', call. = FALSE)
+  
+  ts <- rmf_time_steps(dis, incl_ss = TRUE)
+  if(ts_time && length(ts$cumsum) != dim(array)[4]) warning('ts_time is TRUE but the array contains less time steps than specified by dis. Please consider setting ts_time = FALSE', call. = FALSE)
+  time <- rmfi_ifelse0(ts_time, ts$cumsum[seq_len(dim(array)[4])], seq_len(dim(array)[4]))
+  
+  # full 4d array
   if(is.null(i) && is.null(j) && is.null(k) && is.null(l)) {
     tbl <- rmf_as_tibble(array = rmf_create_array(array[,,,1]), dis = dis, prj = prj, crs = crs, as_points = as_points, id = id)
     if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
-
+    
     mask[which(mask == 0)] <- NA
-    tbl$value <- c(array*mask^2)
-    time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
+    mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
+    tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
     tbl$time <- rep(time, each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
+    tbl$nstp <- rep(seq_len(dim(array)[4]), each = prod(dis$nrow, dis$ncol, dis$nlay, ifelse(as_points, 1, 4)))
     
   } else {
+    # full 3d array + time columns of subsetted time step
     if(!is.null(l)) {
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask[,,,l], prj = prj, crs = crs, as_points = as_points, id = id)
-    } else if(!is.null(i) & !is.null(j) & !is.null(k)) {
-      time <- rmfi_ifelse0(is.null(attr(array, 'totim')), 1:dim(array)[4], attr(array, 'totim')[!is.na(attr(array, 'totim'))])
-      tbl <- tibble::tibble(value = array[i, j, k, ], time = time)
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      tbl$time <- time[l]
+      tbl$nstp <- l
+    } else if(!is.null(i) & !is.null(j) & !is.null(k)) { # single cell (time series)
+      tbl <- rmf_as_tibble(array[,,,1], k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
+      cell_id <- rmf_convert_ijk_to_id(i = i, j = j, k = k, dis = dis, type = 'r')
+      tbl <- tbl[which(tbl$id == cell_id),]
+      if(dim(array)[4] > 1) tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
+      
+      tbl$time <- rep(time, each = ifelse(as_points, 1, 4))
+      tbl$nstp <- rep(seq_len(dim(array)[4]), each = ifelse(as_points, 1, 4))
+      
+      # change id
+      if(id == 'modflow') {
+        tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
+        tbl$id <- as.integer(tbl$id)
+      } else if(id != 'r') {
+        tbl$id <- NULL
+      }
+      
     } else {
-      if(dim(array)[4] > 1) warning('Using final time step results.', call. = FALSE)
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,dim(array)[4]]), i = i, j = j, k = k, dis = dis, mask = mask[,,,dim(array)[4]], prj = prj, crs = crs, as_points = as_points, id = id)
+      # time series of a layer, row or column
+      tbl <- rmf_as_tibble(array, i = i, j = j, k = k, l = 1, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      if(dim(array)[4] > 1) {
+        ncell <- nrow(tbl)
+        tbl <- tbl[rep(seq_len(nrow(tbl)), dim(array)[4]), ]
+        tbl$time <- rep(time, each = ncell)
+        tbl$nstp <- rep(seq_len(dim(array)[4]), each = ncell)
+        
+        mask[which(mask == 0)] <- NA
+        mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
+        tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
+      }
     }
   }
   
+  tbl$nstp <- as.integer(tbl$nstp)
   return(tbl)
 }
 
-#' Title
+
+#' @param obj \code{RMODFLOW} rmf_list object
+#' @param dis \code{RMODFLOW} dis object
+#' @param ijk optional; a data.frame with i, j and k columns used to select the cells in the final tibble.
+#' @param prj optional; a projection object
+#' @param crs optional; a crs object
+#' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
+#' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @param obj 
-#' @param dis 
-#' @param ijk 
-#' @param prj 
-#' @param crs 
-#' @param as_points 
-#'
-#' @return
+#' @return \code{rmf_as_tibble.rmf_list} returns a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
+#' x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
+#' 
 #' @export
-#'
+#' @rdname rmf_as_tibble
+#' @method rmf_as_tibble rmf_list
 #' @examples
+#' # rmf_list
+#' l <- m$chd$data
+#' rmf_as_tibble(l, m$dis)
+#' rmf_as_tibble(l, m$dis, as_points = TRUE)
+#' 
 rmf_as_tibble.rmf_list <- function(obj,
                                    dis,
                                    ijk = NULL,
                                    prj = rmf_get_prj(dis),
                                    crs = NULL,
                                    as_points = FALSE, 
-                                   id = 'r') {
+                                   id = 'r',
+                                   ...) {
   
   if(!is.null(ijk)) {
     ijk_id <- rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = 'modflow')
@@ -475,14 +778,17 @@ rmf_as_tibble.rmf_list <- function(obj,
     coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
     if(!is.null(crs)) {
       if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
-      coords <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
+      coords_prj <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
+      coords$x <- coords_prj$x
+      coords$y <- coords_prj$y
     }
     df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r'))
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     df <- tibble::as_tibble(cbind(df, data, coords))
     
   } else {
-    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+
+    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = NULL)
     ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     xWidth <- dis$delr[obj$j]
     yWidth <- dis$delc[obj$i]
@@ -497,7 +803,7 @@ rmf_as_tibble.rmf_list <- function(obj,
     positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     values <- cbind(data.frame(id = ids), data)
-    
+
     if(!is.null(prj)) {
       new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
       positions$x <- new_positions$x
@@ -519,8 +825,10 @@ rmf_as_tibble.rmf_list <- function(obj,
   df$top <- (length_mlt * tops[df$id]) + z_ref
   df$botm <- (length_mlt * botm[df$id]) + z_ref
   
+  df$id <- as.integer(df$id)
   if(id == 'modflow') {
     df$id <- rmf_convert_id_to_id(df$id, dis = dis, from = 'r', to = 'modflow')
+    df$id <- as.integer(df$id)
   } else if(id != 'r') {
     df$id <- NULL
   }
@@ -767,13 +1075,6 @@ rmf_cell_coordinates <- function(...) {
   UseMethod('rmf_cell_coordinates')
 }
 
-#' @describeIn rmf_cell_coordinates Deprecated function name
-#' @export
-cell_coordinates <- function(...) {
-  .Deprecated(new = "rmf_cell_coordinates", old = "cell_coordinates")
-  rmf_cell_coordinates(...)
-}
-
 #' Get cell dimensions from a dis object
 #' 
 #' @param dis dis object
@@ -892,13 +1193,6 @@ rmf_cell_dimensions <- function(...) {
   UseMethod('rmf_cell_dimensions')
 }
 
-#' @describeIn rmf_cell_dimensions Deprecated function name
-#' @export
-cell_dimensions <- function(...) {
-  .Deprecated(new = "rmf_cell_dimensions", old = "cell_dimensions")
-  rmf_cell_dimensions(...)
-}
-
 #' Get information from a dis object at a certain grid cell
 #' 
 #' @param dis a discretization file object
@@ -976,13 +1270,6 @@ rmf_cell_info.huf <- function(huf,
 #' @export
 rmf_cell_info <- function(...) {
   UseMethod('rmf_cell_info')
-}
-
-#' @describeIn rmf_cell_info Deprecated function name
-#' @export
-cell_info <- function(...) {
-  .Deprecated(new = "rmf_cell_info", old = "cell_info")
-  rmf_cell_info(...)
 }
 
 #' Convert a bcf to a lpf object
@@ -1127,8 +1414,8 @@ rmf_convert_bcf_to_lpf <- function(bcf,
 #' @param cbc \code{RMODFLOW} cbc object
 #' @param dis \code{RMODFLOW} dis object
 #' @param hed \code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used
-#' @param porosity optional 3d array with porosity values. If used, the groundwater velocities are returned.
-#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent darcy velocities (or groundwater velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
+#' @param porosity optional 3d array with porosity values. If used, the average linear groundwater flow velocities are returned.
+#' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent Darcy velocities (or average linear groundwater flow velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 #' @export
 rmf_convert_cbc_to_darcy <- function(cbc,
                                      dis,
@@ -1168,11 +1455,11 @@ rmf_convert_cbc_to_darcy <- function(cbc,
          darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
       }
       if('drains' %in% names(cbc)) {
-        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
         darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
       }
       if('river_leakage' %in% names(cbc)) {
-        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'flow', sparse = FALSE)
+        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
         darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
       }
     }
@@ -1193,38 +1480,28 @@ rmf_convert_cbc_to_darcy <- function(cbc,
   return(darcy)
 }
 
-#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
-#' @export
-convert_bud_to_darcy <- function(...) {
-  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "convert_bud_to_darcy")
-  rmf_convert_cbc_to_darcy(...)
-}
-
-#' @describeIn rmf_convert_cbc_to_darcy Deprecated function name
-#' @export
-rmf_convert_bud_to_darcy <- function(...) {
-  .Deprecated(new = "rmf_convert_cbc_to_darcy", old = "rmf_convert_bud_to_darcy")
-  rmf_convert_cbc_to_darcy(...)
-}
-
-
 #' Convert a dis object to correspond to the saturated volume
 #' 
 #' @param dis dis object
 #' @param hed hed object
-#' @return dis object
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}
+#' @return \code{RMODFLOW} dis object corresponding to the saturated domain.
 #' @export
 rmf_convert_dis_to_saturated_dis <- function(dis,
                                              hed, 
-                                             l = NULL) {
-  if(length(dim(hed))==4) {
+                                             l = NULL,
+                                             na_values = NULL) {
+  if(length(dim(hed)) == 4) {
     if(!is.null(l)) {
       hed <- hed[,,,l]
     } else {
-      warning('Using final stress period heads to determine saturated part of grid.', call. = FALSE)
+      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
       hed <- hed[,,,dim(hed)[4]]
     }
   }
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
   # adjusting confining beds  - REVIEW required
   nnlay <- dis$nlay + sum(dis$laycbd != 0)
   cbd <- rmfi_confining_beds(dis)
@@ -1237,15 +1514,9 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     if (1 %in% cbd) botm[,,which(cbd == 1)] <- botm[,,which(cbd == 1)-1] - thck[,,which(cbd == 1)]
     dis$botm <- botm
   } 
-  dis$top <- rmf_create_array(c(hed[,,1]), dim = c(dis$nrow, dis$ncol))
+  dis$top <- rmf_convert_hed_to_water_table(hed)
+  # dis$top <- rmf_create_array(hed[,,1], dim = c(dis$nrow, dis$ncol))
   return(dis)
-}
-
-#' @describeIn rmf_convert_dis_to_saturated_dis Deprecated function name
-#' @export
-convert_dis_to_saturated_dis <- function(...) {
-  .Deprecated(new = "rmf_convert_dis_to_saturated_dis", old = "convert_dis_to_saturated_dis")
-  rmf_convert_dis_to_saturated_dis(...)
 }
 
 #' Convert modflow coordinates to real world coordinates
@@ -1360,35 +1631,83 @@ rmf_convert_grid_to_xyz <- function(dis,
     if(!is.null(k)) dat <- data.frame(x=x,y=y,z=z)
     return(dat)
   }
-}                                                                           
+}
 
-#' @describeIn rmf_convert_grid_to_xyz Deprecated function name
+
+#' Obtain the water table elevation from a hydraulic head array
+#'
+#' @param hed 2d, 3d or 4d array with hydraulic heads
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}
+#'
+#' @return \code{rmf_2d_array} with the elevation of the water table, i.e. the first non-NA value in every vertical column of the grid
 #' @export
-convert_grid_to_xyz <- function(...) {
-  .Deprecated(new = "rmf_convert_grid_to_xyz", old = "convert_grid_to_xyz")
-  rmf_convert_grid_to_xyz(...)
+#'
+rmf_convert_hed_to_water_table <- function(hed, l = NULL, na_values = NULL) {
+  
+  if(length(dim(hed)) == 4) {
+    if(!is.null(l)) {
+      hed <- hed[,,,l]
+    } else {
+      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
+      hed <- hed[,,,dim(hed)[4]]
+    }
+  }
+  
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
+  wt <- rmf_create_array(apply(hed, c(1,2), function(i) i[which(!is.na(i))[1]]))
+  return(wt)
+}
+
+#' Convert a hob object to a locations data frame
+#'
+#' @param hob \code{RMODFLOW} hob object
+#' @param dis \code{RMODFLOW} dis object
+#' @param prj prj object
+#' @details returned z coordinate represents the center of the cell, not the top or bottom of the well screen
+#' @return a data frame containing name, screened layer proportion pr, cell indices k, i, j and x, y & z coordinates
+#' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_convert_hob_to_time_series}}
+rmf_convert_hob_to_locations <- function(hob,
+                                         dis,
+                                         prj = rmf_get_prj(dis)) {
+  
+  hob$data <- hob$data[!duplicated(hob$data$obsnam),]
+  if(hob$dimensions$mobs > 0) {
+    m_id <- which(lengths(hob$data$layer) > 1)
+    df <- hob$data[-m_id, ]
+    df$layer <- unlist(df$layer)
+    df$pr <- unlist(df$pr)
+    df_m <- lapply(m_id, function(i) as.data.frame(lapply(hob$data[i, ], unlist)))
+    df_m <- do.call(rbind, df_m)
+    df <- rbind(df, df_m) 
+  } else {
+    df <- hob$data
+    df$layer <- unlist(df$layer)
+    df$pr <- unlist(df$pr)
+  }
+  
+  # TODO top & bottom filter
+  coords <- rmf_convert_grid_to_xyz(i = df$row, j = df$column, k = df$layer, roff = df$roff, coff=df$coff, dis = dis, prj = prj)
+  locations <- cbind(subset(df, select = c('obsnam', 'pr', 'layer', 'row', 'column')), coords)
+  locations <- setNames(locations, c('name', 'pr', 'k', 'i', 'j', 'x', 'y', 'z'))
+  return(locations)
 }
 
 #' Convert a hob object to a time series data frame
 #' 
-#' @param hob hob object
-#' @param dis dis object
-#' @param prj prj object
+#' @param hob \code{RMODFLOW} hob object
+#' @param dis \code{RMODFLOW} dis object
 #' @return time series data frame containing name, time and head columns
 #' @export
+#' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_convert_hob_to_locations}}
 rmf_convert_hob_to_time_series <- function(hob,
                                            dis,
-                                           prj) {
-  toffset <- lubridate::days(ifelse(hob$irefsp==1,0,cumsum(dis$perlen)[hob$irefsp-1]) + hob$toffset * hob$tomulth)
-  time_series <- data.frame(name = hob$obsloc, time = prj$starttime + toffset, head = hob$hobs)
+                                           starttime = dis$starttime) {
+  toffset <- ifelse(hob$data$irefsp==1,0,cumsum(dis$perlen)[hob$data$irefsp-1]) + hob$data$toffset * hob$tomulth
+  time_series <- data.frame(name = hob$data$obsnam, time = ifelse(is.null(starttime), 0, starttime) + toffset, head = hob$data$hobs)
   return(time_series)
-}
-
-#' @describeIn rmf_convert_hob_to_time_series Deprecated function name
-#' @export
-convert_hob_to_time_series <- function(...) {
-  .Deprecated(new = "rmf_convert_hob_to_time_series", old = "convert_hob_to_time_series")
-  rmf_convert_hob_to_time_series(...)
 }
 
 #' Convert a huf to a dis object (for plotting)
@@ -1418,24 +1737,17 @@ rmf_convert_huf_to_dis <- function(huf,
   return(new_dis)
 }
 
-#' @describeIn rmf_convert_huf_to_dis Deprecated function name
-#' @export
-convert_huf_to_dis <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_dis", old = "convert_huf_to_dis")
-  rmf_convert_huf_to_dis(...)
-}
-
 #' Convert a parameter defined on the HUF grid to the numerical grid
 #' 
 #' @param huf huf object
 #' @param dis dis object
-#' @param parameters either a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.
+#' @param parameters a list of huf parameters. Defaults to the parameters of the supplied \code{huf} object.
 #' @param values vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.
 #' @param grid target grid; either \code{'dis'} (default) or \code{'huf'}. When \code{'huf'}, no averaging is performed
 #' @param mask masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
 #' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric
 #' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
-#' @param pvl optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied
+#' @param pval optional \code{RMODFLOW} pval object. Used to overwrite the parval attributes if \code{parameters} is supplied
 #' @return rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'} 
 #' @details Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.
 #'      The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
@@ -1449,7 +1761,7 @@ rmf_convert_huf_to_grid <- function(huf,
                                     mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                                     type = ifelse(partyp == 'VK', 'harmonic', 'arithmetic'),
                                     partyp = 'HK',
-                                    pvl = NULL) {
+                                    pval = NULL) {
 
   # if parameters is supplied
   if(is.null(values)) {
@@ -1465,13 +1777,13 @@ rmf_convert_huf_to_grid <- function(huf,
     hgunam <- unique(unlist(lapply(parameters, function(i) attr(i, 'hgunam'))))
     hgunam <- which(huf$hgunam %in% hgunam)
     
-    # replace parval if value is in pvl object
-    if(!is.null(pvl) && length(parameters) > 0) {
+    # replace parval if value is in pval object
+    if(!is.null(pval) && length(parameters) > 0) {
       
       replace_parval <- function(parameter) {
-        if(attr(parameter, 'parnam') %in% pvl$parnam) {
+        if(attr(parameter, 'parnam') %in% pval$parnam) {
           old_parval <- attr(parameter, 'parval')
-          new_parval <- pvl$parval[which(pvl$parnam == attr(parameter, 'parnam'))]
+          new_parval <- pval$parval[which(pval$parnam == attr(parameter, 'parnam'))]
           parameter <- (parameter/old_parval)*new_parval
           attr(parameter, 'parval') <- new_parval
           return(parameter)
@@ -1503,7 +1815,7 @@ rmf_convert_huf_to_grid <- function(huf,
       if(length(hgunam) > 0) hgu_array[,,hgunam] <- unlist(lapply(huf$hgunam, get_array))
       
       # if partyp is HANI, VANI and not everything is supplied by parameters: get information from HGUHANI/HGUVANI
-      hgu_todo <- c(1:huf$nhuf)[-hgunam]
+      hgu_todo <- rmfi_ifelse0(length(hgunam) > 0, c(1:huf$nhuf)[-hgunam], 1:huf$nhuf)
       if(length(hgu_todo) > 0) {
         if(partyp == 'HANI') {
           # hgu_todo <- which(huf$hguhani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
@@ -1511,7 +1823,7 @@ rmf_convert_huf_to_grid <- function(huf,
           hgu_array[,,hgu_todo] <- rep(abs(huf$hguhani[hgu_todo]), each = dis$nrow, dis$ncol)
         }
         if(partyp == 'VANI') {
-          hgu_todo <- which(huf$hguvani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
+          hgu_todo <- which(huf$hguvani > 0 & (c(1:huf$nhuf) %in% hgu_todo))
           hgu_array[,,hgu_todo] <- rep(huf$hguvani[hgu_todo], each = dis$nrow, dis$ncol)
         }
       }
@@ -1549,12 +1861,21 @@ rmf_convert_huf_to_grid <- function(huf,
       thck <- pmin(huf$top[iCell,jCell,],cell_top) - pmax(huf$botm[iCell,jCell,],cell_botm)
       thck[which(thck < 0)] <- 0
       
-      if(is.null(values)) values <- hgu_array[iCell,jCell,]
+      if(is.null(values)) {
+        vls <- hgu_array[iCell,jCell,]
+      } else {
+        vls <- values
+      }
       
-      if(type=='arithmetic') return(weighted.mean(values,thck))
-      if(type=='harmonic') return(rmfi_weighted_harmean(values,thck))
-      if(type=='geometric') return(rmfi_weighted_geomean(values,thck))
+      if(type=='arithmetic') wght_vl <- weighted.mean(vls,thck)
+      if(type=='harmonic') wght_vl <- rmfi_weighted_harmean(vls,thck)
+      if(type=='geometric') wght_vl <- rmfi_weighted_geomean(vls,thck)
+      
+      if(is.na(wght_vl)) wght_vl <- 0
+      return(wght_vl)
+      
     }
+    
     # TODO speed up
     weighted_means <- vapply(which(mask!=0),get_weighted_mean, 1.0)
     num_grid_array[which(mask!=0)] <- weighted_means
@@ -1563,14 +1884,6 @@ rmf_convert_huf_to_grid <- function(huf,
   }
 }
 
-#' @describeIn rmf_convert_huf_to_grid Deprecated function name
-#' @export
-convert_huf_to_grid <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_grid", old = "convert_huf_to_grid")
-  rmf_convert_huf_to_grid(...)
-}
-
-
 #' Convert a huf to a lpf object
 #'
 #' @param huf \code{RMODFLOW} huf object
@@ -1578,7 +1891,7 @@ convert_huf_to_grid <- function(...) {
 #' @param mask masking 3d array for averaging \code{\link{rmf_convert_huf_to_grid}}, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
 #' @param vka character indicating what variable the VKA array in the resulting lpf object represents. Possible values are \code{'VK'} or \code{'VANI'}. If all HGUVANI values are the same, the default vka is set correspondingly. If HGUVANI varies between hgu's, the default vka is \code{'VANI'}.
 #' @param averaging named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the \code{partyp} defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').
-#' @param pvl optional \code{RMODFLOW} pvl object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
+#' @param pval optional \code{RMODFLOW} pval object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
 #' @param ... arguments passed to \code{\link{rmf_create_lpf}}
 #' @return a \code{RMODFLOW} lpf object
 #' @details Huf parameters are converted to non-parameter data averaged over the \code{dis} grid using \code{\link{rmf_convert_huf_to_grid}}.
@@ -1592,17 +1905,17 @@ rmf_convert_huf_to_lpf <- function(huf,
                                    mask = NULL,
                                    vka = ifelse(all(huf$hguvani == 0), 'VK', 'VANI'),
                                    averaging = c(HK = 'arithmetic', HANI = 'arithmetic', VK = 'harmonic', VANI = 'arithmetic', SS = 'arithmetic', SY = 'arithmetic'),
-                                   pvl = NULL,
+                                   pval = NULL,
                                    ...) {
   
     if(is.null(mask)) mask <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
 
-    hk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HK', type = averaging['HK'], pvl = pvl)
-    hani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HANI', type = averaging['HANI'], pvl = pvl)
+    hk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HK', type = averaging['HK'], pval = pval)
+    hani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HANI', type = averaging['HANI'], pval = pval)
 
     vk <- vani <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-    if(any(huf$hguvani == 0)) vk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VK', type = averaging['VK'], pvl = pvl)
-    if(any(huf$hguvani > 0)) vani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VANI', type = averaging['VANI'], pvl = pvl)
+    if(any(huf$hguvani == 0)) vk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VK', type = averaging['VK'], pval = pval)
+    if(any(huf$hguvani > 0)) vani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VANI', type = averaging['VANI'], pval = pval)
     if(vka == 'VK') {
       vani <- hk/vani
     } else if(vka == 'VANI') {
@@ -1615,8 +1928,8 @@ rmf_convert_huf_to_lpf <- function(huf,
     
     ss <- sy <- NULL
     if('TR' %in% dis$sstr) {
-      ss <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SS', type = averaging['SS'], pvl = pvl)
-      if(any(huf$lthuf != 0)) sy <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SY', type = averaging['SY'], pvl = pvl)
+      ss <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SS', type = averaging['SS'], pval = pval)
+      if(any(huf$lthuf != 0)) sy <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SY', type = averaging['SY'], pval = pval)
     } 
     
     lpf <- rmf_create_lpf(dis = dis, 
@@ -1657,13 +1970,6 @@ rmf_convert_huf_to_mask <- function(huf, dis, bas = NULL) {
   return(mask)
 }
 
-#' @describeIn rmf_convert_huf_to_mask Deprecated function name
-#' @export
-convert_huf_to_mask <- function(...) {
-  .Deprecated(new = "rmf_convert_huf_to_mask", old = "convert_huf_to_mask")
-  rmf_convert_huf_to_mask(...)
-}
-
 #' Convert an \code{ibound} array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell
 #' 
 #' @param ibound 3d \code{ibound} array as specified in a MODFLOW BAS object
@@ -1696,13 +2002,6 @@ rmf_convert_ibound_to_neighbours <- function(ibound) {
   }
   
   return(neighbours)
-}
-
-#' @describeIn rmf_convert_ibound_to_neighbours Deprecated function name
-#' @export
-convert_ibound_to_neighbours <- function(...) {
-  .Deprecated(new = "rmf_convert_ibound_to_neighbours", old = "convert_ibound_to_neighbours")
-  rmf_convert_ibound_to_neighbours(...)
 }
 
 #' Convert id to id
@@ -1751,13 +2050,6 @@ rmf_convert_id_to_ijk <- function(id,
   }  
 }
 
-#' @describeIn rmf_convert_id_to_ijk Deprecated function name
-#' @export
-convert_id_to_ijk <- function(...) {
-  .Deprecated(new = "rmf_convert_id_to_ijk", old = "convert_id_to_ijk")
-  rmf_convert_id_to_ijk(...)
-}
-
 #' Convert ijk to id
 #' 
 #' @param i vector of row numbers
@@ -1782,14 +2074,6 @@ rmf_convert_ijk_to_id <- function(i,
   }
   
 }
-
-#' @describeIn rmf_convert_ijk_to_id Deprecated function name
-#' @export
-convert_ijk_to_id <- function(...) {
-  .Deprecated(new = "rmf_convert_ijk_to_id", old = "convert_ijk_to_id")
-  rmf_convert_ijk_to_id(...)
-}
-
 
 #' Convert a lpf to a upw object
 #'
@@ -1902,7 +2186,7 @@ rmf_convert_upw_to_lpf <- function(upw,
 #' @return data frame with modflow coordinates
 #' @seealso \code{\link{rmf_convert_grid_to_xyz}}
 #' @export
-rmf_convert_xyz_to_grid <- function(dis,x,y,prj=rmf_get_prj(dis),z=NULL,output='xyz') {
+rmf_convert_xyz_to_grid <- function(dis,x,y,z=NULL,prj=rmf_get_prj(dis),output='xyz') {
   
   length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'grid')
   
@@ -2012,13 +2296,6 @@ rmf_convert_xyz_to_grid <- function(dis,x,y,prj=rmf_get_prj(dis),z=NULL,output='
   }
 }
 
-#' @describeIn rmf_convert_xyz_to_grid Deprecated function name
-#' @export
-convert_xyz_to_grid <- function(...) {
-  .Deprecated(new = "rmf_convert_xyz_to_grid", old = "convert_xyz_to_grid")
-  rmf_convert_xyz_to_grid(...)
-}
-
 #' Copy files from specified paths to current working directory
 #'
 #' @param filenames character vector of filenames
@@ -2039,10 +2316,12 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
 #'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
+#'          \code{dimnames} are dropped. 
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
 rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dimlabels = attr(obj, 'dimlabels')) {
+  attr(obj, 'dimnames') <- NULL
   if(!is.null(dim)) {
     att <- attributes(obj)
     obj <- array(obj, dim = dim)
@@ -2064,15 +2343,9 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   return(obj)
 }
 
-#' @describeIn rmf_create_array Deprecated function name
-#' @export
-create_rmodflow_array <- function(...) {
-  .Deprecated(new = "rmf_create_array", old = "create_rmodflow_array")
-  rmf_create_array(...)
-}
-
 #' @export
 "[.rmf_4d_array" <-  function(x, i, j, k, l, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k) && missing(l)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1, missing(l) || length(l) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2116,6 +2389,7 @@ create_rmodflow_array <- function(...) {
 
 #' @export
 "[.rmf_3d_array" <-  function(x, i, j, k, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2146,6 +2420,7 @@ create_rmodflow_array <- function(...) {
 
 #' @export
 "[.rmf_2d_array" <-  function(x, i, j, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2173,22 +2448,36 @@ create_rmodflow_array <- function(...) {
 }
 
 #' @export
-as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
+"[.hed" <-  function(x, i, j, k, l, ...) {
+  hed <- NextMethod(...)
+  if(length(dim(hed)) < 4) class(hed) <- subset(class(hed), class(hed) != 'hed')
+  return(hed)
+}
 
 #' @export
-as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
+"[.ddn" <-  function(x, i, j, k, l, ...) {
+  ddn <- NextMethod(...)
+  if(length(dim(ddn)) < 4) class(ddn) <- subset(class(ddn), class(ddn) != 'ddn')
+  return(ddn)
+}
 
 #' @export
-as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
+as.matrix.rmf_2d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.matrix.rmf_3d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.matrix.rmf_4d_array <- function(obj, ...) as.matrix(as.array(obj), ...)
 
 #' @export
-as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
+as.array.rmf_2d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
+
+#' @export
+as.array.rmf_3d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
+
+#' @export
+as.array.rmf_4d_array <- function(obj, ...) as.array(structure(obj, dimlabels = NULL, class = NULL, kper = NULL), ...)
 
 #' @export
 aperm.rmf_2d_array <- function(a, perm, ...) {
@@ -2242,24 +2531,6 @@ t.rmf_2d_array <- function(obj) {
   return(obj)
 }
 
-#' @export
-as.matrix.rmf_2d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.matrix.rmf_3d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.matrix.rmf_4d_array <- function(obj) as.matrix(as.array(obj))
-
-#' @export
-as.array.rmf_2d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
-#' @export
-as.array.rmf_3d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
-#' @export
-as.array.rmf_4d_array <- function(obj) structure(obj, dimlabels = NULL, class = NULL, kper = NULL)
-
 #'
 #' Create a MODFLOW parameter
 #'
@@ -2285,7 +2556,7 @@ rmf_create_parameter <- function(...) {
 #' @param partyp character specifying the type of flow parameter. Allowed values are \code{HK, HANI, VK, VANI, SS, SY}, \code{VKCB} for lpf and \code{SYTP} for huf. Not used when \code{layer} is \code{NULL}.
 #' @param mlt \code{RMODFLOW} mlt object which holds the multiplier arrays specified in \code{mltnam}
 #' @param zon \code{RMODFLOW} zon object which holds the zone arrays specified in \code{zonnam}
-#' @param instnam optional character specying the instance name of the parameter is to be time-varying; defaults to NULL
+#' @param instnam optional character specying the instance name if the parameter is to be time-varying; defaults to NULL
 #' @param hgunam character vector specifying the name(s) of the hydrogeological unit(s) if the parameter represents a huf parameter; defaults to NULL. See details.
 #' @details A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
 #'          If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
@@ -2479,134 +2750,6 @@ rmf_create_parameter.rmf_list <- function(rmf_list,
   return(rmf_list)
 }
 
-#' Calculate the Darcy flux
-#'
-#' @export
-rmf_darcy_flux <- function(...) {
-  UseMethod('rmf_darcy_flux')
-}
-
-#' Calculate the Darcy flux from a 2d array
-#'
-#' @param hed 2d array with the hydraulic heads
-#' @param dis \code{RMODFLOW} dis object
-#' @param hk 2d array with the hydraulic conductivities along rows
-#' @param hani either a 2d array or a single value specifying the horizontal anisotropy. See details. Defaults to isotropic conditions.
-#' @param porosity optional 2d array with the porosity values as fractions. See details. Defaults to NULL
-#' @param mask optional logical 2d array used to set the active cells; defaults to NULL
-#' @details Horizontal anisotropy is the ratio of hydraulic conductivity along columns (Y direction) to the hydraulic conductivity along rows (X direction).
-#'          Darcy flux (or Darcy velocity) is not the actual velocity at which the fluid travels. In order to obtain this fluid velocity, a porosity argument should be specified.
-#'          The flux components are positive in the direction of increasing Cartesian axes.
-#' @return a list with the magnitude, x and y components of the Darcy flux (or fluid velocity if porosity is specified) as 2d arrays
-#' @export
-#' @rdname rmf_darcy_flux
-#'
-rmf_darcy_flux.rmf_2d_array <- function(hed, dis, hk, hani = rep(1, dis$nlay), porosity = NULL, mask = NULL) {
-  
-  hk <- rmf_create_array(hk, dim = c(dis$nrow, dis$ncol))
-  if(!is.array(hani) && length(hani) == 1) hani <- rep(hani, dis$nlay)
-  
-  if(!is.array(hani)) hani <- rmf_create_array(rep(hani, each = dis$nrow*dis$ncol), dim = c(dis$nrow, dis$ncol))
-  hky <- hk*hani
-  
-  if(is.null(porosity)) {
-    porosity <- 1
-  } else {
-    porosity <- rmf_create_array(porosity, dim = c(dis$nrow, dis$ncol))
-  }
-  
-  if(is.null(mask)) mask <- hed*0 + 1
-  grad <- rmf_gradient(hed, dis = dis, mask = mask)
-  
-  fx <- -hk*grad$x/porosity
-  fy <- -hky*grad$y/porosity
-  mag <- sqrt(fx^2 + fy^2)
-  
-  return(list(magnitude = mag, x = fx, y = fy))
-  
-}
-
-#' Calculate the Darcy flux from a 3d array
-#'
-#' @param hed 3d array with the hydraulic heads
-#' @param dis \code{RMODFLOW} dis object
-#' @param flow optional \code{RMODFLOW} flow package, i.e. one of lpf, bcf, huf or upw. Overwrites the use of hk, hani, vka & vani. See details.
-#' @param hk 3d array with the hydraulic conductivities along rows
-#' @param hani either a 3d array or a single value for each layer specifying the horizontal anisotropy. See details. Defaults to isotropic conditions.
-#' @param vka 3d array with either vertical hydraulic conductivities or vertical anisotropies depending on the value of vani. See details.
-#' @param vani a single logical value for each layer specifying whether vka represents vertical hydraulic conductivity (FALSE) or vertical anisotropy for the layer (TRUE). Defaults to FALSE for all layers.
-#' @param porosity optional 3d array with the porosity values as fractions. See details. Defaults to NULL
-#' @param mask optional logical 3d array used to set the active cells; defaults to NULL
-#' @details When flow is specified, all flow parameters are obtained from the flow package.
-#'          Horizontal anisotropy is the ratio of hydraulic conductivity along columns (Y direction) to the hydraulic conductivity along rows (X direction).
-#'          Vertical anisotropy is the ratio of horizontal hydraulic conductivity along rows (X direction) to the vertical hydraulic conductivity.
-#'          Darcy flux (or Darcy velocity) is not the actual velocity at which the fluid travels. In order to obtain this fluid velocity, a porosity argument should be specified.
-#'          The flux components are positive in the direction of increasing Cartesian axes.
-#' @return a list with the magnitude, x, y and z components of the Darcy flux (or fluid velocity if porosity is specified) as 3d arrays
-#' @export
-#' @rdname rmf_darcy_flux
-#' 
-rmf_darcy_flux.rmf_3d_array <- function(hed, dis, flow = NULL, hk, hani = rep(1, dis$nlay), vka, vani = rep(FALSE, dis$nlay), porosity = NULL, mask = NULL) {
-  
-  if(!is.null(flow)) {
-    
-    if('huf' %in% class(flow)) {
-      flow <- rmf_convert_huf_to_lpf(flow, dis = dis, vka = 'VK', mask = mask)
-    } else if('bcf' %in% class(flow)) {
-      flow <- rmf_convert_bcf_to_lpf(flow, dis = dis)
-    } 
-    
-    hk <- flow$hk
-    hani <- rmfi_ifelse0(is.null(flow$hani), flow$chani, flow$hani)
-    vka <- flow$vka
-    vani <- flow$layvka > 0
-    
-  }
-  
-  hk <- rmf_create_array(hk, dim = c(dis$nrow, dis$ncol, dis$nlay))
-  vka <- rmf_create_array(vka, dim = c(dis$nrow, dis$ncol, dis$nlay))
-  if(length(vani) == 1) vani <- rep(vani, dis$nlay)
-  
-  vka[,,which(vani)] <- hk[,,which(vani)]/vka[,,which(vani)]
-  
-  if(!is.array(hani)) {
-    if(length(hani) == 1) hani <- rep(hani, dis$nlay)
-    hani <- rmf_create_array(rep(hani, each = dis$nrow*dis$ncol), dim = c(dis$nrow, dis$ncol, dis$nlay))
-  }
-  hky <- hk*hani
-  
-  if(is.null(porosity)) {
-    porosity <- 1
-  } else {
-    porosity <- rmf_create_array(porosity, dim = c(dis$nrow, dis$ncol, dis$nlay))
-  }
-  
-  if(is.null(mask)) mask <- hed*0 + 1
-  grad <- rmf_gradient(hed, dis = dis, mask = mask)
-  
-  fx <- -hk*grad$x/porosity
-  fy <- -hky*grad$y/porosity
-  fz <- -vka*grad$z/porosity
-  mag <- sqrt(fx^2 + fy^2 + fz^2)
-  
-  return(list(magnitude = mag, x = fx, y = fy, z = fz))
-  
-}
-
-#' Calculate the Darcy flux from a 4d array
-#'
-#' @param hed 4d array with the hydraulic heads
-#' @param dis \code{RMODFLOW} dis object
-#' @param l integer index used to subset the 4th dimension of hed
-#' @param ... additional arguments passed to \code{\link{rmf_darcy_flux.rmf_3d_array}}
-#' @details hed is subsetted to a 3d array and passed to \code{\link{rmf_darcy_flux.rmf_3d_array}}.
-#' @export
-#' @rdname rmf_darcy_flux
-rmf_darcy_flux.rmf_4d_array <- function(hed, dis, l, ...) {
-  if(missing(l)) stop('Please specify a l argument', call. = FALSE)
-  rmf_darcy_flux(hed[,,,l], dis = dis, ...)
-}
-
 #' Calculate a gradient field
 #'
 #' @rdname rmf_gradient
@@ -2622,15 +2765,17 @@ rmf_gradient <- function(...) {
 #'
 #' @param obj 2d array with the scalars
 #' @param dis \code{RMODFLOW} dis object
-#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param na_values optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 2d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x and y components of the gradient field as 2d arrays
-#' @details The gradient is evaluated in the direction of increasing x & y values.
+#' @details The gradient is evaluated in the direction of increasing x & y values. 
+#' Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_2d_array
 #' 
-rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+rmf_gradient.rmf_2d_array <- function(obj, dis, na_values = NULL, mask = obj*0 + 1) {
     
   coords <- rmf_cell_coordinates(dis)
   x <- coords$x[1,,1]
@@ -2639,8 +2784,8 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
   n <- dis$nrow
   m <- dis$ncol
   
-  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
-  obj <- obj*mask
+  if(!is.null(na_values)) obj[which(obj %in% na_values)] <- 0
+  obj <- obj*(mask^2)
     
   gX <- gY <- 0 * obj
   if(n > 1) {
@@ -2664,15 +2809,17 @@ rmf_gradient.rmf_2d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #'
 #' @param obj 3d array with the scalars
 #' @param dis \code{RMODFLOW} dis object
-#' @param na_value optional; sets these values in obj to 0; defaults to NULL
+#' @param na_values optional; sets these values in obj to 0; defaults to NULL
 #' @param mask logical 3d array indicating which cells to include in the gradient calculation; defaults to all cells active
 #' @return a list with the x, y and z components of the gradient field as 3d arrays
 #' @details The gradient is evaluated in the direction of increasing x, y & z values.
+#' Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_3d_array
 #' 
-rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 1) {
+rmf_gradient.rmf_3d_array <- function(obj, dis, na_values = NULL, mask = obj*0 + 1) {
   
   coords <- rmf_cell_coordinates(dis)
   x <- coords$x[1,,1]
@@ -2683,8 +2830,8 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
   m <- dis$ncol
   k <- dis$nlay
   
-  if(!is.null(na_value)) obj[which(obj == na_value)] <- 0
-  obj <- obj*mask
+  if(!is.null(na_values)) obj[which(obj %in% na_values)] <- 0
+  obj <- obj*(mask^2)
   
   gX <- gY <- gZ <- 0 * obj
   if(n > 1) {
@@ -2720,6 +2867,7 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_value = NULL, mask = obj*0 + 
 #' @export
 #'
 #' @rdname rmf_gradient
+#' @method rmf_gradient rmf_4d_array
 #' 
 rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
   if(missing(l)) stop('Please specify a l argument')
@@ -2744,7 +2892,7 @@ rmf_time_steps = function(dis = NULL,
                           perlen = NULL,
                           tsmult = NULL,
                           nstp = NULL,
-                          incl_ss = T){
+                          incl_ss = TRUE){
   
   
   if(!is.null(dis)){
@@ -2790,10 +2938,11 @@ rmf_time_steps = function(dis = NULL,
 #' @param file filename to write to
 #' @param append logical; should the array be appended to the file
 #' @param binary logical; should the array be written to a binary file
-#' @param header logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.
+#' @param header logical; should a MODFLOW style header be written for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.
 #' @param dis optional \code{RMODFLOW} dis object. Used when \code{KPER}, \code{PERTIM} and \code{TOTIM} in the header should be exact.
 #' @param desc character of maximum 16 characters. Used to set the \code{desc} element in the header. Default to \code{'HEAD'}
 #' @param precision character; either \code{'single'} or \code{'double'}. Denotes the precision of the binary file.
+#' @param integer logical; does the binary array contain integer values? Defaults to FALSE
 #' @param xsection logical; does the array represent a NLAY x NCOL cross-section. See 'Details'.
 #' 
 #' @details the header file consists of the following elements:
@@ -2808,22 +2957,27 @@ rmf_time_steps = function(dis = NULL,
 #'  
 #'  \code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
 #'   \code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to 
-#'   set the \desc(ILAY) argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
+#'   set the \code{ILAY} argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
 #'   \code{xsection} does not affect simulation results (assuming the array dimensions are correct)
 #'  
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_read_array}}
 
-rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header = ifelse(binary, TRUE, FALSE), dis=NULL, desc = 'HEAD', precision = 'single', xsection = FALSE) {
+rmf_write_array <- function(array, file, append = FALSE, binary = FALSE, header = binary, dis=NULL, desc = 'HEAD', precision = 'single', integer = FALSE, xsection = FALSE) {
   
   if(binary) { # binary
-    if(header && is.integer(array)) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE", call. = FALSE)
-    write_binary = function() {
+    if(!integer) {
+      array[] <- as.numeric(array)
+    } else {
+      if(!is.integer(array)) stop('Array does not contain integers. Please set integer = FALSE or write as ASCII', call. = FALSE)
+    }
+    if(header && integer) warning("MODFLOW does not read a header line for a binary integer array. Consider setting header to FALSE", call. = FALSE)
+    write_binary <- function() {
       real_number_bytes <- ifelse(precision == 'single', 4, 8)
-      size <- ifelse(is.integer(array), NA_integer_, real_number_bytes)
-      ncell = prod(dim(array))
-      desc = format(toupper(desc), width = 16, justify='right')
+      size <- ifelse(integer, NA_integer_, real_number_bytes)
+      ncell <- prod(dim(array))
+      desc <- format(toupper(desc), width = 16, justify='right')
       
       if(is.null(dim(array))) {    # scalar
         if(header) {
@@ -2880,10 +3034,10 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
                 totim <- sum(1:l)
                 pertim <- l
               } else {
-                kper <-  findInterval(l, cumsum(dis$nstp), left.open = T) + 1
-                kstp <-  rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
-                totim <-  rmf_time_steps(dis)$cumsum[l]
-                pertim <-  totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
+                kper <- findInterval(l, cumsum(dis$nstp), left.open = T) + 1
+                kstp <- rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
+                totim <- rmf_time_steps(dis)$cumsum[l]
+                pertim <- totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
               }
               
               writeBin(as.integer(kstp), con=con) # KSTP
@@ -2901,9 +3055,9 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
       }
     }
     if(append) {
-      con <-  file(file, open='ab')
+      con <- file(file, open='ab')
     } else {
-      con <-  file(file, open='wb')
+      con <- file(file, open='wb')
     }
     
     try(write_binary())
@@ -2915,7 +3069,7 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
     if(length(dim(array))==3) {    # 3D
       for(k in 1:dim(array)[3]) {
         if(header) rmfi_write_variables(1, 1, 1, 1, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection,-1,k), paste0('(',ncol(array),'F)'), file=file)
-        write.table(array[,,k], file=file, col.names = F, row.names = F, append = TRUE)
+        write.table(array[,,k], file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
       }
     } else if(length(dim(array))==4) {    # 4D
       if(header && is.null(dis)) warning('No dis object supplied; writing simplified header lines.', call. = FALSE)
@@ -2929,157 +3083,21 @@ rmf_write_array = function(array, file, append = FALSE, binary = FALSE, header =
               totim <- sum(1:l)
               pertim <- l
             } else {
-              kper <-  findInterval(l, cumsum(dis$nstp), left.open = T) + 1
+              kper <-  findInterval(l, cumsum(dis$nstp), left.open = TRUE) + 1
               kstp <-  rmfi_ifelse0(kper > 1, l - cumsum(dis$nstp[kper-1]), l)
               totim <-  rmf_time_steps(dis)$cumsum[l]
               pertim <-  totim - rmf_time_steps(dis)$cumsum[cumsum(nstp)[kper-1]]
             }
             rmfi_write_variables(kper, kstp, totim, pertim, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection,-1,k), paste0('(',ncol(array),'F)'), file=file)
           }
-          write.table(array[,,k,l], file=file, col.names = F, row.names = F, append = TRUE)
+          write.table(array[,,k,l], file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
         }
       }
     } else {
       if(header) rmfi_write_variables(1, 1, 1, 1, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection, -1,1), paste0('(',ncol(array),'F)'), file=file)
-      write.table(array, file=file, col.names = F, row.names = F, append = TRUE)
+      write.table(array, file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
     }
-    
   }
-}
-
-#' Generic function to export GIS raster layers from RMODFLOW arrays
-#' 
-#' @rdname rmf_export_raster
-#' @export
-rmf_export_raster <- function(...) {
-  UseMethod('rmf_export_raster')
-}
-
-#' Generic function to export tables from RMODFLOW arrays
-#' 
-#' @rdname rmf_export_table
-#' @export
-rmf_export_table <- function(...) {
-  UseMethod('rmf_export_table')
-}
-
-#' @describeIn rmf_export_table Deprecated function name
-#' @export
-export_table <- function(...) {
-  .Deprecated(new = "rmf_export_table", old = "export_table")
-  rmf_export_table(...)
-}
-
-#' Generic function to export tables from RMODFLOW arrays
-#' 
-#' @rdname rmf_export_table
-#' @export
-rmf_export_table.rmf_4d_array <- function(array,
-                                          k,
-                                          l,
-                                          dis,
-                                          bas = NULL,
-                                          mask = rmfi_ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),
-                                          prj=NULL,
-                                          crs=NULL,
-                                          file='rmf_export.csv',
-                                          type='csv') {
-  if(type=='csv') {
-    
-    cell_coord <- cell_coordinates(dis)
-    if(!is.null(prj)) {
-      cell_coord <- rmf_convert_grid_to_xyz(x=c(cell_coord$x[,,k]),y=c(cell_coord$y[,,k]),prj=prj,dis=dis)
-    } else {
-      cell_coord <- data.frame(x = c(cell_coord$x[,,k]), y = c(cell_coord$y[,,k]))
-    }
-    write.csv(na.omit(data.frame(x = c(cell_coord$x), y = c(cell_coord$y), value = c(array[,,k,l]))), file = file, row.names = FALSE)
-    
-  } else {
-    stop('Please provide valid type.', call. = FALSE)
-  }
-}
-
-#' Generic function to export GIS vector layers from RMODFLOW arrays
-#' 
-#' @rdname rmf_export_vector
-#' @export
-rmf_export_vector <- function(...) {
-  UseMethod('rmf_export_vector')
-}
-
-#' @describeIn rmf_export_vector Deprecated function name
-#' @export
-export_vector <- function(...) {
-  .Deprecated(new = "rmf_export_vector", old = "export_vector")
-  rmf_export_vector(...)
-}
-
-#' Generic function to export vectors
-#' 
-#' @rdname rmf_export_vector
-#' @export
-rmf_export_vector.rmf_2d_array <- function(array,
-                                           dis,
-                                           bas = NULL,
-                                           mask = rmfi_ifelse0(is.null(bas),array*0+1,bas$ibound[,,1]),
-                                           prj=NULL,
-                                           crs=NULL,
-                                           file='rmf_vector',
-                                           type = 'ESRI Shapefile',
-                                           include_ijk = FALSE) {
-  
-  
-  xy <- expand.grid(cumsum(dis$delr)-dis$delr/2,sum(dis$delc)-(cumsum(dis$delc)-dis$delc/2))
-  names(xy) <- c('x','y')
-  mask[which(mask==0)] <- NA
-  ids <- factor(1:(dis$nrow*dis$ncol))
-  xWidth <- rep(dis$delr,dis$nrow)
-  yWidth <- rep(dis$delc,each=dis$ncol)
-  positions <- data.frame(id = rep(ids, each=4),x=rep(xy$x,each=4),y=rep(xy$y,each=4))
-  positions$x[(seq(1,nrow(positions),4))] <- positions$x[(seq(1,nrow(positions),4))] - xWidth/2
-  positions$x[(seq(2,nrow(positions),4))] <- positions$x[(seq(2,nrow(positions),4))] - xWidth/2
-  positions$x[(seq(3,nrow(positions),4))] <- positions$x[(seq(3,nrow(positions),4))] + xWidth/2
-  positions$x[(seq(4,nrow(positions),4))] <- positions$x[(seq(4,nrow(positions),4))] + xWidth/2
-  positions$y[(seq(1,nrow(positions),4))] <- positions$y[(seq(1,nrow(positions),4))] - yWidth/2
-  positions$y[(seq(2,nrow(positions),4))] <- positions$y[(seq(2,nrow(positions),4))] + yWidth/2
-  positions$y[(seq(3,nrow(positions),4))] <- positions$y[(seq(3,nrow(positions),4))] + yWidth/2
-  positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
-  if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
-    positions$x <- new_positions$x
-    positions$y <- new_positions$y
-  }
-  if(!is.null(crs)) {
-    positions <- rmfi_convert_coordinates(positions,from=sp::CRS(prj$projection),to=crs)
-  }
-  
-  positions_matrix_x <- matrix(positions$x,nrow=length(ids),ncol=4,byrow=TRUE)
-  positions_matrix_y <- matrix(positions$y,nrow=length(ids),ncol=4,byrow=TRUE)
-  positions_matrix <- cbind(ids,positions_matrix_x, positions_matrix_y)
-  create_polygon_from_row <- function(dat) sp::Polygons(list(sp::Polygon(data.frame(x=dat[2:5],y=dat[6:9]))), ID = dat[1])
-  polygons_list <- apply(positions_matrix, 1, create_polygon_from_row)
-  
-  
-  #   # takes too long
-  #   polygons_list <- list(length=length(ids))
-  #   for(i in 1:length(ids)) {
-  #     polygons_list[[i]] <- Polygons(list(Polygon(positions[which(positions$id==ids[i]),c('x','y')])), ID = ids[i])
-  #   }
-  
-  # apply mask!!
-  # add i, j to data.frame
-  
-  SP <- sp::SpatialPolygons(polygons_list, proj4string=sp::CRS(prj$projection))
-  DF <- data.frame(value = c(t(array*mask^2)), row.names = ids)
-  if(include_ijk) {
-    ijk <- convert_modflow_id_to_ijk(1:(dis$nrow*dis$ncol), dis)
-    DF$i <- ijk$i
-    DF$j <- ijk$j
-    DF$k <- ijk$k
-  }
-  ids_to_keep <- row.names(na.omit(DF))
-  SPDF <- sp::SpatialPolygonsDataFrame(SP[which(1:(dis$nrow*dis$ncol) %in% ids_to_keep)], na.omit(DF))
-  rgdal::writeOGR(SPDF, dsn = '.', layer = file, driver = type, overwrite_layer = TRUE)
 }
 
 #' Generic function to get model performance measures
@@ -3089,14 +3107,6 @@ rmf_export_vector.rmf_2d_array <- function(array,
 rmf_performance <- function(...) {
   UseMethod('rmf_performance')
 }
-
-#' @describeIn rmf_performance Deprecated function name
-#' @export
-performance <- function(...) {
-  .Deprecated(new = "rmf_performance", old = "performance")
-  rmf_performance(...)
-}
-
 
 #' Get model performance measures
 #'
@@ -3143,43 +3153,6 @@ rmf_performance.hpr <- function(hpr, hobdry = -888, measures = c('ssq', 'mse', '
   return(perform)
 }
 
-#' Read a GMS 2D grid file
-#' 
-#' \code{read_gms_2d_grid} reads in a GMS 2D grid file and returns it as an \code{\link{RMODFLOW}} gms2dgrid object.
-#' 
-#' @param file filename
-#' @return object of class gms2dgrid
-#' @export
-rmf_read_gms_2d_grid <- function(file = {cat('Please select gms 2d grid file ...\n'); file.choose()}) {
-  grid2d <- list()
-  grid2d.lines <- readr::read_lines(file)
-  #2dgrid.lines <- remove.comments.from.lines(mlt.lines)
-  grid2d.lines <- grid2d.lines[-1]    
-  grid2d$objtype <- as.character(strsplit(grid2d.lines[1],'\"')[[1]][2])
-  grid2d.lines <- grid2d.lines[-1]
-  grid2d.lines <- grid2d.lines[-1]
-  grid2d$nd <- as.numeric(strsplit(grid2d.lines[1],' ')[[1]][3])
-  grid2d.lines <- grid2d.lines[-1]
-  grid2d$nc <- as.numeric(strsplit(grid2d.lines[1],' ')[[1]][3])    
-  grid2d.lines <- grid2d.lines[-1]
-  grid2d$n <- as.character(strsplit(grid2d.lines[1],'\"')[[1]][2])    
-  grid2d.lines <- grid2d.lines[-1]    
-  grid2d.lines <- grid2d.lines[-1] 
-  
-  grid2d$nddata <- as.numeric(grid2d.lines[1:grid2d$nd])
-  grid2d$ncdata <- as.numeric(grid2d.lines[(1+grid2d$nd):(grid2d$nd + grid2d$nc)])              
-  
-  class(grid2d) <- 'gms_2d_grid'
-  return(grid2d)
-}
-
-#' @describeIn rmf_read_gms_2d_grid Deprecated function name
-#' @export
-rmf_read_gms_2d_grid <- function(...) {
-  .Deprecated(new = "rmf_read_gms_2d_grid", old = "read_gms_2d_grid")
-  rmf_read_gms_2d_grid(...)
-}
-
 #' Read a MODFLOW array from a separate file. 
 #'
 #' \code{rmf_read_array} reads a MODFLOW array from a separate file. Binary and ASCII formats are supported
@@ -3190,8 +3163,9 @@ rmf_read_gms_2d_grid <- function(...) {
 #' @param nlay number of layers in the array that should be read (3th dimension); defaults to 1
 #' @param nstp number of timesteps in the array that should be read (4th dimension); defaults to 1
 #' @param binary logical; is the array read from a binary file.
+#' @param kper integer vector specifying the stress periods in which the array is active. Defaults to \code{NULL}
 #' @param integer logical; does the array hold integer values. Only used for binary files. Might not work optimally.
-#' @param header logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if binary is TRUE and FALSE otherwise.
+#' @param header logical; should a MODFLOW style header be read for the array (see 'Details'). Defaults to TRUE if \code{binary = TRUE} and FALSE otherwise.
 #' @param precision character: either \code{'single'} (default) or \code{'double'}. Denotes the precision of the binary file.
 #'
 #' @details \code{nrow}, \code{ncol}, \code{nlay}, \code{nstp} have to be specified if header is FALSE. They are used to dimension the array.
@@ -3208,19 +3182,22 @@ rmf_read_gms_2d_grid <- function(...) {
 #' @export
 #' @seealso \code{\link{rmf_write_array}}
 
-rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary = F, integer = F, header = ifelse(binary, TRUE, FALSE), precision = 'single') {
+rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary = FALSE, kper = NULL, integer = FALSE, header = binary, precision = 'single') {
   
   if(!header) {
     if(is.null(nrow) || is.null(ncol) || is.null(nlay) || is.null(nstp)) {
       stop('Either provide nrow, ncol, nlay and nstp or set header to TRUE', call. = FALSE)
     }
   }
-  
+  stp_nr <- 0
+  kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
+  kper_inp <- kper
   if(binary) { # Binary
     
-    read_binary = function() {
+    read_binary <- function() {
       real_number_bytes <- ifelse(precision == 'single', 4, 8)
       type <- ifelse(integer, 'integer', 'numeric')
+
       if(header) {
         
         kstp <- readBin(con,what='integer',n=1)
@@ -3228,8 +3205,6 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
         pertim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
         totim <- readBin(con,what='numeric',n = 1, size = real_number_bytes)
         desc <- readChar(con,nchars=16)
-        
-        stp_nr <- 0
         
         while(length(desc != 0)) {
           
@@ -3239,7 +3214,6 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
           
           if(stp_nr == 0) { # initialize 3d array
             arr <- aperm(array(readBin(con,what=type,n = ncol * nrow, size = ifelse(integer, NA_integer_, real_number_bytes)),dim=c(ncol, nrow, 1)), c(2, 1, 3))
-            kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
           } else { # read (abind drops attributes)
             arr <- abind::abind(arr, 
                                 aperm(array(readBin(con,what=type,n = ncol * nrow, size = ifelse(integer, NA_integer_, real_number_bytes)),dim=c(ncol, nrow)), c(2, 1)),
@@ -3279,14 +3253,13 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
       return(arr)
     }
     con <- file(file,open='rb')
-    arr = try(read_binary())
+    arr <- try(read_binary())
     close(con)
     
   } else { # ASCII
     lines <- readr::read_lines(file)
     
     if(header) {
-      stp_nr <- 0
       
       while(length(lines) != 0) {
         variables <- rmfi_remove_empty_strings(strsplit(lines[1],' ')[[1]])
@@ -3301,11 +3274,10 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
         ilay <- abs(as.numeric(variables[length(variables)-1]))
         lines <- lines[-1]
         
-        data_set <- rmfi_parse_array(lines,nrow,ncol,1, skip_header = TRUE)
+        data_set <- rmfi_parse_array(lines,nrow,ncol,1, ndim = 2, skip_header = TRUE)
         
         if(stp_nr == 0) { # initialize 3d array
           arr <- array(data_set$array, dim = c(dim(data_set$array), 1))
-          kstp_attr <- kper_attr <- pertim_attr <- totim_attr <- desc_attr <- ncol_attr <- nrow_attr <- ilay_attr <- NULL
         } else { # read (abind drops attributes)
           arr <- abind::abind(arr, data_set$array, along = 3)
         }
@@ -3331,7 +3303,7 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
       
       for(stp_nr in 1:nstp)  {
         for(ilay in 1:nlay) {
-          data_set <- rmfi_parse_array(lines,nrow,ncol,1, skip_header = TRUE)
+          data_set <- rmfi_parse_array(lines,nrow,ncol,1, ndim = 2, skip_header = TRUE)
           arr[,,ilay,stp_nr] <- data_set$array
           lines <- data_set$remaining_lines
         }
@@ -3358,16 +3330,13 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
     arr <- c(array(arr,dim=nrow*ncol*nlay*nstp))
   } else if(nrow !=1 && ncol !=1 && nlay == 1 && nstp == 1) {
     arr <- arr[,,1,1]
-    class(arr) <- 'rmf_2d_array'   
   } else if(nstp != 1) {
-    class(arr) <- 'rmf_4d_array'
   } else {
     arr <- arr[,,,1]
-    class(arr) <- 'rmf_3d_array'
   }
   
   if(header) {
-    
+    # class(arr) <- append(class(arr), 'hed')
     attr(arr, 'dimnames') <- NULL
     attr(arr, 'kstp') <- kstp_attr
     attr(arr, 'kper') <- kper_attr
@@ -3392,6 +3361,7 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
     }
   }
   
+  arr <- rmf_create_array(arr, kper = kper_inp)
   return(arr)
   
 }
@@ -3412,8 +3382,7 @@ rmf_read_array = function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binary
 rmf_create_list <-  function(df, kper = NULL) {
   
   df <- as.data.frame(df)
-  colnames(df) <- tolower(colnames(df))
-  if(any(!(c('k','i','j') %in% names(df)))) stop('Please set names of the kij columns to k, i and j', call. = FALSE)
+  if(any(!(c('k','i','j') %in% names(df)))) stop('df object should at least have columns k, i, j', call. = FALSE)
   
   attr(df, 'kper') <- kper  
   class(df) <- c('rmf_list', class(df))
@@ -3422,5 +3391,4 @@ rmf_create_list <-  function(df, kper = NULL) {
 }
 
 #' @export
-as.data.frame.rmf_list <- function(obj) as.data.frame.data.frame(structure(obj, kper = NULL))
-
+as.data.frame.rmf_list <- function(obj, ...) structure(NextMethod(...), kper = NULL)
