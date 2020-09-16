@@ -8,7 +8,7 @@ rmfd_supported_codes <- c("MODFLOW-2005", "MODFLOW-OWHM", "MODFLOW-NWT",
 rmfd_supported_packages <- tibble::tribble(
   ~ftype,   ~rmf,
    'HOB',  'hob',
-  'PVAL',  'pvl',
+  'PVAL',  'pval',
    'DIS',  'dis',
   'ZONE',  'zon', 
   'MULT',  'mlt',
