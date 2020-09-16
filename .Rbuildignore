@@ -3,3 +3,5 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 ^NEWS\.md$
+^inst/code/
+^data-raw$

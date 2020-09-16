@@ -464,16 +464,14 @@ rmfi_ifelse0 <- function(test, yes, no) {
 #' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
 rmfi_list_packages <- function(type = 'all') {
   
-  # update these two vectors everytime a new package is supported
+  # update rmfd_supported_packages in /data-raw/ when a new package is supported
   # NAM file is not in here but is supported
-  pack_names <- c('HOB','PVAL','DIS','ZONE','MULT','BAS6','HUF2','OC','WEL','GHB','PCG','KDEP','LPF','RCH','CHD','BCF6','HFB6','RIV','DRN','EVT','SIP','DE4','NWT','UPW','LVDA','GMG', 'LMT6')
-  rmf_names  <- c('hob','pvl', 'dis','zon', 'mlt', 'bas', 'huf', 'oc','wel','ghb','pcg','kdep','lpf','rch','chd','bcf', 'hfb', 'riv','drn','evt','sip','de4','nwt','upw','lvda','gmg', 'lmt')
-  
-  df <- data.frame(ftype = pack_names, rmf = rmf_names, stringsAsFactors = FALSE)
+
+  df <- rmfd_supported_packages
   
   # Below is an exhaustive overview of all packages in MODFLOW-2005 & variants
   # basic
-  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pvl', 'lgr')
+  basic <- c('dis', 'bas', 'nam', 'mlt', 'zon', 'pval', 'lgr')
   
   # flow packages
   flow <- c('bcf', 'lpf', 'huf', 'swi', 'hfb', 'uzf', 'upw', 'kdep', 'lvda')
@@ -1145,11 +1143,11 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
 #' @keywords internal
 rmfi_performance_measures <- function(observations, predictions,print=FALSE,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
   gof <- hydroGOF::gof(predictions, observations, ...)
-  name <- c('Mean error', 'Mean absolute error', 'Mean square error', 'Root mean square error', 'Normalized root mean square error',
-            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standars deviations', 'Nash-Sutcliffe efficiency', 
+  name <- c('Mean error', 'Mean absolute error', 'Mean squared error', 'Root mean squared error', 'Normalized root mean squared error',
+            'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standard deviations', 'Nash-Sutcliffe efficiency', 
             'Modified Nash-Sutcliffe efficiency', 'Relative Nash-Sutcliffe efficiency','Index of agreement', 'Modified index of agreement', 
             'Relative index of agreement', 'Coefficient of persistance', 'Pearson product-moment correlation coefficient', 'Coefficient of determination',
-            'R2 multiplied with slope of linear regressions between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
+            'R2 multiplied with slope of linear regression between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
   gof <- data.frame(measure = rownames(gof), value = c(gof), name = name)
   gof <- rbind(gof, data.frame(measure = 'SSQ', value = round(sum((predictions - observations)^2), digits = 2), name ='Sum of squared errors'))
   measures <- tolower(measures)
