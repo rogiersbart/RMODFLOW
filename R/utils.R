@@ -1674,7 +1674,7 @@ rmf_convert_hob_to_locations <- function(hob,
                                          prj = rmf_get_prj(dis)) {
   
   hob$data <- hob$data[!duplicated(hob$data$obsnam),]
-  if(hob$dimensions$mobs > 0) {
+  if(hob$mobs > 0) {
     m_id <- which(lengths(hob$data$layer) > 1)
     df <- hob$data[-m_id, ]
     df$layer <- unlist(df$layer)
