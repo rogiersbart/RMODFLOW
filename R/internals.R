@@ -196,8 +196,10 @@ rmfi_create_bc_array <- function(arg, dis) {
   
   # combine
   data <- c(parameters, arrays)
-  dimensions <- list(np = np, instances = instances)
-  return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  return(list(np = np,
+              instances = instances,
+              parameter_values = parameter_values,
+              data = data, kper = kper))
   
 }
 
