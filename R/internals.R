@@ -196,8 +196,10 @@ rmfi_create_bc_array <- function(arg, dis) {
   
   # combine
   data <- c(parameters, arrays)
-  dimensions <- list(np = np, instances = instances)
-  return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  return(list(np = np,
+              instances = instances,
+              parameter_values = parameter_values,
+              data = data, kper = kper))
   
 }
 
@@ -353,9 +355,15 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
   
   # combine
   data <- structure(rbind(parameters, lists), kper = NULL)
-  dimensions <- list(np = np, mxl = mxl, instances = instances, mxact = mxact, itmp = itmp)
   
-  return(list(dimensions = dimensions, parameter_values = parameter_values, data = data, kper = kper))
+  return(list(np = np,
+              mxl = mxl,
+              instances = instances,
+              mxact = mxact,
+              itmp = itmp,
+              parameter_values = parameter_values,
+              data = data,
+              kper = kper))
   
 }
 
@@ -1563,18 +1571,18 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
 rmfi_write_array_parameters <- function(obj, arrays, file, partyp, ...) {
   
   parm_names <- names(obj$parameter_values)
-  tv_parm <- structure(rep(F,obj$dimensions$np), names = parm_names)
+  tv_parm <- structure(rep(F,obj$np), names = parm_names)
   
-  for (i in 1:obj$dimensions$np){
+  for (i in 1:obj$np){
     
     p_name <- parm_names[i]
     arr <- arrays[[p_name]]
     
-    tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
+    tv_parm[i] <- (!is.null(obj$instances) && obj$instances[p_name] != 0)
     nclu <- ifelse(tv_parm[i], length(attr(arr[[1]], 'mlt')), length(attr(arr, 'mlt')))
     
     # headers
-    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nclu), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$dimensions$instances[p_name]), ''), file=file)
+    rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nclu), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$instances[p_name]), ''), file=file)
     
     # time-varying
     if(tv_parm[i]){
@@ -1627,36 +1635,36 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   cat(paste('#', comment(obj)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(obj$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(obj$dimensions$np), as.integer(obj$dimensions$mxl), file=file)
+  if(obj$np > 0) rmfi_write_variables('PARAMETER', as.integer(obj$np), as.integer(obj$mxl), file=file)
   
   # data set 2
   if(!is.null(list(...)[["format"]]) && list(...)[['format']] == 'fixed') {
-    ds2 <- paste0(formatC(as.integer(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]])), width = 10), collapse='')
+    ds2 <- paste0(formatC(as.integer(c(obj$mxact, obj[[paste0('i',tolower(package), 'cb')]])), width = 10), collapse='')
   } else {
-    ds2 <- as.integer(c(obj$dimensions$mxact, obj[[paste0('i',tolower(package), 'cb')]]))
+    ds2 <- as.integer(c(obj$mxact, obj[[paste0('i',tolower(package), 'cb')]]))
   }
   rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
   # parameters
-  if(obj$dimensions$np > 0){
+  if(obj$np > 0){
     parm_names <- names(obj$parameter_values)
-    tv_parm <- structure(rep(FALSE,obj$dimensions$np), names = parm_names)
+    tv_parm <- structure(rep(FALSE,obj$np), names = parm_names)
     
-    for (i in 1:obj$dimensions$np){
+    for (i in 1:obj$np){
       
       p_name <- parm_names[i]
       df <- subset(obj$data, name == p_name)
       
-      tv_parm[i] <- (!is.null(obj$dimensions$instances) && obj$dimensions$instances[p_name] != 0)
-      nlst <- unname(ifelse(tv_parm[i], nrow(df)/obj$dimensions$instances[p_name], nrow(df)))
+      tv_parm[i] <- (!is.null(obj$instances) && obj$instances[p_name] != 0)
+      nlst <- unname(ifelse(tv_parm[i], nrow(df)/obj$instances[p_name], nrow(df)))
       
       # data set 3
-      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nlst), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$dimensions$instances[p_name]), ''), file=file)
+      rmfi_write_variables(p_name, toupper(partyp), obj$parameter_values[i], as.integer(nlst), ifelse(tv_parm[i], 'INSTANCES', ''), ifelse(tv_parm[i],  as.integer(obj$instances[p_name]), ''), file=file)
       
       # time-varying
       if(tv_parm[i]){
         instances <- unique(df$instance)
-        for (jj in 1:obj$dimensions$instances[p_name]){
+        for (jj in 1:obj$instances[p_name]){
           
           df2 <- subset(df, instance == instances[jj])
           # data set 4a
@@ -1683,15 +1691,15 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
     if(i > 1 && identical(names_act, colnames(obj$kper)[which(obj$kper[i-1,which(!is.na(obj$kper[i-1,]))] != FALSE)[-1]])) {
       itmp <- -1 
     } else {
-      list_names <- rmfi_ifelse0(obj$dimensions$np > 0, names_act[!(names_act %in% parm_names)], names_act)
+      list_names <- rmfi_ifelse0(obj$np > 0, names_act[!(names_act %in% parm_names)], names_act)
       if(length(list_names) > 0) {
-        itmp <- sum(obj$dimensions$itmp[list_names])
+        itmp <- sum(obj$itmp[list_names])
       } else {
         itmp <- 0
       }
     }
     
-    if(obj$dimensions$np > 0) {
+    if(obj$np > 0) {
       parm_names_active <- parm_names[parm_names %in% names_act]
       np <- length(parm_names_active)
     } else {

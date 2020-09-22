@@ -24,13 +24,11 @@ rmf_create_rch <- function(...,
   arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
   # create rch object
-  obj <- list()
-  
-  obj$dimensions <- arg$dimensions
+  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
   obj$nrchop <- nrchop
   obj$irchcb <- irchcb
   obj$recharge <- arg$data
-  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  if(arg$np > 0) obj$parameter_values <- arg$parameter_values
   obj$kper <- arg$kper
   
   # irch
@@ -239,17 +237,17 @@ rmf_write_rch <-  function(rch,
   cat(paste('#', comment(rch)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(rch$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(rch$dimensions$np), file=file)
+  if(rch$np > 0) rmfi_write_variables('PARAMETER', as.integer(rch$np), file=file)
   
   # data set 2
   rmfi_write_variables(rch$nrchop, rch$irchcb, file=file, integer = TRUE, ...)
   
   # parameters
   partyp <- 'RCH'
-  if(rch$dimensions$np > 0) {
+  if(rch$np > 0) {
     parm_names <- names(rch$parameter_values)
-    tv_parm <- rep(FALSE, rch$dimensions$np)
-    if(!is.null(rch$dimensions$instances)) tv_parm <- rch$dimensions$instances > 0
+    tv_parm <- rep(FALSE, rch$np)
+    if(!is.null(rch$instances)) tv_parm <- rch$instances > 0
     rmfi_write_array_parameters(obj = rch, arrays = rch$recharge, file = file, partyp = 'RCH', ...)
   }
   
@@ -284,7 +282,7 @@ rmf_write_rch <-  function(rch,
       } 
     }
     
-    if(rch$dimensions$np > 0) {
+    if(rch$np > 0) {
       parm_names_active <- parm_names[parm_names %in% names_act]
       np <- length(parm_names_active)
     } else {
