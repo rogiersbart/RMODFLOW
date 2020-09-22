@@ -21,14 +21,12 @@ rmf_create_chd <-  function(...,
   arg <- rmfi_create_bc_list(arg = list(...), dis = dis, varnames = vars, aux = aux)
   
   # create chd object
-  obj <- list()
-  
-  obj$dimensions <- arg$dimensions
+  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
   obj$ichdcb <- NULL
   obj$option <- c('noprint' = noprint)
   obj$aux <- aux
   obj$data <- arg$data
-  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  if(arg$np > 0) obj$parameter_values <- arg$parameter_values
   obj$kper <- arg$kper
   
   class(obj) <- c('chd', 'rmf_package')

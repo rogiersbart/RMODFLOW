@@ -121,8 +121,7 @@ rmf_create_hfb <-  function(...,
   data <- structure(rbind(parameters, lists), kper = NULL)
 
   # create hfb object
-  obj <- list()
-  obj$dimensions <- list(np = np, mxl = mxl, nnp = nrow(data) - mxl, nacthfb = nacthfb, acthfb = acthfb)
+  obj <- list(np = np, mxl = mxl, nnp = nrow(data) - mxl, nacthfb = nacthfb, acthfb = acthfb)
   obj$ihfbcb <- NULL
   obj$option <- c('noprint' = noprint)
   obj$aux <- NULL
@@ -254,13 +253,13 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   cat(paste('#', comment(hfb)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(as.integer(hfb$dimensions$np), as.integer(hfb$dimensions$mxl), as.integer(hfb$dimensions$nnp), ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
+  rmfi_write_variables(as.integer(hfb$np), as.integer(hfb$mxl), as.integer(hfb$nnp), ifelse(hfb$option['noprint'], 'NOPRINT', ''), file=file)
   
   # parameters
-  if(hfb$dimensions$np > 0){
+  if(hfb$np > 0){
     parm_names <- names(hfb$parameter_values)
     
-    for (i in 1:hfb$dimensions$np){
+    for (i in 1:hfb$np){
       p_name <- parm_names[i]
       df <- subset(hfb$data, name == p_name)
       df[[vars[1]]] <- as.integer(df[[vars[1]]])
@@ -288,12 +287,12 @@ rmf_write_hfb<-  function(hfb, dis = rmf_read_dis(), file={cat('Please choose hf
   }
   
   # data set 5
-  rmfi_write_variables(as.integer(hfb$dimensions$nacthfb), file = file)
+  rmfi_write_variables(as.integer(hfb$nacthfb), file = file)
   
   # data set 6
-  if(hfb$dimensions$nacthfb > 0){
-    for(j in 1:hfb$dimensions$nacthfb){
-      rmfi_write_variables(hfb$dimensions$acthfb[j], file=file)
+  if(hfb$nacthfb > 0){
+    for(j in 1:hfb$nacthfb){
+      rmfi_write_variables(hfb$acthfb[j], file=file)
     }
   }
   
