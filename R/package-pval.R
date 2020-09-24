@@ -3,14 +3,20 @@
 #' \code{rmf_create_pval} creates an \code{RMODFLOW} pval object
 #' 
 #' @param parnam character vector specifying the parameter names; defaults to NULL
-#' @param parval numeric vector specifying the parameter values; defaults to NULL+
-#' @details parnam & parval should be of the same length
+#' @param parval numeric vector specifying the parameter values; defaults to NULL
+#' @param np number of MODFLOW-supported parameters; defaults to `length(parnam)`
+#' @details parnam & parval should be of the same length. Extra parameters that
+#'   are not supported by MODFLOW can be introduced, but np should be adjusted
+#'   accordingly (*i.e.* not accounting for the extra parameters). For working
+#'   with these extra parameters, see the `preprocess` argument to
+#'   `rmf_execute()`.
 #' @return an \code{RMODFLOW} pval object
 #' @export
 #' @seealso \code{\link{rmf_read_pval}}, \code{\link{rmf_write_pval}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?parameter_value_file.htm}
 
 rmf_create_pval = function(parnam, 
-                          parval){
+                           parval,
+                           np = length(parnam)){
   
   pval <-  list()
   
@@ -18,7 +24,7 @@ rmf_create_pval = function(parnam,
   # to provide comments, use ?comment on resulting pval object
   
   # data set 1
-  pval$np <- length(parnam)
+  pval$np <- np
   
   # data set 2
   pval$parnam <-  parnam
@@ -33,15 +39,13 @@ rmf_create_pval = function(parnam,
 #' 
 #' \code{rmf_read_pval} reads in a MODFLOW parameter value file and returns it as an \code{\link{RMODFLOW}} pval object.
 #' 
-#' @param file filename; typically '*.pval'
-#' @param read_all logical, indicating if \code{np} parameters should be read, or the full parameter table (only relevant if external codes use the pval file for storing additional parameters).
+#' @param path Path to the PVAL file. Typically with extension `.pval`.
 #' @return object of class pval
 #' @export
 #' @seealso \code{\link{rmf_create_pval}}, \code{\link{rmf_write_pval}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pval.htm}
-rmf_read_pval <- function(file = {cat('Please select pval file ...\n'); file.choose()},
-                         read_all = FALSE) {
+rmf_read_pval <- function(path) {
   
-  pval_lines <- readr::read_lines(file)
+  pval_lines <- readr::read_lines(path)
   pval <- list()
   
   # data set 0
@@ -51,11 +55,11 @@ rmf_read_pval <- function(file = {cat('Please select pval file ...\n'); file.cho
   rm(data_set_0)
   
   # data set 1
-  pval$np <- ifelse(read_all, length(pval_lines)-1, as.numeric(pval_lines[1]))
+  pval$np <- as.numeric(pval_lines[1])
   pval_lines <- pval_lines[-1]
   
   # data set 2
-  for(i in 1:pval$np) {
+  for(i in 1:length(pval_lines)) {
     pval$parnam[i] <- as.character(strsplit(pval_lines[1],' ')[[1]][1])
     pval$parval[i] <- as.numeric(rmfi_remove_empty_strings(strsplit(pval_lines[1],' ')[[1]])[2])
     pval_lines <- pval_lines[-1]
@@ -68,23 +72,23 @@ rmf_read_pval <- function(file = {cat('Please select pval file ...\n'); file.cho
 #' Write a MODFLOW parameter value file
 #' 
 #' @param pval an \code{\link{RMODFLOW}} pval object
-#' @param file filename to write to; typically '*.pval'
+#' @param path Path to write the PVAL file. Typically with extension `.pval`.
 #' @return \code{NULL}
 #' @export
 #' @seealso \code{\link{rmf_create_pval}}, \code{\link{rmf_read_pval}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pval.htm}
 rmf_write_pval <- function(pval,
-                          file = {cat('Please select pval file to overwrite or provide new filename ...\n'); file.choose()}) {
+                           path) {
   
   # data set 0
   v <- packageDescription("RMODFLOW")$Version
-  cat(paste('# MODFLOW Parameter Value File created by RMODFLOW, version',v,'at',date(),'\n'), file=file)
-  cat(paste('#', comment(pval)), sep='\n', file=file, append=TRUE)
+  cat(paste('# MODFLOW Parameter Value File created by RMODFLOW, version',v,'at',date(),'\n'), file = path)
+  cat(paste('#', comment(pval)), sep='\n', file = path, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(pval$np, file=file, integer = TRUE)
+  rmfi_write_variables(pval$np, file = path, integer = TRUE)
   
   # data set 2
-  for(i in 1:pval$np) {
-    rmfi_write_variables(pval$parnam[i], pval$parval[i], file=file)
+  for(i in 1:length(pval$parnam)) {
+    rmfi_write_variables(pval$parnam[i], pval$parval[i], file = path)
   }  
 }
