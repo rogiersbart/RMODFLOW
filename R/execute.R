@@ -74,7 +74,7 @@ rmf_execute.character <- function(
       
       # replace evaluate values in parval
         if (!is.null(evaluate)) {
-          pval$parval <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
+          pval$data$parval <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, evaluate)
         }
       
       # preprocess pval file
@@ -224,17 +224,17 @@ rmf_analyze <- function(path,
   
   # evaluate, include, transform
   if (is.null(evaluate)) {
-    evaluate <- pval$parval
+    evaluate <- pval$data$parval
   } else {
-    evaluate <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
+    evaluate <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, evaluate)
   }
   if (is.null(include)) {
     include <- rep(TRUE,length(evaluate))
   } else {
     regex_to_include <- rep(TRUE, length(include))
     names(regex_to_include) <- include
-    include <- rep(FALSE, length(pval$parnam))
-    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+    include <- rep(FALSE, length(pval$data$parnam))
+    include <- rmfi_replace_in_vector(pval$data$parnam, include, regex_to_include)
   }
   if(!is.null(transform)) {
     if (!all(transform %in% "log")) {
@@ -244,7 +244,7 @@ rmf_analyze <- function(path,
     }
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
-    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, length(pval$parnam)), transform)
+    transform <- rmfi_replace_in_vector(pval$data$parnam, rep(FALSE, length(pval$data$parnam)), transform)
     evaluate[transform] <- log(evaluate[transform])
   }
   
@@ -252,8 +252,8 @@ rmf_analyze <- function(path,
   rui::begin("Analyzing")
   
   # initial run
-  pval$parval <- evaluate
-  if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
+  pval$data$parval <- evaluate
+  if (any(transform)) pval$data$parval[transform] <- exp(pval$data$parval[transform])
   rmf_write_pval(pval, rmfi_look_for_path(dir, nam, type = "pval"))
   rmf_execute(path = path, code = code, ui = "none", ...)
   hob_out_orig <- rmfi_look_for_path(dir, nam, unit = hob$iuhobsv) %>% 
@@ -261,17 +261,17 @@ rmf_analyze <- function(path,
   rmf_analyze <- list()
   rmf_analyze$dss <- matrix(NA_real_,
                     nrow = hob$nh,
-                    ncol = length(pval$parnam))
-  rmf_analyze$css <- rep(NA_real_, length(pval$parnam))
-  rmf_analyze$parnam <- pval$parnam
+                    ncol = length(pval$data$parnam))
+  rmf_analyze$css <- rep(NA_real_, length(pval$data$parnam))
+  rmf_analyze$data$parnam <- pval$data$parnam
   
   # dss & css
   for(i in which(include)) {
-    pval$parval <- evaluate
+    pval$data$parval <- evaluate
     
     # perturbation
-    pval$parval[i] <- pval$parval[i]*1.01
-    if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
+    pval$data$parval[i] <- pval$data$parval[i]*1.01
+    if (any(transform)) pval$data$parval[transform] <- exp(pval$data$parval[transform])
     
     # evaluation
     rmf_write_pval(pval, rmfi_look_for_path(dir, nam, type = "pval"))
@@ -332,6 +332,8 @@ rmf_analyze <- function(path,
 #'   Defaults to `"ssq"`.
 #' @param export Optional file path to export intermediate results to after each
 #'   iteration.
+#' @param continue To continue from the last parameter set recorded in the
+#'   export file, or not. Defaults to FALSE.
 #' @param ... Optional arguments passed to [rmf_execute()].
 #' @return Invisible list with [optim()] results and the full parameter list.
 #' @export
@@ -351,6 +353,7 @@ rmf_optimize <- function(
   restore = FALSE,
   visualize = interactive(),
   export = NULL,
+  continue = FALSE,
   iterate = 50,
   tolerate = 1E-4,
   ...
@@ -378,42 +381,58 @@ rmf_optimize <- function(
              "in the NAM file.")
     rui::stop('Issue with model structure.')
   }
+
+  # continue from previous optimization
+  if (continue) {
+    if (is.null(export)) {
+      rui::alert("You want to continue a previous optimization, but you have",
+                 "not provided an export file path.")
+      rui::stop("Issue with optimization.")
+    }
+    start <- readr::read_tsv(export) %>%
+      dplyr::select(-1, -2) %>%
+      dplyr::slice(nrow(.)) %>%
+      unlist()
+  }
   
+  # if restart, remove export file first
+  if (!continue & fs::file_exists(export)) fs::file_delete(export)
+    
   # start, include, transform, lower, upper
   if (is.null(start)) {
-    start <- pval$parval
+    start <- pval$data$parval
   } else {
-    start <- rmfi_replace_in_vector(pval$parnam, pval$parval, start)
+    start <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, start)
   }
   if (is.null(include)) {
     include <- rep(TRUE,length(start))
   } else {
     regex_to_include <- rep(TRUE, length(include))
     names(regex_to_include) <- include
-    include <- rep(FALSE, length(pval$parnam))
-    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+    include <- rep(FALSE, length(pval$data$parnam))
+    include <- rmfi_replace_in_vector(pval$data$parnam, include, regex_to_include)
   }
   if (is.list(lower)) {
-    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, length(pval$parnam)), lower,
+    lower <- rmfi_replace_in_vector(pval$data$parnam, rep(-Inf, length(pval$data$parnam)), lower,
                                     start = start)
   } else if (length(lower) == 1 & is.infinite(lower[1])) {
-    lower <- rep(lower, length(pval$parnam))
+    lower <- rep(lower, length(pval$data$parnam))
   } else {
-    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, length(pval$parnam)), lower)
+    lower <- rmfi_replace_in_vector(pval$data$parnam, rep(-Inf, length(pval$data$parnam)), lower)
   }
   if (is.list(upper)) {
-    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, length(pval$parnam)), upper,
+    upper <- rmfi_replace_in_vector(pval$data$parnam, rep(Inf, length(pval$data$parnam)), upper,
                                     start = start)
   } else if (length(upper) == 1 & is.infinite(upper[1])) {
-    upper <- rep(upper, length(pval$parnam))
+    upper <- rep(upper, length(pval$data$parnam))
   } else {
-    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, length(pval$parnam)), upper)
+    upper <- rmfi_replace_in_vector(pval$data$parnam, rep(Inf, length(pval$data$parnam)), upper)
   }
   if(!is.null(transform)) {
     if (!all(transform %in% "log")) rui::stop("Only logarithmic transforms are currently implemented.")
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
-    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, length(pval$parnam)), transform)
+    transform <- rmfi_replace_in_vector(pval$data$parnam, rep(FALSE, length(pval$data$parnam)), transform)
     start[transform] <- log(start[transform])
     lower[transform] <- log(lower[transform])
     upper[transform] <- log(upper[transform])
@@ -422,13 +441,13 @@ rmf_optimize <- function(
   # optimize
   rui::begin("Optimizing")
   run <- 0
-  optimization_history <- matrix(ncol = length(pval$parnam) + 1, nrow = 0)
+  optimization_history <- matrix(ncol = length(pval$data$parnam) + 1, nrow = 0)
   optim_modflow <- function(included_parval) {
     run <<- run + 1
     
     # adjust values
-    pval$parval <- start
-    pval$parval[include] <- included_parval
+    pval$data$parval <- start
+    pval$data$parval[include] <- included_parval
     if (any(lower > upper)) {
       rui::alert("{.arg lower} contains values larger than {.arg upper}.")
       rui::stop("Issue with bounds.")
@@ -436,9 +455,9 @@ rmf_optimize <- function(
     
     # check bounds and run modflow
     out_of_bounds <- FALSE
-    if (any(pval$parval > upper) | any(pval$parval < lower)) out_of_bounds <- TRUE
+    if (any(pval$data$parval > upper) | any(pval$data$parval < lower)) out_of_bounds <- TRUE
     if(!is.null(transform)) {
-      pval$parval[transform] <- exp(pval$parval[transform])
+      pval$data$parval[transform] <- exp(pval$data$parval[transform])
     } 
     if (out_of_bounds) {
       converged <- FALSE
@@ -461,7 +480,7 @@ rmf_optimize <- function(
     # keep new step, export, visualize
     new_step <- TRUE # (run + sum(include)*2)%%(sum(include)*2 +1) == 0
     if (new_step) {
-      optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$parval))
+      optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$data$parval))
       # print 
       if (! visualize) {
         rui::inform(
@@ -471,16 +490,28 @@ rmf_optimize <- function(
         )
       }
     }
-    if (!is.null(export)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(converged), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = export, append = TRUE)
+    if (!is.null(export)) {
+      export_exists <- fs::file_exists(export)
+      tibble::tibble(
+        cost = cost_value,
+        converged = converged,
+        parnam = pval$data$parnam,
+        parval = pval$data$parval
+      ) %>%
+        tidyr::spread("parnam", "parval") %>%
+        readr::write_tsv(export,
+                         append = export_exists,
+                         col_names = !export_exists)
+    }
     if (visualize & new_step) {
       optimization_history <- as.data.frame(optimization_history)
-      names(optimization_history) <- c("cost", pval$parnam)
+      names(optimization_history) <- c("cost", pval$data$parnam)
       p <- optimization_history %>% 
         dplyr::mutate(run = 1:nrow(.)) %>% 
-        dplyr::mutate_at(pval$parnam[transform], log) %>% 
+        dplyr::mutate_at(pval$data$parnam[transform], log) %>% 
         tidyr::gather("parameter", "value", -run, -1) %>% 
-        dplyr::filter(parameter %in% pval$parnam[include]) %>% 
-        dplyr::mutate(parameter = ifelse(parameter %in% pval$parnam[transform],
+        dplyr::filter(parameter %in% pval$data$parnam[include]) %>% 
+        dplyr::mutate(parameter = ifelse(parameter %in% pval$data$parnam[transform],
                                          paste0("log(", parameter, ")"),
                                          parameter)) %>% 
         ggplot2::ggplot() +
@@ -510,7 +541,7 @@ rmf_optimize <- function(
                         control = list(maxit = iterate,
                                        reltol = tolerate))
   rmf_optimize$included <- include
-  rmf_optimize$parnam <- pval$parnam
+  rmf_optimize$parnam <- pval$data$parnam
   rmf_optimize$parval <- start
   rmf_optimize$parval[include] <- rmf_optimize$par
   if (!is.null(transform)) {
@@ -519,7 +550,7 @@ rmf_optimize <- function(
   }
   rmf_optimize$trace <- optimization_history %>% 
     tibble::as_tibble() %>%
-    purrr::set_names(c("cost", pval$parnam)) %>% 
+    purrr::set_names(c("cost", pval$data$parnam)) %>% 
     dplyr::mutate(run = 1:nrow(.))
   switch(rmf_optimize$convergence + 1, rui::succeed(), rui::fail())
   if (rmf_optimize$convergence == 1) {

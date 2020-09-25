@@ -201,7 +201,7 @@ print.bas <- function(bas, n = 5) {
 #' @export
 print.pval <- function(pval, n = 30) {
   cat('RMODFLOW Parameter Value File object with:', '\n')
-  df <- data.frame(parnam = pval$parnam, parval = pval$parval)
+  df <- data.frame(parnam = pval$data$parnam, parval = pval$data$parval)
   
   if(pval$np > n) {
     cat(pval$np, 'parameter values', '(first', n, 'shown):', '\n')
