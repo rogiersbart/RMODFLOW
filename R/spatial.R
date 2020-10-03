@@ -900,7 +900,7 @@ print.prj <- function(prj) {
       cat('\n', ' wkt defined')
     }
   }
-
+cat('\n')
 }
 
 #' Functions to get, set, transform and check presence of prj objects
