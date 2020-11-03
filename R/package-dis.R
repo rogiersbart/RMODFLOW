@@ -116,13 +116,15 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   # optional projection information from MODFLOW-OWHM
   # create prj below since it needs full dis information
   if(length(data_set_1$variables) > 6) {
-    xul <- as.numeric(data_set_1$variables[7])
-    yul <- as.numeric(data_set_1$variables[8])
-    rot <- as.numeric(data_set_1$variables[9])
-    prj$origin <- c(xul, yul)
-    prj$rotation <- rot
-    prj$nodecoord <- !('CORNERCOORD' %in% toupper(data_set_1$variables))
-    prj$ulcoordinate <- !('LLCOORDINATE' %in% toupper(data_set_1$variables) || 'LLCOODRINATE' %in% toupper(data_set_1$variables)) 
+    if(all(!is.na(suppressWarnings(as.numeric(data_set_1$variables[6:9]))))) {
+      xul <- as.numeric(data_set_1$variables[7])
+      yul <- as.numeric(data_set_1$variables[8])
+      rot <- as.numeric(data_set_1$variables[9])
+      prj$origin <- c(xul, yul)
+      prj$rotation <- rot
+      prj$nodecoord <- !('CORNERCOORD' %in% toupper(data_set_1$variables))
+      prj$ulcoordinate <- !('LLCOORDINATE' %in% toupper(data_set_1$variables) || 'LLCOODRINATE' %in% toupper(data_set_1$variables)) 
+    }
   }
   dis_lines <- data_set_1$remaining_lines
   rm(data_set_1)
