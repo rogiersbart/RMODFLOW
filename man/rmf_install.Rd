@@ -33,10 +33,12 @@ The default installation location is \code{file.path(system.file(package = "RMOD
 }
 }
 \examples{
+\dontrun{
 rmf_install() # Install all codes.
 rmf_install("2005") # Install MODFLOW-2005.
 rmf_install("MODFLOW-2005") # Install MODFLOW-2005.
-rmf_install(c(2005, "MODFLOW-NWT", "cfp") # Install different variants.
+rmf_install(c(2005, "MODFLOW-NWT", "cfp")) # Install different variants.
+}
 }
 \seealso{
 \code{\link[=rmf_guide]{rmf_guide()}} for launching the \href{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}{Online Guide to MODFLOW} or
