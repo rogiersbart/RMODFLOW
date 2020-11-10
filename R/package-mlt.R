@@ -92,7 +92,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
       mlt_lines <- data_set_2$remaining_lines
       rm(data_set_2)
       
-      if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn)){
+      if(is.null(mlt$functn) || (!is.null(mlt$functn) && !mlt$functn[i])){
         # data set 3
         data_set_3 <- rmfi_parse_array(mlt_lines, nrow = dis$nrow, ncol = dis$ncol, nlay = 1, ndim = 2, file = file, ...)
         mlt$rmlt[[i]] <- data_set_3$array

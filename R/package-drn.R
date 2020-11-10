@@ -24,14 +24,12 @@ rmf_create_drn <-  function(...,
   arg <- rmfi_create_bc_list(arg = list(...), dis = dis, varnames = vars, aux = aux)
   
   # create drn object
-  obj <- list()
-
-  obj$dimensions <- arg$dimensions
+  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
   obj$idrncb <- idrncb
   obj$option <- c('noprint' = noprint)
   obj$aux <- aux
   obj$data <- arg$data
-  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  if(arg$np > 0) obj$parameter_values <- arg$parameter_values
   obj$kper <- arg$kper
   
   class(obj) <- c('drn', 'rmf_package')

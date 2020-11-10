@@ -199,16 +199,16 @@ print.bas <- function(bas, n = 5) {
 }
 
 #' @export
-print.pvl <- function(pvl, n = 30) {
+print.pval <- function(pval, n = 30) {
   cat('RMODFLOW Parameter Value File object with:', '\n')
-  df <- data.frame(parnam = pvl$parnam, parval = pvl$parval)
+  df <- data.frame(parnam = pval$parnam, parval = pval$parval)
   
-  if(pvl$np > n) {
-    cat(pvl$np, 'parameter values', '(first', n, 'shown):', '\n')
+  if(pval$np > n) {
+    cat(pval$np, 'parameter values', '(first', n, 'shown):', '\n')
     nlay <- n
   } else {
-    cat(pvl$np, 'parameter values:', '\n')
-    nlay <- pvl$np
+    cat(pval$np, 'parameter values:', '\n')
+    nlay <- pval$np
   }   
   
   cat('\n')
@@ -568,7 +568,7 @@ print.wel <- function(wel, n = 15) {
   i_noparm <- nrow(subset(wel$data, parameter == FALSE))
   
   cat('RMODFLOW Well object with:', '\n')
-  if(wel$dimensions$np > 0) cat(wel$dimensions$np, if(!is.null(wel$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'wells', '\n')
+  if(wel$np > 0) cat(wel$np, if(!is.null(wel$instances)) {'time-varying'}, 'parameters representing', i_parm, 'wells', '\n')
   cat(i_noparm, 'non-parameter wells', '\n')
   if(!is.null(wel$aux)) cat('Auxiliary variables defined:', wel$aux, '\n')
   cat('\n')
@@ -592,7 +592,7 @@ print.ghb <- function(ghb, n = 15) {
   i_noparm <- nrow(subset(ghb$data, parameter == FALSE))
   
   cat('RMODFLOW General-Head Boundary object with:', '\n')
-  if(ghb$dimensions$np > 0) cat(ghb$dimensions$np, if(!is.null(ghb$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'general-head boundaries', '\n')
+  if(ghb$np > 0) cat(ghb$np, if(!is.null(ghb$instances)) {'time-varying'}, 'parameters representing', i_parm, 'general-head boundaries', '\n')
   cat(i_noparm, 'non-parameter general-head boundaries', '\n')
   if(!is.null(ghb$aux)) cat('Auxiliary variables defined:', ghb$aux, '\n')
   cat('\n')
@@ -845,7 +845,7 @@ print.rch <- function(rch, n = 5) {
   
   cat('RMODFLOW Recharge Package object with:', '\n')
   cat(length(rch$recharge), 'recharge', ifelse(length(rch$recharge) > 1, 'arrays', 'array'), '\n')
-  if(rch$dimensions$np > 0) cat('including', rch$dimensions$np, if(!is.null(rch$dimensions$instances)) {'time-varying'}, ifelse(rch$dimensions$np == 1, 'parameter', 'parameters'), '\n')
+  if(rch$np > 0) cat('including', rch$np, if(!is.null(rch$instances)) {'time-varying'}, ifelse(rch$np == 1, 'parameter', 'parameters'), '\n')
   if(rch$nrchop == 1) {
     nrchop <- 'the top grid layer'
   } else if(rch$nrchop == 2) {
@@ -911,7 +911,7 @@ print.chd <- function(chd, n = 15) {
   i_noparm <- nrow(subset(chd$data, parameter == FALSE))
   
   cat('RMODFLOW Time-Varying Specified Head object with:', '\n')
-  if(chd$dimensions$np > 0) cat(chd$dimensions$np, if(!is.null(chd$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'specified-heads', '\n')
+  if(chd$np > 0) cat(chd$np, if(!is.null(chd$instances)) {'time-varying'}, 'parameters representing', i_parm, 'specified-heads', '\n')
   cat(i_noparm, 'non-parameter specified-heads', '\n')
   if(!is.null(chd$aux)) cat('Auxiliary variables defined:', chd$aux, '\n')
   cat('\n')
@@ -1072,7 +1072,7 @@ print.hfb <- function(hfb, n = 15) {
   i_parm_active <- nrow(subset(hfb$data, parameter == TRUE & active == TRUE))
   
   cat('RMODFLOW Horizontal-Flow Barrier object with:', '\n')
-  if(hfb$dimensions$np > 0) cat(hfb$dimensions$np, 'parameters representing', i_parm, 'horizontal-flow barriers', '(', i_parm_active, 'are active)', '\n')
+  if(hfb$np > 0) cat(hfb$np, 'parameters representing', i_parm, 'horizontal-flow barriers', '(', i_parm_active, 'are active)', '\n')
   cat(i_noparm, 'non-parameter horizontal-flow barriers', '\n')
   cat('\n')
   
@@ -1089,7 +1089,7 @@ print.riv <- function(riv, n = 15) {
   i_noparm <- nrow(subset(riv$data, parameter == FALSE))
   
   cat('RMODFLOW River Package object with:', '\n')
-  if(riv$dimensions$np > 0) cat(riv$dimensions$np, if(!is.null(riv$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'river cells', '\n')
+  if(riv$np > 0) cat(riv$np, if(!is.null(riv$instances)) {'time-varying'}, 'parameters representing', i_parm, 'river cells', '\n')
   cat(i_noparm, 'non-parameter river cells', '\n')
   if(!is.null(riv$aux)) cat('Auxiliary variables defined:', riv$aux, '\n')
   cat('\n')
@@ -1113,7 +1113,7 @@ print.drn <- function(drn, n = 15) {
   i_noparm <- nrow(subset(drn$data, parameter == FALSE))
   
   cat('RMODFLOW Drain Package object with:', '\n')
-  if(drn$dimensions$np > 0) cat(drn$dimensions$np, if(!is.null(drn$dimensions$instances)) {'time-varying'}, 'parameters representing', i_parm, 'drain cells', '\n')
+  if(drn$np > 0) cat(drn$np, if(!is.null(drn$instances)) {'time-varying'}, 'parameters representing', i_parm, 'drain cells', '\n')
   cat(i_noparm, 'non-parameter drain cells', '\n')
   if(!is.null(drn$aux)) cat('Auxiliary variables defined:', drn$aux, '\n')
   cat('\n')
@@ -1135,7 +1135,7 @@ print.evt <- function(evt, n = 5) {
   
   cat('RMODFLOW Evapotranspiration Package object with:', '\n')
   cat(length(evt$evt), 'evapotranspiration', ifelse(length(evt$evt) > 1, 'arrays', 'array'), '\n')
-  if(evt$dimensions$np > 0) cat('including', evt$dimensions$np, if(!is.null(evt$dimensions$instances)) {'time-varying'}, ifelse(evt$dimensions$np == 1, 'parameter', 'parameters'), '\n')
+  if(evt$np > 0) cat('including', evt$np, if(!is.null(evt$instances)) {'time-varying'}, ifelse(evt$np == 1, 'parameter', 'parameters'), '\n')
   if(evt$nevtop == 1) {
     nevtop <- 'the top grid layer'
   } else if(evt$nevtop == 2) {
@@ -1511,8 +1511,8 @@ print.lvda <- function(lvda, n = 10) {
 print.hob <- function(hob, n = 15) {
   
   cat('RMODFLOW Head-Observation Package object with:', '\n')
-  cat(hob$dimensions$nh, 'head observations of which', hob$dimensions$mobs, 'are multilayer observations', '\n')
-  if(hob$dimensions$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$dimensions$maxm, '\n')
+  cat(hob$nh, 'head observations of which', hob$mobs, 'are multilayer observations', '\n')
+  if(hob$mobs > 0) cat('Maximum number of layers used for multilayer observations is', hob$maxm, '\n')
   cat('\n')
   cat('Observed values and simulated equivalents are', ifelse(hob$iuhobsv == 0, 'not written to a head-prediction file', paste('written to the head-prediction file on unit number', hob$iuhobsv)), '\n')
   if(hob$iuhobsv > 0) cat('Simulated equivalents of dry cells are assigned a value of', hob$hobdry, 'in the head-prediction file', '\n')
@@ -1709,7 +1709,7 @@ print.modflow <- function(modflow, n = 5) {
   
   # TODO add other observations
   if('hob' %in% input) {
-    cat(modflow$hob$dimensions$nh, ifelse(modflow$hob$dimensions$nh > 1, 'head observations', 'head observation'), '\n')
+    cat(modflow$hob$nh, ifelse(modflow$hob$nh > 1, 'head observations', 'head observation'), '\n')
     cat('\n')
   }
   

@@ -10,6 +10,15 @@ rmf_as_array <- function(...) {
   UseMethod('rmf_as_array')
 }
 
+#' @export
+rmf_as_array.rmf_2d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_3d_array <- function(x, ...) x
+
+#' @export
+rmf_as_array.rmf_4d_array <- function(x, ...) x
+
 #'
 #' Convert a rmf_list to a RMODFLOW array
 #' 
@@ -68,6 +77,9 @@ rmf_as_array.rmf_list <- function(obj,
 rmf_as_list <- function(...) {
   UseMethod('rmf_as_list')
 }
+
+#' @export
+rmf_as_list.rmf_list <- function(x, ...) x
 
 #'
 #' Converts a rmf_2d_array or rmf_3d_array to a rmf_list
@@ -498,7 +510,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         dis$center <- botm
         for(a in 1:nnlay) dis$center[,,a] <- botm[,,a]+dis$thck[,,a]/2
         tops <- dis$top
-        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       } else {
         if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected; explicitly representing them.')
         dis$thck <- rmf_calculate_thickness(dis)
@@ -507,7 +519,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         for(a in 1:nnlay) dis$center[,,a] <- dis$botm[,,a]+dis$thck[,,a]/2
         tops <- dis$top
         botm <- dis$botm
-        if(length(nnlay) > 1) tops <- rmf_create_array(c(c(top), c(botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
+        if(nnlay > 1) tops <- rmf_create_array(c(c(tops), c(botm[,,seq(1, nnlay - 1)])), dim = c(dis$nrow, dis$ncol, nnlay))
       }
       
       if(is.null(i) & !is.null(j)) {
@@ -1619,7 +1631,7 @@ rmf_convert_hob_to_locations <- function(hob,
                                          prj = NULL) {
   
   hob$data <- hob$data[!duplicated(hob$data$obsnam),]
-  if(hob$dimensions$mobs > 0) {
+  if(hob$mobs > 0) {
     m_id <- which(lengths(hob$data$layer) > 1)
     df <- hob$data[-m_id, ]
     df$layer <- unlist(df$layer)
@@ -1690,9 +1702,9 @@ rmf_convert_huf_to_dis <- function(huf,
 #' @param values vector of parameter values of length \code{nhuf}, in the order of \code{hgunam}; overwrites \code{parameters}. All values should typically represent the same parameter type.
 #' @param grid target grid; either \code{'dis'} (default) or \code{'huf'}. When \code{'huf'}, no averaging is performed
 #' @param mask masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
-#' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
-#' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP' and 'KDEP'}. Only used with \code{parameters}. 
-#' @param pvl optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied
+#' @param type type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric
+#' @param partyp which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').
+#' @param pval optional \code{RMODFLOW} pval object. Used to overwrite the parval attributes if \code{parameters} is supplied
 #' @return rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'} 
 #' @details Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.
 #'      The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
@@ -1706,7 +1718,7 @@ rmf_convert_huf_to_grid <- function(huf,
                                     mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                                     type = ifelse(partyp == 'VK', 'harmonic', 'arithmetic'),
                                     partyp = 'HK',
-                                    pvl = NULL) {
+                                    pval = NULL) {
 
   # if parameters is supplied
   if(is.null(values)) {
@@ -1722,13 +1734,13 @@ rmf_convert_huf_to_grid <- function(huf,
     hgunam <- unique(unlist(lapply(parameters, function(i) attr(i, 'hgunam'))))
     hgunam <- which(huf$hgunam %in% hgunam)
     
-    # replace parval if value is in pvl object
-    if(!is.null(pvl) && length(parameters) > 0) {
+    # replace parval if value is in pval object
+    if(!is.null(pval) && length(parameters) > 0) {
       
       replace_parval <- function(parameter) {
-        if(attr(parameter, 'parnam') %in% pvl$parnam) {
+        if(attr(parameter, 'parnam') %in% pval$parnam) {
           old_parval <- attr(parameter, 'parval')
-          new_parval <- pvl$parval[which(pvl$parnam == attr(parameter, 'parnam'))]
+          new_parval <- pval$parval[which(pval$parnam == attr(parameter, 'parnam'))]
           parameter <- (parameter/old_parval)*new_parval
           attr(parameter, 'parval') <- new_parval
           return(parameter)
@@ -1760,7 +1772,7 @@ rmf_convert_huf_to_grid <- function(huf,
       if(length(hgunam) > 0) hgu_array[,,hgunam] <- unlist(lapply(huf$hgunam, get_array))
       
       # if partyp is HANI, VANI and not everything is supplied by parameters: get information from HGUHANI/HGUVANI
-      hgu_todo <- c(1:huf$nhuf)[-hgunam]
+      hgu_todo <- rmfi_ifelse0(length(hgunam) > 0, c(1:huf$nhuf)[-hgunam], 1:huf$nhuf)
       if(length(hgu_todo) > 0) {
         if(partyp == 'HANI') {
           # hgu_todo <- which(huf$hguhani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
@@ -1768,7 +1780,7 @@ rmf_convert_huf_to_grid <- function(huf,
           hgu_array[,,hgu_todo] <- rep(abs(huf$hguhani[hgu_todo]), each = dis$nrow, dis$ncol)
         }
         if(partyp == 'VANI') {
-          hgu_todo <- which(huf$hguvani > 0 && (c(1:huf$nhuf) %in% hgu_todo))
+          hgu_todo <- which(huf$hguvani > 0 & (c(1:huf$nhuf) %in% hgu_todo))
           hgu_array[,,hgu_todo] <- rep(huf$hguvani[hgu_todo], each = dis$nrow, dis$ncol)
         }
       }
@@ -1806,12 +1818,21 @@ rmf_convert_huf_to_grid <- function(huf,
       thck <- pmin(huf$top[iCell,jCell,],cell_top) - pmax(huf$botm[iCell,jCell,],cell_botm)
       thck[which(thck < 0)] <- 0
       
-      if(is.null(values)) values <- hgu_array[iCell,jCell,]
+      if(is.null(values)) {
+        vls <- hgu_array[iCell,jCell,]
+      } else {
+        vls <- values
+      }
       
-      if(type=='arithmetic') return(weighted.mean(values,thck))
-      if(type=='harmonic') return(rmfi_weighted_harmean(values,thck))
-      if(type=='geometric') return(rmfi_weighted_geomean(values,thck))
+      if(type=='arithmetic') wght_vl <- weighted.mean(vls,thck)
+      if(type=='harmonic') wght_vl <- rmfi_weighted_harmean(vls,thck)
+      if(type=='geometric') wght_vl <- rmfi_weighted_geomean(vls,thck)
+      
+      if(is.na(wght_vl)) wght_vl <- 0
+      return(wght_vl)
+      
     }
+    
     # TODO speed up
     weighted_means <- vapply(which(mask!=0),get_weighted_mean, 1.0)
     num_grid_array[which(mask!=0)] <- weighted_means
@@ -1827,7 +1848,7 @@ rmf_convert_huf_to_grid <- function(huf,
 #' @param mask masking 3d array for averaging \code{\link{rmf_convert_huf_to_grid}}, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells
 #' @param vka character indicating what variable the VKA array in the resulting lpf object represents. Possible values are \code{'VK'} or \code{'VANI'}. If all HGUVANI values are the same, the default vka is set correspondingly. If HGUVANI varies between hgu's, the default vka is \code{'VANI'}.
 #' @param averaging named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the \code{partyp} defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').
-#' @param pvl optional \code{RMODFLOW} pvl object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
+#' @param pval optional \code{RMODFLOW} pval object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.
 #' @param ... arguments passed to \code{\link{rmf_create_lpf}}
 #' @return a \code{RMODFLOW} lpf object
 #' @details Huf parameters are converted to non-parameter data averaged over the \code{dis} grid using \code{\link{rmf_convert_huf_to_grid}}.
@@ -1841,17 +1862,17 @@ rmf_convert_huf_to_lpf <- function(huf,
                                    mask = NULL,
                                    vka = ifelse(all(huf$hguvani == 0), 'VK', 'VANI'),
                                    averaging = c(HK = 'arithmetic', HANI = 'arithmetic', VK = 'harmonic', VANI = 'arithmetic', SS = 'arithmetic', SY = 'arithmetic'),
-                                   pvl = NULL,
+                                   pval = NULL,
                                    ...) {
   
     if(is.null(mask)) mask <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
 
-    hk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HK', type = averaging['HK'], pvl = pvl)
-    hani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HANI', type = averaging['HANI'], pvl = pvl)
+    hk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HK', type = averaging['HK'], pval = pval)
+    hani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'HANI', type = averaging['HANI'], pval = pval)
 
     vk <- vani <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol, dis$nlay))
-    if(any(huf$hguvani == 0)) vk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VK', type = averaging['VK'], pvl = pvl)
-    if(any(huf$hguvani > 0)) vani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VANI', type = averaging['VANI'], pvl = pvl)
+    if(any(huf$hguvani == 0)) vk <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VK', type = averaging['VK'], pval = pval)
+    if(any(huf$hguvani > 0)) vani <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'VANI', type = averaging['VANI'], pval = pval)
     if(vka == 'VK') {
       vani <- hk/vani
     } else if(vka == 'VANI') {
@@ -1864,8 +1885,8 @@ rmf_convert_huf_to_lpf <- function(huf,
     
     ss <- sy <- NULL
     if('TR' %in% dis$sstr) {
-      ss <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SS', type = averaging['SS'], pvl = pvl)
-      if(any(huf$lthuf != 0)) sy <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SY', type = averaging['SY'], pvl = pvl)
+      ss <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SS', type = averaging['SS'], pval = pval)
+      if(any(huf$lthuf != 0)) sy <- rmf_convert_huf_to_grid(huf = huf, dis = dis, mask = mask, partyp = 'SY', type = averaging['SY'], pval = pval)
     } 
     
     lpf <- rmf_create_lpf(dis = dis, 

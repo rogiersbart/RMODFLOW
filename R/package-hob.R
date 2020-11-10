@@ -76,14 +76,13 @@ rmf_create_hob <- function(locations,
   
   # hob
   hob <- list()
-  hob$dimensions <- list()
   # data set 0
   # comments should be provided with ?comment
   
   # data set 1
-  hob$dimensions$nh <- nrow(time_series)
-  hob$dimensions$mobs <- NA # set later
-  hob$dimensions$maxm <- NA # set later
+  hob$nh <- nrow(time_series)
+  hob$mobs <- NA # set later
+  hob$maxm <- NA # set later
   hob$iuhobsv <- iuhobsv
   hob$hobdry <- hobdry
   hob$noprint <- noprint
@@ -94,7 +93,7 @@ rmf_create_hob <- function(locations,
   
   # data set 3-6
   df <- list()
-  df$obsnam <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$itt <- rep(NA, hob$dimensions$nh)
+  df$obsnam <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$itt <- rep(NA, hob$nh)
   df$mlay <- df$pr <- list()
   
   for(i in 1:nrow(locations)) {
@@ -149,13 +148,13 @@ rmf_create_hob <- function(locations,
       df$hobs[ts_id] <- time_series$head[ts_id]
     }
   }
-  hob$dimensions$mobs <- 0
-  if(any(df$layer < 0)) hob$dimensions$mobs <- length(which(df$layer < 0))
-  hob$dimensions$maxm <- abs(min(df$layer[which(df$layer <= 1)]))
+  hob$mobs <- 0
+  if(any(df$layer < 0)) hob$mobs <- length(which(df$layer < 0))
+  hob$maxm <- abs(min(df$layer[which(df$layer <= 1)]))
   
-  if(hob$dimensions$mobs == 0) {
+  if(hob$mobs == 0) {
     df$mlay <- df$layer
-    df$pr <- rep(1, hob$dimensions$nh)
+    df$pr <- rep(1, hob$nh)
   } else {
     s_lay <- which(df$layer > 0)
     df$mlay[s_lay] <- df$layer[s_lay]
@@ -182,7 +181,6 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   
   hob_lines <- readr::read_lines(file)
   hob <- list()
-  hob$dimensions <- list()
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(hob_lines)
@@ -192,9 +190,9 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   
   # data set 1
   data_set_1 <- rmfi_parse_variables(hob_lines)
-  hob$dimensions$nh <- as.numeric(data_set_1$variables[1])
-  hob$dimensions$mobs <- as.numeric(data_set_1$variables[2])
-  hob$dimensions$maxm <- as.numeric(data_set_1$variables[3])
+  hob$nh <- as.numeric(data_set_1$variables[1])
+  hob$mobs <- as.numeric(data_set_1$variables[2])
+  hob$maxm <- as.numeric(data_set_1$variables[3])
   hob$iuhobsv <- ifelse(is.na(as.numeric(data_set_1$variables[4])), 0, as.numeric(data_set_1$variables[4]))
   hob$hobdry <- ifelse(is.na(as.numeric(data_set_1$variables[5])), -888, as.numeric(data_set_1$variables[5]))
   hob$noprint <- FALSE
@@ -211,16 +209,16 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   
   # data set 3 - 6
   df <- list()
-  df$obsnam <- df$obsloc <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$statistic <- df$statflag <- df$plotsymbol <- df$stath <- df$statdd <- df$itt <- rep(NA, hob$dimensions$nh)
+  df$obsnam <- df$obsloc <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$statistic <- df$statflag <- df$plotsymbol <- df$stath <- df$statdd <- df$itt <- rep(NA, hob$nh)
   df$mlay <- df$pr <- list()
   obsnam <- obsloc <- layer <- row <- column <- irefsp <- toffset <- roff <- coff <- hobs <- statistic <- statflag <- plotsymbol <- stath <- statdd <- NA
   mlay <- pr <- NA
   nr <- 1
   
-  while(nr <= hob$dimensions$nh) {
+  while(nr <= hob$nh) {
     
     # data set 3
-    data_set_3 <- rmfi_parse_variables(hob_lines)
+    data_set_3 <- rmfi_parse_variables(hob_lines, character = TRUE)
     obsnam <- as.character(data_set_3$variables[1])
     obsloc <- obsnam
     layer <- as.numeric(data_set_3$variables[2])
@@ -260,8 +258,8 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
         mlay[layerNr] <- data_set_4$variables[(2*layerNr)-1]
         pr[layerNr] <- data_set_4$variables[2*layerNr]
       }
-      df$mlay[[nr]] <- mlay
-      df$pr[[nr]] <- pr
+      df$mlay[[nr]] <- mlay[1:abs(layer)]
+      df$pr[[nr]] <- pr[1:abs(layer)]
       hob_lines <- data_set_4$remaining_lines
       rm(data_set_4)
     }
@@ -279,7 +277,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
       for(ntime in 1:abs(irefsp)) {
         df$nrefsp[nr] <- abs(irefsp)
         df$itt[nr] <- itt
-        data_set_6 <- rmfi_parse_variables(hob_lines)
+        data_set_6 <- rmfi_parse_variables(hob_lines, character = TRUE)
         df$obsnam[nr] <- as.character(data_set_6$variables[1])
         df$obsloc[nr] <- obsloc
         df$irefsp[nr] <- as.numeric(data_set_6$variables[2])
@@ -290,8 +288,8 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
         df$statflag[nr] <- as.numeric(data_set_6$variables[7])
         df$plotsymbol[nr] <- as.numeric(data_set_6$variables[8]) 
         if(layer < 0) {
-          df$mlay[[nr]] <- mlay
-          df$pr[[nr]] <- pr
+          df$mlay[[nr]] <- mlay[1:abs(layer)]
+          df$pr[[nr]] <- pr[1:abs(layer)]
         }
         df$statistic[nr] <- statistic
         df$layer[nr] <- layer
@@ -309,9 +307,9 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
   }
   # if(length(irefsp) != 0) df$irefsp <- irefsp
   
-  if(hob$dimensions$mobs == 0) {
+  if(hob$mobs == 0) {
     df$mlay <- df$layer
-    df$pr <- rep(1, hob$dimensions$nh)
+    df$pr <- rep(1, hob$nh)
   } else {
     s_lay <- which(df$layer > 0)
     df$mlay[s_lay] <- df$layer[s_lay]
@@ -329,7 +327,7 @@ rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choos
 #' @describeIn rmf_read_hob Compatible with default ModelMuse file extensions
 #' @export
 rmf_read_ob_hob <- function(...) {
-  rmf_read_hpr(...)
+  rmf_read_hob(...)
 }
 
 #' Write a MODFLOW head observations file
@@ -349,7 +347,7 @@ rmf_write_hob <- function(hob,
   cat(paste('#', comment(hob)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(as.integer(hob$dimensions$nh), as.integer(hob$dimensions$mobs), as.integer(hob$dimensions$maxm), as.integer(hob$iuhobsv), hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
+  rmfi_write_variables(as.integer(hob$nh), as.integer(hob$mobs), as.integer(hob$maxm), as.integer(hob$iuhobsv), hob$hobdry, ifelse(hob$noprint,'NOPRINT',''), file=file)
   
   # data set 2
   # rmfi_write_variables(hob$tomulth, ifelse(is.na(hob$evh) || is.null(hob$env),1,hob$evh), file=file) # MODFLOW-2000
@@ -357,7 +355,7 @@ rmf_write_hob <- function(hob,
   
   # data set 3 - 6
   i <- 1
-  while(i <= hob$dimensions$nh) {
+  while(i <= hob$nh) {
     # data set 3
     rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1)), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
                          as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],

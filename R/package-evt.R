@@ -28,13 +28,11 @@ rmf_create_evt <- function(...,
   arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
   # create evt object
-  obj <- list()
-  
-  obj$dimensions <- arg$dimensions
+  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
   obj$nevtop <- nevtop
   obj$ievtcb <- ievtcb
   obj$evt <- arg$data
-  if(arg$dimensions['np'] > 0) obj$parameter_values <- arg$parameter_values
+  if(arg$np > 0) obj$parameter_values <- arg$parameter_values
   obj$kper <- arg$kper
   
   # surf
@@ -307,17 +305,17 @@ rmf_write_evt <-  function(evt,
   cat(paste('#', comment(evt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  if(evt$dimensions$np > 0) rmfi_write_variables('PARAMETER', as.integer(evt$dimensions$np), file=file)
+  if(evt$np > 0) rmfi_write_variables('PARAMETER', as.integer(evt$np), file=file)
   
   # data set 2
   rmfi_write_variables(evt$nevtop, evt$ievtcb, file=file, integer = TRUE, ...)
   
   # parameters
   partyp <- 'EVT'
-  if(evt$dimensions$np > 0) {
+  if(evt$np > 0) {
     parm_names <- names(evt$parameter_values)
-    tv_parm <- rep(FALSE, evt$dimensions$np)
-    if(!is.null(evt$dimensions$instances)) tv_parm <- evt$dimensions$instances > 0
+    tv_parm <- rep(FALSE, evt$np)
+    if(!is.null(evt$instances)) tv_parm <- evt$instances > 0
     rmfi_write_array_parameters(obj = evt, arrays = evt$evt, file = file, partyp = 'evt', ...)
   }
   
@@ -373,7 +371,7 @@ rmf_write_evt <-  function(evt,
     }
 
     
-    if(evt$dimensions$np > 0) {
+    if(evt$np > 0) {
       parm_names_active <- parm_names[parm_names %in% names_act]
       np <- length(parm_names_active)
     } else {
