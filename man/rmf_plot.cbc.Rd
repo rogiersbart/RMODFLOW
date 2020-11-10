@@ -59,12 +59,12 @@ Plot a flux component of a cell-by-cell budget object
 \details{
 Flux can be \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
- Additionally, flux can be \code{'darcy'}, in which case Darcy fluxes are computed by \code{\link{rmf_convert_cbc_to_darcy}} and the magnitude is plotted. If
- type = 'vector', the x, y and z components are used to determine the direction of the arrows.
- 
- There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
- The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
- A negative \code{kstp} will plot the final time step of the stress-period.
- 
- If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
+Additionally, flux can be \code{'darcy'}, in which case Darcy fluxes are computed by \code{\link{rmf_convert_cbc_to_darcy}} and the magnitude is plotted. If
+type = 'vector', the x, y and z components are used to determine the direction of the arrows.
+
+There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number.
+The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+A negative \code{kstp} will plot the final time step of the stress-period.
+
+If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 }

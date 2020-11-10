@@ -11,7 +11,7 @@ rmf_convert_id_to_ijk(id, dis, type = "r")
 
 \item{dis}{a discretisation file object}
 
-\item{type}{'r' or 'modflow'; defaults to 'r'}
+\item{type}{'r' or 'modflow' specifying type of id. See details. Defaults to 'r'}
 }
 \description{
 Convert id to ijk

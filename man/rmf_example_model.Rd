@@ -4,7 +4,7 @@
 \alias{rmf_example_model}
 \title{List example model files}
 \usage{
-rmf_example_model(model)
+rmf_example_model(model = NULL)
 }
 \arguments{
 \item{model}{}

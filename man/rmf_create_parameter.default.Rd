@@ -55,10 +55,10 @@ Create a parameter from multiplier and/or zone arrays used in MODFLOW boundary c
 }
 \details{
 A boundary-condition parameter is created by setting the kper argument. A flow parameter is created by setting the layer and partyp arguments.
-         If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name} 
-         Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
-         If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
-         If \code{hgunam} is specified, \code{layer} can not be specified.
+If the boundary-condition parameter is to be time-varying, a separate parameter should be created for each instance with a unique \code{instnam} but with the same \code{name}
+Typically, an array parameter is build from a single multiplier and/or zone array combination. However, multiple combinations can be used.
+If \code{mltnam} is \code{"NONE"} and \code{zonnam} is \code{"ALL"}, \code{parval} applies to all cells in the array and \code{mlt} and \code{zon} are not read.
+If \code{hgunam} is specified, \code{layer} can not be specified.
 }
 \seealso{
 \code{\link{rmf_create_array}}

@@ -9,7 +9,7 @@ rmf_create_hob(
   time_series,
   dis,
   hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-  prj = NULL,
+  prj = rmf_get_prj(dis),
   iuhobsv = 665,
   hobdry = -888,
   noprint = FALSE,

@@ -21,7 +21,7 @@ rmf_create_hfb(..., dis, noprint = FALSE)
 }
 \details{
 As an alternative to specifying \code{irow2} and \code{icol2}, a \code{direction} column can be present in the rmf_lists objects to specify the direction of the horizontal flow barrier with respect to \code{i & j}.
-         Allowed values for the \code{direction} column are \code{"right"}, \code{"back"}, \code{"left"} and \code{"front"}.
+Allowed values for the \code{direction} column are \code{"right"}, \code{"back"}, \code{"left"} and \code{"front"}.
 }
 \seealso{
 \code{\link{rmf_read_hfb}}, \code{\link{rmf_write_hfb}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm}

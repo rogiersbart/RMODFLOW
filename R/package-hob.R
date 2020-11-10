@@ -23,7 +23,7 @@ rmf_create_hob <- function(locations,
                            time_series,
                            dis,
                            hydraulic_conductivity = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-                           prj = NULL,
+                           prj = rmf_get_prj(dis),
                            iuhobsv = 665,
                            hobdry = -888,
                            noprint = FALSE,
@@ -36,9 +36,9 @@ rmf_create_hob <- function(locations,
     geom <- unique(sf::st_geometry_type(locations))
     if(length(geom) > 1 || geom != 'POINT') stop('A locations sf object should have geometry type POINT for all features', call. = FALSE)
     if(!is.na(sf::st_crs(locations))) {
-      if(is.null(prj) || sf::st_crs(locations) != sf::st_crs(prj$projection)) stop('When locations is an sf object with a crs, prj should be provided with the same crs', call. = FALSE)
+      if(is.null(prj) || sf::st_crs(locations) != sf::st_crs(prj$crs)) stop('When locations is an sf object with a crs, prj should be provided with the same crs', call. = FALSE)
     } else {
-      if(!is.null(prj) && !is.na(sf::st_crs(prj$projection))) stop('prj has a crs defined whereas locations does not', call. = FALSE) 
+      if(!is.null(prj) && !is.na(sf::st_crs(prj$crs))) stop('prj has a crs defined whereas locations does not', call. = FALSE) 
     }
     coords <- setNames(as.data.frame(sf::st_coordinates(locations)), c('x', 'y'))
     locations <- cbind(sf::st_set_geometry(locations, NULL), coords)
@@ -70,7 +70,7 @@ rmf_create_hob <- function(locations,
     if(nrow(time_series) == 0) stop('time series is empty', call. = FALSE)
     if(nrow(locations) == 0) stop('locations is empty', call. = FALSE)
   }
-  
+
   locations_top$k <- ifelse(locations_top$loff == 0.5, locations_top$k + 1, locations_top$k)
   locations_bottom$k <- ifelse(locations_bottom$loff == -0.5, locations_bottom$k - 1, locations_bottom$k)  
   

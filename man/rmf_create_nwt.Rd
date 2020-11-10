@@ -112,11 +112,11 @@ Object of class nwt
 }
 \details{
 the option keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If option = "SPECIFIED", the user specifies the values.
-  If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
-  If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
-  Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
-  
-  If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
+If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
+If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
+Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
+
+If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
 }
 \note{
 nwt must be used with the Upstream Weighting flow package. See also \code{\link{rmf_create_upw}}.
