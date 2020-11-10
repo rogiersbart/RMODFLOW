@@ -1,3 +1,63 @@
+
+#' Bilinear interpolation on a rectilinear grid
+#'
+#' @param x x coordinates of known points 
+#' @param y y coordinates of known points
+#' @param f values at known poins (length 4)
+#' @param xout x coordinate of point to interpolate
+#' @param yout y coordinate of point to interpolate
+#'
+#' @return single bilinear interpolated value 
+#' @keywords internal
+#'
+rmfi_bilinear_intp <- function(x, y, f, xout, yout) {
+  x2 <- max(x)
+  x1 <- min(x)
+  y2 <- max(y)
+  y1 <- min(y)
+  
+  # a <- 1 / ((x2-x1)*(y2-y1))
+  # value <- a * matrix(c(x2 - xout, xout - x1), nrow = 1) %*% matrix(f, nrow = 2) %*% matrix(c(y2 - yout, yout - y1), ncol = 1)
+  
+  wx <- (xout - x1) / (x2 - x1)
+  wy <- (yout - y1) / (y2 - y1)
+  
+  value <- (1-wx)*wy*f[1] + wx*wy*f[2] + (1-wx)*(1-wy)*f[3] + wx*(1-wy)*f[4]
+  return(c(value))
+}
+
+#' Trilinear interpolation on a rectilinear grid
+#'
+#' @param x x coordinates of known points 
+#' @param y y coordinates of known points
+#' @param z z coordinates of known points
+#' @param f values at known poins (length 8)
+#' @param xout x coordinate of point to interpolate
+#' @param yout y coordinate of point to interpolate
+#' @param zout z coordinate of points to interpolate
+#'
+#' @return single trilinear interpolated value 
+#' @keywords internal
+#'
+rmfi_trilinear_intp <- function(x, y, z, f, xout, yout, zout) {
+  
+  x2 <- max(x)
+  x1 <- min(x)
+  y2 <- max(y)
+  y1 <- min(y)
+  z2 <- max(z)
+  z1 <- min(z)
+  
+  wx <- (xout - x1) / (x2 - x1)
+  wy <- (yout - y1) / (y2 - y1)
+  wz <- (zout - z1) / (z2 - z1)
+  
+  value <- (1-wx)*wy*(1-wz)*f[1] + wx*wy*(1-wz)*f[2] + (1-wx)*(1-wy)*(1-wz)*f[3] + wx*(1-wy)*(1-wz)*f[4] +
+    (1-wx)*wy*wz*f[5] + wx*wy*wz*f[6] + (1-wx)*(1-wy)*wz*f[7] + wx*(1-wy)*(1-wz)*f[8]
+  
+  return(c(value))
+}
+
 #' Create sequence of confining bed indicators
 #'
 #' @param dis \code{RMODFLOW} dis object

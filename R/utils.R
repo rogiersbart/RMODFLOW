@@ -2810,6 +2810,322 @@ rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
   rmf_gradient(obj[,,,l], dis = dis, ...)
 }
 
+
+#' Interpolation of points on a rmf_2d/3d/4d_array
+#'
+#' @param array numeric rmf_2d/3d/4d_array
+#' @param dis \code{RMODFLOW} dis object
+#' @param xout x coordinates of points to interpolate to
+#' @param yout y coordinates of points to interpolate to
+#' @param zout z coordinates of points to interpolate to when the array is 3d or 4d.
+#' @param tout time instances to interpolate to when the array is 4d. Either as a fractional time step or as total simulated time, depending on the \code{time} argument.
+#' @param obj sf or sfc point or multipoint object to obtain the point locations from. Overrides \code{xout}, \code{yout} and \code{zout}. Needs to be of XYZ dimension when array is 3d or 4d.
+#' @param prj \code{RMODFLOW} prj object
+#' @param method interpolation method. Possible methods are 'nearest' for nearest-neighbor or 'linear' (default) for bi/trilinear interpolation.
+#' @param outside 'nearest' or 'drop'. Defines how interpolated points outside the convex hull described by the cell nodes should be handled for method = 'linear'. 'nearest' (default) sets the values equal to the nearest nodal value, 'drop' sets them to NA.
+#'
+#' @details Users must make sure that the projection of \code{xout}, \code{yout}, \code{zout} or \code{obj} are the same as the one described by the \code{prj} argument.
+#'  Function assumes the 2d array is not a cross-section. Consider using a 3d array if the vertical dimension is of any concern.
+#'  Extrapolation is not supported: values outside the grid are set to NA. Values inside the grid but outside the convex hull described by the cell nodes depend on the 'outside' argument when method = 'linear'.
+#'
+#' @return a vector with the interpolated values for each point.
+#' @export
+#' @name rmf_interpolate
+rmf_interpolate <- function(...) {
+  UseMethod('rmf_interpolate')
+}
+
+#'
+#' @export
+#' @rdname rmf_interpolate
+#' @examples
+#' dis <- rmf_create_dis()
+#' n <- 50
+#' xout <- runif(n, min = -10, max = 1010)
+#' yout <- runif(n, min = -10, max = 1010)
+#' zout <- runif(n, min = -1, max = 31)
+#'
+#' # 2d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' 
+#' rmf_interpolate(array, dis, xout, yout)
+#' rmf_interpolate(array, dis, xout, yout, outside = 'drop')
+#' rmf_interpolate(array, dis, xout, yout, method = 'nearest')
+rmf_interpolate.rmf_2d_array <- function(array, dis, xout, yout, obj = NULL, prj = rmf_get_prj(dis), method = 'linear', outside = 'nearest') {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      coords <- sf::st_coordinates(obj)
+      xout <- coords[,1]
+      yout <- coords[,2]
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # get coordinates on grid (without projection) 
+  out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
+  
+  # drop out of bounds points; return all NA's when all points are out of bounds
+  oob <- is.na(out_coords$roff)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  if(method == 'nearest') {
+    id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    vl <- array[id]
+    
+  } else if(method == 'linear') {
+    
+    # nodal coordinates of non-projected grid
+    cell_coords <- rmf_cell_coordinates(dis, prj = NULL)
+    
+    # find 3 neighbouring cells
+    out_coords$i2 <- ifelse(out_coords$roff > 0, out_coords$i + 1, out_coords$i - 1)
+    out_coords$j2 <- ifelse(out_coords$coff > 0, out_coords$j + 1, out_coords$j - 1)
+    
+    out_coords$id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    out_coords$id1 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    out_coords$id2 <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j2, k = 1, dis = dis, type = 'r')
+    out_coords$id3 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = 1, dis = dis, type = 'r')
+    
+    # function to interpolate for a given point
+    interpol <- function(df) {
+      xout <- df$x
+      yout <- df$y
+      ids <- sort(c(df$id, df$id1, df$id2, df$id3))
+      ids <- ids[c(2,4,1,3)] # bottom-left, bottom-right, top-left, top-right using R's column-major ordering
+      
+      # TODO out-of-bounds
+      if(0==1) {
+        
+      } else if(any(ids < 1) || any(ids > prod(dim(array)))) {
+        
+        # edge case
+        if(outside == 'nearest') {
+          vl <- array[df$id]
+        } else if(outside == 'drop') {
+          vl <- NA
+        } else {
+          stop('outside should be either nearest or drop', call. = FALSE)
+        }
+        
+      } else {
+        # interpolate
+        x <- cell_coords$x[ids]
+        y <- cell_coords$y[ids]
+        f <- array[ids]
+        vl <- rmfi_bilinear_intp(x = x, y = y, f = f, xout = xout, yout = yout)
+      }
+      return(vl)
+    }
+    
+    # apply to all points
+    vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+    
+  } else {
+    stop('Only nearest-neighbour and linear interpolation supported at the moment.', call. = FALSE)
+  }
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+}
+
+#'
+#' @export
+#' @rdname rmf_interpolate
+#' @examples
+#' # 3d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+#' 
+#' rmf_interpolate(array, dis, xout, yout, zout, outside = 'drop')
+#' 
+#' pts <- sf::st_sfc(list(sf::st_point(c(150, 312, -12.5)), sf::st_point(c(500, 500, -22)), sf::st_point(c(850, 566, -16.3))))
+#' rmf_interpolate(array, dis, obj = pts)
+rmf_interpolate.rmf_3d_array <- function(array, dis, xout, yout, zout, obj = NULL, prj = rmf_get_prj(dis), method = 'linear', outside = 'nearest') {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      if(class(sf::st_geometry(obj)[[1]])[1] == "XYZ") {
+        coords <- sf::st_coordinates(obj)
+        xout <- coords[,1]
+        yout <- coords[,2]
+        zout <- coords[,3]
+      } else {
+        stop('POINT geometries must have dimension XYZ for 3D interpolation', call. = FALSE)
+      }
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # get coordinates on grid (without projection) 
+  out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, z = zout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
+  
+  # drop out of bounds points; return all NA's when all points are out of bounds
+  oob <- is.na(out_coords$roff)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  if(method == 'nearest') {
+    id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    vl <- array[id]
+    
+  } else if(method == 'linear') {
+    
+    # nodal coordinates of non-projected grid
+    cell_coords <- rmf_cell_coordinates(dis, prj = NULL)
+    
+    # find 6 neighbouring cells
+    out_coords$i2 <- ifelse(out_coords$roff > 0, out_coords$i + 1, out_coords$i - 1)
+    out_coords$j2 <- ifelse(out_coords$coff > 0, out_coords$j + 1, out_coords$j - 1)
+    out_coords$k2 <- ifelse(out_coords$loff > 0, out_coords$k + 1, out_coords$k - 1)
+    
+    out_coords$id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id1 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id2 <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j2, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id3 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id4 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id5 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id6 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id7 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    
+    
+    # function to interpolate for a given point
+    interpol <- function(df) {
+      xout <- df$x
+      yout <- df$y
+      zout <- df$z
+      ids <- sort(c(df$id, df$id1, df$id2, df$id3, df$id4, df$id5, df$id6, df$id7))
+      ids <- ids[c(2,4,1,3,6,8,5,7)] # upper:bottom-left, bottom-right, top-left, top-right; bottom:bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
+      
+      # TODO out-of-bounds
+      if(0==1) {
+        
+      } else if(any(ids < 1) || any(ids > prod(dim(array)))) {
+        
+        # edge case
+        if(outside == 'nearest') {
+          vl <- array[df$id]
+        } else if(outside == 'drop') {
+          vl <- NA
+        } else {
+          stop('outside should be either nearest or drop', call. = FALSE)
+        }
+        
+      } else {
+        # interpolate
+        x <- cell_coords$x[ids]
+        y <- cell_coords$y[ids]
+        z <- cell_coords$z[ids]
+        f <- array[ids]
+        vl <- rmfi_trilinear_intp(x = x, y = y, z = z, f = f, xout = xout, yout = yout, zout = zout)
+      }
+      return(vl)
+    }
+    
+    # apply to all points
+    vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+    
+  } else {
+    stop('Only nearest-neighbour and linear interpolation supported at the moment.', call. = FALSE)
+  }
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+  
+}
+
+#'
+#' @param time either 'step' (default) or 'totim'. Defines if \code{tout} is a time step fraction (i.e. index for the 4th dimension) or the absolute time. If \code{totim}, the array should have a totim attribute, e.g. as returned from \code{rmf_read_head}
+#' @details Interpolation of a point on a 4d array is performed by 3d interpolation of the nearest time steps followed by a linear interpolation of the obtained values.
+#' @rdname rmf_interpolate
+#' @export
+#' @examples
+#' # 4d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 4), dim = c(dis$nrow, dis$ncol, dis$nlay, 4))
+#' attr(array, 'totim') <- c(100, 200, 500, 780)
+#' 
+#' tout <- runif(n, min = 0.85, max = 4.2) # tout as fractional time step
+#' rmf_interpolate(array, dis, xout, yout, zout, tout)
+#' 
+#' tout <- runif(n, min = 90, max = 800) # tout as total time
+#' rmf_interpolate(array, dis, xout, yout, zout, tout, time = 'totim')
+#'  
+rmf_interpolate.rmf_4d_array <- function(array, dis, xout, yout, zout, tout, obj = NULL, prj = rmf_get_prj(dis), method = 'linear', outside = 'nearest', time = 'step') {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      if(class(sf::st_geometry(obj)[[1]])[1] == "XYZ") {
+        coords <- sf::st_coordinates(obj)
+        xout <- coords[,1]
+        yout <- coords[,2]
+        zout <- coords[,3]
+      } else {
+        stop('POINT geometries must have dimension XYZ for 3D interpolation', call. = FALSE)
+      }
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # find time indices
+  out_coords <- data.frame(x = xout, y = yout, z = zout, t = tout)
+  
+  ids <- 1:dim(array)[4]
+  if(time == 'step') {
+    ts <- 1:dim(array)[4]
+  } else if(time == 'totim') {
+    if(is.null(attr(array, 'totim'))) stop('array should have a totim attribute when time = totim', call. = FALSE)
+    ts <- attr(array, 'totim')
+  } else {
+    stop('time should be either step or totim', call. = FALSE)
+  }
+  
+  # drop out of bounds times; return all NA's when all times are out of bounds
+  oob <- tout < min(ts) | tout > max(ts)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  # interpolate
+  interpol <- function(df) {
+    t1_indx <- rev(ids)[which(rev(ts) <= df$t)[1]]
+    t2_indx <- ids[which(ts > df$t)[1]]
+    
+    # edge case
+    if(df$t == max(ts)) {
+      t2_indx <- max(ids)
+      value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+    } else {
+      
+      t1_value <- rmf_interpolate(array[,,,t1_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+      t2_value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+      
+      # set NA if any of both values are NA (approx won't work)
+      if(is.na(t1_value) || is.na(t2_value)) {
+        value <- NA
+      } else {
+        t1 <- ts[t1_indx]
+        t2 <- ts[t2_indx]
+        value <- approx(x = c(t1, t2), y = c(t1_value, t2_value), xout = df$t, method = 'linear', rule = 1)
+        value <- value$y
+      }
+    }
+    
+    return(value)
+  }
+  
+  # apply to all points
+  vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+  
+}
+
 #' Calculate the internal time step sequence of a transient MODFLOW model
 #' 
 #' \code{rmf_time_steps} calculates the internal sequence of time steps of a transient MODFLOW model from either an \code{RMODFLOW} dis object or separate parameters
