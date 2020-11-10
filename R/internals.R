@@ -3,7 +3,7 @@
 #'
 #' @param x x coordinates of known points 
 #' @param y y coordinates of known points
-#' @param f values at known poins (length 4)
+#' @param f values at known poins (length 4). Order: bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
 #' @param xout x coordinate of point to interpolate
 #' @param yout y coordinate of point to interpolate
 #'
@@ -31,7 +31,7 @@ rmfi_bilinear_intp <- function(x, y, f, xout, yout) {
 #' @param x x coordinates of known points 
 #' @param y y coordinates of known points
 #' @param z z coordinates of known points
-#' @param f values at known poins (length 8)
+#' @param f values at known poins (length 8). Order: upper:bottom-left, bottom-right, top-left, top-right; bottom:bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
 #' @param xout x coordinate of point to interpolate
 #' @param yout y coordinate of point to interpolate
 #' @param zout z coordinate of points to interpolate

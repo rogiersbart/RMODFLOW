@@ -2837,13 +2837,14 @@ rmf_interpolate <- function(...) {
 
 #'
 #' @export
+#' @method rmf_interpolate rmf_2d_array
 #' @rdname rmf_interpolate
 #' @examples
 #' dis <- rmf_create_dis()
 #' n <- 50
 #' xout <- runif(n, min = -10, max = 1010)
 #' yout <- runif(n, min = -10, max = 1010)
-#' zout <- runif(n, min = -1, max = 31)
+#' zout <- runif(n, min = -31, max = 1)
 #'
 #' # 2d
 #' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
@@ -2934,6 +2935,7 @@ rmf_interpolate.rmf_2d_array <- function(array, dis, xout, yout, obj = NULL, prj
 
 #'
 #' @export
+#' @method rmf_interpolate rmf_3d_array
 #' @rdname rmf_interpolate
 #' @examples
 #' # 3d
@@ -3040,9 +3042,10 @@ rmf_interpolate.rmf_3d_array <- function(array, dis, xout, yout, zout, obj = NUL
 
 #'
 #' @param time either 'step' (default) or 'totim'. Defines if \code{tout} is a time step fraction (i.e. index for the 4th dimension) or the absolute time. If \code{totim}, the array should have a totim attribute, e.g. as returned from \code{rmf_read_head}
-#' @details Interpolation of a point on a 4d array is performed by 3d interpolation of the nearest time steps followed by a linear interpolation of the obtained values.
+#' @details Interpolation of a point on a 4d array is performed by 3d interpolation at the nearest time steps followed by a interpolation of the obtained values using the specified \code{method}.
 #' @rdname rmf_interpolate
 #' @export
+#' @method rmf_interpolate rmf_4d_array
 #' @examples
 #' # 4d
 #' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 4), dim = c(dis$nrow, dis$ncol, dis$nlay, 4))
@@ -3099,18 +3102,24 @@ rmf_interpolate.rmf_4d_array <- function(array, dis, xout, yout, zout, tout, obj
       t2_indx <- max(ids)
       value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
     } else {
+      t1 <- ts[t1_indx]
+      t2 <- ts[t2_indx]
       
-      t1_value <- rmf_interpolate(array[,,,t1_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
-      t2_value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
-      
-      # set NA if any of both values are NA (approx won't work)
-      if(is.na(t1_value) || is.na(t2_value)) {
-        value <- NA
+      if(method == 'nearest') {
+        closest_indx <- c(t1_indx, t2_indx)[which.min(abs(c(t1, t2) - df$t))]
+        value <- rmf_interpolate(array[,,,closest_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+        
       } else {
-        t1 <- ts[t1_indx]
-        t2 <- ts[t2_indx]
-        value <- approx(x = c(t1, t2), y = c(t1_value, t2_value), xout = df$t, method = 'linear', rule = 1)
-        value <- value$y
+        t1_value <- rmf_interpolate(array[,,,t1_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+        t2_value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside)
+        
+        # set NA if any of both values are NA (approx won't work)
+        if(is.na(t1_value) || is.na(t2_value)) {
+          value <- NA
+        } else {
+          value <- approx(x = c(t1, t2), y = c(t1_value, t2_value), xout = df$t, method = 'linear', rule = 1)
+          value <- value$y
+        }
       }
     }
     
