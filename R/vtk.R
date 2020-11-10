@@ -1,13 +1,5 @@
 
-
-# TODO make contours work in ParaView
-# has to do with the values at the vertices of the cells, which should vary between neighbouring cells
-# based on the distance weighted average 
-# this is not rmf_as_tibble behaviour though and should be added (eg a vertices = TRUE option to obtain interpolated values at vertices)
-
-# TODO make ijk optional
-
-# TODO upgrade to VTK 5.0 using CELL offset & connection
+# TODO binary
 
 #' Write RMODFLOW objects to VTK files
 #' 
@@ -15,28 +7,62 @@
 #' @return \code{NULL}
 #' @export
 #'
-#' @examples
+#' @rdname rmf_write_vtk
 rmf_write_vtk <- function(...) {
   UseMethod('rmf_write_vtk')
 }
 
 
+#'
+#' @param array \code{rmf_2d/3d/4d_array}
+#' @param dis \code{RMODFLOW} dis object
+#' @param file file to write to
+#' @param mask a 2d array when \code{array} is 2d or a 3d array when \code{array} is 3d or 4d that can be coerced to logical. Used to set inactive cells to NA. Defaults to all cells active.
+#' @param title character; title of the dataset in the VTK file. Defaults to 'array'.
+#' @param as_points logical; should cell-centered nodal values be written to the VTK file as points or rectilinear cells as voxels with a single value per cell (default).  
+#' @param vertices logical; should values at the corner nodes of the cells be written to the VTK file as points? Defaults to FALSE. See details.
+#' @param as_3d logical; should the 2d surface be represented as 3d? Defaults to FALSE. See details.
+#' @param ijk logical; should the ijk indices of the cells be included in the dataset? Defaults to FALSE. See details.
+#' @param binary logical; should the VTK file be written in binary? Defaults to FALSE.
+#' @param prj \code{RMODFLOW} prj object
+#' @param endian See \code{\link{writeBin}}. Only applicable when \code{binary = TRUE}.
+#'
+#' @details A Legacy VTK file is written. If \code{as_points} is TRUE, the cell-centered nodal values are written as points (POLYDATA point structure in VTK). If FALSE, the cell geometry is written with a single array value per cell (UNSTRUCTURED_GRID in VTK using cell type 8 (Pixel) for 2d and 11 (Voxel) for 3d).
+#'  If \code{vertices} is TRUE (only applicable when \code{as_points = FALSE}), the values at the cell corners are written as point values as well. Their values are determined using bi/trilinear interpolation. 
+#'  This option is useful if contours are to be displayed in post-processing, which is not feasible when only cells are written using this function.
+#'  When \code{as_3d} is TRUE, the 2d array is written as a 3d cell/point type with the vertical coordinate set equal to the array value. This is useful if a topography needs to be displayed, e.g. a water-table.
+#'  If \code{ijk} is TRUE, the ijk indices of the cells are also written to the data set as point values for the cell-centered nodes. This is useful for e.g. conversion to Explicit Structured Grids.
+#'  \code{rmf_write_vtk} was tested using [Paraview](https://www.paraview.org/).
+#' @rdname rmf_write_vtk
+#' @export
+#' @method rmf_write_vtk rmf_2d_array
+#'
+#' @examples
+#' dis <- rmf_example_file('example-model.dis') %>% rmf_read_dis()
+#' file <- tempfile()
+#' 
+#' rmf_write_vtk(dis$top, dis, file = file, as_points = TRUE)
+#' rmf_write_vtk(dis$top, dis, file = file, as_3d = TRUE)
+#' rmf_write_vtk(dis$top, dis, file = file, as_points = FALSE, n.vertex = TRUE)
 rmf_write_vtk.rmf_2d_array <- function(array,
                                        dis,
                                        file,
                                        mask = array * 0 + 1,
                                        title = 'array',
                                        as_points = FALSE,
+                                       vertices = FALSE,
                                        as_3d = FALSE,
-                                       binary = FALSE) {
+                                       ijk = FALSE,
+                                       binary = FALSE,                                       
+                                       # prj = rmf_get_prj(dis),
+                                       prj = NULL,
+                                       endian = .Platform$endian) {
   
-  # TODO maybe always add centroid points in data set (disregard as_points argument)
+  n.vertex <- ifelse(as_points, 1, 4) # 2D grid
   
-  vertices <- ifelse(as_points, 1, 4) # 2D grid
-  
-  df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value')
+  df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value', prj = prj)
   df <- na.omit(df)
-  values <- df$value[seq(1, nrow(df), vertices)]
+  values <- df$value[seq(1, nrow(df), n.vertex)]
   
   if(as_3d) {
     df$z <- df$value
@@ -48,27 +74,27 @@ rmf_write_vtk.rmf_2d_array <- function(array,
   
   # order such that x is fastest, then y, then z
   pts <- pts[order(pts$id, pts$z, pts$y, pts$x),]
-  ijk <- rmf_convert_id_to_ijk(pts$id[seq(1, nrow(pts), vertices)], dis = dis, type = 'r')
+  ijk.df <- rmf_convert_id_to_ijk(pts$id[seq(1, nrow(pts), n.vertex)], dis = dis, type = 'r')
   
   ncell <- length(values)
-  cells <- matrix(order(pts$id), ncol = vertices, byrow = TRUE) - 1
-  cells <- as.data.frame(cbind(numPoints = vertices, cells))
+  cells <- matrix(order(pts$id), ncol = n.vertex, byrow = TRUE) - 1
+  cells <- as.data.frame(cbind(numPoints = n.vertex, cells))
   
   if(binary) {
-    stop('binary VTK files not yet supported', call. = FALSE)
+    stop('Writing binary VTK files not yet supported', call. = FALSE)
   } else {
     
     # UNSTRUCTURED_GRID because RECTILINEAR_GRID does not support NaN values (in ASCII legacy vtk)
     
     cat('# vtk DataFile Version 2.0', '\n', append = FALSE, file = file)
     cat(paste('RMODFLOW', title, 'VTK object'), '\n', append = TRUE, file = file)
-    cat('ASCII', '\n', append = TRUE, file = file)
+    cat(ifelse(binary, 'BINARY', 'ASCII'), '\n', append = TRUE, file = file)
     cat('DATASET', ifelse(as_points, 'POLYDATA', 'UNSTRUCTURED_GRID'), '\n', append = TRUE, file = file)
     cat('POINTS', nrow(pts), 'double', '\n', append = TRUE, file = file)
     readr::write_delim(pts[,c('x', 'y', 'z')], path = file, col_names = FALSE, append = TRUE)
     if(!as_points) {
       cat('\n', append = TRUE, file = file)
-      cat('CELLS', ncell, (vertices + 1) * ncell, '\n', append = TRUE, file = file)
+      cat('CELLS', ncell, (n.vertex + 1) * ncell, '\n', append = TRUE, file = file)
       readr::write_delim(cells, path = file, col_names = FALSE, append = TRUE)
       cat('\n', append = TRUE, file = file)
       cat('CELL_TYPES', ncell, '\n', append = TRUE, file = file)
@@ -84,82 +110,76 @@ rmf_write_vtk.rmf_2d_array <- function(array,
     cat('\n', append = TRUE, file = file)
     
     # i-j-k for ExplicitStructuredGrid
-    cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$i, path = file, append = TRUE)
-    cat('\n', append = TRUE, file = file)
-    
-    cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$j, path = file, append = TRUE)
-    cat('\n', append = TRUE, file = file)
-    
-    cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$k, path = file, append = TRUE)
-    cat('\n', append = TRUE, file = file)
-    
-    # vertex values of cells
-    if(!as_points) {
-      cat('POINT_DATA', ncell*vertices, '\n', append = TRUE, file = file)
-      cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
+    if(ijk) {
+      cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      cat(paste0(rep(values, each = vertices), collapse = '\n'), '\n', append = TRUE, file = file)
+      readr::write_lines(ijk.df$i, path = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
-      # i-j-k
-      cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$i, each = vertices), path = file, append = TRUE)
+      readr::write_lines(ijk.df$j, path = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
-      cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$j, each = vertices), path = file, append = TRUE)
-      cat('\n', append = TRUE, file = file)
-      
-      cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
-      cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$k, each = vertices), path = file, append = TRUE)
+      readr::write_lines(ijk.df$k, path = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
     }
     
-    # if(as_3d) {
-    
-    # } else {
-    # mask[which(mask == 0)] <- 0
-    # values <- c(t(array * mask^2))
-    # 
-    # cat('# vtk DataFile Version 2.0', '\n', append = FALSE, file = file)
-    # cat(paste('RMODFLOW', title, 'VTK object'), '\n', append = TRUE, file = file)
-    # cat('ASCII', '\n', append = TRUE, file = file)
-    # cat('DATASET RECTILINEAR_GRID', '\n', append = TRUE, file = file)
-    # cat('DIMENSIONS', dis$ncol + 1, dis$nrow + 1, 1, '\n', append = TRUE, file = file)
-    # cat('X_COORDINATES', dis$ncol + 1, 'double', '\n', append = TRUE, file = file)
-    # cat(c(0, cumsum(dis$delr)), '\n', append = TRUE, file = file)
-    # cat('Y_COORDINATES', dis$nrow + 1, 'double', '\n', append = TRUE, file = file)
-    # cat(rev(c(0, cumsum(dis$delc))), '\n', append = TRUE, file = file)
-    # cat('Z_COORDINATES', 1, 'double', '\n', append = TRUE, file = file)
-    # cat(0, '\n', append = TRUE, file = file)
-    # cat('CELL_DATA', prod(dis$nrow, dis$ncol), '\n', append = TRUE, file = file)
-    # cat('SCALARS', title, 'double', 1, '\n', append = TRUE, file = file)
-    # cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    # cat(paste0(values, collapse = '\n'), '\n', append = TRUE, file = file)
-    # }
-    
+    # vertex values of cells
+    if(!as_points && vertices) {
+      vertex_values <- rmf_interpolate(array, dis = dis, xout = pts$x, yout = pts$y, mask = mask, prj = prj, method = 'linear', outside = 'nearest')
+      cat('POINT_DATA', ncell*n.vertex, '\n', append = TRUE, file = file)
+      cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
+      cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      cat(paste0(vertex_values, collapse = '\n'), '\n', append = TRUE, file = file)
+      cat('\n', append = TRUE, file = file)
+      
+      # not useful to write ijk for points
+      # i-j-k
+      # if(ijk) {
+      #   cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      #   
+      #   cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      #   
+      #   cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      # }
+      
+    }
   }
 }
 
-
+#'
+#' @rdname rmf_write_vtk
+#' @export
+#' @method rmf_write_vtk rmf_3d_array
+#'
+#' @examples
+#' rmf_write_vtk(dis$botm, dis, file = file, ijk = TRUE)
 rmf_write_vtk.rmf_3d_array <- function(array,
                                        dis,
                                        file,
                                        mask = array * 0 + 1,
                                        title = 'array',
                                        as_points = FALSE,
-                                       binary = FALSE) {
+                                       vertices = FALSE,
+                                       ijk = FALSE,
+                                       binary = FALSE,
+                                       # prj = rmf_get_prj(dis),
+                                       prj = NULL,
+                                       endian = .Platform$endian) {
   
-  vertices <- ifelse(as_points, 1, 8) # 3D grid
+  n.vertex <- ifelse(as_points, 1, 8) # 3D grid
   df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value')
   df <- na.omit(df)
   
@@ -178,14 +198,14 @@ rmf_write_vtk.rmf_3d_array <- function(array,
   
   # order such that x is fastest, then y, then z
   pts <- pts[order(pts$id, pts$z, pts$y, pts$x),]
-  ijk <- rmf_convert_id_to_ijk(pts$id[seq(1, nrow(pts), vertices)], dis = dis, type = 'r')
+  ijk.df <- rmf_convert_id_to_ijk(pts$id[seq(1, nrow(pts), n.vertex)], dis = dis, type = 'r')
   
   ncell <- length(values)
-  cells <- matrix(order(pts$id), ncol = vertices, byrow = TRUE) - 1
-  cells <- as.data.frame(cbind(numPoints = vertices, cells))
+  cells <- matrix(order(pts$id), ncol = n.vertex, byrow = TRUE) - 1
+  cells <- as.data.frame(cbind(numPoints = n.vertex, cells))
   
   if(binary) {
-    stop('binary VTK files not yet supported', call. = FALSE)
+    stop('Writing binary VTK files not yet supported', call. = FALSE)
   } else {
     
     cat('# vtk DataFile Version 2.0', '\n', append = FALSE, file = file)
@@ -196,7 +216,7 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     readr::write_delim(pts[,c('x', 'y', 'z')], path = file, col_names = FALSE, append = TRUE)
     if(!as_points) {
       cat('\n', append = TRUE, file = file)
-      cat('CELLS', ncell, (vertices + 1) * ncell, '\n', append = TRUE, file = file)
+      cat('CELLS', ncell, (n.vertex + 1) * ncell, '\n', append = TRUE, file = file)
       readr::write_delim(cells, path = file, col_names = FALSE, append = TRUE)
       cat('\n', append = TRUE, file = file)
       cat('CELL_TYPES', ncell, '\n', append = TRUE, file = file)
@@ -212,57 +232,68 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     cat('\n', append = TRUE, file = file)
     
     # i-j-k for ExplicitStructuredGrid
-    cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$i, path = file, append = TRUE)
-    cat('\n', append = TRUE, file = file)
-    
-    cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$j, path = file, append = TRUE)
-    cat('\n', append = TRUE, file = file)
-    
-    cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
-    cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-    readr::write_lines(ijk$k, path = file, append = TRUE) 
-    cat('\n', append = TRUE, file = file)
-    
-    # vertex values of cells
-    if(!as_points) {
-      cat('POINT_DATA', ncell*vertices, '\n', append = TRUE, file = file)
-      cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
+    if(ijk) {
+      cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      cat(paste0(rep(values, each = vertices), collapse = '\n'), '\n', append = TRUE, file = file)
+      readr::write_lines(ijk.df$i, path = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
-      # i-j-k
-      cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$i, each = vertices), path = file, append = TRUE)
+      readr::write_lines(ijk.df$j, path = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
-      cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$j, each = vertices), path = file, append = TRUE)
-      cat('\n', append = TRUE, file = file)
-      
-      cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
-      cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(rep(ijk$k, each = vertices), path = file, append = TRUE)
+      readr::write_lines(ijk.df$k, path = file, append = TRUE) 
       cat('\n', append = TRUE, file = file)
     }
     
+    # vertex values of cells
+    if(!as_points && vertices) {
+      vertex_values <- rmf_interpolate(array, dis = dis, xout = pts$x, yout = pts$y, zout = pts$z, mask = mask, prj = prj, method = 'linear', outside = 'nearest')
+      cat('POINT_DATA', ncell*n.vertex, '\n', append = TRUE, file = file)
+      cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
+      cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      cat(paste0(vertex_values, collapse = '\n'), '\n', append = TRUE, file = file)
+      cat('\n', append = TRUE, file = file)
+      
+      # not useful to write ijk for points
+      # i-j-k
+      # if(ijk) {
+      #   cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      #   
+      #   cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      #   
+      #   cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
+      #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
+      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), path = file, append = TRUE)
+      #   cat('\n', append = TRUE, file = file)
+      # }
+    }
   }
 }
 
 
+#'
+#' @param ... arguments passed to \code{rmf_write_vtk.rmf_3d_array} or \code{rmf_as_array}
+#' @details Writing a 4d array to a VTK file loops over all time steps in the array and writes 3d arrays for time step l to file \code{paste(l, basename(file), sep = '_')}. 
+#' This format is recognized as a time-varying array by most software supporting VTK files.
+#' @rdname rmf_write_vtk
+#' @export
+#' @method rmf_write_vtk rmf_4d_array
+#'
 rmf_write_vtk.rmf_4d_array <- function(array, 
                                        dis, 
                                        file,
                                        mask = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
-                                       title = 'array',
-                                       as_points = FALSE,
-                                       binary = FALSE) {
+                                       ...) {
   
   dir <- dirname(file)
   base <- basename(file)
@@ -270,7 +301,25 @@ rmf_write_vtk.rmf_4d_array <- function(array,
   for(l in 1:dim(array)[4]) {
     
     f <- file.path(dir, paste(l, base, sep = '_'))
-    rmf_write_vtk(array[,,,l], dis = dis, file = f, mask = mask, title = title, as_points = as_points, binary = binary)
+    rmf_write_vtk(array[,,,l], dis = dis, file = f, mask = mask, ...)
   }
 }
 
+#'
+#' @param obj \code{rmf_list} object 
+#'
+#' @rdname rmf_write_vtk
+#' @export
+#' @method rmf_write_vtk rmf_list
+#'
+#' @examples
+rmf_write_vtk.rmf_list <- function(obj, dis, file, ...) {
+  
+  r <- rmf_as_array(obj, dis, ...)
+  
+  
+  
+}
+
+# rmf_write_vtk(dis$top, dis, file = file, vertices = TRUE, as_3d = F, as_points = TRUE)
+# rmf_write_vtk(dis$botm, dis, file = file2,  vertices = TRUE)
