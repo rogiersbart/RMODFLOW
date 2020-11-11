@@ -29,7 +29,7 @@ rmf_write_vtk <- function(...) {
 #'
 #' @details A Legacy VTK file is written. If \code{as_points} is TRUE, the cell-centered nodal values are written as points (POLYDATA point structure in VTK). If FALSE, the cell geometry is written with a single array value per cell (UNSTRUCTURED_GRID in VTK using cell type 8 (Pixel) for 2d and 11 (Voxel) for 3d).
 #'  If \code{vertices} is TRUE (only applicable when \code{as_points = FALSE}), the values at the cell corners are written as point values as well. Their values are determined using bi/trilinear interpolation. 
-#'  This option is useful if contours are to be displayed in post-processing, which is not feasible when only cells are written using this function.
+#'  This option is useful if contours are to be displayed in post-processing, which is not feasible when only cells are written using this function. Note that this can be very slow, especially for 3d and 4d arrays.
 #'  When \code{as_3d} is TRUE, the 2d array is written as a 3d cell/point type with the vertical coordinate set equal to the array value. This is useful if a topography needs to be displayed, e.g. a water-table.
 #'  If \code{ijk} is TRUE, the ijk indices of the cells are also written to the data set as point values for the cell-centered nodes. This is useful for e.g. conversion to Explicit Structured Grids.
 #'  \code{rmf_write_vtk} was tested using [Paraview](https://www.paraview.org/).
@@ -40,6 +40,7 @@ rmf_write_vtk <- function(...) {
 #' @examples
 #' dis <- rmf_example_file('example-model.dis') %>% rmf_read_dis()
 #' file <- tempfile()
+#' dis <- rmf_set_prj(dis, NULL)
 #' 
 #' rmf_write_vtk(dis$top, dis, file = file, as_points = TRUE)
 #' rmf_write_vtk(dis$top, dis, file = file, as_3d = TRUE)
@@ -54,8 +55,7 @@ rmf_write_vtk.rmf_2d_array <- function(array,
                                        as_3d = FALSE,
                                        ijk = FALSE,
                                        binary = FALSE,                                       
-                                       # prj = rmf_get_prj(dis),
-                                       prj = NULL,
+                                       prj = rmf_get_prj(dis),
                                        endian = .Platform$endian) {
   
   n.vertex <- ifelse(as_points, 1, 4) # 2D grid
@@ -63,6 +63,7 @@ rmf_write_vtk.rmf_2d_array <- function(array,
   df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value', prj = prj)
   df <- na.omit(df)
   values <- df$value[seq(1, nrow(df), n.vertex)]
+  values <- replace(values, is.na(values), NaN)
   
   if(as_3d) {
     df$z <- df$value
@@ -130,6 +131,7 @@ rmf_write_vtk.rmf_2d_array <- function(array,
     # vertex values of cells
     if(!as_points && vertices) {
       vertex_values <- rmf_interpolate(array, dis = dis, xout = pts$x, yout = pts$y, mask = mask, prj = prj, method = 'linear', outside = 'nearest')
+      vertex_values <- replace(vertex_values, is.na(vertex_values), NaN)
       cat('POINT_DATA', ncell*n.vertex, '\n', append = TRUE, file = file)
       cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
@@ -175,12 +177,11 @@ rmf_write_vtk.rmf_3d_array <- function(array,
                                        vertices = FALSE,
                                        ijk = FALSE,
                                        binary = FALSE,
-                                       # prj = rmf_get_prj(dis),
-                                       prj = NULL,
+                                       prj = rmf_get_prj(dis),
                                        endian = .Platform$endian) {
   
   n.vertex <- ifelse(as_points, 1, 8) # 3D grid
-  df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value')
+  df <- rmf_as_tibble(array, dis, mask = mask, as_points = as_points, id = 'r', name = 'value', prj = prj)
   df <- na.omit(df)
   
   if(as_points) {
@@ -194,7 +195,7 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     colnames(pts_tops) <- colnames(pts_botm) <- c('x', 'y', 'z', 'id')
     pts <- rbind(pts_tops, pts_botm)
   }
-  
+  values <- replace(values, is.na(values), NaN)
   
   # order such that x is fastest, then y, then z
   pts <- pts[order(pts$id, pts$z, pts$y, pts$x),]
@@ -252,6 +253,7 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     # vertex values of cells
     if(!as_points && vertices) {
       vertex_values <- rmf_interpolate(array, dis = dis, xout = pts$x, yout = pts$y, zout = pts$z, mask = mask, prj = prj, method = 'linear', outside = 'nearest')
+      vertex_values <- replace(vertex_values, is.na(vertex_values), NaN)
       cat('POINT_DATA', ncell*n.vertex, '\n', append = TRUE, file = file)
       cat('SCALARS', paste('vertex', title, sep = '_'), 'double', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
@@ -321,5 +323,3 @@ rmf_write_vtk.rmf_list <- function(obj, dis, file, ...) {
   
 }
 
-# rmf_write_vtk(dis$top, dis, file = file, vertices = TRUE, as_3d = F, as_points = TRUE)
-# rmf_write_vtk(dis$botm, dis, file = file2,  vertices = TRUE)

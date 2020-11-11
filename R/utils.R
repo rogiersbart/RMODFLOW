@@ -2971,7 +2971,7 @@ rmf_interpolate.rmf_2d_array <- function(array, dis, xout, yout, obj = NULL, met
   out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
   
   # drop out of bounds points; return all NA's when all points are out of bounds
-  oob <- is.na(out_coords$roff)
+  oob <- is.na(out_coords$roff) | is.na(out_coords$coff)
   out_coords <- out_coords[!oob,]
   if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
   
@@ -3073,7 +3073,7 @@ rmf_interpolate.rmf_3d_array <- function(array, dis, xout, yout, zout, obj = NUL
   out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, z = zout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
   
   # drop out of bounds points; return all NA's when all points are out of bounds
-  oob <- is.na(out_coords$roff)
+  oob <- is.na(out_coords$roff) | is.na(out_coords$coff) | is.na(out_coords$loff)
   out_coords <- out_coords[!oob,]
   if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
   
