@@ -905,11 +905,12 @@ cat('\n')
 
 #' Functions to get, set, transform and check presence of prj objects
 #' 
-#' @param dis \code{RMODFLOW} dis object
-#' @param modflow \code{RMODFLOW} modflow object
+#' @param dis \code{RMODFLOW} dis object (or \code{RMT3DMS} btn object)
+#' @param modflow \code{RMODFLOW} modflow object (or \code{RMT3DMS} mt3dms object)
 #' @param prj \code{RMODFLOW} prj object
 #' @param file path to discretization file; typically "*.dis"
 #' @param crs coordinate reference system to transform to. Input for \code{sf::st_crs}.
+#' @details These functions can also be used with the \code{RMT3DMS} library on \code{btn} and \code{mt3dms} objects.
 #' 
 #' @name prj_auxiliary
 NULL
@@ -1098,6 +1099,74 @@ rmf_transform_prj.dis <- function(dis, crs) {
 rmf_transform_prj.modflow <- function(modflow, crs) {
   if(!rmf_has_prj(modflow)) stop('modflow object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(modflow)
+  prj <- rmf_transform_prj(prj, crs)
+  return(prj)
+}
+
+# For RMT3DMS objects
+
+#' @export
+#' @method rmf_get_prj btn
+rmf_get_prj.btn <- function(btn) {
+  if(rmf_has_prj(btn)) {
+    return(btn$prj)
+  } else {
+    return(NULL)
+  }
+}
+
+#' @export
+#' @method rmf_get_prj mt3dms
+rmf_get_prj.mt3dms <- function(mt3dms) {
+  if(rmf_has_prj(mt3dms)) {
+    return(mt3dms$btn$prj)
+  } else {
+    return(NULL)
+  }
+}
+
+#' @export
+#' @method rmf_has_prj btn
+rmf_has_prj.btn <- function(btn) {
+  !is.null(btn$prj) && inherits(btn$prj, 'prj')
+}
+
+#' @export
+#' @method rmf_has_prj mt3dms
+rmf_has_prj.mt3dms <- function(mt3dms) {
+  !is.null(mt3dms$btn$prj) && inherits(mt3dms$btn$prj, 'prj')
+}
+
+#' @export
+#' @method rmf_set_prj btn
+rmf_set_prj.btn <- function(btn, prj) {
+  if(rmf_has_prj(btn)) warning('Overwriting existing prj object in btn object', call. = FALSE)
+  btn$prj <- prj
+  return(btn)
+}
+
+#' @export
+#' @method rmf_set_prj mt3dms
+rmf_set_prj.mt3dms <- function(mt3dms, prj) {
+  if(rmf_has_prj(mt3dms)) warning('Overwriting existing prj object in mt3dms object', call. = FALSE)
+  mt3dms$btn$prj <- prj
+  return(mt3dms)
+}
+
+#' @export
+#' @method rmf_transform_prj btn
+rmf_transform_prj.btn <- function(btn, crs) {
+  if(!rmf_has_prj(btn)) stop('btn object has no prj object to transform', call. = FALSE)
+  prj <- rmf_get_prj(btn)
+  prj <- rmf_transform_prj(prj, crs)
+  return(prj)
+}
+
+#' @export
+#' @method rmf_transform_prj mt3dms
+rmf_transform_prj.mt3dms <- function(mt3dms, crs) {
+  if(!rmf_has_prj(mt3dms)) stop('mt3dms object has no prj object to transform', call. = FALSE)
+  prj <- rmf_get_prj(mt3dms)
   prj <- rmf_transform_prj(prj, crs)
   return(prj)
 }

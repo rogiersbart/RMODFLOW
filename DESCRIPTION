@@ -33,7 +33,8 @@ Imports:
     processx,
     tidyr,
     spectralscale,
-    rui
+    rui,
+    lubridate
 Remotes:
     rogiersbart/spectralscale,
     rogiersbart/rui
