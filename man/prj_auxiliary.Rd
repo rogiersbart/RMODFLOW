@@ -47,9 +47,9 @@ rmf_transform_prj(...)
 \method{rmf_transform_prj}{modflow}(modflow, crs)
 }
 \arguments{
-\item{dis}{\code{RMODFLOW} dis object}
+\item{dis}{\code{RMODFLOW} dis object (or \code{RMT3DMS} btn object)}
 
-\item{modflow}{\code{RMODFLOW} modflow object}
+\item{modflow}{\code{RMODFLOW} modflow object (or \code{RMT3DMS} mt3dms object)}
 
 \item{file}{path to discretization file; typically "*.dis"}
 
@@ -70,6 +70,8 @@ rmf_transform_prj(...)
 Functions to get, set, transform and check presence of prj objects
 }
 \details{
+These functions can also be used with the \code{RMT3DMS} library on \code{btn} and \code{mt3dms} objects.
+
 If \code{prj} information is already present, a warning is raised when overwriting.
 
 \code{rmf_set_prj.character} writes the projection information of \code{prj} directly into the header comments of the discretization file
