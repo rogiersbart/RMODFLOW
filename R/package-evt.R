@@ -28,7 +28,7 @@ rmf_create_evt <- function(...,
   arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
   # create evt object
-  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
+  obj <- arg[c("np", "instances")]
   obj$nevtop <- nevtop
   obj$ievtcb <- ievtcb
   obj$evt <- arg$data

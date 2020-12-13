@@ -1449,12 +1449,14 @@ rmf_convert_bcf_to_lpf <- function(bcf,
 #' @param dis \code{RMODFLOW} dis object
 #' @param hed \code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used
 #' @param porosity optional 3d array with porosity values. If used, the average linear groundwater flow velocities are returned.
+#' @param include_bc logical, should fluxes from boundary conditions be included in the calculation of Darcy fluxes ? Defaults to TRUE.
 #' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent Darcy velocities (or average linear groundwater flow velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 #' @export
 rmf_convert_cbc_to_darcy <- function(cbc,
                                      dis,
                                      hed = NULL,
-                                     porosity = NULL) {
+                                     porosity = NULL,
+                                     include_bc = TRUE) {
   
   # check if all flow components are present
   flow <- c('flow_front_face', 'flow_right_face', 'flow_lower_face')
@@ -1481,24 +1483,26 @@ rmf_convert_cbc_to_darcy <- function(cbc,
   darcy$back <- darcy$back/delr/thck
   
   # TODO: other fluxes
-  for (kper in 1:dis$nper) {
-    for (kstp in 1:dis$nstp[kper]) {
-      step <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper -1 ] + kstp)
-      if ('recharge' %in% names(cbc)) {
-         # TODO check if sum is correct
-         darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
-      }
-      if('drains' %in% names(cbc)) {
-        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
-        darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
-      }
-      if('river_leakage' %in% names(cbc)) {
-        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
-        darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
+  if(include_bc) {
+    for (kper in 1:dis$nper) {
+      for (kstp in 1:dis$nstp[kper]) {
+        step <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper -1 ] + kstp)
+        if ('recharge' %in% names(cbc)) {
+          # TODO check if sum is correct
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
+        }
+        if('drains' %in% names(cbc)) {
+          drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
+        }
+        if('river_leakage' %in% names(cbc)) {
+          river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
+        }
       }
     }
   }
-  
+
   if(is.null(porosity)) {
     porosity <- 1
   } else {

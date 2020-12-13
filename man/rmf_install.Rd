@@ -2,9 +2,12 @@
 % Please edit documentation in R/install.R
 \name{rmf_install}
 \alias{rmf_install}
+\alias{rmf_installed_codes}
 \title{Install external codes}
 \usage{
 rmf_install(code = "all", overwrite = NULL)
+
+rmf_installed_codes()
 }
 \arguments{
 \item{code}{Character vector with the codes to install, or \code{"all"} (default).}
@@ -31,6 +34,9 @@ folder names are modified in order to have more consistency.
 The default installation location is \code{file.path(system.file(package = "RMODFLOW"), "code")}, but it can be altered by setting option
 \code{RMODFLOW.path}.
 }
+
+\code{\link[=rmf_installed_codes]{rmf_installed_codes()}} shows which codes are installed in the default installation location as
+set by the \code{RMODFLOW.path} option.
 }
 \examples{
 \dontrun{
@@ -38,6 +44,9 @@ rmf_install() # Install all codes.
 rmf_install("2005") # Install MODFLOW-2005.
 rmf_install("MODFLOW-2005") # Install MODFLOW-2005.
 rmf_install(c(2005, "MODFLOW-NWT", "cfp")) # Install different variants.
+}
+\dontrun{
+rmf_installed_codes()
 }
 }
 \seealso{

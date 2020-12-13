@@ -47,6 +47,25 @@ rmf_install <- function(code = "all", overwrite = NULL) {
   invisible()
 }
 
+#' @rdname rmf_install
+#' @export
+#' @details [rmf_installed_codes()] shows which codes are installed in the default installation location as
+#'  set by the `RMODFLOW.path` option.
+#' @examples
+#' \dontrun{
+#' rmf_installed_codes()
+#' }
+rmf_installed_codes <- function() {
+  loc <- getOption('RMODFLOW.path')
+  codes <- vapply(list.dirs(loc, recursive = FALSE), basename, 'text')
+  if(length(codes) == 0) {
+    rui::disapprove('No codes have been installed in {loc}')
+  } else {
+    rui::approve('Following codes have been installed in {loc}:')
+    for(i in codes) rui::inform(i)
+  }
+}
+
 #' Install codes
 #'
 #' @inheritParams rmf_install
@@ -148,7 +167,8 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
       succes <- succes*file.rename(file.path(mf_dir, 'mf2005cfp.exe'),
                                    file.path(mf_dir, 'bin', 'mf2005cfp.exe'))
     } else {
-      fs::file_move(file.path(dir, folder), mf_dir)
+      # fs::file_move(file.path(dir, folder), mf_dir)
+      file.rename(file.path(dir, folder), mf_dir)
     }
     rui::succeed()
     rui::inform("You can find {code} at: {.path {mf_dir}}")

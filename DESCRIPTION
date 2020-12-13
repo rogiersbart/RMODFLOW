@@ -29,7 +29,6 @@ Imports:
     ggquiver,
     magrittr,
     stars,
-    fs,
     processx,
     tidyr,
     spectralscale,

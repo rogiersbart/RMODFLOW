@@ -30,7 +30,7 @@
 #'          Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and SYTP}. Variables can be specified either through the use of parameters or direct vector input through hk, hani, vk, ss, sy and sytp arguments.
 #'          Specifying directly with parameters is useful if the parametrization is complex. If only a single value per hgu per partyp is needed, the direct vector input can be used.
 #'          If any parameters are specified, all flow variables have to be specified by parameters. If hk, hani, vk, ss, sy or sytp are not named, the hgu number will be added as a suffix to the type (e.g. 'HK_1'). 
-#'          Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI van not be specified, only VK. VANI can be set through hguvani.
+#'          Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI can not be specified, only VK. VANI can be set through hguvani.
 #'          
 #'          \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
 #'          
@@ -76,10 +76,10 @@ rmf_create_huf <- function(dis,
   huf$iohufflows <- iohufflows
   
   # data set 2
-  huf$lthuf <- lthuf
+  huf$lthuf <- rmfi_ifelse0(length(lthuf) == 1, rep(lthuf, dis$nlay), lthuf)
   
   # data set 3
-  huf$laywt <- laywt
+  huf$laywt <- rmfi_ifelse0(length(laywt) == 1, rep(laywt, dis$nlay), laywt)
 
   # data set 4
   if(any(huf$laywet != 0)) {
@@ -101,8 +101,8 @@ rmf_create_huf <- function(dis,
   huf$thck <- thck
   
   # data set 9
-  huf$hguhani <- hguhani
-  huf$hguvani <- hguvani
+  huf$hguhani <- rmfi_ifelse0(length(hguhani) == 1, rep(hguhani, huf$nhuf), hguhani)
+  huf$hguvani <- rmfi_ifelse0(length(hguvani) == 1, rep(hguvani, huf$nhuf), hguvani)
   
   # data set 10-11
   if(!is.null(parameters)) {
@@ -130,31 +130,36 @@ rmf_create_huf <- function(dis,
     }
     
     # hk
+    if(length(hk) == 1) hk <- rep(hk, huf$nhuf)
     hk_p <- lapply(1:huf$nhuf, function(i) create_huf_parameter(value = hk[i], index = i, partyp = 'HK', hgunam = huf$hgunam[i]))
     huf$parameters <- hk_p
     
     # hani
     if(any(huf$hguhani == 0)) {
+      if(length(hani) == 1) hani <- rep(hani, huf$nhuf)
       hani_p <- lapply(1:huf$nhuf, function(i) rmfi_ifelse0(huf$hguhani[i] == 0, create_huf_parameter(value = hani[i], index = i, partyp = 'HANI', hgunam = huf$hgunam[i]), NULL))
       huf$parameters <- c(huf$parameters, hani_p[huf$hguhani == 0])
     }
     
     # vk
     if(any(huf$hguvani == 0)) {
+      if(length(vk) == 1) vk <- rep(vk, huf$nhuf)
       vk_p <- lapply(1:huf$nhuf, function(i) rmfi_ifelse0(huf$hguvani[i] == 0, create_huf_parameter(value = vk[i], index = i, partyp = 'VK', hgunam = huf$hgunam[i]), NULL))
       huf$parameters <- c(huf$parameters, vk_p[huf$hguvani == 0])
     }
       
     # ss
     if('TR' %in% dis$sstr) {
+      if(length(ss) == 1) ss <- rep(ss, huf$nhuf)
       ss_p <- lapply(1:huf$nhuf, function(i) create_huf_parameter(value = ss[i], index = i, partyp = 'SS', hgunam = huf$hgunam[i]))
       huf$parameters <- c(huf$parameters, ss_p)
     }
       
     # sy
     if('TR' %in% dis$sstr && any(huf$lthuf != 0)) {
-      sy_p <- lapply(1:huf$nhuf, function(i) rmfi_ifelse0(huf$lthuf[i] != 0, create_huf_parameter(value = ss[i], index = i, partyp = 'SY', hgunam = huf$hgunam[i]), NULL))
-      huf$parameters <- c(huf$parameters, ss_p[huf$lthuf != 0])
+      if(length(sy) == 1) sy <- rep(sy, huf$nhuf)
+      sy_p <- lapply(1:huf$nhuf, function(i) rmfi_ifelse0(huf$lthuf[i] != 0, create_huf_parameter(value = sy[i], index = i, partyp = 'SY', hgunam = huf$hgunam[i]), NULL))
+      huf$parameters <- c(huf$parameters, sy_p[huf$lthuf != 0])
     }
       
     # sytp

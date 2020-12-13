@@ -55,11 +55,11 @@ rmf_create_bcf <-  function(dis,
   bcf$ihdwet <- ihdwet
   
   # data set 2
-  bcf$layavg <- layavg
-  bcf$laycon <- laycon
+  bcf$layavg <- rmfi_ifelse0(length(layavg) == 1, rep(layavg, dis$nlay), layavg)
+  bcf$laycon <- rmfi_ifelse0(length(laycon) == 1, rep(laycon, dis$nlay), laycon)
   
   # data set 3
-  bcf$trpy <- trpy
+  bcf$trpy <- rmfi_ifelse0(length(trpy) == 1, rep(trpy, dis$nlay), trpy)
   
   # data set 4
   if('TR' %in% dis$sstr) bcf$sf1 <- rmf_create_array(sf1, dim = c(dis$nrow, dis$ncol, dis$nlay))

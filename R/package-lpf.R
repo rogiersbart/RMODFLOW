@@ -75,19 +75,19 @@ rmf_create_lpf <- function(dis,
   lpf$noparcheck <- noparcheck
   
   # data set 2
-  lpf$laytyp <- laytyp
+  lpf$laytyp <- rmfi_ifelse0(length(laytyp) == 1, rep(laytyp, dis$nlay), laytyp)
   
   # data set 3
-  lpf$layavg <- layavg
+  lpf$layavg <- rmfi_ifelse0(length(layavg) == 1, rep(layavg, dis$nlay), layavg)
   
   # data set 4
-  lpf$chani <- chani
+  lpf$chani <- rmfi_ifelse0(length(chani) == 1, rep(chani, dis$nlay), chani)
   
   # data set 5
-  lpf$layvka <- layvka
+  lpf$layvka <- rmfi_ifelse0(length(layvka) == 1, rep(layvka, dis$nlay), layvka)
   
   # data set 6
-  lpf$laywet <- laywet
+  lpf$laywet <- rmfi_ifelse0(length(laywet) == 1, rep(laywet, dis$nlay), laywet)
   
   # data set 7
   if(any(lpf$laywet != 0)) {

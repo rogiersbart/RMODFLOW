@@ -11,6 +11,7 @@
   j = NULL,
   k = NULL,
   l = NULL,
+  nstp = NULL,
   kper = NULL,
   kstp = NULL,
   saturated = FALSE,
@@ -31,7 +32,9 @@
 
 \item{k}{layer number to plot}
 
-\item{l}{time step number to plot; defaults to plotting the final time step.}
+\item{l}{time step number to plot (index for 4th dimension); defaults to plotting the final time step. See details.}
+
+\item{nstp}{integer specifying the flow time step to plot. See details.}
 
 \item{kper}{integer specifying the stress-period. Use in conjunction with kstp. See details.}
 
@@ -48,8 +51,10 @@ ggplot2 object or layer
 Plot a MODFLOW head file object
 }
 \details{
-There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number.
-The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+There are three ways to specify which time step to plot.
+The \code{l} argument can be specified which represents the dimension index. This can be smaller than the total number of time steps since output may not be written for all steps.
+The second option is to specify \code{nstp} which is the total time step number. Since output at every time step is not always written, a specified nstp value might not be available in the array.
+The third option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
 A negative \code{kstp} will plot the final time step of the stress-period.
 
 If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful

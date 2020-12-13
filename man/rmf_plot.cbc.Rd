@@ -32,7 +32,7 @@
 
 \item{k}{layer number to plot}
 
-\item{l}{time step number to plot; defaults to plotting the final time step.}
+\item{l}{time step number to plot; defaults to plotting the final time step. See details.}
 
 \item{flux}{character denoting which flux to plot. See details.}
 

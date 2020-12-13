@@ -102,7 +102,7 @@ rmf_create_nam <- function(..., basename = NULL) {
   if(lmt_type$ftype %in% nam$ftype) {
     lmt <- fobjects[[which(nam$ftype == lmt_type$ftype) - 1]]
     if(lmt$inftl %in% nam$nunit) {
-      stop('lmt intfl number is already occupied by the ', df$rmf[which(df$ftype %in% nam$ftype[which(nam$nunit == lmt$inftl)])], ' package. Please change the inftl value in the lmt object.', call. = FALSE)
+      stop('lmt intfl number is already occupied by the ', df$rmf[which(df$ftype %in% nam$ftype[which(nam$nunit == lmt$inftl)[1]])], ' package. Please change the inftl value in the lmt object.', call. = FALSE)
     }
   }
   
@@ -182,6 +182,7 @@ rmf_write_nam <- function(nam,
     ftype <- df$ftype[which(df$rmf %in% exclude)]
     nam <- nam[-which(nam$ftype %in% ftype), ]
   }
+  
   if(length(unique(nam$nunit)) < nrow(nam)) stop('Please make sure every file has a unique nunit specified', call. = FALSE)
   if(any(c(5, 6, 96:99) %in% nam$nunit)) stop('nunit 5, 6, 96, 97, 98 or 99 detected. These unit numbers are not allowed by MODFLOW', call. = FALSE)
   nam$nunit <- as.integer(nam$nunit)
