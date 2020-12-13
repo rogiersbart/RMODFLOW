@@ -784,6 +784,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           fname <- nam$fname[which(nam$nunit == locat)]
           direct <- attr(nam, 'dir')
           absfile <- file.path(direct, fname)
+          ext_file <- TRUE
           
           # ASCII
           if(locat > 0) {
@@ -791,8 +792,8 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
               lengths <- rmfi_fortran_format(fmtin)
               fortranfmt <-  TRUE
             }
-            if(locat == nam$nunit[which(basename(nam$fname) == basename(file))]) { # read from current file
-              
+            if(locat == nam$nunit[which(basename(nam$fname) == basename(file))] || normalizePath(absfile) == normalizePath(file)) { # read from current file
+              ext_file <- FALSE
               remaining_lines <- remaining_lines[-1] 
               if(fortranfmt) {
                 remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
@@ -858,11 +859,16 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
             
             close(con)
           }
-          if(is.null(attr(nam, as.character(locat)))) {
-            attr(nam, as.character(locat)) <- nLines
-          } else {
-            attr(nam, as.character(locat)) <- attr(nam, as.character(locat)) + nLines
+          
+          if(ext_file) {
+            if(is.null(attr(nam, as.character(locat)))) {
+              attr(nam, as.character(locat)) <- nLines
+            } else {
+              attr(nam, as.character(locat)) <- attr(nam, as.character(locat)) + nLines
+            }
+            nLines <- 1
           }
+
         }
         remaining_lines <- remaining_lines[-c(1:nLines)]
       }   
