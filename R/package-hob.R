@@ -357,7 +357,7 @@ rmf_write_hob <- function(hob,
   i <- 1
   while(i <= hob$nh) {
     # data set 3
-    rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1)), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
+    rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), hob$data$layer[[i]])), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
                          as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
                          file=file)
     
