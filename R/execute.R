@@ -553,6 +553,8 @@ rmfi_find <- function(
         folder <- rmf_install_bin_folder
       } else if(file.exists(Sys.which(executable))) {
         return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
       } else {
         rui::stop("Path to {code} executable not found.")
       }
@@ -570,6 +572,8 @@ rmfi_find <- function(
         folder <- rmf_install_bin_folder
       } else if(file.exists(Sys.which(executable))) {
         return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
       } else {
         rui::stop("Path to {code} executable not found.")
       }
@@ -587,6 +591,8 @@ rmfi_find <- function(
         folder <- rmf_install_bin_folder
       } else if(file.exists(Sys.which(executable))) {
         return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
       } else {
         rui::stop("Path to {code} executable not found.")
       }
@@ -604,6 +610,8 @@ rmfi_find <- function(
         folder <- rmf_install_bin_folder
       } else if(file.exists(Sys.which(executable))) {
         return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
       } else {
         rui::stop("Path to {code} executable not found.")
       }
@@ -621,6 +629,8 @@ rmfi_find <- function(
         folder <- rmf_install_bin_folder
       } else if(file.exists(Sys.which(executable))) {
         return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
       } else {
         rui::stop("Path to {code} executable not found.")
       }

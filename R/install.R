@@ -51,6 +51,7 @@ rmf_install <- function(code = "all", overwrite = NULL) {
 #' @export
 #' @details [rmf_installed_codes()] shows which codes are installed in the default installation location as
 #'  set by the `RMODFLOW.path` option.
+#' @return [rmf_installed_codes()] returns an invisible character vector with installed code names.
 #' @examples
 #' \dontrun{
 #' rmf_installed_codes()
@@ -64,6 +65,7 @@ rmf_installed_codes <- function() {
     rui::approve('Following codes have been installed in {loc}:')
     for(i in codes) rui::inform(i)
   }
+  return(invisible(codes))
 }
 
 #' Install codes

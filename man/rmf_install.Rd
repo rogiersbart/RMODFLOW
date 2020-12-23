@@ -16,6 +16,9 @@ rmf_installed_codes()
 \code{NULL} (default), the user is asked what to do in an interactive session.
 An error message is issued otherwise.}
 }
+\value{
+\code{\link[=rmf_installed_codes]{rmf_installed_codes()}} returns an invisible character vector with installed code names.
+}
 \description{
 This function installs external codes that are used by \link{RMODFLOW}.
 }

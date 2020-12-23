@@ -420,6 +420,15 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
 #'
 rmfi_fortran_format <- function(format) {
   
+  # take only what is within first and last parentheses
+  if(grepl('\\(', format) && grepl('\\)', format)) {
+    splt <- strsplit(format, '')[[1]]
+    fp <- grep('\\(', splt)[1]
+    lp <- grep('\\)', splt)
+    lp <- lp[length(lp)]
+    format <- paste0(splt[fp:lp], collapse = '')
+  }
+  
   # remove outer parentheses
   format <- trimws(toupper(format))
   format <- gsub('^\\(|\\)$','',format)
@@ -771,7 +780,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
         locat <- as.numeric(header$variables[1])
         cnst <- as.numeric(header$variables[2])
         if(cnst == 0) cnst <-  1.0
-        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:41], collapse = '')
+        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:40], collapse = '')
         fmtin <- trimws(as.character(fmtin))
         
         # CONSTANT
@@ -1536,7 +1545,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     
     if(!is.null(dim(array)) && length(dim(array)) > 2) {
       for(i in 1:dim(array)[3]) {
-        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=ifelse(i == 1, append, TRUE))
       }
     } else {
       cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
@@ -1575,7 +1584,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
         cat(paste('CONSTANT ',cnstnt * c(array)[1], '\n', sep=''), file=file, append=append)
       } else {
         cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
-        cat(paste(paste(array, collapse=' '), '\n', sep=' '), file=file, append=append)     
+        cat(paste(paste(array, collapse=' '), '\n', sep=' '), file=file, append=TRUE)     
       }
     } else if(length(dim(array))==2) {
       if(prod(c(array)[1] == c(array))==1) {
@@ -1583,22 +1592,22 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
       } else {
         cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
         if(dim(array)[1] == 1) {
-          cat(paste0(paste(array, collapse=' '),'\n'), file=file, append=append)
+          cat(paste0(paste(array, collapse=' '),'\n'), file=file, append=TRUE)
         } else {
-          write.table(array, file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE) 
+          write.table(array, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
         }
       }
     } else {
       for(i in 1:dim(array)[3])
       {
         if(prod(c(array[,,i])[1] == c(array[,,i]))==1) {
-          cat(paste('CONSTANT ',cnstnt * c(array[,,i])[1], '\n', sep=''), file=file, append=append)
+          cat(paste('CONSTANT ',cnstnt * c(array[,,i])[1], '\n', sep=''), file=file, append=ifelse(i == 1, append, TRUE))
         } else {
-          cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
+          cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=ifelse(i == 1, append, TRUE))
           if(dim(array)[1] == 1) {
-            cat(paste0(paste(array[,,i], collapse=' '),'\n'), file=file, append=append)
+            cat(paste0(paste(array[,,i], collapse=' '),'\n'), file=file, append=TRUE)
           } else {
-            write.table(array[,,i], file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE)       
+            write.table(array[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
           }
         }
       }

@@ -421,6 +421,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
 #' @param exclude character vector with packages names to exclude from the simulation. Defaults to NULL
 #' @param suppress logical; remove non-supported (and thus not written) packages in the NAME file ? Defaults to FALSE
 #' @param verbose logical; should information on writing files be printed to the console ? Defaults to TRUE.
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
 #' @details All arrays use free-format headers INTERNAL or CONSTANT
@@ -431,7 +432,8 @@ rmf_write <- function(modflow,
                       file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()},
                       exclude = NULL,
                       suppress = FALSE,
-                      verbose = TRUE) {
+                      verbose = TRUE,
+                      iprn = -1) {
   
   print_writing <- function(package, file) {
     cat(paste0("---------------------------------", '\n'))
@@ -474,20 +476,20 @@ rmf_write <- function(modflow,
   
   # dis
   if(verbose) print_writing('DIS', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
-  rmf_write_dis(dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
+  rmf_write_dis(dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]), iprn = iprn)
   
   # bas
   if(verbose) print_writing('BAS6', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
-  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
+  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]), iprn = iprn)
   
   # mlt & zon
   if('mlt' %in% ftype) {
     if(verbose) print_writing('MULT', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
-    rmf_write_mlt(mlt = modflow$mlt, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
+    rmf_write_mlt(mlt = modflow$mlt, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]), iprn = iprn)
   }
   if('zon' %in% ftype) {
     if(verbose) print_writing('ZONE', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
-    rmf_write_zon(zon = modflow$zon, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
+    rmf_write_zon(zon = modflow$zon, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]), iprn = iprn)
   } 
   
   # pval
@@ -510,7 +512,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }
@@ -523,7 +525,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }
@@ -562,7 +564,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }
