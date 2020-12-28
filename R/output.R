@@ -34,16 +34,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
                          fluxes = 'all',
                          timesteps = NULL) {
   
-  # headers <- c('   CONSTANT HEAD',
-  #              '         STORAGE',
-  #              'FLOW RIGHT FACE ',
-  #              'FLOW FRONT FACE ',
-  #              'FLOW LOWER FACE ',
-  #              '           WELLS',
-  #              '   RIVER LEAKAGE',
-  #              '        RECHARGE',
-  #              '          DRAINS',
-  #              ' HEAD DEP BOUNDS')
+  headers <- trimws(rmfd_cbc_headers)
   
   nbytes <- ifelse(precision == 'single', 4, 8) 
   binary <-  TRUE # MODFLOW cbc budget file is always binary
@@ -102,12 +93,13 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
       while(length(desc!=0)) {
         
         name <- gsub(' ', '_', tolower(trimws(desc)))
+        name_chck <- trimws(desc)
         if(trial == 1) {
-          if(!(name %in% c("storage","constant_head",'flow_right_face','flow_front_face'))) {
+          if(!(name_chck %in% headers)) {
             fail[1] = TRUE
           }
         } else if(trial == 2) {
-          if(!(name %in% c('constant_head','flow_right_face','flow_front_face','flow_lower_face'))) {
+          if(!(name_chck %in% headers)) {
             fail[2] = TRUE
           }
         }
@@ -410,29 +402,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
                          precision = 'single',
                          timesteps = NULL) {
   
-  headers <- c('HEAD',
-               'DRAWDOWN',
-               'SUBSIDENCE',
-               'COMPACTION',
-               'CRITICAL HEAD', # spaces! fix!
-               'HEAD IN HGU',
-               'NDSYS COMPACTION',
-               'Z DISPLACEMENT',
-               'D CRITICAL HEAD',
-               'LAYER COMPACTION',
-               'DSYS COMPACTION',
-               'ND CRITICAL HEAD',
-               'LAYER COMPACTION',
-               'SYSTM COMPACTION',
-               'PRECONSOL STRESS',
-               'CHANGE IN PCSTRS',
-               'EFFECTIVE STRESS',
-               'CHANGE IN EFF-ST',
-               'VOID RATIO',
-               'THICKNESS',
-               'CENTER ELEVATION',
-               'GEOSTATIC STRESS',
-               'CHANGE IN G-STRS')
+  headers <- trimws(rmfd_state_headers)
   other_desc <- NULL
 
   if(binary) { # Binary
@@ -839,29 +809,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
                          precision = 'single',
                          timesteps = NULL) {
   
-  headers <- c('HEAD',
-               'DRAWDOWN',
-               'SUBSIDENCE',
-               'COMPACTION',
-               'CRITICAL HEAD', # spaces! fix!
-               'HEAD IN HGU',
-               'NDSYS COMPACTION',
-               'Z DISPLACEMENT',
-               'D CRITICAL HEAD',
-               'LAYER COMPACTION',
-               'DSYS COMPACTION',
-               'ND CRITICAL HEAD',
-               'LAYER COMPACTION',
-               'SYSTM COMPACTION',
-               'PRECONSOL STRESS',
-               'CHANGE IN PCSTRS',
-               'EFFECTIVE STRESS',
-               'CHANGE IN EFF-ST',
-               'VOID RATIO',
-               'THICKNESS',
-               'CENTER ELEVATION',
-               'GEOSTATIC STRESS',
-               'CHANGE IN G-STRS')
+  headers <- rmfd_state_headers
   other_desc <- NULL
   
   if(binary) { # Binary
@@ -1279,7 +1227,8 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
     
     # no budget is printed
   } else {
-    stop("No budget was printed to listing file. You can change this in the OC file.", call. = FALSE)
+    warning("No budget was printed to listing file. You can change this in the OC file.", call. = FALSE)
+    return(NULL)
   }
   
   class(balance) <- 'bud'

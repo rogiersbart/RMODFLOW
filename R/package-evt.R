@@ -384,7 +384,7 @@ rmf_write_evt <-  function(evt,
     if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, iprn = iprn, ...)
     
     # data set 7
-    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$recharge[[names_act]], file = file, iprn = iprn, ...)
+    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$evt[[names_act]], file = file, iprn = iprn, ...)
     
     # data set 8
     if(np > 0){

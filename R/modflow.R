@@ -336,7 +336,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       hdry <- modflow[[which(names(modflow) %in% c('huf', 'lpf', 'bcf', 'upw'))]]$hdry
       
       # heads
-      if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0))) {
+      if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) && !is.na(modflow$oc$ihedun) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0) && (modflow$oc$ihedun > 0))) {
         if(verbose) print_reading('Head', file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], output = TRUE)
         
         # huf heads
@@ -350,7 +350,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       }
       
       # drawdown
-      if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0))) {
+      if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) && !is.na(modflow$oc$iddnun) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0) && (modflow$oc$iddnun > 0))) {
         if(verbose) print_reading('Drawdown', file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], output = TRUE)
         modflow$drawdown <- rmf_read_drawdown(file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], dis = modflow$dis, bas = modflow$bas, hdry = hdry, oc = modflow$oc,
                                               binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$iddnun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)

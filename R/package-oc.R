@@ -258,7 +258,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$print_head <- cbind(oc$print_head, 1:dis$nlay %in% layers)
           } else {
-            oc$print_head <- cbind(oc$print_head, rep(T,dis$nlay))
+            oc$print_head <- cbind(oc$print_head, rep(TRUE,dis$nlay))
           }
         } 
         
@@ -267,12 +267,12 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$print_drawdown <- cbind(oc$print_drawdown, 1:dis$nlay %in% layers)
           } else {
-            oc$print_drawdown <- cbind(oc$print_drawdown, rep(T,dis$nlay))
+            oc$print_drawdown <- cbind(oc$print_drawdown, rep(TRUE,dis$nlay))
           }
         } 
         
         if(grepl('PRINT BUDGET', oc_lines[1])) {
-          oc$print_budget <- append(oc$print_budget, T)
+          oc$print_budget <- append(oc$print_budget, TRUE)
         } 
         
         if(grepl('SAVE HEAD', oc_lines[1])) {
@@ -280,7 +280,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_head <- cbind(oc$save_head, 1:dis$nlay %in% layers)
           } else {
-            oc$save_head <- cbind(oc$save_head, rep(T,dis$nlay))
+            oc$save_head <- cbind(oc$save_head, rep(TRUE,dis$nlay))
           }
         } 
         
@@ -289,7 +289,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_drawdown <- cbind(oc$save_drawdown, 1:dis$nlay %in% layers)
           } else {
-            oc$save_drawdown <- cbind(oc$save_drawdown, rep(T,dis$nlay))
+            oc$save_drawdown <- cbind(oc$save_drawdown, rep(TRUE,dis$nlay))
           }
         } 
         
@@ -298,12 +298,12 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
             layers <- as.numeric(rmfi_parse_variables(oc_lines[1], format = 'free')$variables[-c(1:2)])
             oc$save_ibound <- cbind(oc$save_ibound, 1:dis$nlay %in% layers)
           } else {
-            oc$save_ibound <- cbind(oc$save_ibound, rep(T,dis$nlay))
+            oc$save_ibound <- cbind(oc$save_ibound, rep(TRUE,dis$nlay))
           }
         } 
         
         if(grepl('SAVE BUDGET', oc_lines[1])) {
-          oc$save_budget <- append(oc$save_budget, T)
+          oc$save_budget <- append(oc$save_budget, TRUE)
         } 
         
         oc_lines <- oc_lines[-1]
@@ -356,7 +356,7 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
     
     # data set 2 & 3
     oc$incode <- oc$ihddfl <- oc$ibudfl <- oc$icbcfl <- NULL
-    oc$hdpr <- oc$ddpr <- oc$hdsv <- oc$ddsv <- matrix(NA, nrow = sum(dis$nstp), ncol = dis$nlay)
+    oc$hdpr <- oc$ddpr <- oc$hdsv <- oc$ddsv <- matrix(0, nrow = sum(dis$nstp), ncol = dis$nlay)
     for (i in 1:sum(dis$nstp)) {
       data_set_2 <- rmfi_parse_variables(oc_lines, n = 4, ...)
       oc$incode[i] <- rmfi_ifelse0(is.na(data_set_2$variables[1]), 0, as.numeric(data_set_2$variables[1]))
@@ -368,10 +368,10 @@ rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose(
       
       if(oc$incode[i] < 0) {
         if(i == 1) {
-          oc$hdpr[i,] <- NA
-          oc$ddpr[i,] <- NA
-          oc$hdsv[i,] <- NA
-          oc$ddsv[i,] <- NA
+          oc$hdpr[i,] <- 0
+          oc$ddpr[i,] <- 0
+          oc$hdsv[i,] <- 0
+          oc$ddsv[i,] <- 0
         } else {
           oc$hdpr[i,] <- oc$hdpr[i-1,]
           oc$ddpr[i,] <- oc$ddpr[i-1,]

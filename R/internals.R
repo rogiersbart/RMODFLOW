@@ -779,7 +779,6 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
         header <- rmfi_parse_variables(remaining_lines[1], n = 3, format = 'fixed')
         locat <- as.numeric(header$variables[1])
         cnst <- as.numeric(header$variables[2])
-        if(cnst == 0) cnst <-  1.0
         fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:40], collapse = '')
         fmtin <- trimws(as.character(fmtin))
         
@@ -788,6 +787,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           array[,,k] <- cnst
           nLines <- 1
         } else {
+          if(cnst == 0) cnst <-  1.0
           if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
           fname <- nam$fname[which(nam$nunit == locat)]
@@ -997,7 +997,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
           
           # zero or character entry terminates IZ
           iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
-          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1] - 1, which(iz_vector == 0)[1], na.rm = TRUE)]
         }
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -1705,7 +1705,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
   # parameters
-  if(obj$np > 0){
+  if(obj$np > 0) {
     parm_names <- names(obj$parameter_values)
     tv_parm <- structure(rep(FALSE,obj$np), names = parm_names)
     
@@ -1816,24 +1816,33 @@ rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', app
   
 }
 
-#' Write modflow variables
-#' Internal function used in the write_* functions for writing single line datasets
-#' @param format either \code{'fixed'} or \code{'free'}. Fixed format assumes 10 character spaces for each value
+#' Write MODFLOW variables
+#' Internal function used in the rmf_write_* functions for writing single line datasets
+#' @param format either \code{'fixed'} or \code{'free'}.  Fixed format assumes fixed width character spaces for each value as determined by the width argument
+#' @param width numeric vector with the character widths for each variable. If a single value, it is repeated.
 #' @param integer logical; should all values be converted to integers? MODFLOW does not allow for exponents in integer values
+#' @param iprn ignored
 #' @keywords internal
-rmfi_write_variables <- function(..., file, append=TRUE, format = 'free', integer = FALSE) {
+rmfi_write_variables <- function(..., file, append=TRUE, width = 10, format = 'free', integer = FALSE, iprn = -1) {
   arg <- list(...)
   arg <- arg[vapply(arg, function(i) all(nchar(i) > 0), TRUE)] # removes empty elements
   if(integer) arg <- lapply(arg, as.integer)
   
   # sets integers in proper format since Type is converted to double when vectorized
   if(format == 'free') {
-    arg <- lapply(arg, formatC)
+    if(integer) {
+      arg <- lapply(arg, formatC)
+    } else {
+      arg <- lapply(arg, as.character)
+    }
     arg <- unlist(arg)
     cat(paste0(paste(arg, sep = ' ', collapse = ' '), '\n'), file=file, append=append)
-  } else if(format == 'fixed') { # optional items are always free format so no need to adjust code for characters
-    arg <- lapply(arg, formatC, width = 10)
+  } else if(format == 'fixed') { 
+    arg <- unlist(lapply(arg, as.list), recursive = FALSE)
+    if(length(width) == 1) width <- rep(width, length(arg)) 
+    arg <- lapply(1:length(arg), function(i) rmfi_ifelse0(nchar(arg[[i]]) > width[i], formatC(arg[[i]], width = width[i]), paste0(paste0(rep(' ', width[i]-nchar(arg[[i]])), collapse = ''), as.character(arg[[i]]), collapse = '')))
+    arg <- lapply(1:length(arg), function(i) paste0(strsplit(arg[[i]], '')[[1]][1:width[i]], collapse = ''))
     arg <- unlist(arg)
-    cat(paste0(paste0(arg, collapse = ''), '\n'), file=file, append=append)
+    cat(paste0(paste0(arg, collapse=''), '\n'), file=file, append=append)
   }
 }
