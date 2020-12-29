@@ -21,7 +21,7 @@
   gridlines = FALSE,
   add = FALSE,
   height_exaggeration = 100,
-  binwidth = pretty(diff(zlim)/20, 1)[1],
+  binwidth = max(pretty(diff(zlim)/20, 2)),
   label = TRUE,
   prj = rmf_get_prj(dis),
   crs = NULL,

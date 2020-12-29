@@ -250,5 +250,31 @@ For the HUF package however, there is a S3 plotting method: `rmf_plot.huf()`. By
 # Plotting output
 Plotting output is shown in [the vignette on output handling](output.html).
 
+# Plotting MODFLOW models
+To quickly have a glance at an entire MODFLOW model that's been read in, `rmf_plot` also has a S3 method for the `modflow` class. This plots the IBOUND array and the discrete boundary condition packages that are active. Continuous boundary conditions like RCH and EVT are not plotted since that would overwhelm to plot. You have to select a i, j or k section to plot:
+```{r, eval=F}
+m <- rmf_example_file("rocky-mountain-arsenal.nam") %>%
+  rmf_read(verbose = FALSE)
+
+rmf_plot(m, k = 1)
+
+```
+
+If you wish to omit a certain package, specify the `omit` argument which takes a character vector as input. Note that it requires MODFLOW abbreviations for the packages, like the `ftype` in the NAME file:
+```{r, eval=F}
+rmf_plot(m, k = 1, omit = 'CHD', gridlines = FALSE)
+```
+
+Lastly, in some models, not all boundary conditions are present in all layers. For example, wells are often present in deeper layers. Instead of plotting all layers separately to view them, we can reproject all boundary condition cells to the current layer when the `k` index is given by setting `to_k = TRUE`. Note that the IBOUND is not reprojected.
+```{r, eval=F}
+m <- rmf_example_file("example-model.nam") %>%
+  rmf_read(verbose = FALSE)
+
+# nothing in layer 2
+rmf_plot(m, k = 2)
+
+# force showing all 
+rmf_plot(m, k = 2, to_k = TRUE)
+```
 
 

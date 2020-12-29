@@ -6,7 +6,6 @@ rmf_plot <- function(...) {
   UseMethod('rmf_plot')
 }
 
-
 #' Plot a MODFLOW volumetric budget
 #'
 #' \code{rmf_plot.bud} plots a MODFLOW volumetric budget
@@ -917,6 +916,115 @@ rmf_plot.huf <- function(huf,
   }
 }
 
+#' Plot a 2D section through a MODFLOW model
+#'
+#' \code{rmf_plot.modflow} plots a 2D section through a MODFLOW model showing the IBOUND array and discrete boundary conditions.
+#'
+#' @param modflow \code{RMODFLOW} modflow model
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param ... parameters provided to plot.rmf_3d_array
+#' @param omit character vector with MODFLOW ftypes specifying which packages to omit from the plot. Defaults to plotting all packages.
+#' @param to_k logical; if a layer section is plotted (\code{k} is given), reproject all boundary conditions (not IBOUND) to the layer? Defaults to FALSE.
+#' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines. Defaults to TRUE.
+#' @param prj projection file object
+#' @param legend character denoting the legend of the plot. Defaults to \code{''}.
+#'
+#' @details Only the IBOUND and the locations of the discrete boundary condition packages are plotted.
+#'          \code{to_k} only reprojects boundary condition cells, not IBOUND cells, to layer k. It is not used when \code{k} is not defined. This is useful 
+#'          to plot all boundary condition cells even if they are not present in the current layer k, e.g. wells in deeper layers.
+#'
+#' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
+#' @method rmf_plot modflow
+#' @export
+#'
+#' @examples
+#' m <- rmf_example_file('water-supply-problem.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m, k = 1)
+#' rmf_plot(m, j = 33, gridlines = FALSE)
+#' 
+#' m2 <- rmf_example_file('rocky-mountain-arsenal.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m2, k = 1, legend = 'Type')
+#' rmf_plot(m2, k = 1, legend = 'Type', omit = 'WEL')
+#' 
+#' m3 <- rmf_example_file('example-model.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m3, k = 1)
+#' rmf_plot(m3, k = 2)
+#' 
+#' # reproject boundary conditions (all in layer 1) to layer 2
+#' rmf_plot(m3, k = 2, to_k = TRUE)
+rmf_plot.modflow <- function(modflow, 
+                             i = NULL,
+                             j = NULL,
+                             k = NULL,
+                             omit = NULL,
+                             to_k = FALSE,
+                             gridlines = TRUE,
+                             prj = rmf_get_prj(modflow),
+                             legend = '',
+                             ...) {
+  
+  if(is.null(i) & is.null(j) & is.null(k)) {
+    stop('Please provide i, j or k.', call. = FALSE)
+  }
+  omit <- c(omit, c('RCH', 'EVT', 'ETS'))
+  
+  all_colrs <- setNames(c('turquoise', 'tan3', 'palevioletred', 'springgreen3', 'chartreuse',
+                          'magenta4', 'blue4', 'sienna4', 'sienna1', 'darkseagreen3',
+                          'royalblue3', 'palegreen3', 'olivedrab1', 'burlywood', 'deeppink1'),
+                        c('chd', 'fhb', 'wel', 'drn', 'drt', 'ghb', 'lak', 
+                          'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'bfh', 'rip'))
+  
+  bc <- rmfi_list_packages(type = 'boundary')
+  if(!is.null(omit)) bc <- bc[-which(bc$ftype %in% omit),]
+  bas <- modflow$bas
+  dis <- modflow$dis
+  
+  
+  types <- setNames(c('Constant head', 'Inactive', 'Active', bc$ftype), seq(-1, nrow(bc) + 1))
+  colrs <- setNames(c('lightskyblue', 'grey50', NA, all_colrs[bc$rmf]), types)
+  r <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  
+  # ibound
+  r[which(bas$ibound < 0)] <- -1
+  r[which(bas$ibound == 0)] <- 0
+  
+  pcks <- sort(names(modflow)[which(names(modflow) %in% bc$rmf)])
+  
+  if(length(pcks) > 0) {
+    for(ii in 1:length(pcks)) {
+      ipck <- bc$ftype[which(bc$rmf == pcks[ii])]
+      obj <- modflow[[pcks[ii]]]
+      
+      if(nrow(obj$data) > 0) {
+        
+        df <- obj$data
+        if(!is.null(k) && to_k) df$k <- k
+        ids <- rmf_convert_ijk_to_id(i = df$i, j = df$j, k = df$k, dis = dis, type = 'r')
+        r[ids] <- as.numeric(names(types[which(types == ipck)]))
+      }
+    }
+  }
+  
+  p <- rmf_plot(r, dis = dis, mask = r*0 + 1, i = i, j = j, k = k, type = 'factor', levels = types, gridlines = gridlines, prj = prj, ...)
+  
+  # to suppress warnings of new fill scale being added, remove old fill scale first
+  i <- which(vapply(p$scales$scales, function(i) 'fill' %in% i$aesthetics, TRUE))
+  p$scales$scales[[i]] <- NULL
+  p <- p + ggplot2::scale_fill_manual(legend, values = colrs)
+  
+  # TODO test this
+  if('hfb' %in% names(modflow)) {
+    obj <- modflow$hfb
+    
+    hfb_p <- rmf_plot(hfb, dis = dis, i = i, j = j, k = k, gridlines = FALSE, add = TRUE, colour = 'orange', prj = prj, crop = FALSE)
+    p <- p + hfb_p
+  }
+
+  return(p)
+}
+
 #' Plot a RMODFLOW rch object
 #' 
 #' @param rch an \code{RMODFLOW} rch object
@@ -1044,7 +1152,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   gridlines = FALSE,
                                   add = FALSE,
                                   height_exaggeration = 100,
-                                  binwidth=pretty(diff(zlim)/20, 1)[1],
+                                  binwidth=max(pretty(diff(zlim)/20, 2)),
                                   label=TRUE,
                                   prj=rmf_get_prj(dis),
                                   crs=NULL,
@@ -1327,7 +1435,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   crop = TRUE,
                                   hed = NULL,
                                   l = NULL,
-                                  binwidth = pretty(diff(zlim)/20, 1)[1],
+                                  binwidth = max(pretty(diff(zlim)/20, 2)),
                                   label = TRUE,
                                   prj = rmf_get_prj(dis),
                                   crs = NULL,

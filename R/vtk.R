@@ -268,6 +268,7 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     
     # vertex values of cells
     if(!as_points && vertices) {
+      stop('Writing vertices for 3D & 4D arrays not yet supported', call. = FALSE)
       # apply 0.001 perturbation to prevent out-of-bound errors of corner node coordinates
       # keep perturbation inside grid by setting negative perturbation values for 1st row, last column and top layer
       perf <- 0.0001
@@ -346,12 +347,10 @@ rmf_write_vtk.rmf_4d_array <- function(array,
 #' @export
 #' @method rmf_write_vtk rmf_list
 #'
-#' @examples
 rmf_write_vtk.rmf_list <- function(obj, dis, file, ...) {
   
   r <- rmf_as_array(obj, dis, ...)
-  
-  
+  rmf_write_vtk(r, dis = dis, file = file, ...)
   
 }
 
