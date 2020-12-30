@@ -1534,7 +1534,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     if(!is.null(l)) {
       hed <- hed[,,,l]
     } else {
-      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
+      if(dim(hed)[4] > 1) warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
       hed <- hed[,,,dim(hed)[4]]
     }
   }
@@ -1544,7 +1544,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
   nnlay <- dis$nlay + sum(dis$laycbd != 0)
   cbd <- rmfi_confining_beds(dis)
   if(nnlay > 1) {
-    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.')
+    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.', call. = FALSE)
     thck <- botm <- rmf_calculate_thickness(dis)
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
@@ -3244,6 +3244,45 @@ rmf_interpolate.rmf_4d_array <- function(array, dis, xout, yout, zout, tout, obj
   values[!oob] <- vl
   return(values)
   
+}
+
+#' Calculate saturated thicknesses
+#'
+#' @param hed 3d or 4d array object containing hydraulic head values for each cell
+#' @param dis \code{RMODFLOW} dis object
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used.
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}.
+#'
+#' @return a \code{rmf_3d_array} with saturated thicknesses for each cell.
+#' @export
+#'
+rmf_saturated_thickness <- function(hed, dis, l = NULL, na_values = NULL) {
+  
+  if(length(dim(hed)) == 4) {
+    if(!is.null(l)) {
+      hed <- hed[,,,l]
+    } else {
+      if(dim(hed)[4] > 1) warning('Using final time step heads to calculate saturated thicknesses.', call. = FALSE)
+      hed <- hed[,,,dim(hed)[4]]
+    }
+  }
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
+  cbd <- rmfi_confining_beds(dis)
+  if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated thickness.', call. = FALSE)
+  botm <- dis$botm[,,!cbd]
+  thck <- rmf_calculate_thickness(dis, only_layers = TRUE)
+  
+  # set NA's in head (dry or inactive) to very low value so it's never saturated
+  hed[which(is.na(hed))] <- min(botm, na.rm = TRUE) - 1000
+  
+  sats <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  sats[,,1] <- ifelse(hed[,,1] > dis$top, thck[,,1], ifelse(hed[,,1] < botm[,,1], 0, hed[,,1] - botm[,,1]))
+  if(dis$nlay > 1) {
+    sats[,,2:dis$nlay] <- ifelse(hed[,,2:dis$nlay] > botm[,,1:(dis$nlay - 1)], thck[,,2:dis$nlay], ifelse(hed[,,2:dis$nlay] < botm[2:dis$nlay], 0, hed[,,2:dis$nlay] - botm[,,2:dis$nlay]))
+  }
+  
+  return(sats)
 }
 
 #' Calculate the internal time step sequence of a transient MODFLOW model
