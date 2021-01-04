@@ -14,7 +14,7 @@
   nstp = NULL,
   kper = NULL,
   kstp = NULL,
-  saturated = FALSE,
+  saturated = TRUE,
   type = "fill",
   gridlines = FALSE,
   add = FALSE,
@@ -40,7 +40,7 @@
 
 \item{kstp}{integer specifying the time step of kper. Use in conjunction with kper. See details.}
 
-\item{saturated}{logical indicating if the saturated grid should be used. Defaults to FALSE. See details.}
+\item{saturated}{logical indicating if the saturated grid should be used. Defaults to TRUE. See details.}
 
 \item{...}{additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}}
 }
@@ -58,7 +58,7 @@ The third option is to specify both \code{kper} & \code{kstp} which specify the 
 A negative \code{kstp} will plot the final time step of the stress-period.
 
 If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful
-for cross-sections with \code{grid = TRUE}.
+for cross-sections to show the true saturated surface.
 
 If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 }

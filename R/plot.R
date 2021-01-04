@@ -504,7 +504,7 @@ rmf_plot.ghb <- function(ghb,
 #' @param nstp integer specifying the flow time step to plot. See details. 
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
 #' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
-#' @param saturated logical indicating if the saturated grid should be used. Defaults to FALSE. See details.
+#' @param saturated logical indicating if the saturated grid should be used. Defaults to TRUE. See details.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
 #'
 #' @details There are three ways to specify which time step to plot. 
@@ -514,7 +514,7 @@ rmf_plot.ghb <- function(ghb,
 #'  A negative \code{kstp} will plot the final time step of the stress-period.
 #'  
 #'  If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful 
-#'  for cross-sections with \code{grid = TRUE}.
+#'  for cross-sections to show the true saturated surface.
 #'  
 #'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 #'
@@ -531,7 +531,7 @@ rmf_plot.hed <- function(hed,
                          nstp = NULL,
                          kper = NULL,
                          kstp = NULL,
-                         saturated = FALSE,
+                         saturated = TRUE,
                          type = 'fill',
                          gridlines = FALSE,
                          add = FALSE,
@@ -608,7 +608,7 @@ rmf_plot.hfb <- function(hfb,
                          prj = rmf_get_prj(dis),
                          crs = NULL,
                          size = 1,
-                         colour = 'black',
+                         colour = 'orange',
                          crop = FALSE,
                          add = FALSE,
                          ...) {
@@ -686,7 +686,8 @@ rmf_plot.hfb <- function(hfb,
     
     # plot
     if(variable == 'id') {
-      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row), size = size, colour = colour)
+      p <-  list(ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = 'HFB'), size = size),
+                 ggplot2::scale_colour_manual('', values = c('HFB' = colour)))
     } else {
       p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = value), size = size)
     }
@@ -697,10 +698,10 @@ rmf_plot.hfb <- function(hfb,
       if(!crop) {
         corners <- data.frame(x = rep(c(0, sum(dis$delr)), 2), y = rep(c(0, sum(dis$delc)), each = 2))
         xy <- rmf_convert_grid_to_xyz(x=corners$x,y=corners$y, dis = dis, prj=prj)
-        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y)))
+        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y))) + ggplot2::coord_equal()
         return(p)
       } else {
-        return(ggplot2::ggplot() + p)
+        return(ggplot2::ggplot() + p + ggplot2::coord_equal())
       }
     }
     
@@ -924,12 +925,14 @@ rmf_plot.huf <- function(huf,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param ... parameters provided to plot.rmf_3d_array
 #' @param omit character vector with MODFLOW ftypes specifying which packages to omit from the plot. Defaults to plotting all packages.
 #' @param to_k logical; if a layer section is plotted (\code{k} is given), reproject all boundary conditions (not IBOUND) to the layer? Defaults to FALSE.
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines. Defaults to TRUE.
 #' @param prj projection file object
 #' @param legend character denoting the legend of the plot. Defaults to \code{''}.
+#' @param crop logical; should plot be cropped by dropping NA values; defaults to FALSE
+#' @param size numeric; size of the HFB line if present in \code{modflow}. Default to 1.
+#' @param ... parameters provided to plot.rmf_3d_array
 #'
 #' @details Only the IBOUND and the locations of the discrete boundary condition packages are plotted.
 #'          \code{to_k} only reprojects boundary condition cells, not IBOUND cells, to layer k. It is not used when \code{k} is not defined. This is useful 
@@ -963,6 +966,8 @@ rmf_plot.modflow <- function(modflow,
                              gridlines = TRUE,
                              prj = rmf_get_prj(modflow),
                              legend = '',
+                             crop = FALSE,
+                             size = 1,
                              ...) {
   
   if(is.null(i) & is.null(j) & is.null(k)) {
@@ -1007,18 +1012,17 @@ rmf_plot.modflow <- function(modflow,
     }
   }
   
-  p <- rmf_plot(r, dis = dis, mask = r*0 + 1, i = i, j = j, k = k, type = 'factor', levels = types, gridlines = gridlines, prj = prj, ...)
+  p <- rmf_plot(r, dis = dis, mask = r*0 + 1, i = i, j = j, k = k, type = 'factor', levels = types, gridlines = gridlines, prj = prj, crop = crop, ...)
   
   # to suppress warnings of new fill scale being added, remove old fill scale first
   i <- which(vapply(p$scales$scales, function(i) 'fill' %in% i$aesthetics, TRUE))
   p$scales$scales[[i]] <- NULL
   p <- p + ggplot2::scale_fill_manual(legend, values = colrs)
   
-  # TODO test this
   if('hfb' %in% names(modflow)) {
     obj <- modflow$hfb
     
-    hfb_p <- rmf_plot(hfb, dis = dis, i = i, j = j, k = k, gridlines = FALSE, add = TRUE, colour = 'orange', prj = prj, crop = FALSE)
+    hfb_p <- rmf_plot(obj, dis = dis, i = i, j = j, k = k, gridlines = FALSE, add = TRUE, colour = 'orange', prj = prj, crop = crop, size = size)
     p <- p + hfb_p
   }
 
@@ -1130,7 +1134,7 @@ rmf_plot.riv <- function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param vecsize vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.
 #' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
@@ -1159,7 +1163,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   vecsize = NULL,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
@@ -1402,7 +1406,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
 #' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
@@ -1432,7 +1436,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   hed = NULL,
                                   l = NULL,
                                   binwidth = max(pretty(diff(zlim)/20, 2)),

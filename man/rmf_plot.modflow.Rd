@@ -14,6 +14,8 @@
   gridlines = TRUE,
   prj = rmf_get_prj(modflow),
   legend = "",
+  crop = FALSE,
+  size = 1,
   ...
 )
 }
@@ -35,6 +37,10 @@
 \item{prj}{projection file object}
 
 \item{legend}{character denoting the legend of the plot. Defaults to \code{''}.}
+
+\item{crop}{logical; should plot be cropped by dropping NA values; defaults to FALSE}
+
+\item{size}{numeric; size of the HFB line if present in \code{modflow}. Default to 1.}
 
 \item{...}{parameters provided to plot.rmf_3d_array}
 }
