@@ -1173,8 +1173,12 @@ rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.
     # helper functions
     read_vars <- function(index, lines) rmfi_remove_empty_strings(strsplit(gsub('=', ' = ', lines[index]), ' ')[[1]])
     get_timing <- function(header_vector) {
-      kstp <- as.numeric(strsplit(header_vector[11],',')[[1]])
-      kper <- as.numeric(header_vector[length(header_vector)])
+      kstp <- strsplit(header_vector[11],',')[[1]]
+      if(grepl('STEP', kstp)) kstp <- gsub('STEP', '', kstp)
+      kstp <- as.numeric(kstp)
+      kper <- header_vector[length(header_vector)]
+      if(grepl('PERIOD', kper)) kper <- gsub('PERIOD', '', kper)
+      kper <- as.numeric(kper)
       # nstp <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper - 1] + kstp)
       return(list(kstp, kper))
     }
