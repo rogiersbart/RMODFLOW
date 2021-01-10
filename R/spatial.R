@@ -672,10 +672,20 @@ rmf_as_stars.rmf_3d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   array_list <- lapply(seq_len(dim(array)[3]), 
                         function(i) t(as.matrix(array[rev(seq_len(dim(array)[1])),,i]))) %>% 
     setNames(paste('layer', seq_len(dim(array)[3]), sep = '_'))
-  s <- stars::st_as_stars(array_list, dimensions = d) %>%
-    merge() %>%
-    setNames(name) %>%
-    stars::st_set_dimensions(names = c(names(d), 'layer'))
+  if(dim(array)[3] > 1) {
+    s <- stars::st_as_stars(array_list, dimensions = d) %>%
+      merge() %>%
+      setNames(name) %>%
+      stars::st_set_dimensions(names = c(names(d), 'layer'))
+  } else {
+    array_list[['layer_2']] <- array_list[[1]]*0
+    s <- stars::st_as_stars(array_list, dimensions = d) %>%
+      merge() %>%
+      setNames(name) %>%
+      stars::st_set_dimensions(names = c(names(d), 'layer'))
+    s <- s[,,,1]
+  }
+
   if(id %in% c('r', 'modflow')) {
     s$id <- ids
     dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
@@ -705,11 +715,23 @@ rmf_as_stars.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(arra
                        function(i) aperm(as.array(array[rev(seq_len(dim(array)[1])),,,i]), c(2,1,3))) %>% 
                 setNames(time)
   
-  s <- stars::st_as_stars(array_list, dimensions = d) %>%
-    merge() %>%
-    setNames(name) %>%
-    stars::st_set_dimensions(names = c(names(d), 'time')) %>%
-    stars::st_set_dimensions(which = 4, values = time)
+  if(dim(array)[4] > 1) {
+    s <- stars::st_as_stars(array_list, dimensions = d) %>%
+      merge() %>%
+      setNames(name) %>%
+      stars::st_set_dimensions(names = c(names(d), 'time')) %>%
+      stars::st_set_dimensions(which = 4, values = time)
+  } else {
+    array_list[['time_2']] <- array_list[[1]]*0
+    time[2] <- time[1] + 1
+    s <- stars::st_as_stars(array_list, dimensions = d) %>%
+      merge() %>%
+      setNames(name) %>%
+      stars::st_set_dimensions(names = c(names(d), 'time')) %>%
+      stars::st_set_dimensions(which = 4, values = time)
+    s <- s[,,,,1]
+  }
+
   if(id %in% c('r', 'modflow')) {
     s$id <- ids
     dim(s[[name]]) <- dim(s$id) # TODO this might change in the stars API
