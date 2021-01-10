@@ -12,7 +12,7 @@
 #' @param noprint logical; if TRUE, the input and output are not printed in the listing file
 #' @param tomult time offset multiplier, to convert the time unit in \code{time_series} to the MODFLOW time unit
 #' @param itt integer flag, either a single value or a value for every observation well as defined in \code{locations}. Identifies whether hydraulic heads (1; default) or changes in hydraulic heads (2) are used as observations. See details.
-#' @param unique_obsnam logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.
+#' @param unique_obsnam logical; should an ID number be added to obsnam for filters with observations at different times prefixed with an underscore? Defaults to FALSE.
 #' @details Regardless of the value of \code{itt}, observed heads should be specified in \code{time_series}. MODFLOW will calculate the changes in hydraulic head internally.
 #' The \code{locations} data.frame must have columns named \code{name, x, y, top, bottom}.
 #' The \code{time_series} data.frame must have columns named \code{name, time, head}.
@@ -47,6 +47,7 @@ rmf_create_hob <- function(locations,
   # error checks in locations & time_series
   if(!all(c('x', 'y', 'name', 'top', 'bottom') %in% colnames(locations))) stop('locations object must have columns x, y, name, top and bottom', call. = FALSE)
   if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
+  if(any(duplicated(locations$name))) stop('locations should not have duplicated names', call. = FALSE)
   
   # set locations tops and bottoms
   locations_top <- cbind(locations[,c('x','y','top')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
@@ -95,6 +96,10 @@ rmf_create_hob <- function(locations,
   df <- list()
   df$obsnam <- df$layer <- df$row <- df$column <- df$nrefsp <- df$irefsp <- df$toffset <- df$roff <- df$coff <- df$hobs <- df$itt <- rep(NA, hob$nh)
   df$mlay <- df$pr <- list()
+  
+  if(any(nchar(locations$name) > 12) | any(grepl('\\s+', locations$name))) {
+    stop('Head observation names should be maximum 12 characters and not contain spaces.', call. = FALSE)
+  }
   
   for(i in 1:nrow(locations)) {
     # locations
@@ -160,6 +165,8 @@ rmf_create_hob <- function(locations,
     df$mlay[s_lay] <- df$layer[s_lay]
     df$pr[s_lay] <- 1
   }
+  
+  if(any(nchar(df$obsnam) > 12)) stop('Head observation names should be maximum 12 characters. This may be caused by unique_obsnam = TRUE', call. = FALSE)
   
   # Data
   hob$data <- data.frame(obsnam = df$obsnam, layer = I(df$mlay), pr = I(df$pr), row = df$row, column = df$column, nrefsp = df$nrefsp, irefsp = df$irefsp,
