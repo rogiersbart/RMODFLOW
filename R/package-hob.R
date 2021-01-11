@@ -50,8 +50,8 @@ rmf_create_hob <- function(locations,
   if(any(duplicated(locations$name))) stop('locations should not have duplicated names', call. = FALSE)
   
   # set locations tops and bottoms
-  locations_top <- cbind(locations[,c('x','y','top')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
-  locations_bottom <- cbind(locations[,c('x','y','bottom')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  locations_top <- cbind(locations[,c('x','y','top','name')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  locations_bottom <- cbind(locations[,c('x','y','bottom','name')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
   if(any(is.na(locations_top)) || any(is.na(locations_bottom))) {
     na_id <- unique(c(which(is.na(locations_top), arr.ind = TRUE)[, 1], which(is.na(locations_bottom), arr.ind = TRUE)[, 1]))
     locations_top <- locations_top[-na_id, ]
@@ -68,6 +68,8 @@ rmf_create_hob <- function(locations,
             paste(na_names, collapse= ' '), call. = FALSE)
     locations <- subset(locations, !(name %in% na_names))
     time_series <- subset(time_series, !(name %in% na_names))
+    locations_top <- subset(locations_top, !(name %in% na_names))
+    locations_bottom <- subset(locations_bottom, !(name %in% na_names))
     if(nrow(time_series) == 0) stop('time series is empty', call. = FALSE)
     if(nrow(locations) == 0) stop('locations is empty', call. = FALSE)
   }
