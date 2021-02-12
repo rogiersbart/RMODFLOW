@@ -106,7 +106,7 @@ rmf_create_hob <- function(locations,
     first_greater_than <- function(x, y) which(y >= x)[1]
     if(length(ts_id) > 1) df$irefsp[ts_id] <- -length(ts_id)
     if(length(ts_id) == 1) df$irefsp[ts_id] <- first_greater_than(time_series$time[ts_id], cumsum(dis$perlen))
-    df$nrefsp[ts_id] <- abs(df$irefsp[ts_id])
+    df$nrefsp[ts_id] <- length(ts_id)
     df$roff[ts_id] <- locations_top$roff[i]
     df$coff[ts_id] <- locations_top$coff[i]
     if(locations_top$k[i] == locations_bottom$k[i]) {
@@ -360,7 +360,7 @@ rmf_write_hob <- function(hob,
   while(i <= hob$nh) {
     # data set 3
     rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), hob$data$layer[[i]])), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
-                         as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
+                         as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp[i], hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
                          file=file)
     
     # data set 4
