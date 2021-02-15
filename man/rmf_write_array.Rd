@@ -46,19 +46,19 @@ rmf_write_array(
 }
 \details{
 the header file consists of the following elements:
- \code{KSTP}, \code{KPER},\code{PERTIM},\code{DESC},\code{NCOL}, \code{NROW}, \code{ILAY} and \code{FMTIN}
- (see \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?frequently_asked_questions.htm} for their respective meaning.)
- If the array is 2D or 3D, \code{KSTP}, \code{KPER},\code{PERTIM} are always set to 1; otherwise they are all equal to the index of the 4th dimension.
- 
- The \code{DESC} element must be read but it not used by MODFLOW itself. Users may want to specify a different \code{DESC} value when using the array with postprocessing software.
- 
- The \code{FMTIN} element is not written for binary files. For ASCII files, \code{RMODFLOW} sets it as \code{NCOL * F}. Note that the ASCII format
- is irrelevant when using free-format reading and writing.
- 
- \code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
-  \code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to 
-  set the \code{ILAY} argument to -1 which promts MODFLOW to write slightly different information to the listing file. 
-  \code{xsection} does not affect simulation results (assuming the array dimensions are correct)
+\code{KSTP}, \code{KPER},\code{PERTIM},\code{DESC},\code{NCOL}, \code{NROW}, \code{ILAY} and \code{FMTIN}
+(see \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?frequently_asked_questions.htm} for their respective meaning.)
+If the array is 2D or 3D, \code{KSTP}, \code{KPER},\code{PERTIM} are always set to 1; otherwise they are all equal to the index of the 4th dimension.
+
+The \code{DESC} element must be read but it not used by MODFLOW itself. Users may want to specify a different \code{DESC} value when using the array with postprocessing software.
+
+The \code{FMTIN} element is not written for binary files. For ASCII files, \code{RMODFLOW} sets it as \code{NCOL * F}. Note that the ASCII format
+is irrelevant when using free-format reading and writing.
+
+\code{xsection} can be set to TRUE if the array represents a cross-section, i.e. the ibound or strt array in the
+\code{bas} file. The user must make sure the array is of dimension NLAY * NCOL. The sole function of \code{xsection} is to
+set the \code{ILAY} argument to -1 which promts MODFLOW to write slightly different information to the listing file.
+\code{xsection} does not affect simulation results (assuming the array dimensions are correct)
 }
 \seealso{
 \code{\link{rmf_read_array}}

@@ -16,8 +16,8 @@ vector of length \code{dis$nlay + confining beds} indicating indicating if the i
 Create sequence of confining bed indicators
 }
 \details{
-When confining beds are present, \code{dis$botm} has \code{dis$nlay + number of confining beds} layers. 
-         This functions returns a logical vector indicating which of those layers is a confining bed. This is useful 
-         when handling calculations with \code{dis$botm}, e.g. calculating thicknesses.
+When confining beds are present, \code{dis$botm} has \code{dis$nlay + number of confining beds} layers.
+This functions returns a logical vector indicating which of those layers is a confining bed. This is useful
+when handling calculations with \code{dis$botm}, e.g. calculating thicknesses.
 }
 \keyword{internal}

@@ -11,7 +11,7 @@ rmf_convert_huf_to_lpf(
   vka = ifelse(all(huf$hguvani == 0), "VK", "VANI"),
   averaging = c(HK = "arithmetic", HANI = "arithmetic", VK = "harmonic", VANI =
     "arithmetic", SS = "arithmetic", SY = "arithmetic"),
-  pvl = NULL,
+  pval = NULL,
   ...
 )
 }
@@ -26,7 +26,7 @@ rmf_convert_huf_to_lpf(
 
 \item{averaging}{named character vector of weighted averaging to use in \code{\link{rmf_convert_huf_to_grid}}. Possible values are 'arithmetic', 'harmonic' and 'geometric'. Names should correspond to the \code{partyp} defined in the huf object. Defaults to 'arithmetic' for every parameter type except for 'VK' ('harmonic').}
 
-\item{pvl}{optional \code{RMODFLOW} pvl object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.}
+\item{pval}{optional \code{RMODFLOW} pval object; used to overwrite huf parameter values in \code{\link{rmf_convert_huf_to_grid}}. Defaults to NULL.}
 
 \item{...}{arguments passed to \code{\link{rmf_create_lpf}}}
 }

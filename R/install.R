@@ -24,10 +24,12 @@
 #'   MODFLOW](https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/) or
 #'   specific pages thereof.
 #' @examples
+#' \dontrun{
 #' rmf_install() # Install all codes.
 #' rmf_install("2005") # Install MODFLOW-2005.
 #' rmf_install("MODFLOW-2005") # Install MODFLOW-2005.
-#' rmf_install(c(2005, "MODFLOW-NWT", "cfp") # Install different variants.
+#' rmf_install(c(2005, "MODFLOW-NWT", "cfp")) # Install different variants.
+#' }
 rmf_install <- function(code = "all", overwrite = NULL) {
   if (code[1] == "all") {
     rmfi_install_code(rmfd_supported_codes, overwrite = overwrite)

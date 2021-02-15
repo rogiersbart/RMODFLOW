@@ -44,9 +44,9 @@ Convert an object to a RMODFLOW array
 Convert a rmf_list to a RMODFLOW array
 }
 \details{
-the dimension of the returned array is guessed from the supplied dis object. If there is only one unique k value in obj, 
- \code{sparse}, determines the dimensions of the returned array. If \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE}, a 3D array is returned.
- When there is more than one unique k value in obj, a 3D array is always returned.
+the dimension of the returned array is guessed from the supplied dis object. If there is only one unique k value in obj,
+\code{sparse}, determines the dimensions of the returned array. If \code{sparse = TRUE}, a 2D array is returned. If \code{sparse = FALSE}, a 3D array is returned.
+When there is more than one unique k value in obj, a 3D array is always returned.
 }
 \seealso{
 \code{\link{rmf_as_list}}

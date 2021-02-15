@@ -43,7 +43,7 @@ a list with the x, y and z components of the gradient field as 3d arrays
 \code{rmf_gradient.rmf_4d_array} calculates the x, y and z components of the gradient from a 4d scalar field where the 4th dimension is time
 }
 \details{
-The gradient is evaluated in the direction of increasing x & y values. 
+The gradient is evaluated in the direction of increasing x & y values.
 Central differences are used for interior points; single-sided differences for values at the edges of the matrix.
 
 The gradient is evaluated in the direction of increasing x, y & z values.

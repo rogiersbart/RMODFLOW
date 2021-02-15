@@ -15,7 +15,7 @@
   type = "fill",
   active_only = TRUE,
   fun = ifelse(variable == "hydchr", sum, mean),
-  prj = NULL,
+  prj = rmf_get_prj(dis),
   crs = NULL,
   size = 1,
   colour = "black",

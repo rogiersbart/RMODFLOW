@@ -21,7 +21,8 @@ rmf_create_dis(
   perlen = rep(1, nper),
   nstp = rep(1, nper),
   tsmult = rep(1, nper),
-  sstr = c("SS", rep("TR", nper - 1))
+  sstr = c("SS", rep("TR", nper - 1)),
+  prj = NULL
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ rmf_create_dis(
 \item{tsmult}{vector of successive time step length multipliers}
 
 \item{sstr}{character vector with steady state ('SS') or transient ('TR') stress period indicator}
+
+\item{prj}{optional RMODFLOW prj object as created by \code{\link{rmf_create_prj}} to set the projection information. Defaults to NULL}
 }
 \value{
 Object of class dis

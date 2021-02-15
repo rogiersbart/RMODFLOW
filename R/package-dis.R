@@ -17,6 +17,7 @@
 #' @param nstp vector of stress period time steps
 #' @param tsmult vector of successive time step length multipliers
 #' @param sstr character vector with steady state ('SS') or transient ('TR') stress period indicator
+#' @param prj optional RMODFLOW prj object as created by \code{\link{rmf_create_prj}} to set the projection information. Defaults to NULL
 #' @return Object of class dis
 #' @export
 #' @seealso \code{\link{rmf_read_dis}}, \code{\link{rmf_write_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
@@ -34,7 +35,8 @@ rmf_create_dis <- function(nlay = 3,
                            perlen = rep(1, nper),
                            nstp = rep(1, nper),
                            tsmult = rep(1, nper),
-                           sstr = c('SS', rep('TR', nper - 1))) {
+                           sstr = c('SS', rep('TR', nper - 1)),
+                           prj = NULL) {
   dis <- NULL
   
   # data set 0
@@ -73,8 +75,10 @@ rmf_create_dis <- function(nlay = 3,
     dis$nstp <- nstp
     dis$tsmult <- tsmult
     dis$sstr <- toupper(sstr)
-  
-  #comment(dis) <- comments
+    
+    # prj
+    dis$prj <- rmfi_ifelse0(inherits(prj, 'prj'), prj, NULL)
+
   class(dis) <- c('dis','rmf_package')
   return(dis)
 }
@@ -92,6 +96,7 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   
   dis_lines <- readr::read_lines(file)
   dis <- list()
+  prj <- NULL
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(dis_lines)
@@ -107,6 +112,20 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
   dis$nper <- as.numeric(data_set_1$variables[4])
   dis$itmuni <- as.numeric(data_set_1$variables[5])
   dis$lenuni <- as.numeric(data_set_1$variables[6])
+  
+  # optional projection information from MODFLOW-OWHM
+  # create prj below since it needs full dis information
+  if(length(data_set_1$variables) > 6) {
+    if(all(!is.na(suppressWarnings(as.numeric(data_set_1$variables[6:9]))))) {
+      xul <- as.numeric(data_set_1$variables[7])
+      yul <- as.numeric(data_set_1$variables[8])
+      rot <- as.numeric(data_set_1$variables[9])
+      prj$origin <- c(xul, yul)
+      prj$rotation <- rot
+      prj$nodecoord <- !('CORNERCOORD' %in% toupper(data_set_1$variables))
+      prj$ulcoordinate <- !('LLCOORDINATE' %in% toupper(data_set_1$variables) || 'LLCOODRINATE' %in% toupper(data_set_1$variables)) 
+    }
+  }
   dis_lines <- data_set_1$remaining_lines
   rm(data_set_1)
   
@@ -155,6 +174,17 @@ rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choos
     rm(data_set_7)
   }
   
+  # set prj
+  # prj from header comments takes precedence over possible prj from data set 1
+  prj_header <- rmfi_parse_prj(comment(dis))
+  if(!is.null(prj_header$prj)) {
+    prj <- prj_header$prj
+    comment(dis) <- prj_header$remaining_comments
+  } else if(!is.null(prj)){ # prj from data set 1
+    prj <- rmf_create_prj(origin = prj$origin, rotation = prj$rotation, ulcoordinate = prj$ulcoordinate, nodecoordinate = prj$nodecoord, dis = dis)
+  }
+  dis$prj <- prj
+  
   class(dis) <- c('dis','rmf_package')
   return(dis)
 }
@@ -177,6 +207,10 @@ rmf_write_dis <- function(dis,
   v <- packageDescription("RMODFLOW")$Version
   cat(paste('# MODFLOW Discretization File created by RMODFLOW, version',v,'\n'), file=file)
   cat(paste('#', comment(dis)), sep='\n', file=file, append=TRUE)
+  
+  # TODO only write if prj is present: keep?
+  # write RMODFLOW projection information
+  if(rmf_has_prj(dis)) rmfi_write_prj(dis, prj = rmf_get_prj(dis), file = file)
   
   # data set 1
   rmfi_write_variables(dis$nlay,dis$nrow,dis$ncol,dis$nper,dis$itmuni,dis$lenuni,file=file, integer = TRUE)

@@ -46,14 +46,14 @@ a rmf_array with optional attributes if a header was read.
 }
 \details{
 \code{nrow}, \code{ncol}, \code{nlay}, \code{nstp} have to be specified if header is FALSE. They are used to dimension the array.
- 
- The \code{integer} flag is only used when reading binary files.
- 
- The header file consists of the following elements:
- \code{KSTP}, \code{KPER},\code{PERTIM},\code{DESC},\code{NCOL}, \code{NROW}, \code{ILAY} and \code{FMTIN}
- (see \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?frequently_asked_questions.htm} for their respective meaning.)
- The \code{FMTIN} element is not read for binary files.
- If a header is read, the values are set as attributes to the array.
+
+The \code{integer} flag is only used when reading binary files.
+
+The header file consists of the following elements:
+\code{KSTP}, \code{KPER},\code{PERTIM},\code{DESC},\code{NCOL}, \code{NROW}, \code{ILAY} and \code{FMTIN}
+(see \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?frequently_asked_questions.htm} for their respective meaning.)
+The \code{FMTIN} element is not read for binary files.
+If a header is read, the values are set as attributes to the array.
 }
 \seealso{
 \code{\link{rmf_write_array}}

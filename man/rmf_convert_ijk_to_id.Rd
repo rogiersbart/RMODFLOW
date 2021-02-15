@@ -14,6 +14,8 @@ rmf_convert_ijk_to_id(i, j, k, dis, type = "r")
 \item{k}{vector of layer numbers}
 
 \item{dis}{a discretization file object}
+
+\item{type}{'r' or 'modflow' specifying type of id. See details. Defaults to 'r'}
 }
 \value{
 cell ids, providing the place of the cell in an input file 3d array

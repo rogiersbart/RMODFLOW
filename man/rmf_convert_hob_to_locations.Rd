@@ -4,7 +4,7 @@
 \alias{rmf_convert_hob_to_locations}
 \title{Convert a hob object to a locations data frame}
 \usage{
-rmf_convert_hob_to_locations(hob, dis, prj = NULL)
+rmf_convert_hob_to_locations(hob, dis, prj = rmf_get_prj(dis))
 }
 \arguments{
 \item{hob}{\code{RMODFLOW} hob object}

@@ -26,7 +26,7 @@ object of class kdep
 }
 \details{
 Note that the parameters are defined on the HUF grid, not the numerical grid
-         \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the huf grid to the numerical grid
+\code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the huf grid to the numerical grid
 }
 \seealso{
 \code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_create_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}

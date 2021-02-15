@@ -39,10 +39,10 @@ object of class \code{cbc} which is a list consisting of named rmf_arrays and/or
 \details{
 Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
- 
+
 If no \code{oc} object is supplied, for all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
-If a \code{oc} object is supplied, rmf_arrays of dimensions NROW x NCOL x NLAY are read and binded at each time step for which output is written. 
-The resulting dimensions of the final arrays are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
+If a \code{oc} object is supplied, rmf_arrays of dimensions NROW x NCOL x NLAY are read and binded at each time step for which output is written.
+The resulting dimensions of the final arrays are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved.
 
 If the timesteps argument is supplied, it overwrites the use of the oc argument. For all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x length(timesteps) is created and filled.
 

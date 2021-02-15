@@ -4,7 +4,16 @@
 \alias{rmf_plot.hob}
 \title{Plot a RMODFLOW hob object}
 \usage{
-\method{rmf_plot}{hob}(hob, dis, i = NULL, j = NULL, k = NULL, prj = NULL, kper = NULL, ...)
+\method{rmf_plot}{hob}(
+  hob,
+  dis,
+  i = NULL,
+  j = NULL,
+  k = NULL,
+  prj = rmf_get_prj(dis),
+  kper = NULL,
+  ...
+)
 }
 \arguments{
 \item{hob}{\code{RMODFLOW} hob object}

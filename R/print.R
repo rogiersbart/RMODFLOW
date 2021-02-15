@@ -166,6 +166,11 @@ print.dis <- function(dis, n = 5) {
   }
   print(sp[1:nper,], row.names = FALSE)
   
+  if(rmf_has_prj(dis)) {
+    cat('\n')
+    print(rmf_get_prj(dis))
+  } 
+  
 }
 
 #' @export

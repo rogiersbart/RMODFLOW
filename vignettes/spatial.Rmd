@@ -1,0 +1,229 @@
+---
+title: "Spatial functions"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Spatial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(RMODFLOW)
+```
+
+RMODFLOW has several functions to handle conversions from and to spatial objects. Spatial data in MODFLOW comes in two forms, discrete and continuous. This resembles the two major types of geographic data: vector and raster. RMODFLOW supports the conversion from and to `sf`, `stars` and `raster` objects. RMODFLOW uses a `prj` object to define the origin, rotation and coordinate reference system of the model and uses this object in spatial functions.
+
+# The RMODFLOW projection object
+If the MODFLOW model represents a real-world area, it can be georeferenced. This is done in RMODFLOW with the `prj` object. In essence, the `prj` object is a list with three components:
+
+1. The origin: the real-world XY(Z) coordinates of the bottomleft corner of the model
+2. The rotation angle around this corner
+3. The coordinate reference system in which these coordinates are defined
+
+You can create a `prj` object from scratch using `rmf_create_prj()`. It needs three arguments: `origin` is a numeric vector with the X, Y and Z coordinates of the bottomleft corner. If no Z coordinate is supplied, it is set to zero. The default is `c(0, 0, 0)`. Note that these coordinates should be in length units defined in the `crs` argument. The second argument is `rotation`, specifying the rotation angle around the bottomleft corner in degrees counterclockwise. It defaults to 0. The third argument is `crs` which sets the coordinate reference system. It can take any value supported by `sf::st_crs`, e.g. EPSG codes, proj4string or WKT formats. If no crs is defined it should be set to `NA` (the default). In addition to those three arguments, `rmf_create_prj()` has a `ulcoordinate` argument which is a logical specifying that the supplied `origin` vector represents the topleft corner instead of the bottomleft (default is FALSE) and `nodecoordinate` which if set to TRUE specifies that the supplied `origin` vector represents the coordinates of the *nodal cell center* instead of the *cell corner* as it is by default. Note that if any of these two arguments are set to TRUE, a `dis` object needs to be supplied as well to convert `origin` to the bottomleft corner. The resulting `origin` values in the `prj` object always represent the bottomleft cell corner of the model. 
+
+```{r}
+(prj <- rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370))
+```
+
+The `prj` object can be placed in an existing `dis` object using `rmf_set_prj` or by supplying `prj` to a `rmf_create_dis` call:
+
+```{r}
+dis <- rmf_create_dis(prj = prj)
+dis <- rmf_set_prj(dis, prj)
+```
+
+Whenever a `prj` argument is needed by a RMODFLOW function it is obtained from the `dis` object (if supplied) using `rmf_get_prj`:
+
+```{r}
+rmf_plot(dis$top, dis)
+```
+
+Alternatively, you can specify the `prj` argument directly in these functions:
+
+```{r}
+rmf_plot(dis$top, dis, prj = NULL)
+```
+
+Using this approach, the `prj` object is part of the `dis` object and is by default directly obtained in function calls using `rmf_get_prj` although all those functions allow specifying `prj` directly as well. 
+
+RMODFLOW projection information is written to the header comments of the DIS file when writing a `dis` object containing `prj` using `rmf_write_dis`. The structure of the RMODFLOW projection information is as follows:
+
+```{r, echo = FALSE}
+extent <- rmf_extent(dis)
+cat('#', 'Start RMODFLOW projection information', '\n')
+cat('#', 'Upper left corner:', paste0('(', paste(extent$corners['ul',], collapse = ', '), ')'), '\n')
+cat('#', 'Lower left corner:', paste0('(', paste(extent$corners['ll',], collapse = ', '), ')'), '\n')
+cat('#', 'Upper right corner:', paste0('(', paste(extent$corners['ur',], collapse = ', '), ')'), '\n')
+cat('#', 'Lower right corner:', paste0('(', paste(extent$corners['lr',], collapse = ', '), ')'), '\n')
+cat('#', 'Grid angle (in degrees counterclockwise):', ifelse(is.null(prj), 0, prj$rotation), '\n')
+cat('#', 'Z coordinate lower left corner:', ifelse(is.null(prj) || is.na(prj$origin[3]), 0, prj$origin[3]), '\n')
+if(is.null(prj$crs) || is.na(prj$crs)) {
+  cat('#', 'proj4string:', 'NA', '\n')
+} else { # if crs is present it should have either epsg, proj4string or wkt (for sf >= 0.9)
+  if(!is.na(prj$crs$epsg)) {
+    cat('#', 'epsg:', prj$crs$epsg, '\n')
+  } else if(!is.na(prj$crs$proj4string)) {
+    cat('#', 'proj4string:', prj$crs$proj4string, '\n')
+  } else {
+    if(packageVersion('sf') >= '0.9') {
+      cat('#', 'wkt:', '\n')
+      cat(paste('#', prj$crs$wkt), sep = '\n')
+    }
+  }
+}
+cat('#', 'End RMODFLOW projection information', '\n')
+```
+
+If a crs is present, the EPSG, proj4string or WKT information is written (in that order of importance). If no crs is present a proj4string value of NA is written. Alternatively, you can 'inject' RMODFLOW style projection information into the header comments of an existing DIS file using `rmf_set_prj(file, dis, prj)` where `file` is the path to the DIS file.
+
+When reading in a DIS file, projection information is checked in multiple locations. Firstly, the header comments in the DIS file are checked for RMODFLOW style projection information. If not present, ModelMuse style projection is checked. If that's also not available, MODFLOW-OWHM style projection information is checked in the first data set of the DIS object. If `rmf_read` is used to read in an entire model and a usgs.model.reference file is present in the same directory as the NAME file (as should be the case for usgs.reference.model files), the projection information is read from that file using `rmf_read_usgs_model_reference()` which takes precedence over the other formats.
+
+Most crs formats have length units defined. If they differ from the defined MODFLOW length units (`dis$lenuni`), RMODFLOW converts the latter on-the-fly whenever a `prj` is supplied with a crs element that has length units. This conversion is used in e.g. plotting or functions where coordinates are returned:
+
+```{r}
+dis$lenuni <- 1 # ft
+rmf_plot(dis$top, dis, prj = prj) # crs in prj is defined in m
+```
+
+# Conversion to spatial objects
+RMODFLOW provides several S3 functions to convert its base classes (`rmf_list` and `rmf_2d/3d/4d_array`) to spatial objects. Conversion can be to `sf`, `stars` or `raster` objects. The latter is only possible for non-rotated regular grids.
+
+Conversion to `sf` is done with `rmf_as_sf` which takes as input either an RMODFLOW array or list object, the dis argument and an optional prj object (by default taken from the dis argument). By default it returns polygon geometries representing the grid cells. If the `as_points` argument is set to `TRUE`, point geometries are returned representing the cell-centered nodes. In addition to the geometries and values, an `id` column is returned with either the `r` based or `modflow` based array index of the cell/node depending on the `id` argument (`r` by default):
+
+```{r}
+rmf_as_sf(dis$top, dis)
+
+(sf <- rmf_as_sf(dis$top, dis, as_points = TRUE, id = 'modflow'))
+plot(sf)
+```
+
+At its core, `rmf_as_sf` first converts to a `stars` object using `rmf_as_stars`:
+```{r}
+rmf_as_stars(dis$botm, dis)
+```
+
+To convert to `raster`, use `rmf_as_raster` which first calls `rmf_as_stars` and then converts to a `raster` object. Note that this only works for regular non-rotated rasters:
+```{r, error = TRUE}
+rmf_as_raster(dis$botm, dis)
+```
+```{r}
+rmf_as_raster(dis$top, dis, prj = rmf_create_prj(origin = c(152082, 168000.2), crs = 31370))
+```
+
+# Conversion to RMODFLOW objects
+RMODFLOW can convert `sf`, `stars` and `raster` objects to `rmf_list` and `rmf_2d/3d/4d_array` objects using S3 functions `rmf_as_list` and `rmf_as_array`.
+
+`rmf_as_list.sf` uses `sf::st_join` to find the MODFLOW grid indices corresponding to the `sf` object. By default, the geometrical operator is set to `sf::st_intersects` but this can be any kind described in `?sf::st_intersects`:
+
+```{r}
+dis <- rmf_create_dis()
+
+# point
+pts <- sf::st_sfc(list(sf::st_point(c(150, 312)), sf::st_point(c(500, 500)), sf::st_point(c(850, 566))))
+obj <- sf::st_sf(q = c(-500, -400, -300), geom = pts)
+
+# convert to rmf_list
+(rlst <- rmf_as_list(obj, dis))
+
+# polygon
+p1 <- rbind(c(120, 120), c(120, 760), c(800, 800), c(120, 120))
+pol1 <- sf::st_polygon(list(p1))
+
+obj <- sf::st_sf(head = 15, geom = sf::st_sfc(pol1))
+
+# convert to rmf_list and plot
+# op = sf::st_intersects
+rmf_as_list(obj, dis) %>%
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+
+# op = sf::st_covers
+rmf_as_list(obj, dis, op = sf::st_covers) %>%
+  rmf_plot(dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE, alpha = 0.4, fill = 'yellow')
+```
+
+Note that when a point geometry is located on the edges of cells, depending on the used operator `op`, one or more cells might be returned. Although correct topological behaviour, this is not always desirable. E.g. if a well should be attributed to a single cell (unless the discharge is also recalculated):
+
+```{r}
+# 4 cells selected for second point on cell edges
+obj <- sf::st_sf(q = c(-500, -400, -300), geom = pts)
+
+rmf_as_list(obj, dis) %>% 
+  rmf_plot( dis, k = 1, grid = TRUE) +
+  ggplot2::geom_sf(data = obj, inherit.aes = FALSE)
+```
+
+The user should be aware of this and set `op` accordingly.
+
+`rmf_as_array.sf` rasterizes a `sf` object to a `rmf_array` using `stars::st_rasterize` which in turn uses GDALRasterize.
+```{r}
+sfc <- sf::st_sfc(list(sf::st_point(c(100,200)), sf::st_point(c(750, 800)), sf::st_point(c(700, 850))))
+obj <- sf::st_sf(q = c(-500, -400, -300), geom = sfc)
+dis <- rmf_create_dis()
+
+rmf_as_array(obj, dis = dis, select = 'q')
+
+# add values at same location
+rmf_as_array(obj, dis = dis, select = 'q', options = c('MERGE_ALG=ADD'))
+
+```
+
+As an alternative, you can convert the `sf` object to a `rmf_list` and convert the resulting object using `rmf_as_array`. Results may differ:
+```{r}
+# alternative
+rmf_as_list(obj, dis = dis, select = 'q') %>%
+  rmf_as_array(dis = dis)
+```
+
+Converting a `stars` object to an array uses `stars::st_warp` if `resample = TRUE`. This should be used when the dimensions and resolution of the MODFLOW grid and the `stars` object do not match. The values will be resampled using the specified `method`. For possible methods, see `?stars::st_warp` (default is bilinear interpolation). If the dimensions and resolution do coincide, `resample` should be set to `FALSE` which simply sets the values in the `rmf_array` to those in the `stars` object. Conversion from `raster` objects uses the same functions but first converts `raster` to `stars`:
+
+```{r}
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+s <- rmf_as_stars(r, dis = dis)
+
+rmf_as_array(s, dis = dis, resample = FALSE)
+```
+
+Conversion from `stars` to `rmf_list` is intended for `stars` objects with geometry dimensions (e.g.`sf` objects) and involves converting the `stars` object to `sf`.
+
+These spatial-to-RMODFLOW functions can for example be used in pipelines to create boundary condition packages. Ultimately, these might evolve to functions that are tailored for specific stress packages, e.g. a `rmf_build_wel` function that creates a `wel` object directly from a `sf` input object without the intermediate conversion to `rmf_list`.
+```{r}
+# linestring
+s1 <- rbind(c(150,312), c(500, 500), c(850, 566))
+ls1 <- sf::st_linestring(s1)
+s2 <- rbind(c(100,100), c(500, 555))
+ls2 <- sf::st_linestring(s2)
+
+sf::st_sf(conductance = c(500, 1000), stage = c(-5, -2), rbot = c(-6, -5), geom = sf::st_sfc(ls1, ls2)) %>%
+  rmf_as_list(dis = dis, kper = 1) %>%
+  rmf_create_riv(dis = dis)
+
+```
+
+# Utility functions
+There are several S3 utility functions dealing with the `prj` object which work on `dis` and `modflow` objects. In addition to `rmf_get_prj` and `rmf_set_prj` (discussed above), `rmf_has_prj` returns a logical depending on the presence of a `prj` object in a `dis` or `modflow` object. `rmf_transform_prj` switches the crs of a `prj` object, transforms the origin coordinates and returns the supplied `prj`, `dis` or `modflow` argument with these modifications. 
+
+```{r}
+prj <- rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)
+dis <- rmf_create_dis(prj = prj)
+rmf_has_prj(dis)
+
+rmf_transform_prj(prj, crs = 3812)
+```
+
+Lastly, the `rmf_extent` function returns a list with (1) the coordinates of the grid corners as a `data.frame` and (2) the bounding box of the grid as a `sf bbox` object:
+```{r}
+rmf_extent(dis)
+```
+
+

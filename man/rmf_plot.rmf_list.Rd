@@ -20,7 +20,7 @@
   active_only = FALSE,
   fun = sum,
   add = FALSE,
-  prj = NULL,
+  prj = rmf_get_prj(dis),
   crs = NULL,
   colour_palette = rmfi_rev_rainbow,
   nlevels = 7,
@@ -85,6 +85,6 @@ Plot a RMODFLOW list object
 }
 \details{
 If \code{geom = 'polygon'}, the rmf_list is converted to a rmf_3d_array using \code{\link{rmf_as_array.rmf_list}}. The sparse argument is set to FALSE.
-         If \code{geom = 'line'}, \code{ggplot2::geom_path} is used. If \code{geom = 'point'}, \code{ggplot2::geom_point} is used.
-         \code{geom = 'line'} will only work optimally if the \code{group} argument is set.
+If \code{geom = 'line'}, \code{ggplot2::geom_path} is used. If \code{geom = 'point'}, \code{ggplot2::geom_point} is used.
+\code{geom = 'line'} will only work optimally if the \code{group} argument is set.
 }
