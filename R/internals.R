@@ -517,11 +517,11 @@ rmfi_ifelse0 <- function(test, yes, no) {
 
 #' List supported MODFLOW packages
 #'
-#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc'}
+#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc', 'output'}
 #'
 #' @return data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} abbreviations for the requested packages
 #' @keywords internal
-#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data
+#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data. 'output' lists all supported output types.
 #' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
 rmfi_list_packages <- function(type = 'all') {
   
@@ -564,9 +564,14 @@ rmfi_list_packages <- function(type = 'all') {
   # cbc (uzf and swi need to be set separately)
   cbc <- c('bcf', 'lpf', 'huf', 'upw', 'uzf', 'swi', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'ibs', 'sub', 'swt', 'swr', 'rip')
   
-  # subset
-  if(type != 'all') df <- subset(df, rmf %in% get(type))
-  
+  # output
+  if(type == 'output') {
+    df <- rmfd_supported_output
+  } else if(type != 'all') {
+    # subset type
+    df <- subset(df, rmf %in% get(type))
+  }
+
   return(df)
   
 }

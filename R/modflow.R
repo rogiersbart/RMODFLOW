@@ -14,6 +14,15 @@ rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE, basename = NULL) {
   
   modflow <- list(...)
   if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
+  
+  # drop output objects
+  output_classes <- rmfi_list_packages(type = 'output')
+  any_output <- vapply(modflow, function(i) any(output_classes$rmf %in% class(i)), TRUE)
+  if(sum(any_output) > 1) {
+    warning('Dropping RMODFLOW output objects', call. = FALSE)
+    modflow <- modflow[!any_output]
+  }
+  
   # check if all input are rmf_packages & add all input objects
   all_rmf <- vapply(modflow, function(i) 'rmf_package' %in% class(i), TRUE)
   if(prod(all_rmf) == 0) stop('Please make sure all objects are RMODFLOW rmf_package objects representing MODFLOW input', call. = FALSE)

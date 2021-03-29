@@ -35,6 +35,14 @@ rmfd_supported_packages <- tibble::tribble(
    'GMG',  'gmg',
   'LMT6',  'lmt'
 )
+rmfd_supported_output <- tibble::tribble(
+                   ~type,  ~rmf,
+                  'HEAD', 'hed',
+              'DRAWDOWN', 'ddn',
+   'CELL-BY-CELL BUDGET', 'cbc',
+     'VOLUMETRIC BUDGET', 'bud',
+       'HOB OUTPUT FILE', 'hpr'
+)
 rmfd_supported_length_units <- tibble::tribble(
      ~unit,        ~conv,
       "km",         1000,
@@ -128,6 +136,7 @@ usethis::use_data(
   rmfd_supported_codes,
   rmfd_supported_packages,
   rmfd_guide_shortcuts,
+  rmfd_supported_output,
   rmfd_supported_length_units,
   rmfd_state_headers,
   rmfd_cbc_headers,
