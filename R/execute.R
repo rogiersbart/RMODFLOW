@@ -196,7 +196,7 @@ rmf_analyze <- function(path,
                         restore = FALSE,
                         visualize = interactive(),
                         ...) {
-  # allow for controlling some settings for the gradient approximation
+  # TODO allow for controlling some settings for the gradient approximation
   # like the step size and one/two-sided approximation etc?
   # TODO consider parallel options here when rmf_execute.modflow works
   # TODO better include restoring in on.exit?
@@ -210,7 +210,7 @@ rmf_analyze <- function(path,
   # read pval and hob
   if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
     rui::alert("{.fun rmf_analyze} only works with PVAL and HOB file types.")
-    rui::stop("Issue with model structure.")
+    rui::error("Issue with model structure.")
   }
   pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
   hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
@@ -219,7 +219,7 @@ rmf_analyze <- function(path,
              "This can be created by setting {.arg iuhobsv} of the HOB file to",
              "a non-zero value, and including a corresponding DATA type entry",
              "in the NAM file.")
-    rui::stop('Issue with model structure.')
+    rui::error('Issue with model structure.')
   }
   
   # evaluate, include, transform
@@ -240,7 +240,7 @@ rmf_analyze <- function(path,
     if (!all(transform %in% "log")) {
       rui::alert('Use {.val "log"} in {.arg transform} for logarithmic',
                "transformations. Other options are not available yet.")
-      rui::stop("Issue with transformation definition.")
+      rui::error("Issue with transformation definition.")
     }
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
@@ -370,7 +370,7 @@ rmf_optimize <- function(
   # read pval and hob
   if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
     rui::alert("{.fun rmf_optimize} only works with PVAL and HOB file types.")
-    rui::stop("Issue with model structure.")
+    rui::error("Issue with model structure.")
   }
   pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
   hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
@@ -379,7 +379,7 @@ rmf_optimize <- function(
              "This can be created by setting {.arg iuhobsv} of the HOB file to",
              "a non-zero value, and including a corresponding DATA type entry",
              "in the NAM file.")
-    rui::stop('Issue with model structure.')
+    rui::error('Issue with model structure.')
   }
 
   # continue from previous optimization
@@ -387,7 +387,7 @@ rmf_optimize <- function(
     if (is.null(export)) {
       rui::alert("You want to continue a previous optimization, but you have",
                  "not provided an export file path.")
-      rui::stop("Issue with optimization.")
+      rui::error("Issue with optimization.")
     }
     start <- readr::read_tsv(export) %>%
       dplyr::select(-1, -2) %>%
@@ -429,7 +429,7 @@ rmf_optimize <- function(
     upper <- rmfi_replace_in_vector(pval$data$parnam, rep(Inf, length(pval$data$parnam)), upper)
   }
   if(!is.null(transform)) {
-    if (!all(transform %in% "log")) rui::stop("Only logarithmic transforms are currently implemented.")
+    if (!all(transform %in% "log")) rui::error("Only logarithmic transforms are currently implemented.")
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
     transform <- rmfi_replace_in_vector(pval$data$parnam, rep(FALSE, length(pval$data$parnam)), transform)
@@ -450,7 +450,7 @@ rmf_optimize <- function(
     pval$data$parval[include] <- included_parval
     if (any(lower > upper)) {
       rui::alert("{.arg lower} contains values larger than {.arg upper}.")
-      rui::stop("Issue with bounds.")
+      rui::error("Issue with bounds.")
     }
     
     # check bounds and run modflow
@@ -601,7 +601,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -616,7 +616,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -631,7 +631,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -646,7 +646,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -661,7 +661,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -669,7 +669,7 @@ rmfi_find <- function(
   rui::alert("Finding paths to the executables of codes other than ",
            "MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or ",
            "MODFLOW-CFP is currently not supported.")
-  rui::stop("Issue with code path.")
+  rui::error("Issue with code path.")
 }
 
 #' Look for a file path in a NAM file
@@ -687,7 +687,7 @@ rmfi_look_for_path <- function(dir, nam, type = NULL, unit = NULL) {
     return(file.path(dir, nam$fname[which(nam$nunit == unit)]))
   }
   rui::alert("Either {.arg type} or {.arg unit} should be provided.")
-  rui::stop("Issue with arguments.")
+  rui::error("Issue with arguments.")
 }
 
 rmfi_line_callback <- function(line, process) {
@@ -695,7 +695,7 @@ rmfi_line_callback <- function(line, process) {
   if (line == "") return(invisible())
   if (line %in% c("MODFLOW-2005", "MODFLOW-LGR2", "MODFLOW-NWT-SWR1",
                   "OWHM 1.0")) {
-    rui::title(line)
+    rui::entitle(line)
     return(invisible())
   }
   if (grepl("Normal termination of simulation", line)) {
@@ -708,12 +708,12 @@ rmfi_line_callback <- function(line, process) {
   }
   if (grepl("Can't find name file", line)) {
     rui::alert(line)
-    rui::stop("Issue with the name file path.")
+    rui::error("Issue with the name file path.")
     return(invisible())
   }
   if (grepl("NAME FILE IS EMPTY", line)) {
     rui::alert(line)
-    rui::stop("Issue with the name file.")
+    rui::error("Issue with the name file.")
     return(invisible())
   }
   if (grepl("Solving: Stress period: 1 Time step: 1", line, fixed = TRUE)) {
@@ -721,10 +721,10 @@ rmfi_line_callback <- function(line, process) {
     return(invisible())
   }
   if (grepl("Solving: ", line, fixed = TRUE)) {
-    rui::update(line)
+    rui::proceed(line)
     return(invisible())
   }
-  if (grepl("Run end ", line)) rui::end()
+  if (grepl("Run end ", line)) rui::clear()
   rui::inform(line)
   invisible()
 }
@@ -763,7 +763,7 @@ rmfi_replace_in_vector <- function(parnam, parval, new, start = parval) {
   }
   rui::alert("Length of one of the vector arguments does not equal the number of",
            "parameters in the PVAL file, and the vector is not named.")
-  rui::stop("Issue with the function arguments.")
+  rui::error("Issue with the function arguments.")
 }
 
 #' Backup a PVAL file
