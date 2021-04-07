@@ -258,12 +258,11 @@ rmf_analyze <- function(path,
   rmf_execute(path = path, code = code, ui = "none", ...)
   hob_out_orig <- rmfi_look_for_path(dir, nam, unit = hob$iuhobsv) %>% 
     rmf_read_hob_out()
-  rmf_analyze <- list()
-  rmf_analyze$dss <- matrix(NA_real_,
-                    nrow = hob$nh,
-                    ncol = length(pval$data$parnam))
-  rmf_analyze$css <- rep(NA_real_, length(pval$data$parnam))
-  rmf_analyze$data$parnam <- pval$data$parnam
+  blank_dss <- tibble::tibble(obsnam = hob_out_orig$name,
+                              dss = NA_real_)
+  rmf_analyze <- pval$data %>%
+    dplyr::mutate(css = NA_real_,
+           dss = list(blank_dss)[rep(1, nrow(.))])
   
   # dss & css
   for(i in which(include)) {
@@ -279,8 +278,8 @@ rmf_analyze <- function(path,
     hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
     
     # assignment
-    rmf_analyze$dss[,i] <- (hob_out$simulated - hob_out_orig$simulated)/(0.01)
-    rmf_analyze$css[i] <- sqrt(sum(rmf_analyze$dss[,i]^2)/hob$nh)
+    rmf_analyze$dss[[i]][, "dss"] <- (hob_out$simulated - hob_out_orig$simulated)/(0.01)
+    rmf_analyze$css[i] <- sqrt(sum(rmf_analyze$dss[[i]][, "dss"]^2)/hob$nh)
     
     # visualize
     if (visualize) {

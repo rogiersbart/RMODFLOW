@@ -1914,16 +1914,12 @@ rmf_plot.rmf_analyze <- function(analysis, type = "css") {
       ui_theme(panel.grid.major.y = ggplot2::element_blank()) +
       ui_fill_c(trans = "log10")
   } else if(type=='dss') {
-    p <- tibble::as_tibble(analysis$dss) %>%
-      setNames(analysis$parnam) %>%
-      dplyr::mutate(id = 1:nrow(.)) %>% 
-      tidyr::gather("parnam", "dss", -id) %>% 
-      dplyr::group_by(parnam) %>% 
-      dplyr::filter(!all(is.na(dss))) %>% 
+    p <- analysis %>% 
+      tidyr::unnest(dss) %>%
       ggplot2::ggplot() +
-      ggplot2::aes(id, parnam, fill = dss) +
+      ggplot2::aes(obsnam, parnam, fill = dss) +
       ggplot2::geom_raster() +
-      ggplot2::labs(x = "Observation ID",
+      ggplot2::labs(x = "Observation name",
                     y = "Parameter name",
                     fill = "DSS",
                     title = "Dimensionless scaled sensitivities") +
