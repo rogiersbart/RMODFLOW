@@ -49,8 +49,8 @@ rmf_create_hob <- function(locations,
   if(!all(c('time', 'name', 'head') %in% colnames(time_series))) stop('time_series data.frame must have columns time, name and head', call. = FALSE)
   
   # set locations tops and bottoms
-  locations_top <- cbind(locations[,c('x','y','top')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
-  locations_bottom <- cbind(locations[,c('x','y','bottom')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  locations_top <- cbind(locations[,c('x','y','top','name')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$top, dis = dis, prj = prj, output = c('ijk', 'off'))))
+  locations_bottom <- cbind(locations[,c('x','y','bottom','name')], suppressWarnings(rmf_convert_xyz_to_grid(x = locations$x, y = locations$y, z = locations$bottom, dis = dis, prj = prj, output = c('ijk', 'off'))))
   if(any(is.na(locations_top)) || any(is.na(locations_bottom))) {
     na_id <- unique(c(which(is.na(locations_top), arr.ind = TRUE)[, 1], which(is.na(locations_bottom), arr.ind = TRUE)[, 1]))
     locations_top <- locations_top[-na_id, ]
@@ -67,6 +67,8 @@ rmf_create_hob <- function(locations,
             paste(na_names, collapse= ' '), call. = FALSE)
     locations <- subset(locations, !(name %in% na_names))
     time_series <- subset(time_series, !(name %in% na_names))
+    locations_top <- subset(locations_top, !(name %in% na_names))
+    locations_bottom <- subset(locations_bottom, !(name %in% na_names))
     if(nrow(time_series) == 0) stop('time series is empty', call. = FALSE)
     if(nrow(locations) == 0) stop('locations is empty', call. = FALSE)
   }
@@ -104,7 +106,7 @@ rmf_create_hob <- function(locations,
     first_greater_than <- function(x, y) which(y >= x)[1]
     if(length(ts_id) > 1) df$irefsp[ts_id] <- -length(ts_id)
     if(length(ts_id) == 1) df$irefsp[ts_id] <- first_greater_than(time_series$time[ts_id], cumsum(dis$perlen))
-    df$nrefsp[ts_id] <- abs(df$irefsp[ts_id])
+    df$nrefsp[ts_id] <- length(ts_id)
     df$roff[ts_id] <- locations_top$roff[i]
     df$coff[ts_id] <- locations_top$coff[i]
     if(locations_top$k[i] == locations_bottom$k[i]) {
@@ -357,8 +359,8 @@ rmf_write_hob <- function(hob,
   i <- 1
   while(i <= hob$nh) {
     # data set 3
-    rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), 1)), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
-                         as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp, hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
+    rmfi_write_variables(hob$data$obsnam[i], as.integer(ifelse(length(hob$data$layer[[i]]) > 1, -length(hob$data$layer[[i]]), hob$data$layer[[i]])), as.integer(hob$data$row[i]), as.integer(hob$data$column[i]),
+                         as.integer(ifelse(hob$data$nrefsp[i] > 1, -hob$data$nrefsp[i], hob$data$irefsp[i])), hob$data$toffset[i], hob$data$roff[i], hob$data$coff[i], hob$data$hobs[i],
                          file=file)
     
     # data set 4
