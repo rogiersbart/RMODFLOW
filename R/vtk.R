@@ -94,11 +94,11 @@ rmf_write_vtk.rmf_2d_array <- function(array,
     cat(ifelse(binary, 'BINARY', 'ASCII'), '\n', append = TRUE, file = file)
     cat('DATASET', ifelse(as_points, 'POLYDATA', 'UNSTRUCTURED_GRID'), '\n', append = TRUE, file = file)
     cat('POINTS', nrow(pts), 'double', '\n', append = TRUE, file = file)
-    readr::write_delim(pts[,c('x', 'y', 'z')], path = file, col_names = FALSE, append = TRUE)
+    readr::write_delim(pts[,c('x', 'y', 'z')], file = file, col_names = FALSE, append = TRUE)
     if(!as_points) {
       cat('\n', append = TRUE, file = file)
       cat('CELLS', ncell, (n.vertex + 1) * ncell, '\n', append = TRUE, file = file)
-      readr::write_delim(cells, path = file, col_names = FALSE, append = TRUE)
+      readr::write_delim(cells, file = file, col_names = FALSE, append = TRUE)
       cat('\n', append = TRUE, file = file)
       cat('CELL_TYPES', ncell, '\n', append = TRUE, file = file)
       cat(paste0(rep(8, ncell), collapse = '\n'), '\n', append = TRUE, file = file) # 8 = PIXEL
@@ -116,17 +116,17 @@ rmf_write_vtk.rmf_2d_array <- function(array,
     if(ijk) {
       cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$i, path = file, append = TRUE)
+      readr::write_lines(ijk.df$i, file = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
       cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$j, path = file, append = TRUE)
+      readr::write_lines(ijk.df$j, file = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
       cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$k, path = file, append = TRUE)
+      readr::write_lines(ijk.df$k, file = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
     }
     
@@ -158,17 +158,17 @@ rmf_write_vtk.rmf_2d_array <- function(array,
       # if(ijk) {
       #   cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       #   
       #   cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       #   
       #   cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       # }
       
@@ -230,11 +230,11 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     cat('ASCII', '\n', append = TRUE, file = file)
     cat('DATASET', ifelse(as_points, 'POLYDATA', 'UNSTRUCTURED_GRID'), '\n', append = TRUE, file = file)
     cat('POINTS', nrow(pts), 'double', '\n', append = TRUE, file = file)
-    readr::write_delim(pts[,c('x', 'y', 'z')], path = file, col_names = FALSE, append = TRUE)
+    readr::write_delim(pts[,c('x', 'y', 'z')], file = file, col_names = FALSE, append = TRUE)
     if(!as_points) {
       cat('\n', append = TRUE, file = file)
       cat('CELLS', ncell, (n.vertex + 1) * ncell, '\n', append = TRUE, file = file)
-      readr::write_delim(cells, path = file, col_names = FALSE, append = TRUE)
+      readr::write_delim(cells, file = file, col_names = FALSE, append = TRUE)
       cat('\n', append = TRUE, file = file)
       cat('CELL_TYPES', ncell, '\n', append = TRUE, file = file)
       cat(paste0(rep(11, ncell), collapse = '\n'), '\n', append = TRUE, file = file) # 11 = VOXEL
@@ -252,17 +252,17 @@ rmf_write_vtk.rmf_3d_array <- function(array,
     if(ijk) {
       cat('SCALARS', 'I', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$i, path = file, append = TRUE)
+      readr::write_lines(ijk.df$i, file = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
       cat('SCALARS', 'J', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$j, path = file, append = TRUE)
+      readr::write_lines(ijk.df$j, file = file, append = TRUE)
       cat('\n', append = TRUE, file = file)
       
       cat('SCALARS', 'K', 'int', 1, '\n', append = TRUE, file = file)
       cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      readr::write_lines(ijk.df$k, path = file, append = TRUE) 
+      readr::write_lines(ijk.df$k, file = file, append = TRUE) 
       cat('\n', append = TRUE, file = file)
     }
     
@@ -298,17 +298,17 @@ rmf_write_vtk.rmf_3d_array <- function(array,
       # if(ijk) {
       #   cat('SCALARS', paste('vertex', 'I', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$i, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       #   
       #   cat('SCALARS', paste('vertex', 'J', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$j, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       #   
       #   cat('SCALARS', paste('vertex', 'K', sep = '_'), 'int', 1, '\n', append = TRUE, file = file)
       #   cat('LOOKUP_TABLE', 'default', '\n', append = TRUE, file = file)
-      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), path = file, append = TRUE)
+      #   readr::write_lines(rep(ijk.df$k, each = n.vertex), file = file, append = TRUE)
       #   cat('\n', append = TRUE, file = file)
       # }
     }

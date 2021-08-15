@@ -1080,20 +1080,20 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       if(naux > 0) {
         widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
-        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
         
         # handle AUX variables which may be free format
         df[[ncol(df)]] <- gsub(',', ' ', df[[ncol(df)]])
         cols2 <- do.call(readr::cols_only, as.list(rep('d', naux)))
-        lc <- as.data.frame(readr::read_table2(df[[ncol(df)]], col_names = FALSE, col_types = cols2))
+        lc <- as.data.frame(readr::read_table(I(df[[ncol(df)]]), col_names = FALSE, col_types = cols2))
         df <- cbind(df[-ncol(df)], lc)
         
       } else {
         widths <- readr::fwf_widths(c(rep(10, n)))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
-        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
       }
@@ -1103,7 +1103,8 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
       # TODO unsuppress warnings;
       # reading in subset of columns without knowing all names not possible without warnings in readr
-      df <- as.data.frame(suppressWarnings(readr::read_table2(lines, col_names = FALSE, col_types = cols)))
+      # NOTE: this was for readr < 2.0.0; check again
+      df <- as.data.frame(suppressWarnings(readr::read_table(I(lines), col_names = FALSE, col_types = cols)))
     }
     return(df[1:nlst,])
   }
@@ -1814,9 +1815,9 @@ rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', app
   if(format == 'fixed') {
     fmt <- paste0(c(rep('%10i', 3), rep('%10g', n), rep('%10g', naux)), collapse = '')
     dff <- do.call('sprintf', c(df, fmt))
-    readr::write_lines(dff, path = file, append = append)
+    readr::write_lines(dff, file = file, append = append)
   } else {
-    readr::write_delim(df, path = file, delim = ' ', col_names = FALSE, append = append)
+    readr::write_delim(df, file = file, delim = ' ', col_names = FALSE, append = append)
   }
   
 }

@@ -1258,8 +1258,12 @@ rmf_read_hpr <- function(file = {cat('Please select hpr file ...\n'); file.choos
   
   hpr <- readr::read_table(file = file,
                            col_names = FALSE, skip = 1,
-                           col_types = readr::cols(readr::col_double(), readr::col_double(), readr::col_character()))
+                           col_types = readr::cols()) # sometimes 4 columns (extra whitespace), sometimes 3
+  hpr <- hpr[,1:3] # drop any additional columns
   colnames(hpr) <- c('simulated', 'observed', 'name')
+  hpr$simulated <- as.numeric(hpr$simulated)
+  hpr$observed <- as.numeric(hpr$observed)
+  hpr$name <- as.character(hpr$name)
   hpr$residual <- hpr$simulated - hpr$observed
   hpr <- as.data.frame(hpr)
   attr(hpr, 'spec') <- NULL

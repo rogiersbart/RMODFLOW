@@ -200,5 +200,7 @@ rmf_write_nam <- function(nam,
   
   # data set 1
   # write.table(nam, file = file, row.names = FALSE, col.names = FALSE, quote = FALSE, na='', append=TRUE)
-  readr::write_tsv(nam, path = file, append = TRUE, col_names = FALSE, quote_escape = FALSE, na = '')
+  # readr::write_tsv(nam, file = file, append = TRUE, col_names = FALSE, quote = 'none', escape = 'none', na = '')
+  readr::write_delim(nam, file = file, append = TRUE, col_names = FALSE, quote = 'none', escape = 'none', na = '', delim = ' ')
+  
 }
