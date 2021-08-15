@@ -1017,7 +1017,8 @@ rmf_plot.modflow <- function(modflow,
   # to suppress warnings of new fill scale being added, remove old fill scale first
   i <- which(vapply(p$scales$scales, function(i) 'fill' %in% i$aesthetics, TRUE))
   p$scales$scales[[i]] <- NULL
-  p <- p + ggplot2::scale_fill_manual(legend, values = colrs)
+  colr_legend <- colrs[types[as.character(unique(r))]]
+  p <- p + ggplot2::scale_fill_manual(legend, values = colr_legend, na.value = NA)
   
   if('hfb' %in% names(modflow)) {
     obj <- modflow$hfb
