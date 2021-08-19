@@ -5,6 +5,7 @@
 \title{Convert modflow coordinates to real world coordinates}
 \usage{
 rmf_convert_grid_to_xyz(
+  dis,
   x = NULL,
   y = NULL,
   z = NULL,
@@ -14,11 +15,12 @@ rmf_convert_grid_to_xyz(
   roff = NULL,
   coff = NULL,
   loff = NULL,
-  prj = NULL,
-  dis = NULL
+  prj = rmf_get_prj(dis)
 )
 }
 \arguments{
+\item{dis}{\code{RMODFLOW} dis object}
+
 \item{x}{modflow x coordinate}
 
 \item{y}{modflow y coordinate}
@@ -38,8 +40,6 @@ rmf_convert_grid_to_xyz(
 \item{loff}{modflow layer offset}
 
 \item{prj}{prj object}
-
-\item{dis}{dis object}
 }
 \value{
 data frame with real world x and y (and optionally z) coordinates
@@ -49,10 +49,13 @@ Convert modflow coordinates to real world coordinates
 }
 \details{
 Provide either xyz or ijk
-  If xyz is provided, it is reprojected using the optional prj object.
-  
-  Optional roff, coff and loff values can be supplied along the i, j and k indices.
-  
-  k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
-  set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
+If xyz is provided, it is reprojected using the optional prj object.
+
+Optional roff, coff and loff values can be supplied along the i, j and k indices.
+
+k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
+set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
+}
+\seealso{
+\code{\link{rmf_convert_xyz_to_grid}}
 }

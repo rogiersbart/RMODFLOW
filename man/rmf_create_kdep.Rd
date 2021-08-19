@@ -21,9 +21,9 @@ a \code{RMODFLOW} kdep object
 }
 \details{
 All parameters should have a hgunam attribute and their partyp attribute set to 'KDEP'.
-         The KDEP package can only be used in conjunction with the HUF package.
-         Note that the parameters are defined on the HUF grid, not the numerical grid
-         \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
+The KDEP package can only be used in conjunction with the HUF package.
+Note that the parameters are defined on the HUF grid, not the numerical grid
+\code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
 }
 \seealso{
 \code{link{rmf_convert_huf_to_grid}}, \code{\link{rmf_read_kdep}}, \code{\link{rmf_write_kdep}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?kdep.htm}

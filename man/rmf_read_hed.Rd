@@ -55,7 +55,7 @@ object of class hed and rmf_4d_array.
 When huf heads are to be read, a \code{huf} object should also be supplied. The final array will have NHUF layers instead of NLAY.
 
 If no \code{oc} object is supplied, a rmf_array of dimensions NROW x NCOL x NLAY x sum(NSTP) is created and filled. Time steps for which no output is given are filled with \code{NA}.
-If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved. 
+If a \code{oc} object is supplied, the dimensions of the returned array are NROW x NCOL x NLAY x STPS where STPS are timesteps for which output is saved.
 If the array is in ASCII format and no headers are present, a \code{OC} object must be supplied. In that case, it is assumed that the file being read only contains head values and the keyword XSECTION in the bas file is not present.
 
 If the timesteps argument is supplied, it overwrites the use of the oc argument. For all array flow terms a rmf_array of dimensions NROW x NCOL x NLAY x length(timesteps) is created and filled.

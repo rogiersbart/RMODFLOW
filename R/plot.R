@@ -594,7 +594,7 @@ rmf_plot.hfb <- function(hfb,
                          type = 'fill',
                          active_only = TRUE,
                          fun = ifelse(variable == 'hydchr', sum, mean),
-                         prj = NULL,
+                         prj = rmf_get_prj(dis),
                          crs = NULL,
                          size = 1,
                          colour = 'black',
@@ -757,7 +757,7 @@ rmf_plot.hob <- function(hob,
                          i = NULL,
                          j = NULL,
                          k = NULL,
-                         prj = NULL,
+                         prj = rmf_get_prj(dis),
                          kper = NULL,
                          ...) {
   
@@ -1034,7 +1034,7 @@ rmf_plot.rmf_2d_array <- function(array,
                                   height_exaggeration = 100,
                                   binwidth=pretty(diff(zlim)/20, 1)[1],
                                   label=TRUE,
-                                  prj=NULL,
+                                  prj=rmf_get_prj(dis),
                                   crs=NULL,
                                   alpha=1,
                                   plot3d=FALSE,
@@ -1050,7 +1050,7 @@ rmf_plot.rmf_2d_array <- function(array,
     x <- xyz$x[,,1]
     y <- xyz$y[,,1]
     if(!is.null(prj)) {
-      xyz <- rmf_convert_grid_to_xyz(x=c(x),y=c(y),prj=prj)
+      xyz <- rmf_convert_grid_to_xyz(x=c(x),y=c(y),prj=prj,dis=dis)
       x[,] <- xyz$x
       y[,] <- xyz$y
     }
@@ -1150,13 +1150,20 @@ rmf_plot.rmf_2d_array <- function(array,
       }
     } else if(type=='contour') {
       if(!is.null(prj)) {
-        new_xy <- rmf_convert_grid_to_xyz(x=xy$x,y=xy$y,prj=prj)
+        new_xy <- rmf_convert_grid_to_xyz(x=xy$x,y=xy$y,prj=prj,dis=dis)
         xy$x <- new_xy$x
         xy$y <- new_xy$y
+        
+        if(!is.null(crs)) {
+          transf_positions <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+          xy$x <- transf_positions$x
+          xy$y <- transf_positions$y
+        }
+        
+      } else if(!is.null(crs)) {
+        stop('Please provide a prj file when transforming the crs', call. = FALSE)
       }
-      if(!is.null(crs)) {
-        xy <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))
-      }
+      
       xy$z <- c(t(array*mask^2))
       xyBackup <- xy
       xy <- na.omit(as.data.frame(xy))
@@ -1215,14 +1222,20 @@ rmf_plot.rmf_2d_array <- function(array,
       # x & y are center of cells
       vector_df <- xy
       if(!is.null(prj)) {
-        new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=vector_df$y,prj=prj)
+        new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=vector_df$y,prj=prj,dis=dis)
         vector_df$x <- new_positions$x
         vector_df$y <- new_positions$y
+        
+        if(!is.null(crs)) {
+          transf_positions <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+          vector_df$x <- transf_positions$x
+          vector_df$y <- transf_positions$y
+        }
+        
+      } else if(!is.null(crs)) {
+        stop('Please provide a prj file when transforming the crs', call. = FALSE)
       }
-      if(!is.null(crs)) {
-        if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        vector_df <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))
-      }
+
       if(crop) vector_df <- na.omit(vector_df)
       # add gradient values; negative because want to show arrow from high to low
       if(is.null(uvw)) {
@@ -1304,7 +1317,7 @@ rmf_plot.rmf_3d_array <- function(array,
                                   l = NULL,
                                   binwidth = pretty(diff(zlim)/20, 1)[1],
                                   label = TRUE,
-                                  prj = NULL,
+                                  prj = rmf_get_prj(dis),
                                   crs = NULL,
                                   vecsize = NULL,
                                   uvw = NULL,
@@ -1377,15 +1390,22 @@ rmf_plot.rmf_3d_array <- function(array,
       if(type == 'contour') {
         xy$x <- rep(xy$y, each = nnlay)
         xy$y <- c(t(dis$center[,j,]))
+        
         if(!is.null(prj)) {
-          new_xy <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]], y=xy$x,z=xy$y,prj=prj)
+          new_xy <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]], y=xy$x,z=xy$y,prj=prj,dis=dis)
           xy$x <- new_xy$y
           xy$y <- new_xy$z
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            xy$x <- transf_positions$y
+            xy$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
-        }
+
         xy$z <- c(t(array[,j,]*mask[,j,]^2))
         xyBackup <- xy
         xy <- na.omit(as.data.frame(xy))
@@ -1399,7 +1419,7 @@ rmf_plot.rmf_3d_array <- function(array,
         xy$z <- c(xy$z)
       }
     } else if(!is.null(i) & is.null(j)) {
-      
+
       colnames(datapoly) <- replace(colnames(datapoly), match(c('x', 'y', 'z'), colnames(datapoly)), c('x', 'z', 'y'))
       
       xlabel <- 'x'
@@ -1408,15 +1428,22 @@ rmf_plot.rmf_3d_array <- function(array,
       if(type == 'contour') {
         xy$x <- rep(xy$x, each = nnlay)
         xy$y <- c(t(dis$center[i,,]))
+        
         if(!is.null(prj)) {
-          new_xy <- rmf_convert_grid_to_xyz(x=xy$x, y=rmf_convert_grid_to_xyz(i=i, j=1, dis=dis)[[2]],z=xy$y,prj=prj)
+          new_xy <- rmf_convert_grid_to_xyz(x=xy$x, y=rmf_convert_grid_to_xyz(i=i, j=1, dis=dis)[[2]],z=xy$y,prj=prj,dis=dis)
           xy$x <- new_xy$x
           xy$y <- new_xy$z
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_xy,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            xy$x <- transf_positions$x
+            xy$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          xy$x <- rmfi_convert_coordinates(xy,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
-        }
+
         xy$z <- c(t(array[i,,]*mask[i,,]^2))
         xyBackup <- xy
         xy <- na.omit(as.data.frame(xy))
@@ -1526,30 +1553,44 @@ rmf_plot.rmf_3d_array <- function(array,
       }
       if(is.null(i) && !is.null(j)) {
         vector_df <- data.frame(x=xy$y,y=c(dis$center[,j,]))
+        
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=vector_df$x,z=vector_df$y,prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=rmf_convert_grid_to_xyz(i=1, j=j, dis=dis)[[1]],y=vector_df$x,z=vector_df$y,prj=prj,dis=dis)
           vector_df$x <- new_positions$y
           vector_df$y <- new_positions$z
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            vector_df$x <- transf_positions$y
+            vector_df$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
-        }
+
         # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$y[,j,]*mask[,j,]^2))
         vector_df$v <- -c(grad$z[,j,]*mask[,j,]^2)
         
       } else if(!is.null(i) && is.null(j)) {
         vector_df <- data.frame(x=xy$x,y=c(dis$center[i,,]))
+        
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=vector_df$y,prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=vector_df$x,y=rmf_convert_grid_to_xyz(i=i,j=1,dis=dis)[[2]],z=vector_df$y,prj=prj,dis=dis)
           vector_df$x <- new_positions$x
           vector_df$y <- new_positions$z
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            vector_df$x <- transf_positions$x
+            vector_df$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          vector_df$x <- rmfi_convert_coordinates(vector_df,from=sf::st_crs(prj$projection),to=sf::st_crs(crs))$x
-        }
+
         # add gradient values; negative because want to show arrow from high to low
         vector_df$u <- -c(t(grad$x[i,,]*mask[i,,]^2))
         vector_df$v <- -c(grad$z[i,,]*mask[i,,]^2)
@@ -1665,7 +1706,7 @@ rmf_plot.rmf_list <- function(obj,
                               active_only = FALSE,
                               fun = sum,
                               add = FALSE,
-                              prj = NULL,
+                              prj = rmf_get_prj(dis),
                               crs = NULL,
                               colour_palette = rmfi_rev_rainbow,
                               nlevels = 7,
@@ -1773,7 +1814,7 @@ rmf_plot.rmf_list <- function(obj,
       # }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        lim <- rmfi_convert_coordinates(lim, from = prj$projection, to = crs)
+        lim <- rmfi_convert_coordinates(lim, from = prj$crs, to = crs)
       }
       xlim <- range(lim$x)
       ylim <- range(lim$y)
@@ -1793,7 +1834,7 @@ rmf_plot.rmf_list <- function(obj,
       # }
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
+        xlim <- rmfi_convert_coordinates(xlim, from = prj$crs, to = crs)
       }
       xlim <- xlim$x
     }
@@ -1813,7 +1854,7 @@ rmf_plot.rmf_list <- function(obj,
       
       if(!is.null(crs)) {
         if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-        xlim <- rmfi_convert_coordinates(xlim, from = prj$projection, to = crs)
+        xlim <- rmfi_convert_coordinates(xlim, from = prj$crs, to = crs)
       }
       xlim <- xlim$y
     }

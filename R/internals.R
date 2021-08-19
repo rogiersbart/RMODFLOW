@@ -16,35 +16,19 @@ rmfi_confining_beds <- function(dis) {
 
 #' Convert data frame coordinates to another coordinate reference system
 #' 
-#' @param dat data frame with x and y coordinates
+#' @param dat data frame with x and y (and/or z) coordinates
 #' @param from coordinate reference system of the data
 #' @param to target coordinate reference system
-#' @param names_from names from the data frame coordinate columns
-#' @param names_to names to use for the converted coordinates
 #' @return data frame with converted coordinates
 #' @keywords internal
-rmfi_convert_coordinates <- function(dat, from, to, names_from=c('x','y'), names_to=names_from) {
-  nrs <- which(!is.na(dat[[names_from[1]]]+dat[[names_from[2]]]))
-  # dat_names <- names(dat)
+rmfi_convert_coordinates <- function(dat, from, to) {
+  nrs <- which(!is.na(apply(dat, 1, sum)))
   if(is.na(sf::st_crs(from)) || is.na(sf::st_crs(to))) stop('crs can not be NA when transforming', call. = FALSE)
-  converted_coords <- sf::st_transform(sf::st_sfc(sf::st_multipoint(cbind(dat[,names_from[1]], dat[,names_from[2]])[nrs, ]), crs = sf::st_crs(from)), crs = sf::st_crs(to))
-  converted_coords <- data.frame(sf::st_coordinates(converted_coords))[,c('X','Y')]
+  converted_coords <- sf::st_transform(sf::st_as_sf(dat[nrs,], coords = colnames(dat), crs = sf::st_crs(from)), crs = sf::st_crs(to))
+  converted_coords <- as.data.frame(sf::st_coordinates(converted_coords))
+  colnames(converted_coords) <- colnames(dat)
+  dat[nrs,] <- converted_coords
   
-  names(converted_coords) <- names_to
-  if(names_from[1]==names_to[1]) {
-    dat[,names_to[1]][nrs] <- converted_coords[,1]
-  } else {
-    dat$new <- NA
-    dat$new[nrs] <- converted_coords[,1]
-    names(dat)[ncol(dat)] <- names_to[1]
-  }
-  if(names_from[2]==names_to[2]) {
-    dat[,names_to[2]][nrs] <- converted_coords[,2]
-  } else {
-    dat$new <- NA
-    dat$new[nrs] <- converted_coords[,2]
-    names(dat)[ncol(dat)] <- names_to[2]
-  }  
   return(dat)
 }
 

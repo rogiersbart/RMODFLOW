@@ -2,21 +2,45 @@
 % Please edit documentation in R/install.R
 \name{rmf_install}
 \alias{rmf_install}
-\title{Install external software}
+\title{Install external codes}
 \usage{
-rmf_install(name = "MODFLOW-2005")
+rmf_install(code = "all", overwrite = NULL)
 }
 \arguments{
-\item{name}{Character.}
+\item{code}{Character vector with the codes to install, or \code{"all"} (default).}
+
+\item{overwrite}{Logical. Overwrite when the code is already installed? If
+\code{NULL} (default), the user is asked what to do in an interactive session.
+An error message is issued otherwise.}
 }
 \description{
-Install external software
+This function installs external codes that are used by \link{RMODFLOW}.
 }
 \details{
-Currently supported software: All MODFLOW variants documented at
-\url{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}, except for
-MODFLOW-2000.I.e. MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR and
-MODFLOW-CFP. The zip files with windows binaries hosted at the USGS websites
-are downloaded and extracted in \file{C:/WRDAPP/} each time. The main folder
-names are modified in order to have more consistency.
+\subsection{Supported software}{
+
+All MODFLOW variants documented at the \href{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}{Online Guide to MODFLOW}, except
+for MODFLOW-2000. \emph{I.e.} MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR
+and MODFLOW-CFP. The zip files with windows binaries hosted at the USGS
+websites are downloaded and extracted in the installation directory. The main
+folder names are modified in order to have more consistency.
+}
+
+\subsection{Installation location}{
+
+The default installation location is \code{file.path(system.file(package = "RMODFLOW"), "code")}, but it can be altered by setting option
+\code{RMODFLOW.path}.
+}
+}
+\examples{
+\dontrun{
+rmf_install() # Install all codes.
+rmf_install("2005") # Install MODFLOW-2005.
+rmf_install("MODFLOW-2005") # Install MODFLOW-2005.
+rmf_install(c(2005, "MODFLOW-NWT", "cfp")) # Install different variants.
+}
+}
+\seealso{
+\code{\link[=rmf_guide]{rmf_guide()}} for launching the \href{https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/}{Online Guide to MODFLOW} or
+specific pages thereof.
 }

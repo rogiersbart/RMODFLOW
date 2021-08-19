@@ -13,7 +13,7 @@ rmf_convert_huf_to_grid(
   mask = rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
   type = ifelse(partyp == "VK", "harmonic", "arithmetic"),
   partyp = "HK",
-  pvl = NULL
+  pval = NULL
 )
 }
 \arguments{
@@ -29,11 +29,11 @@ rmf_convert_huf_to_grid(
 
 \item{mask}{masking 3d array for averaging, typically the \code{ibound} array, to speed up grid conversion; defaults to including all cells}
 
-\item{type}{type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').}
+\item{type}{type of averaging that should be performed when \code{grid == 'dis'}; either arithmetic (default), harmonic or geometric}
 
-\item{partyp}{which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP' and 'KDEP'}. Only used with \code{parameters}.}
+\item{partyp}{which parameter type to convert; used to subset \code{parameters}. Possible values are \code{'HK' (default), 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP'}. Only used with \code{parameters}. Defaults to 'arithmetic' expect when partyp = 'VK' ('harmonic').}
 
-\item{pvl}{optional \code{RMODFLOW} pvl object. Used to overwrite the parval attributes if \code{parameters} is supplied}
+\item{pval}{optional \code{RMODFLOW} pval object. Used to overwrite the parval attributes if \code{parameters} is supplied}
 }
 \value{
 rmf_3d_array with the parameter values. Dimensions are \code{dis$nrow, dis$ncol, dis$nlay} when \code{grid == 'dis'} or \code{dis$nrow, dis$ncol, huf$nhuf} when \code{grid == 'huf'}
@@ -43,6 +43,6 @@ Convert a parameter defined on the HUF grid to the numerical grid
 }
 \details{
 Either \code{parameters} or \code{values} should be supplied. The former is used for more complex parametrizations including multiplier and/or zone arrays.
-     The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}. 
-     Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
+The latter is used when a single parameter value of for each unit is sufficient. When \code{values} is used, all values typically represent the same parameter type, e.g. \code{'HK'}.
+Similarly, when \code{parameters} is used, only one value for \code{partyp} should be supplied.
 }

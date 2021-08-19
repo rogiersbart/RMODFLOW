@@ -144,45 +144,7 @@ rmf_as_list.rmf_4d_array <- function(obj, l, ...) {
   rmf_as_list(obj[,,,l], ...)
 }
 
-#' Generic function to convert rmf_array objects to simple features
-#' 
-#' @rdname rmf_as_sf
-#' @export
-rmf_as_sf <- function(...) {
-  UseMethod('rmf_as_sf')
-}
-
-#' Title
-#'
-#' @param array 
-#' @param dis 
-#' @param mask 
-#' @param prj 
-#' @param crs 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-rmf_as_sf.rmf_2d_array <- function(array,
-                                   dis,
-                                   mask = array * 0 + 1,
-                                   prj = NULL,
-                                   crs = NULL) {
-  df <- rmf_as_tibble(array, dis, mask, prj, crs)
-  df <- df %>%
-    dplyr::group_by(id, value) %>% tidyr::nest() %>% 
-    dplyr::mutate(data = purrr::map(data, function(df) sf::st_polygon(list(as.matrix(rbind(df, df[1,]))))))
-  if (is.null(prj)) {
-    df$data <- sf::st_sfc(df$data)
-  } else {
-    df$data <- sf::st_sfc(df$data, crs = prj$projection)
-  }
-  df <- sf::st_sf(df)
-  return(df)
-}
-
-#' Generic function to convert rmf_array and rmf_list objects to tibbles
+#' Generic function to convert RMODFLOW objects to tibbles
 #' 
 #' @rdname rmf_as_tibble
 #' @export
@@ -190,8 +152,6 @@ rmf_as_tibble <- function(...) {
   UseMethod('rmf_as_tibble')
 }
 
-#' Convert a RMODFLOW cbc object to a tibble
-#'
 #' @param cbc \code{RMODFLOW} cbc object
 #' @param dis \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -206,15 +166,21 @@ rmf_as_tibble <- function(...) {
 #' @param id type of id used; options are \code{'r'} or \code{'modflow'}. Defaults to \code{'r'}
 #' @param fluxes character; denotes which fluxes to read. Defaults to reading all fluxes. See details.
 #' @param ts_time logical passed to \code{rmf_as_tibble.rmf_4d_array}; should the returned time column represent the cumulative modelled time or the time step numbers. Defaults to TRUE (cumulative modelled time)
-#' @param ... ignored
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @details Fluxes include \code{'constant_head'}, \code{'storage'}, \code{'flow_right_face'}, \code{'flow_front_face'}, \code{'flow_lower_face'}, \code{'wells'},
 #' \code{'river_leakage'}, \code{'recharge'}, \code{'drains'}, \code{'head_dep_bounds'} or any other description as written by MODFLOW.
 #'
-#' @return A \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
+#' @return \code{rmf_as_tibble.cbc} returns a \code{tibble} of with the \code{fluxes} components of the \code{cbc} object
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble cbc
+#' 
+#' @examples
+#' m <- rmf_read(rmf_example_file('example-model.nam'), output = TRUE, verbose = FALSE)
+#' 
+#' # cbc
+#' rmf_as_tibble(m$cbc, m$dis, fluxes = c('wells', 'flow_right_face'))
 #' 
 rmf_as_tibble.cbc <- function(cbc,
                               dis,
@@ -224,7 +190,7 @@ rmf_as_tibble.cbc <- function(cbc,
                               l = NULL,
                               mask = array(1, dim = c(dis$nrow, dis$ncol, dis$nlay)),
                               ijk = NULL,
-                              prj = NULL,
+                              prj = rmf_get_prj(dis),
                               crs = NULL, 
                               as_points = FALSE,
                               id = 'r',
@@ -232,7 +198,7 @@ rmf_as_tibble.cbc <- function(cbc,
                               ts_time = TRUE,
                               ...) {
   
-  if(fluxes != 'all') cbc <- cbc[which(names(cbc) %in% fluxes)]
+  if(length(fluxes) > 1 || fluxes != 'all') cbc <- cbc[which(names(cbc) %in% fluxes)]
   
   set_tbl <- function(obj, flux) {
     if(inherits(obj, 'rmf_list')) {
@@ -277,8 +243,6 @@ rmf_as_tibble.cbc <- function(cbc,
   return(tbls)
 }
 
-#' Convert a RMODFLOW ddn object to a tibble
-#'
 #' @param ddn \code{RMODFLOW} ddn object
 #' @param dis \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -286,15 +250,18 @@ rmf_as_tibble.cbc <- function(cbc,
 #' @param k optional layer number to subset
 #' @param l optional time step number to subset
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
-#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}}
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' @return \code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
 #'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble ddn
+#' @examples
+#' # ddn
+#' rmf_as_tibble(m$drawdown, m$dis, k = 1)
 #' 
 rmf_as_tibble.ddn <- function(ddn,
                               dis,
@@ -316,8 +283,6 @@ rmf_as_tibble.ddn <- function(ddn,
   return(tbl)
 }
 
-#' Convert a RMODFLOW hed object to a tibble
-#'
 #' @param hed \code{RMODFLOW} hed object
 #' @param dis \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -325,15 +290,19 @@ rmf_as_tibble.ddn <- function(ddn,
 #' @param k optional layer number to subset
 #' @param l optional time step number to subset
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
-#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}}
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' @return \code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
 #'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble hed
+#' @examples
+#' # hed
+#' rmf_as_tibble(m$head, m$dis, i = 2, as_points = TRUE)
+#' 
 rmf_as_tibble.hed <- function(hed,
                               dis,
                               i = NULL,
@@ -354,8 +323,6 @@ rmf_as_tibble.hed <- function(hed,
   return(tbl)
 }
 
-#' Convert a rmf_2d_array to a tibble
-#'
 #' @param array a \code{rmf_2d_array} object
 #' @param dis \code{RMODFLOW} dis object
 #' @param mask a 2d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active
@@ -363,24 +330,27 @@ rmf_as_tibble.hed <- function(hed,
 #' @param crs optional; a crs object
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
-#' @param ... ignored
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @return A \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
+#' @return \code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
 #' x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'  
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble rmf_2d_array
+#' @examples
+#' # 2d array
+#' rmf_as_tibble(m$dis$top, m$dis, id = FALSE)
 #' 
 rmf_as_tibble.rmf_2d_array <- function(array,
                                        dis,
                                        mask = array(1, dim = dim(array)),
-                                       prj = NULL,
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r',
                                        ...) {
-  
+
   xy <- expand.grid(sum(dis$delc) - (cumsum(dis$delc) - dis$delc/2), cumsum(dis$delr) - dis$delr/2)
   names(xy) <- c('y','x')
   mask[which(mask == 0)] <- NA
@@ -405,13 +375,18 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   }
   
   if(!is.null(prj)) {
-    new_positions <- rmf_convert_grid_to_xyz(x = positions$x, y = positions$y, prj = prj)
+    new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
     positions$x <- new_positions$x
     positions$y <- new_positions$y
-  }
-  if(!is.null(crs)) {
-    if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-    positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
+    
+    if(!is.null(crs)) {
+      transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+      positions$x <- transf_positions$x
+      positions$y <- transf_positions$y
+    }
+    
+  } else if(!is.null(crs)) {
+    stop('Please provide a prj file when transforming the crs', call. = FALSE)
   }
   
   tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
@@ -426,8 +401,6 @@ rmf_as_tibble.rmf_2d_array <- function(array,
   return(tbl)
 }
 
-#' Convert a rmf_3d_array to a tibble
-#'
 #' @param array a \code{rmf_3d_array} object
 #' @param dis a \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -438,9 +411,9 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #' @param crs optional; a crs object
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
-#' @param ... ignored
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'  
-#' @return a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' @return \code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #'
 #' Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
@@ -450,14 +423,18 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble rmf_3d_array
+#' @examples
+#' # 3d array
+#' rmf_as_tibble(m$lpf$hk, m$dis)
+#' rmf_as_tibble(m$lpf$hk, m$dis, as_points = TRUE, i = 5)
 #' 
 rmf_as_tibble.rmf_3d_array <- function(array,
                                        dis,
                                        i = NULL,
                                        j = NULL,
                                        k = NULL,
-                                       mask = array(1, dim = dim(array)),
-                                       prj = NULL,
+                                       mask = array * 0 + 1,
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL,
                                        as_points = FALSE,
                                        id = 'r',
@@ -474,6 +451,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
   if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
   center <- botm + (tops - botm)/2
   z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
   
   # return full array
   if(is.null(i) && is.null(j) && is.null(k)) {
@@ -484,7 +462,9 @@ rmf_as_tibble.rmf_3d_array <- function(array,
     mask[which(mask == 0)] <- NA
     tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
     tbl$id <- rep(seq_len(prod(dis$nrow, dis$ncol, dis$nlay)), each = ifelse(as_points, 1, 4))
-    if(as_points) tbl$z <- center[tbl$id] + z_ref
+    if(as_points) tbl$z <- (length_mlt * center[tbl$id]) + z_ref
+    tbl$top <- (length_mlt * tops[tbl$id]) + z_ref
+    tbl$botm <- (length_mlt * botm[tbl$id]) + z_ref
     
   } else {
     
@@ -493,7 +473,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
       array <- array[,,k]
       tbl <- rmf_as_tibble(array = array, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
       tbl$id <- tbl$id + ((k -1) * prod(dis$nrow, dis$ncol))
-      if(as_points) tbl$z <- center[tbl$id] + z_ref
+      if(as_points) tbl$z <- (length_mlt * center[tbl$id]) + z_ref
       
     } else { # cross-section
       xy <- NULL
@@ -528,7 +508,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$nrow), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$nrow))
         
         # x-values
-        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis)$x
+        cst_values <- rmf_convert_grid_to_xyz(i = 1:dis$nrow, j = j, k = 1, dis = dis, prj = NULL)$x
         
         if(as_points) {
           positions <- data.frame(id = ids, x = xy$y, y = c(dis$center[,j,]), z = cst_values)
@@ -549,16 +529,19 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=positions$z, y=positions$x, z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$z, y=positions$x, z=positions$y, prj=prj, dis = dis)
           positions$x <- new_positions$y
           positions$y <- new_positions$z
           positions$z <- new_positions$x
-        }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          crs_positions <-  rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))
-          positions$x <- crs_positions$y
-          positions$z <- crs_positions$x
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            positions$x <- transf_positions$y
+            positions$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
         
         tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
@@ -572,7 +555,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         if(dis$nlay > 1) ids <- rep(ids, dis$nlay) + c(rep(0, dis$ncol), rep(prod(dis$nrow, dis$ncol) * seq_len(dis$nlay - 1), each = dis$ncol))
         
         # y-values
-        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis)$y
+        cst_values <- rmf_convert_grid_to_xyz(i = i, j = 1:dis$ncol, k = 1, dis = dis, prj = NULL)$y
         
         if(as_points) {
           positions <- data.frame(id = ids, x = xy$x, y = c(dis$center[i,,]), z = cst_values)
@@ -593,16 +576,19 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         }
         
         if(!is.null(prj)) {
-          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$z, z=positions$y, prj=prj)
+          new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$z, z=positions$y, prj=prj, dis = dis)
           positions$x <- new_positions$x
           positions$y <- new_positions$z
           positions$z <- new_positions$y
-        }
-        if(!is.null(crs)) {
-          if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-          crs_positions <-  rmfi_convert_coordinates(positions, from=sf::st_crs(prj$projection), to=sf::st_crs(crs))
-          positions$x <- crs_positions$x
-          positions$z <- crs_positions$y
+          
+          if(!is.null(crs)) {
+            transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+            positions$x <- transf_positions$x
+            positions$y <- transf_positions$z
+          }
+          
+        } else if(!is.null(crs)) {
+          stop('Please provide a prj file when transforming the crs', call. = FALSE)
         }
         
         tbl <- tibble::as_tibble(merge(values, positions, by = c("id")))
@@ -610,12 +596,13 @@ rmf_as_tibble.rmf_3d_array <- function(array,
         tbl <- tbl[,c('id', 'value', 'x', 'y', 'z')]
         # if(!as_points) tbl$y <- NULL
       }
+
     }
+    
+    # add top & botm
+    tbl$top <- (length_mlt * tops[tbl$id]) + z_ref
+    tbl$botm <- (length_mlt * botm[tbl$id]) + z_ref
   }
-  
-  # add top & botm
-  tbl$top <- tops[tbl$id] + z_ref
-  tbl$botm <- botm[tbl$id] + z_ref
   
   # change id
   if(id == 'modflow') {
@@ -628,8 +615,6 @@ rmf_as_tibble.rmf_3d_array <- function(array,
   return(tbl)
 }
 
-#' Convert a rmf_4d_array to a tibble
-#'
 #' @param array a \code{rmf_3d_array} object
 #' @param dis a \code{RMODFLOW} dis object
 #' @param i optional row number to subset
@@ -642,9 +627,9 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
 #' @param ts_time logical; should the returned time column represent the cumulative modelled time or the time step numbers. See details. Defaults to TRUE (cumulative modelled time)
-#' @param ... ignored
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @return A \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
+#' @return \code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #' 
 #' Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
@@ -662,6 +647,11 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble rmf_4d_array
+#' @examples
+#' # 4d array
+#' r <- rmf_create_array(1:prod(dim(m$head)), dim = dim(m$head))
+#' rmf_as_tibble(r, m$dis)
+#' rmf_as_tibble(r, m$dis, time = 1)
 #' 
 rmf_as_tibble.rmf_4d_array <- function(array,
                                        dis,
@@ -670,7 +660,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
                                        k = NULL,
                                        l = NULL,
                                        mask = array(1, dim = dim(array)[1:3]),
-                                       prj = NULL,
+                                       prj = rmf_get_prj(dis),
                                        crs = NULL, 
                                        as_points = FALSE,
                                        id = 'r',
@@ -708,7 +698,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
       
       tbl$time <- rep(time, each = ifelse(as_points, 1, 4))
       tbl$nstp <- rep(seq_len(dim(array)[4]), each = ifelse(as_points, 1, 4))
-
+      
       # change id
       if(id == 'modflow') {
         tbl$id <- rmf_convert_id_to_id(tbl$id, dis = dis, from = 'r', to = 'modflow')
@@ -737,8 +727,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   return(tbl)
 }
 
-#' Convert a rmf_list object to a tibble
-#'
+
 #' @param obj \code{RMODFLOW} rmf_list object
 #' @param dis \code{RMODFLOW} dis object
 #' @param ijk optional; a data.frame with i, j and k columns used to select the cells in the final tibble.
@@ -746,20 +735,25 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 #' @param crs optional; a crs object
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param id either \code{'r'} (default) or \code{'modflow'} specifying the type of cell id to use. MODFLOW uses row-major array ordering whereas R uses column-major ordering.
-#' @param ... ignored
+#' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
-#' @return a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
+#' @return \code{rmf_as_tibble.rmf_list} returns a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
 #' x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
 #' Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
 #' 
 #' @export
 #' @rdname rmf_as_tibble
 #' @method rmf_as_tibble rmf_list
-#'
+#' @examples
+#' # rmf_list
+#' l <- m$chd$data
+#' rmf_as_tibble(l, m$dis)
+#' rmf_as_tibble(l, m$dis, as_points = TRUE)
+#' 
 rmf_as_tibble.rmf_list <- function(obj,
                                    dis,
                                    ijk = NULL,
-                                   prj = NULL,
+                                   prj = rmf_get_prj(dis),
                                    crs = NULL,
                                    as_points = FALSE, 
                                    id = 'r',
@@ -778,21 +772,23 @@ rmf_as_tibble.rmf_list <- function(obj,
   botm <- dis$botm[,,nnlay]
   if(length(nnlay) > 1) tops <- rmf_create_array(c(c(dis$top), c(dis$botm[,,nnlay[-length(nnlay)]])), dim = c(dis$nrow, dis$ncol, length(nnlay)))
   z_ref <- ifelse(is.null(prj), 0, ifelse(length(prj$origin) > 2, prj$origin[3], 0))
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
   
   if(as_points) {
     coords <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = prj)
     if(!is.null(crs)) {
       if(is.null(prj)) stop('Please specify prj if crs is specified', call. = FALSE)
-      coords_prj <- rmfi_convert_coordinates(coords, from = prj$projection, to = crs)
+      coords_prj <- rmfi_convert_coordinates(coords, from = prj$crs, to = crs)
       coords$x <- coords_prj$x
-      coords_y <- coords_prj$y
+      coords$y <- coords_prj$y
     }
     df <- data.frame(id = rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r'))
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     df <- tibble::as_tibble(cbind(df, data, coords))
     
   } else {
-    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis)
+
+    xy <- rmf_convert_grid_to_xyz(i = obj$i, j = obj$j, k = obj$k, dis = dis, prj = NULL)
     ids <- rmf_convert_ijk_to_id(i = obj$i, j = obj$j, k = obj$k, dis = dis, type = 'r')
     xWidth <- dis$delr[obj$j]
     yWidth <- dis$delc[obj$i]
@@ -807,20 +803,27 @@ rmf_as_tibble.rmf_list <- function(obj,
     positions$y[(seq(4,nrow(positions),4))] <- positions$y[(seq(4,nrow(positions),4))] - yWidth/2
     data <- as.data.frame(subset(obj, select = -which(colnames(obj) %in% c('i', 'j', 'k'))))
     values <- cbind(data.frame(id = ids), data)
+
     if(!is.null(prj)) {
-      new_positions <- rmf_convert_grid_to_xyz(x=positions$x, y=positions$y, prj=prj)
+      new_positions <- rmf_convert_grid_to_xyz(x=positions$x,y=positions$y,prj=prj,dis=dis)
       positions$x <- new_positions$x
       positions$y <- new_positions$y
+      
+      if(!is.null(crs)) {
+        transf_positions <- rmfi_convert_coordinates(new_positions,from=sf::st_crs(prj$crs),to=sf::st_crs(crs))
+        positions$x <- transf_positions$x
+        positions$y <- transf_positions$y
+      }
+      
+    } else if(!is.null(crs)) {
+      stop('Please provide a prj file when transforming the crs', call. = FALSE)
     }
-    if(!is.null(crs)) {
-      if(is.null(prj)) stop('Please provide a prj file when transforming the crs', call. = FALSE)
-      positions <- rmfi_convert_coordinates(positions, from = sf::st_crs(prj$projection), to = sf::st_crs(crs))
-    }
+    
     df <- tibble::as_tibble(merge(values, positions, by=c("id")))
   }
   
-  df$top <- tops[df$id] + z_ref
-  df$botm <- botm[df$id] + z_ref
+  df$top <- (length_mlt * tops[df$id]) + z_ref
+  df$botm <- (length_mlt * botm[df$id]) + z_ref
   
   df$id <- as.integer(df$id)
   if(id == 'modflow') {
@@ -952,12 +955,14 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
 #' Get cell x, y and z coordinates from a dis object
 #' 
 #' @param dis dis object
+#' @param prj projection file object
 #' @param include_faces logical; should face coordinates be included?
 #' @return list with with cell coordinate 3d arrays
 #' @rdname rmf_cell_coordinates
 #' @method rmf_cell_coordinates dis
 #' @export
 rmf_cell_coordinates.dis <- function(dis,
+                                     prj = rmf_get_prj(dis),
                                      include_faces = FALSE) {
   if(any(dis$laycbd != 0)) warning("Quasi-3D confining beds detected. Returned z coordinates only represent numerical layers.")
   cell_coordinates <- NULL
@@ -989,6 +994,23 @@ rmf_cell_coordinates.dis <- function(dis,
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
   }
+  if(!is.null(prj)) {
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj, dis=dis)
+    cell_coordinates$x[] <- coord_prj$x
+    cell_coordinates$y[] <- coord_prj$y
+    cell_coordinates$z[] <- coord_prj$z
+    
+    if(include_faces) {
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
+      cell_coordinates$front[] <- faces_prj_1$x
+      cell_coordinates$right[] <- faces_prj_1$y
+      cell_coordinates$upper[] <- faces_prj_1$z
+      cell_coordinates$back[] <- faces_prj_2$x
+      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$lower[] <- faces_prj_2$z
+    }
+  }
   return(cell_coordinates)
 }
 
@@ -996,6 +1018,7 @@ rmf_cell_coordinates.dis <- function(dis,
 #' 
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
+#' @param prj projection file object
 #' @param include_faces logical; should face coordinates be included?
 #' @return 3d array with cell coordinates
 #'
@@ -1004,10 +1027,10 @@ rmf_cell_coordinates.dis <- function(dis,
 #' @export
 rmf_cell_coordinates.huf <- function(huf,
                                      dis = NULL,
+                                     prj = rmf_get_prj(dis),
                                      include_faces = FALSE) {
   cell_coordinates <- NULL
   cell_coordinates$z <- huf$top - huf$thck/2
-  class(cell_coordinates$z) <- 'rmf_3d_array'
   if(!is.null(dis)) {
     cell_coordinates$x <- cell_coordinates$z*0
     cell_coordinates$y <- cell_coordinates$z*0
@@ -1023,6 +1046,23 @@ rmf_cell_coordinates.huf <- function(huf,
     cell_coordinates$right <- cell_coordinates$x + dis$delr/2 
     cell_coordinates$front <- cell_coordinates$y - dis$delc/2
     cell_coordinates$back <- cell_coordinates$y + dis$delc/2
+  }
+  if(!is.null(prj)) {
+    coord_prj <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$x[,,1]), y = c(cell_coordinates$y[,,1]), z = c(cell_coordinates$z), prj = prj, dis=dis)
+    cell_coordinates$x[] <- coord_prj$x
+    cell_coordinates$y[] <- coord_prj$y
+    cell_coordinates$z[] <- coord_prj$z
+    
+    if(include_faces) {
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
+      cell_coordinates$front[] <- faces_prj_1$x
+      cell_coordinates$right[] <- faces_prj_1$y
+      cell_coordinates$upper[] <- faces_prj_1$z
+      cell_coordinates$back[] <- faces_prj_2$x
+      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$lower[] <- faces_prj_2$z
+    }
   }
   return(cell_coordinates)
 }
@@ -1481,6 +1521,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
 
 #' Convert modflow coordinates to real world coordinates
 #' 
+#' @param dis \code{RMODFLOW} dis object
 #' @param x modflow x coordinate
 #' @param y modflow y coordinate
 #' @param z modflow z coordinate
@@ -1491,7 +1532,6 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
 #' @param coff modflow column offset
 #' @param loff modflow layer offset
 #' @param prj prj object
-#' @param dis dis object
 #' @details Provide either xyz or ijk
 #'   If xyz is provided, it is reprojected using the optional prj object.
 #'   
@@ -1501,8 +1541,10 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
 #'   set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
 #'   
 #' @return data frame with real world x and y (and optionally z) coordinates
+#' @seealso \code{\link{rmf_convert_xyz_to_grid}}
 #' @export
-rmf_convert_grid_to_xyz <- function(x = NULL,
+rmf_convert_grid_to_xyz <- function(dis,
+                                    x = NULL,
                                     y = NULL,
                                     z = NULL,
                                     i = NULL,
@@ -1511,8 +1553,10 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
                                     roff = NULL,
                                     coff = NULL,
                                     loff = NULL,
-                                    prj = NULL,
-                                    dis = NULL) {
+                                    prj = rmf_get_prj(dis)) {
+  
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'xyz')
+  
   if(!is.null(x)) {
     if(!is.null(prj)) {
       if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
@@ -1520,14 +1564,13 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       angle <- atan(y/x)*180/pi+prj$rotation
       angle[which(is.na(angle))] <- 90-prj$rotation
       s <- sqrt(x^2+y^2)
-      x <- prj$origin[1]+ cos(angle*pi/180)*s
-      y <- prj$origin[2]+ sin(angle*pi/180)*s
-      if(!is.null(z)) z <- prj$origin[3]+z
+      x <- prj$origin[1] + ((cos(angle*pi/180)*s) * length_mlt)
+      y <- prj$origin[2] + ((sin(angle*pi/180)*s) * length_mlt)
+      if(!is.null(z)) z <- prj$origin[3] + ((z) * length_mlt)
     }
     ifelse(!is.null(z),return(data.frame(x=x,y=y,z=z)),return(data.frame(x=x,y=y)))
     
   } else if(!is.null(i)) {
-    if(is.null(dis)) stop('Please provide a dis object', call. = FALSE)
     y_grid <- c(cumsum(rev(dis$delc))-rev(dis$delc)/2)[(dis$nrow-i+1)]
     x_grid <- c(cumsum(dis$delr)-dis$delr/2)[j]
     
@@ -1577,10 +1620,10 @@ rmf_convert_grid_to_xyz <- function(x = NULL,
       angle <- asin(y_grid/s)*180/pi + prj$rotation
       x_grid <- cos(angle*pi/180)*s
       y_grid <- sin(angle*pi/180)*s
-      x <- prj$origin[1] + x_grid
-      y <- prj$origin[2] + y_grid
+      x <- prj$origin[1] + (x_grid * length_mlt)
+      y <- prj$origin[2] + (y_grid * length_mlt)
       if(!is.null(k)) {
-        z <- prj$origin[3] + z_grid
+        z <- prj$origin[3] + (z_grid * length_mlt)
       }
     }
     
@@ -1628,7 +1671,7 @@ rmf_convert_hed_to_water_table <- function(hed, l = NULL, na_values = NULL) {
 #' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_convert_hob_to_time_series}}
 rmf_convert_hob_to_locations <- function(hob,
                                          dis,
-                                         prj = NULL) {
+                                         prj = rmf_get_prj(dis)) {
   
   hob$data <- hob$data[!duplicated(hob$data$obsnam),]
   if(hob$mobs > 0) {
@@ -1971,8 +2014,12 @@ rmf_convert_ibound_to_neighbours <- function(ibound) {
 #' @export
 rmf_convert_id_to_id = function(id, dis, from = 'modflow', to = 'r') {
   
-  ijk <-  rmf_convert_id_to_ijk(id, dis = dis, type = from)
-  idn <-  rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = to)
+  if(from == to) {
+    idn <- id
+  } else {
+    ijk <-  rmf_convert_id_to_ijk(id, dis = dis, type = from)
+    idn <-  rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = to)
+  }
   
   return(idn)
   
@@ -1982,7 +2029,7 @@ rmf_convert_id_to_id = function(id, dis, from = 'modflow', to = 'r') {
 #' 
 #' @param id cell id, providing the place of the number in an input file 3d array
 #' @param dis a discretisation file object
-#' @param type 'r' or 'modflow'; defaults to 'r'
+#' @param type 'r' or 'modflow' specifying type of id. See details. Defaults to 'r'
 #' @details a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @export
 rmf_convert_id_to_ijk <- function(id,
@@ -2009,6 +2056,7 @@ rmf_convert_id_to_ijk <- function(id,
 #' @param j vector of column numbers
 #' @param k vector of layer numbers
 #' @param dis a discretization file object
+#' @param type 'r' or 'modflow' specifying type of id. See details. Defaults to 'r'
 #' @return cell ids, providing the place of the cell in an input file 3d array
 #' @details a modflow id provides the place of the number in an input file 3d array (not like the way R uses ids for arrays or matrices; rows and columns are switched)
 #' @export
@@ -2123,38 +2171,43 @@ rmf_convert_upw_to_lpf <- function(upw,
 
 #' Convert real world coordinates to modflow coordinates
 #' 
+#' @param dis \code{RMODFLOW} dis object
 #' @param x real world x coordinate
 #' @param y real world y coordinate
 #' @param z real world z coordinate; optional
-#' @param prj prj object
-#' @param dis dis object; optional
+#' @param prj optional \code{RMODFLOW} prj object
 #' @param output character; containing 'xyz','ijk' and/or 'off' for the return of x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @details
-#' If dis is not provided, only x, y and z coordinates are returned. If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
+#' If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
+#' If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
 #' If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned. 
 #'
 #' If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
 #' @return data frame with modflow coordinates
+#' @seealso \code{\link{rmf_convert_grid_to_xyz}}
 #' @export
-rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
+rmf_convert_xyz_to_grid <- function(dis,x,y,z=NULL,prj=rmf_get_prj(dis),output='xyz') {
+  
+  length_mlt <- rmfi_prj_length_multiplier(dis, prj, to = 'grid')
+  
   output_xyz <- 'xyz' %in% output
   output_ijk <- 'ijk' %in% output
   output_off <- 'off' %in% output
   if(!is.null(prj)) {
     if(length(prj$origin) <= 2) prj$origin <-  c(prj$origin, 0)
-    x <- x-prj$origin[1]
-    y <- y-prj$origin[2]
+    x <- (x - prj$origin[1]) * length_mlt
+    y <- (y - prj$origin[2]) * length_mlt
     angle <- atan(y/x)*180/pi - prj$rotation
     angle[which(is.na(angle))] <- 90-prj$rotation
+    angle[which(angle < 0)] <- 180 + angle[which(angle < 0)]
     s <- sqrt(x^2+y^2)
     x <- cos(angle*pi/180)*s
     y <- sin(angle*pi/180)*s
-    if(!is.null(z)) z <- z - prj$origin[3]
+    if(!is.null(z)) z <- (z - prj$origin[3]) * length_mlt
   }
   dat <- data.frame(x=x,y=y)
   if(!is.null(z)) dat$z <- z
   if(output_ijk || output_off) {
-    if(is.null(dis)) stop('Please provide dis argument', call. = FALSE)    
     if(ncol(dat)==3) {
       dis$thck <- dis$tops <- dis$botm
       dis$thck <- rmf_calculate_thickness(dis)
@@ -2166,19 +2219,25 @@ rmf_convert_xyz_to_grid <- function(x,y,prj=NULL,z=NULL,dis=NULL,output='xyz') {
       warning('Quasi-3D confining beds detected. Returned coordinates/indices only represent numerical layers.')
       cbd <- rmfi_confining_beds(dis)
     }
+    
+    # set min & max limits for checking out-of-bounds
+    lims <- list(x = c(0, sum(dis$delr)),
+                 y = c(0, sum(dis$delc)))
+    
+    # TODO vectorize
     for(i in 1:nrow(dat)) {
       dat$i[i] <- which(cumsum(dis$delc) >= sum(dis$delc)-dat$y[i])[1]
       dat$j[i] <- which(cumsum(dis$delr) >= dat$x[i])[1]
       dat$roff[i] <- (sum(dis$delc)-dat$y[i] -(cumsum(dis$delc) - dis$delc/2)[dat$i[i]])/dis$delc[dat$i[i]]
       dat$coff[i] <- (dat$x[i] -(cumsum(dis$delr) - dis$delr/2)[dat$j[i]])/dis$delr[dat$j[i]]
       
-      if(dat$x[i] < 0 || dat$x[i] > sum(dis$delr)) {
+      if(dat$x[i] < lims$x[1] || dat$x[i] > lims$x[2]) {
         dat$j[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
         warning('x coordinate out of bounds. Setting j index and roff/coff to NA', call. = FALSE)
-      } 
-      if(dat$y[i] < 0 || dat$y[i] > sum(dis$delc)) {
+      }
+      if(dat$y[i] < lims$y[1] || dat$y[i] > lims$y[2]) {
         dat$i[i] <- NA
         dat$roff[i] <- NA
         dat$coff[i] <- NA
@@ -2257,10 +2316,12 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
 #'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
 #'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
+#'          \code{dimnames} are dropped. 
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
 
 rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dimlabels = attr(obj, 'dimlabels')) {
+  attr(obj, 'dimnames') <- NULL
   if(!is.null(dim)) {
     att <- attributes(obj)
     obj <- array(obj, dim = dim)
@@ -2284,6 +2345,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_4d_array" <-  function(x, i, j, k, l, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k) && missing(l)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1, missing(l) || length(l) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2327,6 +2389,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_3d_array" <-  function(x, i, j, k, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j) && missing(k)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -2357,6 +2420,7 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
 
 #' @export
 "[.rmf_2d_array" <-  function(x, i, j, ...) {
+  attr(x, 'dimnames') <- NULL
   if(missing(i) && missing(j)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
@@ -3033,7 +3097,6 @@ rmf_write_array <- function(array, file, append = FALSE, binary = FALSE, header 
       if(header) rmfi_write_variables(1, 1, 1, 1, format(desc, width=16, justify='right'), ncol(array), nrow(array), ifelse(xsection, -1,1), paste0('(',ncol(array),'F)'), file=file)
       write.table(array, file=file, col.names = FALSE, row.names = FALSE, append = TRUE)
     }
-    
   }
 }
 
@@ -3329,36 +3392,3 @@ rmf_create_list <-  function(df, kper = NULL) {
 
 #' @export
 as.data.frame.rmf_list <- function(obj, ...) structure(NextMethod(...), kper = NULL)
-
-#' Read a projection file
-#' 
-#' \code{read_prj} reads in projection file and returns it as a prj object.
-#' 
-#' @param file filename; typically '*.prj'
-#' @return object of class prj
-#' @export
-rmf_read_prj <- function(file = {cat('Please select prj file ...\n'); file.choose()}) {
-  prj.lines <- readr::read_lines(file)
-  prj <- list()
-  prj$projection <- prj.lines[1]
-  prj$origin <- as.numeric(RMODFLOW:::rmfi_remove_empty_strings(strsplit(prj.lines[2],' ')[[1]]))
-  prj$rotation <- as.numeric(RMODFLOW:::rmfi_remove_empty_strings(strsplit(prj.lines[3],' ')[[1]])[1])
-  if(length(prj.lines) > 3) prj$starttime <- as.POSIXct(prj.lines[4])
-  class(prj) <- 'prj'
-  return(prj)
-}
-
-#' Write an RMODFLOW projection file
-#' 
-#' \code{write.prj} writes a projection file
-#' 
-#' @param prj an \code{\link{RMODFLOW}} prj object
-#' @param file filename to write to; typically '*.prj'
-#' @export
-rmf_write_prj <- function(prj,
-                          file = {cat('Please select prj file to overwrite or provide new filename ...\n'); file.choose()}) {
-  cat(paste0(prj$projection,'\n'), file=file)
-  cat(paste0(paste0(prj$origin,collapse=' '),'\n'), file=file, append=TRUE)
-  cat(paste0(prj$rotation,'\n'), file=file, append=TRUE)
-  if(length(prj) > 3) cat(paste0(format(prj$starttime,format='%Y-%m-%d %H:%M:%S'),'\n'), file=file, append=TRUE)
-}
