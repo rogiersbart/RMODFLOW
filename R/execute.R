@@ -2,6 +2,19 @@
 #' 
 #' These functions execute MODFLOW models.
 #' 
+#' The `preprocess` argument can be used for different purposes:
+#' - Implementing derived parameters: One can make some of the pval parameters
+#'   depend on others. The `preprocess` function should in this case just
+#'   modify the pval object, and return it. Note that this means that the values
+#'   of derived parameters specified in `evaluate` might be changed in this
+#'   case.
+#' - Implementing any kind of parameter that is not directly supported by
+#'   MODFLOW. This means the `preprocess` function should have some side
+#'   effects, modifying some of the MODFLOW files. For this purpose, it is
+#'   convenient to add extra parameters at the end of the pval file, while
+#'   keeping the number of parameters (np) constant, and equal to the number
+#'   of MODFLOW-supported parameters.
+#' 
 #' @param code Name of the MODFLOW variant to use, or path to the executable.
 #' @param evaluate Vector of PVAL file parameter values to evaluate. This should
 #'   be a named vector if not all parameters are provided in their order of
@@ -28,6 +41,9 @@ rmf_execute <- function(...) {
 #' @param path Path to the NAM file. Typically with extension `.nam`.
 #' @param backup Logical. Should a backup (with `.old` suffix) of the original
 #'   PVAL file be created? Defaults to `FALSE`.
+#' @param preprocess Function to do preprocessing, which takes the model pval
+#'   object as input, and returns another pval object. See details for how to
+#'   use this. Defaults to NULL.
 #' @param ui If NULL (default), MODFLOW output is shown in the R console. If
 #'   `"none"`, the output is suppressed.
 #' @export
@@ -36,6 +52,7 @@ rmf_execute.character <- function(
   code = "2005",
   evaluate = NULL,
   backup = FALSE,
+  preprocess = NULL,
   ui = NULL,
   convergence = "Normal termination"
 ) {
@@ -47,7 +64,7 @@ rmf_execute.character <- function(
   file <- basename(path)
 
   # set initial parameters if provided  
-  if(!is.null(evaluate)) {
+  if(!is.null(evaluate) | !is.null(preprocess)) {
     nam <- rmf_read_nam(path)
     if('PVAL' %in% nam$ftype) {
       pval <- rmf_read_pval(rmfi_look_for_path(dir, nam, "pval"))
@@ -56,11 +73,17 @@ rmf_execute.character <- function(
         if (backup) rmfi_backup_pval(dir, nam)
       
       # replace evaluate values in parval
-        pval$parval <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
+        if (!is.null(evaluate)) {
+          pval$data$parval <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, evaluate)
+        }
+      
+      # preprocess pval file
+        if (!is.null(preprocess)) pval <- preprocess(pval)
         
-      rmf_write_pval(pval, file = file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
+      rmf_write_pval(pval, file.path(dir, nam$fname[which(nam$ftype == 'PVAL')]))
     } else {
-      rui::warn('Model does not have pval input file. Ignoring evaluate argument.')
+      rui::alert('Model does not have pval input file. Ignoring evaluate argument.')
+      rui::warn("Issue with PVAL file.")
     }
   }
   
@@ -173,7 +196,7 @@ rmf_analyze <- function(path,
                         restore = FALSE,
                         visualize = interactive(),
                         ...) {
-  # allow for controlling some settings for the gradient approximation
+  # TODO allow for controlling some settings for the gradient approximation
   # like the step size and one/two-sided approximation etc?
   # TODO consider parallel options here when rmf_execute.modflow works
   # TODO better include restoring in on.exit?
@@ -187,7 +210,7 @@ rmf_analyze <- function(path,
   # read pval and hob
   if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
     rui::alert("{.fun rmf_analyze} only works with PVAL and HOB file types.")
-    rui::stop("Issue with model structure.")
+    rui::error("Issue with model structure.")
   }
   pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
   hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
@@ -196,32 +219,32 @@ rmf_analyze <- function(path,
              "This can be created by setting {.arg iuhobsv} of the HOB file to",
              "a non-zero value, and including a corresponding DATA type entry",
              "in the NAM file.")
-    rui::stop('Issue with model structure.')
+    rui::error('Issue with model structure.')
   }
   
   # evaluate, include, transform
   if (is.null(evaluate)) {
-    evaluate <- pval$parval
+    evaluate <- pval$data$parval
   } else {
-    evaluate <- rmfi_replace_in_vector(pval$parnam, pval$parval, evaluate)
+    evaluate <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, evaluate)
   }
   if (is.null(include)) {
     include <- rep(TRUE,length(evaluate))
   } else {
     regex_to_include <- rep(TRUE, length(include))
     names(regex_to_include) <- include
-    include <- rep(FALSE, pval$np)
-    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+    include <- rep(FALSE, length(pval$data$parnam))
+    include <- rmfi_replace_in_vector(pval$data$parnam, include, regex_to_include)
   }
   if(!is.null(transform)) {
     if (!all(transform %in% "log")) {
       rui::alert('Use {.val "log"} in {.arg transform} for logarithmic',
                "transformations. Other options are not available yet.")
-      rui::stop("Issue with transformation definition.")
+      rui::error("Issue with transformation definition.")
     }
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
-    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
+    transform <- rmfi_replace_in_vector(pval$data$parnam, rep(FALSE, length(pval$data$parnam)), transform)
     evaluate[transform] <- log(evaluate[transform])
   }
   
@@ -229,35 +252,34 @@ rmf_analyze <- function(path,
   rui::begin("Analyzing")
   
   # initial run
-  pval$parval <- evaluate
-  if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
-  rmf_write_pval(pval, file = rmfi_look_for_path(dir, nam, type = "pval"))
+  pval$data$parval <- evaluate
+  if (any(transform)) pval$data$parval[transform] <- exp(pval$data$parval[transform])
+  rmf_write_pval(pval, rmfi_look_for_path(dir, nam, type = "pval"))
   rmf_execute(path = path, code = code, ui = "none", ...)
   hob_out_orig <- rmfi_look_for_path(dir, nam, unit = hob$iuhobsv) %>% 
     rmf_read_hob_out()
-  rmf_analyze <- list()
-  rmf_analyze$dss <- matrix(NA_real_,
-                    nrow = hob$nh,
-                    ncol = pval$np)
-  rmf_analyze$css <- rep(NA_real_, pval$np)
-  rmf_analyze$parnam <- pval$parnam
+  blank_dss <- tibble::tibble(obsnam = hob_out_orig$name,
+                              dss = NA_real_)
+  rmf_analyze <- pval$data %>%
+    dplyr::mutate(css = NA_real_,
+           dss = list(blank_dss)[rep(1, nrow(.))])
   
   # dss & css
   for(i in which(include)) {
-    pval$parval <- evaluate
+    pval$data$parval <- evaluate
     
     # perturbation
-    pval$parval[i] <- pval$parval[i]*1.01
-    if (any(transform)) pval$parval[transform] <- exp(pval$parval[transform])
+    pval$data$parval[i] <- pval$data$parval[i]*1.01
+    if (any(transform)) pval$data$parval[transform] <- exp(pval$data$parval[transform])
     
     # evaluation
-    rmf_write_pval(pval, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_write_pval(pval, rmfi_look_for_path(dir, nam, type = "pval"))
     rmf_execute(path = path, code = code, ui = "none", ...)
     hob_out <- rmf_read_hob_out(rmfi_look_for_path(dir, nam, unit = hob$iuhobsv))
     
     # assignment
-    rmf_analyze$dss[,i] <- (hob_out$simulated - hob_out_orig$simulated)/(0.01)
-    rmf_analyze$css[i] <- sqrt(sum(rmf_analyze$dss[,i]^2)/hob$nh)
+    rmf_analyze$dss[[i]][, "dss"] <- (hob_out$simulated - hob_out_orig$simulated)/(0.01)
+    rmf_analyze$css[i] <- sqrt(sum(rmf_analyze$dss[[i]][, "dss"]^2)/hob$nh)
     
     # visualize
     if (visualize) {
@@ -271,7 +293,7 @@ rmf_analyze <- function(path,
   # restore original pval
   if (restore) {
     rui::begin("Restoring")
-    rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_write_pval(pval_org, rmfi_look_for_path(dir, nam, type = "pval"))
     rmf_execute(path = path, code = code, ...)
     rui::succeed()
   }
@@ -309,7 +331,9 @@ rmf_analyze <- function(path,
 #'   Defaults to `"ssq"`.
 #' @param export Optional file path to export intermediate results to after each
 #'   iteration.
-#' @param ... Optional arguments passed to [optim()].
+#' @param continue To continue from the last parameter set recorded in the
+#'   export file, or not. Defaults to FALSE.
+#' @param ... Optional arguments passed to [rmf_execute()].
 #' @return Invisible list with [optim()] results and the full parameter list.
 #' @export
 #' @seealso
@@ -328,6 +352,7 @@ rmf_optimize <- function(
   restore = FALSE,
   visualize = interactive(),
   export = NULL,
+  continue = FALSE,
   iterate = 50,
   tolerate = 1E-4,
   ...
@@ -344,7 +369,7 @@ rmf_optimize <- function(
   # read pval and hob
   if(!('PVAL' %in% nam$ftype) || !('HOB' %in% nam$ftype)) {
     rui::alert("{.fun rmf_optimize} only works with PVAL and HOB file types.")
-    rui::stop("Issue with model structure.")
+    rui::error("Issue with model structure.")
   }
   pval <- pval_org <- rmfi_look_for_path(dir, nam, "pval") %>% rmf_read_pval()
   hob <- rmfi_look_for_path(dir, nam, "hob") %>% rmf_read_hob()
@@ -353,44 +378,60 @@ rmf_optimize <- function(
              "This can be created by setting {.arg iuhobsv} of the HOB file to",
              "a non-zero value, and including a corresponding DATA type entry",
              "in the NAM file.")
-    rui::stop('Issue with model structure.')
+    rui::error('Issue with model structure.')
+  }
+
+  # continue from previous optimization
+  if (continue) {
+    if (is.null(export)) {
+      rui::alert("You want to continue a previous optimization, but you have",
+                 "not provided an export file path.")
+      rui::error("Issue with optimization.")
+    }
+    start <- readr::read_tsv(export) %>%
+      dplyr::select(-1, -2) %>%
+      dplyr::slice(nrow(.)) %>%
+      unlist()
   }
   
+  # if restart, remove export file first
+  if (!continue & fs::file_exists(export)) fs::file_delete(export)
+    
   # start, include, transform, lower, upper
   if (is.null(start)) {
-    start <- pval$parval
+    start <- pval$data$parval
   } else {
-    start <- rmfi_replace_in_vector(pval$parnam, pval$parval, start)
+    start <- rmfi_replace_in_vector(pval$data$parnam, pval$data$parval, start)
   }
   if (is.null(include)) {
     include <- rep(TRUE,length(start))
   } else {
     regex_to_include <- rep(TRUE, length(include))
     names(regex_to_include) <- include
-    include <- rep(FALSE, pval$np)
-    include <- rmfi_replace_in_vector(pval$parnam, include, regex_to_include)
+    include <- rep(FALSE, length(pval$data$parnam))
+    include <- rmfi_replace_in_vector(pval$data$parnam, include, regex_to_include)
   }
   if (is.list(lower)) {
-    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, pval$np), lower,
+    lower <- rmfi_replace_in_vector(pval$data$parnam, rep(-Inf, length(pval$data$parnam)), lower,
                                     start = start)
   } else if (length(lower) == 1 & is.infinite(lower[1])) {
-    lower <- rep(lower, pval$np)
+    lower <- rep(lower, length(pval$data$parnam))
   } else {
-    lower <- rmfi_replace_in_vector(pval$parnam, rep(-Inf, pval$np), lower)
+    lower <- rmfi_replace_in_vector(pval$data$parnam, rep(-Inf, length(pval$data$parnam)), lower)
   }
   if (is.list(upper)) {
-    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, pval$np), upper,
+    upper <- rmfi_replace_in_vector(pval$data$parnam, rep(Inf, length(pval$data$parnam)), upper,
                                     start = start)
   } else if (length(upper) == 1 & is.infinite(upper[1])) {
-    upper <- rep(upper, pval$np)
+    upper <- rep(upper, length(pval$data$parnam))
   } else {
-    upper <- rmfi_replace_in_vector(pval$parnam, rep(Inf, pval$np), upper)
+    upper <- rmfi_replace_in_vector(pval$data$parnam, rep(Inf, length(pval$data$parnam)), upper)
   }
   if(!is.null(transform)) {
-    if (!all(transform %in% "log")) rui::stop("Only logarithmic transforms are currently implemented.")
+    if (!all(transform %in% "log")) rui::error("Only logarithmic transforms are currently implemented.")
     transform[transform == "log"] <- TRUE
     transform <- as.logical(transform) %>% setNames(names(transform))
-    transform <- rmfi_replace_in_vector(pval$parnam, rep(FALSE, pval$np), transform)
+    transform <- rmfi_replace_in_vector(pval$data$parnam, rep(FALSE, length(pval$data$parnam)), transform)
     start[transform] <- log(start[transform])
     lower[transform] <- log(lower[transform])
     upper[transform] <- log(upper[transform])
@@ -399,30 +440,30 @@ rmf_optimize <- function(
   # optimize
   rui::begin("Optimizing")
   run <- 0
-  optimization_history <- matrix(ncol = pval$np + 1, nrow = 0)
+  optimization_history <- matrix(ncol = length(pval$data$parnam) + 1, nrow = 0)
   optim_modflow <- function(included_parval) {
     run <<- run + 1
     
     # adjust values
-    pval$parval <- start
-    pval$parval[include] <- included_parval
+    pval$data$parval <- start
+    pval$data$parval[include] <- included_parval
     if (any(lower > upper)) {
       rui::alert("{.arg lower} contains values larger than {.arg upper}.")
-      rui::stop("Issue with bounds.")
+      rui::error("Issue with bounds.")
     }
     
     # check bounds and run modflow
     out_of_bounds <- FALSE
-    if (any(pval$parval > upper) | any(pval$parval < lower)) out_of_bounds <- TRUE
+    if (any(pval$data$parval > upper) | any(pval$data$parval < lower)) out_of_bounds <- TRUE
     if(!is.null(transform)) {
-      pval$parval[transform] <- exp(pval$parval[transform])
+      pval$data$parval[transform] <- exp(pval$data$parval[transform])
     } 
     if (out_of_bounds) {
       converged <- FALSE
     } else {
       # write values
       rmf_write_pval(pval,
-                     file = rmfi_look_for_path(dir, nam, "pval"))
+                     rmfi_look_for_path(dir, nam, "pval"))
       converged <- rmf_execute(path = path, code = code,
                                ui = "none", ...)$normal_termination
     }
@@ -438,7 +479,7 @@ rmf_optimize <- function(
     # keep new step, export, visualize
     new_step <- TRUE # (run + sum(include)*2)%%(sum(include)*2 +1) == 0
     if (new_step) {
-      optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$parval))
+      optimization_history <<- optimization_history %>% rbind(c(cost_value, pval$data$parval))
       # print 
       if (! visualize) {
         rui::inform(
@@ -448,16 +489,28 @@ rmf_optimize <- function(
         )
       }
     }
-    if (!is.null(export)) cat(paste(cost, '=', format(cost_value,scientific=TRUE,digits=4), 'converged =', as.character(converged), 'parval =', paste(format(pval$parval[include],scientific=TRUE,digits=4), collapse=' '),'\n'), file = export, append = TRUE)
+    if (!is.null(export)) {
+      export_exists <- fs::file_exists(export)
+      tibble::tibble(
+        cost = cost_value,
+        converged = converged,
+        parnam = pval$data$parnam,
+        parval = pval$data$parval
+      ) %>%
+        tidyr::spread("parnam", "parval") %>%
+        readr::write_tsv(export,
+                         append = export_exists,
+                         col_names = !export_exists)
+    }
     if (visualize & new_step) {
       optimization_history <- as.data.frame(optimization_history)
-      names(optimization_history) <- c("cost", pval$parnam)
+      names(optimization_history) <- c("cost", pval$data$parnam)
       p <- optimization_history %>% 
         dplyr::mutate(run = 1:nrow(.)) %>% 
-        dplyr::mutate_at(pval$parnam[transform], log) %>% 
+        dplyr::mutate_at(pval$data$parnam[transform], log) %>% 
         tidyr::gather("parameter", "value", -run, -1) %>% 
-        dplyr::filter(parameter %in% pval$parnam[include]) %>% 
-        dplyr::mutate(parameter = ifelse(parameter %in% pval$parnam[transform],
+        dplyr::filter(parameter %in% pval$data$parnam[include]) %>% 
+        dplyr::mutate(parameter = ifelse(parameter %in% pval$data$parnam[transform],
                                          paste0("log(", parameter, ")"),
                                          parameter)) %>% 
         ggplot2::ggplot() +
@@ -487,7 +540,7 @@ rmf_optimize <- function(
                         control = list(maxit = iterate,
                                        reltol = tolerate))
   rmf_optimize$included <- include
-  rmf_optimize$parnam <- pval$parnam
+  rmf_optimize$parnam <- pval$data$parnam
   rmf_optimize$parval <- start
   rmf_optimize$parval[include] <- rmf_optimize$par
   if (!is.null(transform)) {
@@ -496,7 +549,7 @@ rmf_optimize <- function(
   }
   rmf_optimize$trace <- optimization_history %>% 
     tibble::as_tibble() %>%
-    purrr::set_names(c("cost", pval$parnam)) %>% 
+    purrr::set_names(c("cost", pval$data$parnam)) %>% 
     dplyr::mutate(run = 1:nrow(.))
   switch(rmf_optimize$convergence + 1, rui::succeed(), rui::fail())
   if (rmf_optimize$convergence == 1) {
@@ -507,7 +560,7 @@ rmf_optimize <- function(
   # restore original pval
   if (restore) {
     rui::begin("Restoring")
-    rmf_write_pval(pval_org, file = rmfi_look_for_path(dir, nam, type = "pval"))
+    rmf_write_pval(pval_org, rmfi_look_for_path(dir, nam, type = "pval"))
     rmf_execute(path = path, code = code, ...)
     rui::succeed()
   }
@@ -547,7 +600,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -562,7 +615,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -577,7 +630,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -592,7 +645,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -607,7 +660,7 @@ rmfi_find <- function(
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
       } else if (Sys.which(executable) == "") {
-        rui::stop("Path to {code} executable not found.")
+        rui::error("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -615,7 +668,7 @@ rmfi_find <- function(
   rui::alert("Finding paths to the executables of codes other than ",
            "MODFLOW-2005, MODFLOW-OWHM, MODFLOW-NWT, MODFLOW-LGR or ",
            "MODFLOW-CFP is currently not supported.")
-  rui::stop("Issue with code path.")
+  rui::error("Issue with code path.")
 }
 
 #' Look for a file path in a NAM file
@@ -633,7 +686,7 @@ rmfi_look_for_path <- function(dir, nam, type = NULL, unit = NULL) {
     return(file.path(dir, nam$fname[which(nam$nunit == unit)]))
   }
   rui::alert("Either {.arg type} or {.arg unit} should be provided.")
-  rui::stop("Issue with arguments.")
+  rui::error("Issue with arguments.")
 }
 
 rmfi_line_callback <- function(line, process) {
@@ -641,7 +694,7 @@ rmfi_line_callback <- function(line, process) {
   if (line == "") return(invisible())
   if (line %in% c("MODFLOW-2005", "MODFLOW-LGR2", "MODFLOW-NWT-SWR1",
                   "OWHM 1.0")) {
-    rui::title(line)
+    rui::entitle(line)
     return(invisible())
   }
   if (grepl("Normal termination of simulation", line)) {
@@ -654,14 +707,23 @@ rmfi_line_callback <- function(line, process) {
   }
   if (grepl("Can't find name file", line)) {
     rui::alert(line)
-    rui::stop("Issue with the name file path.")
+    rui::error("Issue with the name file path.")
     return(invisible())
   }
   if (grepl("NAME FILE IS EMPTY", line)) {
     rui::alert(line)
-    rui::stop("Issue with the name file.")
+    rui::error("Issue with the name file.")
     return(invisible())
   }
+  if (grepl("Solving: Stress period: 1 Time step: 1", line, fixed = TRUE)) {
+    rui::begin(line)
+    return(invisible())
+  }
+  if (grepl("Solving: ", line, fixed = TRUE)) {
+    rui::proceed(line)
+    return(invisible())
+  }
+  if (grepl("Run end ", line)) rui::clear()
   rui::inform(line)
   invisible()
 }
@@ -700,7 +762,7 @@ rmfi_replace_in_vector <- function(parnam, parval, new, start = parval) {
   }
   rui::alert("Length of one of the vector arguments does not equal the number of",
            "parameters in the PVAL file, and the vector is not named.")
-  rui::stop("Issue with the function arguments.")
+  rui::error("Issue with the function arguments.")
 }
 
 #' Backup a PVAL file

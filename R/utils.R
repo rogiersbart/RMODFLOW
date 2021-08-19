@@ -1781,9 +1781,9 @@ rmf_convert_huf_to_grid <- function(huf,
     if(!is.null(pval) && length(parameters) > 0) {
       
       replace_parval <- function(parameter) {
-        if(attr(parameter, 'parnam') %in% pval$parnam) {
+        if(attr(parameter, 'parnam') %in% pval$data$parnam) {
           old_parval <- attr(parameter, 'parval')
-          new_parval <- pval$parval[which(pval$parnam == attr(parameter, 'parnam'))]
+          new_parval <- pval$data$parval[which(pval$data$parnam == attr(parameter, 'parnam'))]
           parameter <- (parameter/old_parval)*new_parval
           attr(parameter, 'parval') <- new_parval
           return(parameter)

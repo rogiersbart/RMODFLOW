@@ -166,7 +166,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
   # pval
   if('PVAL' %in% modflow$nam$ftype) {
     if(verbose) print_reading('PVAL', file = fname[which(modflow$nam$ftype == 'PVAL')])
-    modflow$pval <- rmf_read_pval(file = fname[which(modflow$nam$ftype == 'PVAL')])
+    modflow$pval <- rmf_read_pval(fname[which(modflow$nam$ftype == 'PVAL')])
     ftype <- ftype[-which(ftype == 'PVAL')]
   }
   
@@ -493,7 +493,7 @@ rmf_write <- function(modflow,
   # pval
   if('pval' %in% ftype) {
     if(verbose) print_writing('PVAL', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')]))
-    rmf_write_pval(pval = modflow$pval, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')]))
+    rmf_write_pval(pval = modflow$pval, file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'PVAL')]))
   }
     
   # lgr

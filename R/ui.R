@@ -14,7 +14,7 @@
       return(p)
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
   ui_theme <- function(...) {
     if (getOption("RMODFLOW.theme") == "RMODFLOW") {
@@ -29,7 +29,7 @@
       return(ggplot2::theme(...))
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
   ui_fill_c <- function(...) {
     if (getOption("RMODFLOW.theme") == "ggplot2") return(NULL)
@@ -37,7 +37,7 @@
       return(spectralscale::fill_c(...))
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
   ui_fill_d <- function(...) {
     if (getOption("RMODFLOW.theme") == "ggplot2") return(NULL)
@@ -45,7 +45,7 @@
       return(spectralscale::fill_d(...))
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
   ui_colour_c <- function(...) {
     if (getOption("RMODFLOW.theme") == "ggplot2") return(NULL)
@@ -53,7 +53,7 @@
       return(spectralscale::colour_c(...))
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
   ui_colour_d <- function(...) {
     if (getOption("RMODFLOW.theme") == "ggplot2") return(NULL)
@@ -61,6 +61,6 @@
       return(spectralscale::colour_d(...))
     }
     rui::alert('Option {.arg RMODFLOW.theme} should be {.val "RMODFLOW"} or {.val "ggplot2"}.')
-    rui::stop("Issue with RMODFLOW options.")
+    rui::error("Issue with RMODFLOW options.")
   }
 
