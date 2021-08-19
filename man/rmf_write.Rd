@@ -11,7 +11,8 @@ rmf_write(
     file.choose() },
   exclude = NULL,
   suppress = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  iprn = -1
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ rmf_write(
 \item{suppress}{logical; remove non-supported (and thus not written) packages in the NAME file ? Defaults to FALSE}
 
 \item{verbose}{logical; should information on writing files be printed to the console ? Defaults to TRUE.}
+
+\item{iprn}{format code for printing arrays in the listing file; defaults to -1 (no printing)}
 }
 \value{
 \code{NULL}

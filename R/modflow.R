@@ -14,6 +14,15 @@ rmf_create <- function(..., cbc = NULL, recreate_nam = FALSE, basename = NULL) {
   
   modflow <- list(...)
   if(length(modflow) == 1 && inherits(modflow[[1]], c('list', 'modflow')) && !('rmf_package' %in% class(modflow[[1]]))) modflow <- unclass(modflow[[1]])
+  
+  # drop output objects
+  output_classes <- rmfi_list_packages(type = 'output')
+  any_output <- vapply(modflow, function(i) any(output_classes$rmf %in% class(i)), TRUE)
+  if(sum(any_output) > 1) {
+    warning('Dropping RMODFLOW output objects', call. = FALSE)
+    modflow <- modflow[!any_output]
+  }
+  
   # check if all input are rmf_packages & add all input objects
   all_rmf <- vapply(modflow, function(i) 'rmf_package' %in% class(i), TRUE)
   if(prod(all_rmf) == 0) stop('Please make sure all objects are RMODFLOW rmf_package objects representing MODFLOW input', call. = FALSE)
@@ -336,7 +345,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       hdry <- modflow[[which(names(modflow) %in% c('huf', 'lpf', 'bcf', 'upw'))]]$hdry
       
       # heads
-      if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0))) {
+      if((!is.null(modflow$oc$save_head) && any(modflow$oc$save_head)) && !is.na(modflow$oc$ihedun) || (!is.null(modflow$oc$hdsv) && any(modflow$oc$hdsv != 0) && (modflow$oc$ihedun > 0))) {
         if(verbose) print_reading('Head', file = fname[which(modflow$nam$nunit == modflow$oc$ihedun)], output = TRUE)
         
         # huf heads
@@ -350,7 +359,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
       }
       
       # drawdown
-      if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0))) {
+      if((!is.null(modflow$oc$save_drawdown) && any(modflow$oc$save_drawdown)) && !is.na(modflow$oc$iddnun) || (!is.null(modflow$oc$ddsv) && any(modflow$oc$ddsv != 0) && (modflow$oc$iddnun > 0))) {
         if(verbose) print_reading('Drawdown', file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], output = TRUE)
         modflow$drawdown <- rmf_read_drawdown(file = fname[which(modflow$nam$nunit == modflow$oc$iddnun)], dis = modflow$dis, bas = modflow$bas, hdry = hdry, oc = modflow$oc,
                                               binary = modflow$nam$ftype[which(modflow$nam$nunit == modflow$oc$iddnun)] %in% c('DATA(BINARY)', 'DATAGLO(BINARY)'), precision = precision)
@@ -421,6 +430,7 @@ rmf_read <- function(file = {cat('Please select nam file ...\n'); file.choose()}
 #' @param exclude character vector with packages names to exclude from the simulation. Defaults to NULL
 #' @param suppress logical; remove non-supported (and thus not written) packages in the NAME file ? Defaults to FALSE
 #' @param verbose logical; should information on writing files be printed to the console ? Defaults to TRUE.
+#' @param iprn format code for printing arrays in the listing file; defaults to -1 (no printing)
 #' @return \code{NULL}
 #' @export
 #' @details All arrays use free-format headers INTERNAL or CONSTANT
@@ -431,7 +441,8 @@ rmf_write <- function(modflow,
                       file = {cat('Please select nam file to overwrite or provide new filename ...\n'); file.choose()},
                       exclude = NULL,
                       suppress = FALSE,
-                      verbose = TRUE) {
+                      verbose = TRUE,
+                      iprn = -1) {
   
   print_writing <- function(package, file) {
     cat(paste0("---------------------------------", '\n'))
@@ -474,20 +485,20 @@ rmf_write <- function(modflow,
   
   # dis
   if(verbose) print_writing('DIS', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
-  rmf_write_dis(dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]))
+  rmf_write_dis(dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'DIS')]), iprn = iprn)
   
   # bas
   if(verbose) print_writing('BAS6', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
-  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]))
+  rmf_write_bas(bas = modflow$bas, dis = modflow$dis, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'BAS6')]), iprn = iprn)
   
   # mlt & zon
   if('mlt' %in% ftype) {
     if(verbose) print_writing('MULT', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
-    rmf_write_mlt(mlt = modflow$mlt, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]))
+    rmf_write_mlt(mlt = modflow$mlt, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'MULT')]), iprn = iprn)
   }
   if('zon' %in% ftype) {
     if(verbose) print_writing('ZONE', file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
-    rmf_write_zon(zon = modflow$zon, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]))
+    rmf_write_zon(zon = modflow$zon, file = file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == 'ZONE')]), iprn = iprn)
   } 
   
   # pval
@@ -510,7 +521,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }
@@ -523,7 +534,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }
@@ -562,7 +573,7 @@ rmf_write <- function(modflow,
         fnctn <- paste0('rmf_write_', df$rmf[i])
         file <- file.path(dir_name, modflow$nam$fname[which(modflow$nam$ftype == df$ftype[i])])
         if(verbose) print_writing(df$ftype[i], file = file)
-        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt))
+        do.call(fnctn, list(modflow[[df$rmf[i]]], dis = modflow$dis, file = file, format = fmt, iprn = iprn))
       }
     }
   }

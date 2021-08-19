@@ -24,6 +24,7 @@
 #'   PVAL file.
 #' @param convergence Character. The message in the terminal output used
 #'   to check for convergence.
+#' @param precision Character. Specifies if 'single' (default) or 'double' precision executable is used (MODFLOW-2005 only).
 #' @return Invisible list with start and end time, elapsed run time, a logical
 #'   indicating normal termination, and the stdout output, when done for an on
 #'   disk model. Full `modflow` object including all results otherwise (in
@@ -54,10 +55,11 @@ rmf_execute.character <- function(
   backup = FALSE,
   preprocess = NULL,
   ui = NULL,
-  convergence = "Normal termination"
+  convergence = "Normal termination",
+  precision = "single"
 ) {
   # NOTE The convergence argument was foreseen for custom executables.
-  code <- rmfi_find(code)
+  code <- rmfi_find(code, precision = precision)
   
   # get directory and filename
   dir <- dirname(path)
@@ -125,7 +127,10 @@ rmf_execute.character <- function(
 rmf_execute.modflow <- function(
   modflow,
   code = "2005",
-  evaluate = NULL
+  evaluate = NULL,
+  ui = NULL,
+  convergence = "Normal termination",
+  precision = "single"
 ) {
   # TODO change class and top-level S3 to "rmf_model" instead of modflow
   # TODO append rmf_execute results to top level list?
@@ -150,7 +155,7 @@ rmf_execute.modflow <- function(
   }
   
   # run modflow
-  rmf_execute('input.nam', code = code, evaluate = evaluate, backup = FALSE)
+  rmf_execute('input.nam', code = code, evaluate = evaluate, backup = FALSE, ui = ui, convergence = convergence, precision = precision)
   
   # read all output
   
@@ -599,8 +604,12 @@ rmfi_find <- function(
     if (!file.exists(executable)) {
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        rui::error("Path to {code} executable not found.")
+      } else if(file.exists(Sys.which(executable))) {
+        return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
+      } else {
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -614,8 +623,12 @@ rmfi_find <- function(
     if (!file.exists(executable)) {
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        rui::error("Path to {code} executable not found.")
+      } else if(file.exists(Sys.which(executable))) {
+        return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
+      } else {
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -629,8 +642,12 @@ rmfi_find <- function(
     if (!file.exists(executable)) {
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        rui::error("Path to {code} executable not found.")
+      } else if(file.exists(Sys.which(executable))) {
+        return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
+      } else {
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -644,8 +661,12 @@ rmfi_find <- function(
     if (!file.exists(executable)) {
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        rui::error("Path to {code} executable not found.")
+      } else if(file.exists(Sys.which(executable))) {
+        return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
+      } else {
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))
@@ -659,8 +680,12 @@ rmfi_find <- function(
     if (!file.exists(executable)) {
       if (file.exists(file.path(rmf_install_bin_folder, executable))) {
         folder <- rmf_install_bin_folder
-      } else if (Sys.which(executable) == "") {
-        rui::error("Path to {code} executable not found.")
+      } else if(file.exists(Sys.which(executable))) {
+        return(Sys.which(executable))
+      } else if (file.exists(Sys.which(code))) {
+        return(Sys.which(code))
+      } else {
+        rui::stop("Path to {code} executable not found.")
       }
     }
     return(file.path(folder, executable))

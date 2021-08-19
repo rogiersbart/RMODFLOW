@@ -952,12 +952,19 @@ rmf_calculate_thickness <- function(dis, collapse_cbd = FALSE, only_layers = FAL
   
 }
 
-#' Get cell x, y and z coordinates from a dis object
+#' Generic functions to get cell coordinates
+#' 
+#' @rdname rmf_cell_coordinates
+#' @export
+rmf_cell_coordinates <- function(...) {
+  UseMethod('rmf_cell_coordinates')
+}
+
 #' 
 #' @param dis dis object
 #' @param prj projection file object
 #' @param include_faces logical; should face coordinates be included?
-#' @return list with with cell coordinate 3d arrays
+#' @return \code{rmf_cell_coordinates} returns a list with with cell center x y and z coordinate as 3d arrays and optionally, the face coordinates of all cells
 #' @rdname rmf_cell_coordinates
 #' @method rmf_cell_coordinates dis
 #' @export
@@ -1014,7 +1021,6 @@ rmf_cell_coordinates.dis <- function(dis,
   return(cell_coordinates)
 }
 
-#' Get cell coordinates from a huf object
 #' 
 #' @param huf huf object
 #' @param dis dis object, corresponding to the huf object
@@ -1067,21 +1073,66 @@ rmf_cell_coordinates.huf <- function(huf,
   return(cell_coordinates)
 }
 
-#' Generic function to get cell coordinates
-#' 
-#' @rdname rmf_cell_coordinates
+#'
+#' @return \code{rmf_get_cell_coordinates} returns a data frame with the coordinates of specified cells
 #' @export
-rmf_cell_coordinates <- function(...) {
-  UseMethod('rmf_cell_coordinates')
+#'
+#' @rdname rmf_cell_coordinates
+rmf_get_cell_coordinates <- function(...) {
+  UseMethod('rmf_get_cell_coordinates')
 }
 
-#' Get cell dimensions from a dis object
+#'
+#' @param i row indices of required cell(s)
+#' @param j column indices of required cell(s)
+#' @param k layer indices of required cell(s)
+#' @param ... additional arguments passed to \code{rmf_cell_coordinates}
+#'
+#' @rdname rmf_cell_coordinates
+#' @export
+#' @method rmf_get_cell_coordinates dis
+rmf_get_cell_coordinates.dis <- function(dis, i, j, k, ...) {
+  
+  cell_coordinates <- rmf_cell_coordinates(dis, ...)
+  
+  ijk <- data.frame(i = i, j = j, k = k)
+  ids <- rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = 'r')
+  values <- as.data.frame(lapply(cell_coordinates, '[', ids))
+  
+  coord <- cbind(ijk, values)
+  return(coord)
+}
+
+#'
+#' @rdname rmf_cell_coordinates
+#' @export
+#' @method rmf_get_cell_coordinates huf
+rmf_get_cell_coordinates.huf <- function(huf, i, j, k, ...) {
+  
+  cell_coordinates <- rmf_cell_coordinates(huf, ...)
+  
+  ijk <- data.frame(i = i, j = j, k = k)
+  ids <- rmf_convert_ijk_to_id(i = ijk$i, j = ijk$j, k = ijk$k, dis = dis, type = 'r')
+  values <- as.data.frame(lapply(cell_coordinates, '[', ids))
+  
+  coord <- cbind(ijk, values)
+  return(coord)
+}
+
+#' Generic function to get cell dimensions
+#' 
+#' @rdname rmf_cell_dimensions
+#' @export
+rmf_cell_dimensions <- function(...) {
+  UseMethod('rmf_cell_dimensions')
+}
+
 #' 
 #' @param dis dis object
 #' @param hed hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned
 #' @param include_volume logical; should the cell volumes be included?
 #' @param include_faces logical; should face areas be included?
-#' @return list with cell dimension 3d arrays
+#' @return list with x y and z cell dimension 3d arrays and optionally, cell volume
 #' @rdname rmf_cell_dimensions
 #' @method rmf_cell_dimensions dis
 #' @export
@@ -1142,12 +1193,8 @@ rmf_cell_dimensions.dis <- function(dis,
   return(cell_dimensions)
 }
 
-#' Get cell dimensions from a huf object
 #' 
 #' @param huf huf object
-#' @param hed hed object, used for calculating the saturated thickness; if not specified, the regular cell thickness is returned
-#' @return list with cell dimension 3d arrays
-#'
 #' @rdname rmf_cell_dimensions
 #' @method rmf_cell_dimensions huf
 #' @export
@@ -1185,15 +1232,15 @@ rmf_cell_dimensions.huf <- function(huf,
   return(cell_dimensions)
 }
 
-#' Generic function to get cell dimensions
+
+#' Generic function to print information at a certain grid cell
 #' 
-#' @rdname rmf_cell_dimensions
+#' @rdname rmf_cell_info
 #' @export
-rmf_cell_dimensions <- function(...) {
-  UseMethod('rmf_cell_dimensions')
+rmf_cell_info <- function(...) {
+  UseMethod('rmf_cell_info')
 }
 
-#' Get information from a dis object at a certain grid cell
 #' 
 #' @param dis a discretization file object
 #' @param i row number
@@ -1233,13 +1280,8 @@ rmf_cell_info.dis <- function(dis,
   
 }
 
-#' Get information from a huf object at a certain grid cell
 #' 
 #' @param huf a hydrogeologic unit file object
-#' @param i row number
-#' @param j column number
-#' @return \code{NULL}
-#'
 #' @rdname rmf_cell_info
 #' @method rmf_cell_info huf
 #' @export
@@ -1262,14 +1304,6 @@ rmf_cell_info.huf <- function(huf,
   row.names(df) <- rows
   print(df)
 
-}
-
-#' Generic function to get information at a certain grid cell
-#' 
-#' @rdname rmf_cell_info
-#' @export
-rmf_cell_info <- function(...) {
-  UseMethod('rmf_cell_info')
 }
 
 #' Convert a bcf to a lpf object
@@ -1415,12 +1449,14 @@ rmf_convert_bcf_to_lpf <- function(bcf,
 #' @param dis \code{RMODFLOW} dis object
 #' @param hed \code{RMODFLOW} hed object; optional; if specified, the saturated cell thickness is used
 #' @param porosity optional 3d array with porosity values. If used, the average linear groundwater flow velocities are returned.
+#' @param include_bc logical, should fluxes from boundary conditions be included in the calculation of Darcy fluxes ? Defaults to TRUE.
 #' @return list of 4d arrays: right, front, lower, left, back, upper, qx, qy, qz and q; all represent Darcy velocities (or average linear groundwater flow velocities if porosity is specified): the first six at the different cell faces, the last four represent the components and magnitude at the cell center
 #' @export
 rmf_convert_cbc_to_darcy <- function(cbc,
                                      dis,
                                      hed = NULL,
-                                     porosity = NULL) {
+                                     porosity = NULL,
+                                     include_bc = TRUE) {
   
   # check if all flow components are present
   flow <- c('flow_front_face', 'flow_right_face', 'flow_lower_face')
@@ -1447,24 +1483,26 @@ rmf_convert_cbc_to_darcy <- function(cbc,
   darcy$back <- darcy$back/delr/thck
   
   # TODO: other fluxes
-  for (kper in 1:dis$nper) {
-    for (kstp in 1:dis$nstp[kper]) {
-      step <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper -1 ] + kstp)
-      if ('recharge' %in% names(cbc)) {
-         # TODO check if sum is correct
-         darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
-      }
-      if('drains' %in% names(cbc)) {
-        drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
-        darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
-      }
-      if('river_leakage' %in% names(cbc)) {
-        river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
-        darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
+  if(include_bc) {
+    for (kper in 1:dis$nper) {
+      for (kstp in 1:dis$nstp[kper]) {
+        step <- ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper -1 ] + kstp)
+        if ('recharge' %in% names(cbc)) {
+          # TODO check if sum is correct
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - cbc$recharge[,,,step]/delc[,,,1]/delr[,,,1]
+        }
+        if('drains' %in% names(cbc)) {
+          drains <- rmf_as_array(subset(cbc$drains, nstp == step), dis = dis, select = 'value', sparse = FALSE)
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - drains[,,,step]/delc[,,,1]/delr[,,,1]
+        }
+        if('river_leakage' %in% names(cbc)) {
+          river <- rmf_as_array(subset(cbc$river_leakage, nstp == step), dis = dis, select = 'value', sparse = FALSE)
+          darcy$upper[,,,step] <- darcy$upper[,,,step] - river[,,,step]/delc[,,,1]/delr[,,,1]
+        }
       }
     }
   }
-  
+
   if(is.null(porosity)) {
     porosity <- 1
   } else {
@@ -1496,7 +1534,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
     if(!is.null(l)) {
       hed <- hed[,,,l]
     } else {
-      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
+      if(dim(hed)[4] > 1) warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
       hed <- hed[,,,dim(hed)[4]]
     }
   }
@@ -1506,7 +1544,7 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
   nnlay <- dis$nlay + sum(dis$laycbd != 0)
   cbd <- rmfi_confining_beds(dis)
   if(nnlay > 1) {
-    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.')
+    if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated dis.', call. = FALSE)
     thck <- botm <- rmf_calculate_thickness(dis)
     dis$botm <- dis$botm[,,!cbd]
     dis$botm[,,1:(dis$nlay-1)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])] <- hed[,,2:(dis$nlay)][which(hed[,,2:(dis$nlay)] < dis$botm[,,1:(dis$nlay-1)])]
@@ -2872,6 +2910,379 @@ rmf_gradient.rmf_3d_array <- function(obj, dis, na_values = NULL, mask = obj*0 +
 rmf_gradient.rmf_4d_array <- function(obj, dis, l, ...) {
   if(missing(l)) stop('Please specify a l argument')
   rmf_gradient(obj[,,,l], dis = dis, ...)
+}
+
+
+#' Interpolation of points on a rmf_2d/3d/4d_array
+#'
+#' @param array numeric rmf_2d/3d/4d_array
+#' @param dis \code{RMODFLOW} dis object
+#' @param xout x coordinates of points to interpolate to
+#' @param yout y coordinates of points to interpolate to
+#' @param zout z coordinates of points to interpolate to when the array is 3d or 4d.
+#' @param tout time instances to interpolate to when the array is 4d. Either as a fractional time step or as total simulated time, depending on the \code{time} argument.
+#' @param obj sf or sfc point or multipoint object to obtain the point locations from. Overrides \code{xout}, \code{yout} and \code{zout}. Needs to be of XYZ dimension when array is 3d or 4d.
+#' @param method interpolation method. Possible methods are 'nearest' for nearest-neighbor or 'linear' (default) for bi/trilinear interpolation.
+#' @param outside 'nearest' or 'drop'. Defines how interpolated points outside the convex hull described by the cell nodes should be handled for method = 'linear'. 'nearest' (default) sets the values equal to the nearest nodal value, 'drop' sets them to NA.
+#' @param prj \code{RMODFLOW} prj object
+#' @param mask a 2d array when \code{array} is 2d or a 3d array when \code{array} is 3d or 4d that can be coerced to logical. Used to set inactive cells to NA. Defaults to all cells active.
+#' 
+#' @details Users must make sure that the projection of \code{xout}, \code{yout}, \code{zout} or \code{obj} are the same as the one described by the \code{prj} argument.
+#'  Function assumes the 2d array is not a cross-section. Consider using a 3d array if the vertical dimension is of any concern.
+#'  Extrapolation is not supported: values outside the grid are set to NA. Values inside the grid but outside the convex hull described by the cell nodes depend on the 'outside' argument when method = 'linear'.
+#'
+#' @return a vector with the interpolated values for each point.
+#' @export
+#' @rdname rmf_interpolate
+rmf_interpolate <- function(...) {
+  UseMethod('rmf_interpolate')
+}
+
+#'
+#' @export
+#' @method rmf_interpolate rmf_2d_array
+#' @rdname rmf_interpolate
+#' @examples
+#' dis <- rmf_create_dis()
+#' n <- 50
+#' xout <- runif(n, min = -10, max = 1010)
+#' yout <- runif(n, min = -10, max = 1010)
+#' zout <- runif(n, min = -31, max = 1)
+#'
+#' # 2d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' 
+#' rmf_interpolate(array, dis, xout, yout)
+#' rmf_interpolate(array, dis, xout, yout, outside = 'drop')
+#' rmf_interpolate(array, dis, xout, yout, method = 'nearest')
+#'
+rmf_interpolate.rmf_2d_array <- function(array, dis, xout, yout, obj = NULL, method = 'linear', outside = 'nearest', prj = rmf_get_prj(dis), mask = array*0 + 1) {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      coords <- sf::st_coordinates(obj)
+      xout <- coords[,1]
+      yout <- coords[,2]
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # set mask values to NA
+  array[which(mask == 0)] <- NA
+  
+  # get coordinates on grid (without projection) 
+  out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
+  
+  # drop out of bounds points; return all NA's when all points are out of bounds
+  oob <- is.na(out_coords$roff) | is.na(out_coords$coff)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  if(method == 'nearest') {
+    id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    vl <- array[id]
+    
+  } else if(method == 'linear') {
+    
+    # nodal coordinates of non-projected grid
+    cell_coords <- rmf_cell_coordinates(dis, prj = NULL)
+    
+    # find 3 neighbouring cells
+    out_coords$i2 <- ifelse(out_coords$roff > 0, out_coords$i + 1, out_coords$i - 1)
+    out_coords$j2 <- ifelse(out_coords$coff > 0, out_coords$j + 1, out_coords$j - 1)
+    
+    out_coords$id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    out_coords$id1 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j, k = 1, dis = dis, type = 'r')
+    out_coords$id2 <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j2, k = 1, dis = dis, type = 'r')
+    out_coords$id3 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = 1, dis = dis, type = 'r')
+    
+    # function to interpolate for a given point
+    interpol <- function(df) {
+      xout <- df$x
+      yout <- df$y
+      ids <- sort(c(df$id, df$id1, df$id2, df$id3))
+      ids <- ids[c(2,4,1,3)] # bottom-left, bottom-right, top-left, top-right using R's column-major ordering
+      
+      # TODO out-of-bounds
+      if(0==1) {
+        
+      } else if(any(ids < 1) || any(ids > prod(dim(array)))) {
+        
+        # edge case
+        if(outside == 'nearest') {
+          vl <- array[df$id]
+        } else if(outside == 'drop') {
+          vl <- NA
+        } else {
+          stop('outside should be either nearest or drop', call. = FALSE)
+        }
+        
+      } else {
+        # interpolate
+        x <- cell_coords$x[ids]
+        y <- cell_coords$y[ids]
+        f <- array[ids]
+        vl <- rmfi_bilinear_intp(x = x, y = y, f = f, xout = xout, yout = yout)
+      }
+      return(vl)
+    }
+    
+    # apply to all points
+    vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+    
+  } else {
+    stop('Only nearest-neighbour and linear interpolation supported at the moment.', call. = FALSE)
+  }
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+}
+
+#'
+#' @export
+#' @method rmf_interpolate rmf_3d_array
+#' @rdname rmf_interpolate
+#' @examples
+#' # 3d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay), dim = c(dis$nrow, dis$ncol, dis$nlay))
+#' 
+#' rmf_interpolate(array, dis, xout, yout, zout, outside = 'drop')
+#' 
+#' pts <- sf::st_sfc(list(sf::st_point(c(150, 312, -12.5)), sf::st_point(c(500, 500, -22)), sf::st_point(c(850, 566, -16.3))))
+#' rmf_interpolate(array, dis, obj = pts)
+#' 
+rmf_interpolate.rmf_3d_array <- function(array, dis, xout, yout, zout, obj = NULL, method = 'linear', outside = 'nearest', prj = rmf_get_prj(dis), mask = array*0 + 1) {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      if(class(sf::st_geometry(obj)[[1]])[1] == "XYZ") {
+        coords <- sf::st_coordinates(obj)
+        xout <- coords[,1]
+        yout <- coords[,2]
+        zout <- coords[,3]
+      } else {
+        stop('POINT geometries must have dimension XYZ for 3D interpolation', call. = FALSE)
+      }
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # set mask values to NA
+  array[which(mask == 0)] <- NA
+  
+  # get coordinates on grid (without projection) 
+  out_coords <- suppressWarnings(rmf_convert_xyz_to_grid(x = xout, y = yout, z = zout, dis = dis, prj = prj, output = c('xyz', 'ijk', 'off')))
+  
+  # drop out of bounds points; return all NA's when all points are out of bounds
+  oob <- is.na(out_coords$roff) | is.na(out_coords$coff) | is.na(out_coords$loff)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  if(method == 'nearest') {
+    id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    vl <- array[id]
+    
+  } else if(method == 'linear') {
+    
+    # nodal coordinates of non-projected grid
+    cell_coords <- rmf_cell_coordinates(dis, prj = NULL)
+    
+    # find 6 neighbouring cells
+    out_coords$i2 <- ifelse(out_coords$roff > 0, out_coords$i + 1, out_coords$i - 1)
+    out_coords$j2 <- ifelse(out_coords$coff > 0, out_coords$j + 1, out_coords$j - 1)
+    out_coords$k2 <- ifelse(out_coords$loff > 0, out_coords$k + 1, out_coords$k - 1)
+    
+    out_coords$id <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id1 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id2 <- rmf_convert_ijk_to_id(i = out_coords$i, j = out_coords$j2, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id3 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k, dis = dis, type = 'r')
+    out_coords$id4 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id5 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id6 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    out_coords$id7 <- rmf_convert_ijk_to_id(i = out_coords$i2, j = out_coords$j2, k = out_coords$k2, dis = dis, type = 'r')
+    
+    
+    # function to interpolate for a given point
+    interpol <- function(df) {
+      xout <- df$x
+      yout <- df$y
+      zout <- df$z
+      ids <- sort(c(df$id, df$id1, df$id2, df$id3, df$id4, df$id5, df$id6, df$id7))
+      ids <- ids[c(2,4,1,3,6,8,5,7)] # upper:bottom-left, bottom-right, top-left, top-right; bottom:bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
+      
+      # TODO out-of-bounds
+      if(0==1) {
+        
+      } else if(any(ids < 1) || any(ids > prod(dim(array)))) {
+        
+        # edge case
+        if(outside == 'nearest') {
+          vl <- array[df$id]
+        } else if(outside == 'drop') {
+          vl <- NA
+        } else {
+          stop('outside should be either nearest or drop', call. = FALSE)
+        }
+        
+      } else {
+        # interpolate
+        x <- cell_coords$x[ids]
+        y <- cell_coords$y[ids]
+        z <- cell_coords$z[ids]
+        f <- array[ids]
+        vl <- rmfi_trilinear_intp(x = x, y = y, z = z, f = f, xout = xout, yout = yout, zout = zout)
+      }
+      return(vl)
+    }
+    
+    # apply to all points
+    vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+    
+  } else {
+    stop('Only nearest-neighbour and linear interpolation supported at the moment.', call. = FALSE)
+  }
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+  
+}
+
+#'
+#' @param time either 'step' (default) or 'totim'. Defines if \code{tout} is a time step fraction (i.e. index for the 4th dimension) or the absolute time. If \code{totim}, the array should have a totim attribute, e.g. as returned from \code{rmf_read_head}
+#' @details Interpolation of a point on a 4d array is performed by 3d interpolation at the nearest time steps followed by a interpolation of the obtained values using the specified \code{method}.
+#' @rdname rmf_interpolate
+#' @export
+#' @method rmf_interpolate rmf_4d_array
+#' @examples
+#' # 4d
+#' array <- rmf_create_array(1:prod(dis$nrow, dis$ncol, dis$nlay, 4), dim = c(dis$nrow, dis$ncol, dis$nlay, 4))
+#' attr(array, 'totim') <- c(100, 200, 500, 780)
+#' 
+#' tout <- runif(n, min = 0.85, max = 4.2) # tout as fractional time step
+#' rmf_interpolate(array, dis, xout, yout, zout, tout)
+#' 
+#' tout <- runif(n, min = 90, max = 800) # tout as total time
+#' rmf_interpolate(array, dis, xout, yout, zout, tout, time = 'totim')
+#'  
+rmf_interpolate.rmf_4d_array <- function(array, dis, xout, yout, zout, tout, obj = NULL, method = 'linear', outside = 'nearest', time = 'step', prj = rmf_get_prj(dis), mask = array(1, dim = dim(array)[1:3])) {
+  
+  if(!is.null(obj)) {
+    if(sf::st_geometry_type(obj, by_geometry = FALSE) %in% c('POINT', 'MULTIPOINT')) {
+      if(class(sf::st_geometry(obj)[[1]])[1] == "XYZ") {
+        coords <- sf::st_coordinates(obj)
+        xout <- coords[,1]
+        yout <- coords[,2]
+        zout <- coords[,3]
+      } else {
+        stop('POINT geometries must have dimension XYZ for 3D interpolation', call. = FALSE)
+      }
+    } else {
+      stop('Only sf POINT and MULTIPOINT geometries are supported.', call. = FALSE)
+    }
+  }
+  
+  # find time indices
+  out_coords <- data.frame(x = xout, y = yout, z = zout, t = tout)
+  
+  ids <- 1:dim(array)[4]
+  if(time == 'step') {
+    ts <- 1:dim(array)[4]
+  } else if(time == 'totim') {
+    if(is.null(attr(array, 'totim'))) stop('array should have a totim attribute when time = totim', call. = FALSE)
+    ts <- attr(array, 'totim')
+  } else {
+    stop('time should be either step or totim', call. = FALSE)
+  }
+  
+  # drop out of bounds times; return all NA's when all times are out of bounds
+  oob <- tout < min(ts) | tout > max(ts)
+  out_coords <- out_coords[!oob,]
+  if(nrow(out_coords) == 0) return(rep(NA_real_, length(oob)))
+  
+  # interpolate
+  interpol <- function(df) {
+    t1_indx <- rev(ids)[which(rev(ts) <= df$t)[1]]
+    t2_indx <- ids[which(ts > df$t)[1]]
+    
+    # edge case
+    if(df$t == max(ts)) {
+      t2_indx <- max(ids)
+      value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside, mask = mask)
+    } else {
+      t1 <- ts[t1_indx]
+      t2 <- ts[t2_indx]
+      
+      if(method == 'nearest') {
+        closest_indx <- c(t1_indx, t2_indx)[which.min(abs(c(t1, t2) - df$t))]
+        value <- rmf_interpolate(array[,,,closest_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside, mask = mask)
+        
+      } else {
+        t1_value <- rmf_interpolate(array[,,,t1_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside, mask = mask)
+        t2_value <- rmf_interpolate(array[,,,t2_indx], dis = dis, xout = df$x, yout = df$y, zout = df$z, obj = NULL, prj = prj, method = method, outside = outside, mask = mask)
+        
+        # set NA if any of both values are NA (approx won't work)
+        if(is.na(t1_value) || is.na(t2_value)) {
+          value <- NA
+        } else {
+          value <- approx(x = c(t1, t2), y = c(t1_value, t2_value), xout = df$t, method = 'linear', rule = 1)
+          value <- value$y
+        }
+      }
+    }
+    
+    return(value)
+  }
+  
+  # apply to all points
+  vl <- vapply(1:nrow(out_coords), function(i) interpol(out_coords[i,]), 12.2)
+  
+  values <- rep(NA_real_, length(oob))
+  values[!oob] <- vl
+  return(values)
+  
+}
+
+#' Calculate saturated thicknesses
+#'
+#' @param hed 3d or 4d array object containing hydraulic head values for each cell
+#' @param dis \code{RMODFLOW} dis object
+#' @param l integer used to subset the 4th dimension of \code{hed}. If not supplied, the final time step is used.
+#' @param na_values optional; specifies which \code{hed} values should be set to \code{NA}.
+#'
+#' @return a \code{rmf_3d_array} with saturated thicknesses for each cell.
+#' @export
+#'
+rmf_saturated_thickness <- function(hed, dis, l = NULL, na_values = NULL) {
+  
+  if(length(dim(hed)) == 4) {
+    if(!is.null(l)) {
+      hed <- hed[,,,l]
+    } else {
+      if(dim(hed)[4] > 1) warning('Using final time step heads to calculate saturated thicknesses.', call. = FALSE)
+      hed <- hed[,,,dim(hed)[4]]
+    }
+  }
+  if(!is.null(na_values)) hed[which(hed %in% na_values)] <- NA
+  
+  cbd <- rmfi_confining_beds(dis)
+  if(any(dis$laycbd != 0)) warning('Quasi-3D confining beds detected. Not taking them into account for the calculation of saturated thickness.', call. = FALSE)
+  botm <- dis$botm[,,!cbd]
+  thck <- rmf_calculate_thickness(dis, only_layers = TRUE)
+  
+  # set NA's in head (dry or inactive) to very low value so it's never saturated
+  hed[which(is.na(hed))] <- min(botm, na.rm = TRUE) - 1000
+  
+  sats <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  sats[,,1] <- ifelse(hed[,,1] > dis$top, thck[,,1], ifelse(hed[,,1] < botm[,,1], 0, hed[,,1] - botm[,,1]))
+  if(dis$nlay > 1) {
+    sats[,,2:dis$nlay] <- ifelse(hed[,,2:dis$nlay] > botm[,,1:(dis$nlay - 1)], thck[,,2:dis$nlay], ifelse(hed[,,2:dis$nlay] < botm[2:dis$nlay], 0, hed[,,2:dis$nlay] - botm[,,2:dis$nlay]))
+  }
+  
+  return(sats)
 }
 
 #' Calculate the internal time step sequence of a transient MODFLOW model

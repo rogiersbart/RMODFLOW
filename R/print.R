@@ -8,8 +8,8 @@ print.rmf_2d_array <- function(obj, ...) {
   if(is.null(attr(obj, 'kper'))) {
     cat('Not representing stress period data', '\n')
   } else {
-    cat('Active during', ifelse(length(attr(obj, 'kper')) > 1, 'stress periods:', 'stress period:'), 
-        attr(obj, 'kper'), '\n')
+    cat('Active during', ifelse(length(unique(attr(obj, 'kper'))) > 1, 'stress periods:', 'stress period:'), 
+        unique(attr(obj, 'kper')), '\n')
   }
   print(as.array(obj), ...)
   
@@ -26,8 +26,8 @@ print.rmf_3d_array <- function(obj, ...) {
   if(is.null(attr(obj, 'kper'))) {
     cat('Not representing stress period data', '\n')
   } else {
-    cat('Active during', ifelse(length(attr(obj, 'kper')) > 1, 'stress periods:', 'stress period:'), 
-        attr(obj, 'kper'), '\n')
+    cat('Active during', ifelse(length(unique(attr(obj, 'kper'))) > 1, 'stress periods:', 'stress period:'), 
+        unique(attr(obj, 'kper')), '\n')
   }
   print(as.array(obj), ...)
   
@@ -45,8 +45,8 @@ print.rmf_4d_array <- function(obj, ...) {
   if(is.null(attr(obj, 'kper'))) {
     cat('Not representing stress period data', '\n')
   } else {
-    cat('Active during', ifelse(length(attr(obj, 'kper')) > 1, 'stress periods:', 'stress period:'), 
-        attr(obj, 'kper'), '\n')
+    cat('Active during', ifelse(length(unique(attr(obj, 'kper'))) > 1, 'stress periods:', 'stress period:'), 
+        unique(attr(obj, 'kper')), '\n')
   }
   print(as.array(obj), ...)
   
@@ -60,8 +60,8 @@ print.rmf_list <- function(obj, ...) {
   if(is.null(attr(obj, 'kper'))) {
     cat('Not representing stress period data', '\n')
   } else {
-    cat('Active during', ifelse(length(attr(obj, 'kper')) > 1, 'stress periods:', 'stress period:'), 
-        attr(obj, 'kper'), '\n')
+    cat('Active during', ifelse(length(unique(attr(obj, 'kper'))) > 1, 'stress periods:', 'stress period:'), 
+        unique(attr(obj, 'kper')), '\n')
   }
   print(as.data.frame(obj), ...)
   
@@ -1146,7 +1146,7 @@ print.evt <- function(evt, n = 5) {
   } else if(evt$nevtop == 2) {
     nevtop <- 'cells defined by layer variable ievt'
   } 
-  cat('Evapotranspiration calculated for', nevtop, '\n')
+  cat('Evapotranspiration calculated for', evt$nevtop, '\n')
   cat('\n')
   cat(rmfi_ifelse0(evt$ievtcb == 0, 'EVT fluxes are not saved to a cell-by-cell flow budget file', c('EVT fluxes are saved to the cell-by-cell flow budget file on unit number', evt$ievtcb)), '\n')
   cat('\n')

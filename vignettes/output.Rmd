@@ -19,7 +19,7 @@ A MODFLOW simulation can create multiple output files representing different var
 These files can be written by MODFLOW in a variety of types and formats such as binary or ASCII. The internal structure of those files can also take various forms. RMODFLOW can handle all those formats, even the more obscure ones. In most cases, you'll only need to supply a `dis` object to the `rmf_read_*` function. If the file is binary, you'll need to know if it's single or double precision depending on which MODFLOW executable was used. Most of the time, this would have been single precision. 
 
 ## Heads & drawdowns
-To read simulated heads, use `rmf_read_hed()` (or its alias, `rmf_read_head()`). By default, `binary = TRUE` and `precision = 'single'`. If either of those arguments are incorrect, RMODFLOW will throw an error and suggests changing them. You can also supply a bas object to remove no-flow values.
+To read simulated heads, use `rmf_read_hed()` (or its alias, `rmf_read_head()`). By default, `binary = TRUE` and `precision = 'single'`. If either of those arguments are incorrect, RMODFLOW will throw an error and suggests changing them. You can also supply a bas object to remove no-flow values or supply a `hdry` vector with values to set to `NA`. 
 ```{r}
 dis <- rmf_example_file("water-supply-problem.dis") %>%
   rmf_read_dis()
@@ -57,9 +57,32 @@ bas <- rmf_example_file("water-supply-problem.bas") %>%
 rmf_plot(head, dis = dis, bas = bas, k = 1)
 ```
 
-By default, the last time step is plotted. As with `rmf_plot.rmf_4d_array`, you can specify the `l` argument to subset the 4th dimension directly. Alternatively for `hed`, `ddn` and `cbc` objects, you can supply a `kper` and `kstp` argument to the respective `rmf_plot` call:
+By default, the last time step is plotted. As with `rmf_plot.rmf_4d_array`, you can specify the `l` argument to subset the 4th dimension directly. Alternatively for `hed`, `ddn` and `cbc` objects, you can supply a `kper` and `kstp` argument to the respective `rmf_plot` call. For `hed` & `ddn`, you can also supply the absolute time step number using `nstp`:
 ```{r}
 rmf_plot(head, dis = dis, bas = bas, k = 1, kper = 1, kstp = 16)
+rmf_plot(head, dis = dis, bas = bas, k = 1, nstp = 12)
+```
+
+When plotting a `hed` object, a `saturated` argument can be supplied. By default, this is set to `TRUE`, which plots the saturated part of the grid when a cross-section plot is made. This can be useful if the potentiometric surface needs to be displayed. If set to `FALSE`, the cells are completely filled.
+```{r}
+m <- rmf_example_file('rocky-mountain-arsenal.nam') %>%
+  rmf_read(output = TRUE, verbose = FALSE)
+
+rmf_plot(m$head, dis = m$dis, bas = m$bas, j = 25, grid = TRUE, saturated = TRUE) # default
+rmf_plot(m$head, dis = m$dis, bas = m$bas, j = 25, grid = TRUE, saturated = FALSE)
+```
+
+It does not affect the mapview plot however:
+```{r}
+# same results
+rmf_plot(m$head, dis = m$dis, bas = m$bas, k = 1, saturated = TRUE) # default
+rmf_plot(m$head, dis = m$dis, bas = m$bas, k = 1, saturated = FALSE)
+```
+
+We can obtain a water-table surface from the `hed` object using `rmf_convert_hed_to_water_table` which returns a `rmf_2d_array`, which also takes an `l` argument to subset the time step of the `hed` object (by default takes the last time step):
+```{r}
+wt <- rmf_convert_hed_to_water_table(head, l = 10)
+str(wt)
 ```
 
 ## Cell-by-cell flow budget

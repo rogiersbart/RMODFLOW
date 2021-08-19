@@ -7,7 +7,7 @@
 rmfi_list_packages(type = "all")
 }
 \arguments{
-\item{type}{character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc'}}
+\item{type}{character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc', 'output'}}
 }
 \value{
 data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} abbreviations for the requested packages
@@ -16,7 +16,7 @@ data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} a
 List supported MODFLOW packages
 }
 \details{
-'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data
+'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data. 'output' lists all supported output types.
 }
 \note{
 this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}

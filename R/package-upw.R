@@ -55,16 +55,16 @@ rmf_create_upw <- function(dis,
   upw$noparcheck <- noparcheck
   
   # data set 2
-  upw$laytyp <- laytyp
+  upw$laytyp <- rmfi_ifelse0(length(laytyp) == 1, rep(laytyp, dis$nlay), laytyp)
   
   # data set 3
-  upw$layavg <- layavg
+  upw$layavg <- rmfi_ifelse0(length(layavg) == 1, rep(layavg, dis$nlay), layavg)
   
   # data set 4
-  upw$chani <- chani
+  upw$chani <- rmfi_ifelse0(length(chani) == 1, rep(chani, dis$nlay), chani)
   
   # data set 5
-  upw$layvka <- layvka
+  upw$layvka <- rmfi_ifelse0(length(layvka) == 1, rep(layvka, dis$nlay), layvka)
   
   # data set 6
   upw$laywet <- rep(0, dis$nlay)

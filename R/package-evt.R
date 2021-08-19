@@ -28,7 +28,7 @@ rmf_create_evt <- function(...,
   arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
   # create evt object
-  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
+  obj <- arg[c("np", "instances")]
   obj$nevtop <- nevtop
   obj$ievtcb <- ievtcb
   obj$evt <- arg$data
@@ -384,7 +384,7 @@ rmf_write_evt <-  function(evt,
     if(insurf >= 0) rmfi_write_array(evt$surf[[insurf_act]], file = file, iprn = iprn, ...)
     
     # data set 7
-    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$recharge[[names_act]], file = file, iprn = iprn, ...)
+    if(np == 0 && inevtr >= 0) rmfi_write_array(evt$evt[[names_act]], file = file, iprn = iprn, ...)
     
     # data set 8
     if(np > 0){

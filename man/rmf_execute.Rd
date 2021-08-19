@@ -14,10 +14,18 @@ rmf_execute(...)
   evaluate = NULL,
   backup = FALSE,
   ui = NULL,
-  convergence = "Normal termination"
+  convergence = "Normal termination",
+  precision = "single"
 )
 
-\method{rmf_execute}{modflow}(modflow, code = "2005", evaluate = NULL)
+\method{rmf_execute}{modflow}(
+  modflow,
+  code = "2005",
+  evaluate = NULL,
+  ui = NULL,
+  convergence = "Normal termination",
+  precision = "single"
+)
 }
 \arguments{
 \item{path}{Path to the NAM file. Typically with extension \code{.nam}.}
@@ -39,6 +47,8 @@ PVAL file be created? Defaults to \code{FALSE}.}
 
 \item{convergence}{Character. The message in the terminal output used
 to check for convergence.}
+
+\item{precision}{Character. Specifies if 'single' (default) or 'double' precision executable is used (MODFLOW-2005 only).}
 
 \item{modflow}{modflow object}
 }

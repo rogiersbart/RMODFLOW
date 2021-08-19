@@ -18,7 +18,7 @@
   prj = rmf_get_prj(dis),
   crs = NULL,
   size = 1,
-  colour = "black",
+  colour = "orange",
   crop = FALSE,
   add = FALSE,
   ...

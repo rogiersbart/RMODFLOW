@@ -63,7 +63,7 @@ rmf_plot(dis$top, dis = dis, gridlines = "pink")
 ```
 
 #### Contour
-The `contour` type will plot contour lines. You can tweak the `binwidth` argument to your liking. Additionally, the labels can be removed by setting `label = FALSE` 
+The `contour` type will plot contour lines. You can tweak the `binwidth` argument to your liking (the defaults might not always work). Additionally, the labels can be removed by setting `label = FALSE` 
 ```{r}
 rmf_plot(dis$top, dis = dis, type = "contour")
 rmf_plot(dis$top, dis = dis, type = "contour", binwidth = 2, label = FALSE)
@@ -90,15 +90,6 @@ rmf_plot(dis$top, dis = dis, colour_palette = heat.colors, nlevels = 8)
 rmf_plot(dis$top, dis = dis, colour_palette = heat.colors, nlevels = 8, type = 'vector')
 ```
 
-#### Crop
-In some cases, you'll find that large parts of the `rmf_array` are filled with `NA's`, e.g. when plotting discrete boundary conditions. By default, the limits of the plot are adjusted to only contain the non-NA values. This can be changed by setting `crop = FALSE`:
-```{r}
-r <- rmf_create_array(NA, dim = c(dis$nrow, dis$ncol))
-r[dis$nrow/2, dis$ncol/2] <- 1
-
-rmf_plot(r, dis = dis)
-rmf_plot(r, dis = dis, crop = FALSE)
-```
 
 #### Mask & bas
 You can supply a logical array as the `mask` argument to only include certain parts of the grid. If not supplied, the entire grid is plotted. If a `bas` object is supplied, the ibound array is used as a `mask` object.
@@ -107,7 +98,6 @@ mask <- rmf_create_array(0, dim = c(dis$nrow, dis$ncol))
 mask[1:dis$nrow/2, ] <- 1
 
 rmf_plot(dis$top, dis = dis, mask = mask)
-rmf_plot(dis$top, dis = dis, mask = mask, crop = FALSE)
 
 # water-supply problem
 dis_ws <- rmf_example_file("water-supply-problem.dis") %>%
@@ -201,10 +191,10 @@ ls <- data.frame(i = c(5, 5, 6),
 
 rmf_plot(ls, dis = dis, k = 1)
 rmf_plot(ls, dis = dis, k = 1, active_only = TRUE)
-rmf_plot(ls, dis = dis, k = 1, variable = 'q', active_only = TRUE, crop = FALSE, gridlines = TRUE)
+rmf_plot(ls, dis = dis, k = 1, variable = 'q', active_only = TRUE, gridlines = TRUE)
 
 # fun = mean, notice change in scale
-rmf_plot(ls, dis = dis, k = 1, variable = 'q', active_only = TRUE,  crop = FALSE, fun = mean)
+rmf_plot(ls, dis = dis, k = 1, variable = 'q', active_only = TRUE, fun = mean)
 
 ```
 
@@ -229,7 +219,7 @@ Concerning the discrete boundary conditions, the respective S3 plotting methods 
 riv_ws <- rmf_example_file("water-supply-problem.riv") %>%
    rmf_read_riv(dis = dis_ws)
 
-rmf_plot(riv_ws, dis = dis_ws, k = 1, variable = 'conductance', crop = FALSE)
+rmf_plot(riv_ws, dis = dis_ws, k = 1, variable = 'conductance')
 ```
 
 # Plotting flow packages
@@ -250,5 +240,31 @@ For the HUF package however, there is a S3 plotting method: `rmf_plot.huf()`. By
 # Plotting output
 Plotting output is shown in [the vignette on output handling](output.html).
 
+# Plotting MODFLOW models
+To quickly have a glance at an entire MODFLOW model that's been read in, `rmf_plot` also has a S3 method for the `modflow` class. This plots the IBOUND array and the discrete boundary condition packages that are active. Continuous boundary conditions like RCH and EVT are not plotted since that would overwhelm to plot. You have to select a i, j or k section to plot:
+```{r}
+m <- rmf_example_file("rocky-mountain-arsenal.nam") %>%
+  rmf_read(verbose = FALSE)
+
+rmf_plot(m, k = 1)
+
+```
+
+If you wish to omit a certain package, specify the `omit` argument which takes a character vector as input. Note that it requires MODFLOW abbreviations for the packages, like the `ftype` in the NAME file:
+```{r}
+rmf_plot(m, k = 1, omit = 'CHD', gridlines = FALSE)
+```
+
+Lastly, in some models, not all boundary conditions are present in all layers. For example, wells are often present in deeper layers. Instead of plotting all layers separately to view them, we can reproject all boundary condition cells to the current layer when the `k` index is given by setting `to_k = TRUE`. Note that the IBOUND is not reprojected.
+```{r}
+m <- rmf_example_file("example-model.nam") %>%
+  rmf_read(verbose = FALSE)
+
+# nothing in layer 2
+rmf_plot(m, k = 2)
+
+# force showing all 
+rmf_plot(m, k = 2, to_k = TRUE)
+```
 
 

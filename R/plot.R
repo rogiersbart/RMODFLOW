@@ -6,7 +6,6 @@ rmf_plot <- function(...) {
   UseMethod('rmf_plot')
 }
 
-
 #' Plot a MODFLOW volumetric budget
 #'
 #' \code{rmf_plot.bud} plots a MODFLOW volumetric budget
@@ -179,7 +178,7 @@ rmf_plot.bud <-  function(bud,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param l time step number to plot; defaults to plotting the final time step. See details.
 #' @param flux character denoting which flux to plot. See details.
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour' or 'vector'
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
@@ -316,14 +315,16 @@ rmf_plot.chd <- function(chd,
 #' @param j column number to plot
 #' @param k layer number to plot
 #' @param l time step number to plot; defaults to plotting the final time step.
+#' @param nstp integer specifying the flow time step to plot. See details. 
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
 #' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
 #'
-#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
-#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#' @details There are three ways to specify which time step to plot. 
+#'  The \code{l} argument can be specified which represents the dimension index. This can be smaller than the total number of time steps since output may not be written for all steps. 
+#'  The second option is to specify \code{nstp} which is the total time step number. Since output at every time step is not always written, a specified nstp value might not be available in the array.
+#'  The third option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
 #'  A negative \code{kstp} will plot the final time step of the stress-period.
-#'  
 #'  
 #'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 #'
@@ -337,26 +338,28 @@ rmf_plot.ddn <- function(ddn,
                          j = NULL,
                          k = NULL,
                          l = NULL,
+                         nstp = NULL,
                          kper = NULL,
                          kstp = NULL,
                          ...) {
   
   if(inherits(ddn, 'rmf_4d_array')) {
     # skip if ijk are specified and a time series should be plotted
-    if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
-      if(is.null(l) && (is.null(kper) && is.null(kstp))) {
-        if(dis$nper > 1 || dis$nstp[1] > 1) warning('Plotting final time step results.', call. = FALSE)
-        l <- dim(ddn)[4]
-      }
-      
-      if(is.null(l)) {
-        if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
+    if(is.null(l) && is.null(nstp) && (is.null(kper) && is.null(kstp))) {
+      if(dim(ddn)[4] > 1) warning('Plotting final time step results.', call. = FALSE)
+      l <- dim(ddn)[4]
+    }
+    
+    if(is.null(l)) {
+      if(!is.null(nstp)) {
+        if(!(nstp %in% attr(ddn, 'nstp'))) stop('No output written for specified nstp time step.', call. = FALSE)
+        l <- which(attr(ddn, 'nstp') == nstp)
+      } else {
+        if(any(is.null(kper), is.null(kstp))) stop('kper should be specified in conjunction with kstp', call. = FALSE)
         l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
-      }
-      
-      if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
-      
-    } 
+        if(!(l %in% attr(ddn, 'nstp'))) stop('No output written for specified kper-kstp time step.', call. = FALSE)
+      } 
+    }
     rmf_plot.rmf_4d_array(ddn, dis = dis, i=i, j=j, k=k, l=l, ...)
     
   } else if(inherits(ddn, 'rmf_3d_array')) {
@@ -497,18 +500,21 @@ rmf_plot.ghb <- function(ghb,
 #' @param i row number to plot
 #' @param j column number to plot
 #' @param k layer number to plot
-#' @param l time step number to plot; defaults to plotting the final time step.
+#' @param l time step number to plot (index for 4th dimension); defaults to plotting the final time step. See details.
+#' @param nstp integer specifying the flow time step to plot. See details. 
 #' @param kper integer specifying the stress-period. Use in conjunction with kstp. See details.
 #' @param kstp integer specifying the time step of kper. Use in conjunction with kper. See details.
-#' @param saturated logical indicating if the saturated grid should be used. Defaults to FALSE. See details.
+#' @param saturated logical indicating if the saturated grid should be used. Defaults to TRUE. See details.
 #' @param ... additional parameters passed to \code{\link{rmf_plot.rmf_4d_array}}
 #'
-#' @details There are two ways to specify which time step to plot. The \code{l} argument can be specified which represents the total time step number. 
-#'  The other option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
+#' @details There are three ways to specify which time step to plot. 
+#'  The \code{l} argument can be specified which represents the dimension index. This can be smaller than the total number of time steps since output may not be written for all steps. 
+#'  The second option is to specify \code{nstp} which is the total time step number. Since output at every time step is not always written, a specified nstp value might not be available in the array.
+#'  The third option is to specify both \code{kper} & \code{kstp} which specify the stress-period and corresponding time step in that stress-period.
 #'  A negative \code{kstp} will plot the final time step of the stress-period.
 #'  
 #'  If \code{saturated} is TRUE, the saturated grid is plotted as given by \code{\link{rmf_convert_dis_to_saturated_dis}}, which might be useful 
-#'  for cross-sections with \code{grid = TRUE}.
+#'  for cross-sections to show the true saturated surface.
 #'  
 #'  If no output is written for the specified time step, as controlled by the Output Control file in MODFLOW, an error is thrown.
 #'
@@ -522,9 +528,10 @@ rmf_plot.hed <- function(hed,
                          j = NULL,
                          k = NULL,
                          l = NULL,
+                         nstp = NULL,
                          kper = NULL,
                          kstp = NULL,
-                         saturated = FALSE,
+                         saturated = TRUE,
                          type = 'fill',
                          gridlines = FALSE,
                          add = FALSE,
@@ -533,17 +540,21 @@ rmf_plot.hed <- function(hed,
   if(inherits(hed, 'rmf_4d_array')) {
     # skip if ijk are specified and a time series should be plotted
     if(!(!is.null(i) && !is.null(j) && !is.null(k))) {
-      if(is.null(l) && (is.null(kper) && is.null(kstp))) {
+      if(is.null(l) && is.null(nstp) && (is.null(kper) && is.null(kstp))) {
         if(dim(hed)[4] > 1) warning('Plotting final time step results.', call. = FALSE)
         l <- dim(hed)[4]
       }
       
       if(is.null(l)) {
-        if(any(is.null(kper), is.null(kstp))) stop('Please specify either l or kstp & kper.', call. = FALSE)
-        l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+        if(!is.null(nstp)) {
+          if(!(nstp %in% attr(hed, 'nstp'))) stop('No output written for specified nstp time step.', call. = FALSE)
+          l <- which(attr(hed, 'nstp') == nstp)
+        } else {
+          if(any(is.null(kper), is.null(kstp))) stop('kper should be specified in conjunction with kstp', call. = FALSE)
+          l <- ifelse(kper == 1, 0, cumsum(dis$nstp)[kper-1]) + ifelse(kstp < 0, dis$nstp[kper], kstp)
+          if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified kper-kstp time step.', call. = FALSE)
+        } 
       }
-      
-      if(!(l %in% attr(hed, 'nstp'))) stop('No output written for specified time step.', call. = FALSE)
       
       if(saturated) {  
         satdis <- rmf_convert_dis_to_saturated_dis(dis = dis, hed = hed, l = l)
@@ -597,7 +608,7 @@ rmf_plot.hfb <- function(hfb,
                          prj = rmf_get_prj(dis),
                          crs = NULL,
                          size = 1,
-                         colour = 'black',
+                         colour = 'orange',
                          crop = FALSE,
                          add = FALSE,
                          ...) {
@@ -675,7 +686,8 @@ rmf_plot.hfb <- function(hfb,
     
     # plot
     if(variable == 'id') {
-      p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row), size = size, colour = colour)
+      p <-  list(ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = 'HFB'), size = size),
+                 ggplot2::scale_colour_manual('', values = c('HFB' = colour)))
     } else {
       p <-  ggplot2::geom_path(data = df, ggplot2::aes(x=x, y=y, group = row, colour = value), size = size)
     }
@@ -686,10 +698,10 @@ rmf_plot.hfb <- function(hfb,
       if(!crop) {
         corners <- data.frame(x = rep(c(0, sum(dis$delr)), 2), y = rep(c(0, sum(dis$delc)), each = 2))
         xy <- rmf_convert_grid_to_xyz(x=corners$x,y=corners$y, dis = dis, prj=prj)
-        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y)))
+        p <- ggplot2::ggplot() + p + ggplot2::lims(x = c(min(xy$x), max(xy$x)), y = c(min(xy$y), max(xy$y))) + ggplot2::coord_equal()
         return(p)
       } else {
-        return(ggplot2::ggplot() + p)
+        return(ggplot2::ggplot() + p + ggplot2::coord_equal())
       }
     }
     
@@ -905,6 +917,119 @@ rmf_plot.huf <- function(huf,
   }
 }
 
+#' Plot a 2D section through a MODFLOW model
+#'
+#' \code{rmf_plot.modflow} plots a 2D section through a MODFLOW model showing the IBOUND array and discrete boundary conditions.
+#'
+#' @param modflow \code{RMODFLOW} modflow model
+#' @param i row number to plot
+#' @param j column number to plot
+#' @param k layer number to plot
+#' @param omit character vector with MODFLOW ftypes specifying which packages to omit from the plot. Defaults to plotting all packages.
+#' @param to_k logical; if a layer section is plotted (\code{k} is given), reproject all boundary conditions (not IBOUND) to the layer? Defaults to FALSE.
+#' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines. Defaults to TRUE.
+#' @param prj projection file object
+#' @param legend character denoting the legend of the plot. Defaults to \code{''}.
+#' @param crop logical; should plot be cropped by dropping NA values; defaults to FALSE
+#' @param size numeric; size of the HFB line if present in \code{modflow}. Default to 1.
+#' @param ... parameters provided to plot.rmf_3d_array
+#'
+#' @details Only the IBOUND and the locations of the discrete boundary condition packages are plotted.
+#'          \code{to_k} only reprojects boundary condition cells, not IBOUND cells, to layer k. It is not used when \code{k} is not defined. This is useful 
+#'          to plot all boundary condition cells even if they are not present in the current layer k, e.g. wells in deeper layers.
+#'
+#' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
+#' @method rmf_plot modflow
+#' @export
+#'
+#' @examples
+#' m <- rmf_example_file('water-supply-problem.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m, k = 1)
+#' rmf_plot(m, j = 33, gridlines = FALSE)
+#' 
+#' m2 <- rmf_example_file('rocky-mountain-arsenal.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m2, k = 1, legend = 'Type')
+#' rmf_plot(m2, k = 1, legend = 'Type', omit = 'WEL')
+#' 
+#' m3 <- rmf_example_file('example-model.nam') %>% rmf_read(verbose = FALSE)
+#' rmf_plot(m3, k = 1)
+#' rmf_plot(m3, k = 2)
+#' 
+#' # reproject boundary conditions (all in layer 1) to layer 2
+#' rmf_plot(m3, k = 2, to_k = TRUE)
+rmf_plot.modflow <- function(modflow, 
+                             i = NULL,
+                             j = NULL,
+                             k = NULL,
+                             omit = NULL,
+                             to_k = FALSE,
+                             gridlines = TRUE,
+                             prj = rmf_get_prj(modflow),
+                             legend = '',
+                             crop = FALSE,
+                             size = 1,
+                             ...) {
+  
+  if(is.null(i) & is.null(j) & is.null(k)) {
+    stop('Please provide i, j or k.', call. = FALSE)
+  }
+  omit <- c(omit, c('RCH', 'EVT', 'ETS'))
+  
+  all_colrs <- setNames(c('turquoise', 'tan3', 'palevioletred', 'springgreen3', 'chartreuse',
+                          'magenta4', 'blue4', 'sienna4', 'sienna1', 'darkseagreen3',
+                          'royalblue3', 'palegreen3', 'olivedrab1', 'burlywood', 'deeppink1'),
+                        c('chd', 'fhb', 'wel', 'drn', 'drt', 'ghb', 'lak', 
+                          'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'bfh', 'rip'))
+  
+  bc <- rmfi_list_packages(type = 'boundary')
+  if(!is.null(omit)) bc <- bc[-which(bc$ftype %in% omit),]
+  bas <- modflow$bas
+  dis <- modflow$dis
+  
+  
+  types <- setNames(c('Constant head', 'Inactive', 'Active', bc$ftype), seq(-1, nrow(bc) + 1))
+  colrs <- setNames(c('lightskyblue', 'grey50', NA, all_colrs[bc$rmf]), types)
+  r <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
+  
+  # ibound
+  r[which(bas$ibound < 0)] <- -1
+  r[which(bas$ibound == 0)] <- 0
+  
+  pcks <- sort(names(modflow)[which(names(modflow) %in% bc$rmf)])
+  
+  if(length(pcks) > 0) {
+    for(ii in 1:length(pcks)) {
+      ipck <- bc$ftype[which(bc$rmf == pcks[ii])]
+      obj <- modflow[[pcks[ii]]]
+      
+      if(nrow(obj$data) > 0) {
+        
+        df <- obj$data
+        if(!is.null(k) && to_k) df$k <- k
+        ids <- rmf_convert_ijk_to_id(i = df$i, j = df$j, k = df$k, dis = dis, type = 'r')
+        r[ids] <- as.numeric(names(types[which(types == ipck)]))
+      }
+    }
+  }
+  
+  p <- rmf_plot(r, dis = dis, mask = r*0 + 1, i = i, j = j, k = k, type = 'factor', levels = types, gridlines = gridlines, prj = prj, crop = crop, ...)
+  
+  # to suppress warnings of new fill scale being added, remove old fill scale first
+  i <- which(vapply(p$scales$scales, function(i) 'fill' %in% i$aesthetics, TRUE))
+  p$scales$scales[[i]] <- NULL
+  colr_legend <- colrs[types[as.character(unique(r))]]
+  p <- p + ggplot2::scale_fill_manual(legend, values = colr_legend, na.value = NA)
+  
+  if('hfb' %in% names(modflow)) {
+    obj <- modflow$hfb
+    
+    hfb_p <- rmf_plot(obj, dis = dis, i = i, j = j, k = k, gridlines = FALSE, add = TRUE, colour = 'orange', prj = prj, crop = crop, size = size)
+    p <- p + hfb_p
+  }
+
+  return(p)
+}
+
 #' Plot a RMODFLOW rch object
 #' 
 #' @param rch an \code{RMODFLOW} rch object
@@ -1010,7 +1135,7 @@ rmf_plot.riv <- function(riv,
 #' @param alpha transparency value; defaults to 1
 #' @param plot3d logical; should a 3D plot be made
 #' @param height 2D array for specifying the 3D plot z coordinate
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param vecsize vector sizing if \code{type = 'vector'}. See \code{\link{ggquiver::geom_quiver}}. Defaults to NULL which automatically determines vector sizing.
 #' @param uvw optional named list with u and v vectors or 2d arrays specifying the vector components in the x and y direction for every node if type = 'vector'. By default, these components are computed by \code{\link{rmf_gradient}}
 #' @param legend either a logical indicating if the legend is shown or a character indicating the legend title
@@ -1032,14 +1157,14 @@ rmf_plot.rmf_2d_array <- function(array,
                                   gridlines = FALSE,
                                   add = FALSE,
                                   height_exaggeration = 100,
-                                  binwidth=pretty(diff(zlim)/20, 1)[1],
+                                  binwidth=max(pretty(diff(zlim)/20, 2)),
                                   label=TRUE,
                                   prj=rmf_get_prj(dis),
                                   crs=NULL,
                                   alpha=1,
                                   plot3d=FALSE,
                                   height=NULL,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   vecsize = NULL,
                                   uvw = NULL,
                                   legend = ifelse(type %in% c('fill', 'factor'), !add, FALSE),
@@ -1282,7 +1407,7 @@ rmf_plot.rmf_2d_array <- function(array,
 #' @param type plot type: 'fill' (default), 'factor', 'grid', 'contour', or 'vector'
 #' @param levels (named) character vector with labels for the factor legend. If not named, factor values are sorted before being labelled. If NULL, the array factor levels are used
 #' @param gridlines logical; should grid lines be plotted? alternatively, provide colour of the grid lines.
-#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE
+#' @param crop logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE
 #' @param hed hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used
 #' @param l time step number for subsetting the hed object
 #' @param binwidth binwidth for contour plot; defaults to 1/20 of zlim
@@ -1312,10 +1437,10 @@ rmf_plot.rmf_3d_array <- function(array,
                                   levels = NULL,
                                   gridlines = FALSE,
                                   add=FALSE,
-                                  crop = TRUE,
+                                  crop = FALSE,
                                   hed = NULL,
                                   l = NULL,
-                                  binwidth = pretty(diff(zlim)/20, 1)[1],
+                                  binwidth = max(pretty(diff(zlim)/20, 2)),
                                   label = TRUE,
                                   prj = rmf_get_prj(dis),
                                   crs = NULL,

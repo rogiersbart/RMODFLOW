@@ -2,24 +2,30 @@
 % Please edit documentation in R/internals.R
 \name{rmfi_write_variables}
 \alias{rmfi_write_variables}
-\title{Write modflow variables
-Internal function used in the write_* functions for writing single line datasets}
+\title{Write MODFLOW variables
+Internal function used in the rmf_write_* functions for writing single line datasets}
 \usage{
 rmfi_write_variables(
   ...,
   file,
   append = TRUE,
+  width = 10,
   format = "free",
-  integer = FALSE
+  integer = FALSE,
+  iprn = -1
 )
 }
 \arguments{
-\item{format}{either \code{'fixed'} or \code{'free'}. Fixed format assumes 10 character spaces for each value}
+\item{width}{numeric vector with the character widths for each variable. If a single value, it is repeated.}
+
+\item{format}{either \code{'fixed'} or \code{'free'}.  Fixed format assumes fixed width character spaces for each value as determined by the width argument}
 
 \item{integer}{logical; should all values be converted to integers? MODFLOW does not allow for exponents in integer values}
+
+\item{iprn}{ignored}
 }
 \description{
-Write modflow variables
-Internal function used in the write_* functions for writing single line datasets
+Write MODFLOW variables
+Internal function used in the rmf_write_* functions for writing single line datasets
 }
 \keyword{internal}

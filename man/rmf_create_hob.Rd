@@ -37,7 +37,7 @@ rmf_create_hob(
 
 \item{itt}{integer flag, either a single value or a value for every observation well as defined in \code{locations}. Identifies whether hydraulic heads (1; default) or changes in hydraulic heads (2) are used as observations. See details.}
 
-\item{unique_obsnam}{logical; should an ID number be added to obsnam for filters with observations at different times? Defaults to FALSE.}
+\item{unique_obsnam}{logical; should an ID number be added to obsnam for filters with observations at different times prefixed with an underscore? Defaults to FALSE.}
 
 \item{tomult}{time offset multiplier, to convert the time unit in \code{time_series} to the MODFLOW time unit}
 }

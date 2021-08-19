@@ -1,3 +1,63 @@
+
+#' Bilinear interpolation on a rectilinear grid
+#'
+#' @param x x coordinates of known points 
+#' @param y y coordinates of known points
+#' @param f values at known poins (length 4). Order: bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
+#' @param xout x coordinate of point to interpolate
+#' @param yout y coordinate of point to interpolate
+#'
+#' @return single bilinear interpolated value 
+#' @keywords internal
+#'
+rmfi_bilinear_intp <- function(x, y, f, xout, yout) {
+  x2 <- max(x)
+  x1 <- min(x)
+  y2 <- max(y)
+  y1 <- min(y)
+  
+  # a <- 1 / ((x2-x1)*(y2-y1))
+  # value <- a * matrix(c(x2 - xout, xout - x1), nrow = 1) %*% matrix(f, nrow = 2) %*% matrix(c(y2 - yout, yout - y1), ncol = 1)
+  
+  wx <- (xout - x1) / (x2 - x1)
+  wy <- (yout - y1) / (y2 - y1)
+  
+  value <- (1-wx)*wy*f[1] + wx*wy*f[2] + (1-wx)*(1-wy)*f[3] + wx*(1-wy)*f[4]
+  return(c(value))
+}
+
+#' Trilinear interpolation on a rectilinear grid
+#'
+#' @param x x coordinates of known points 
+#' @param y y coordinates of known points
+#' @param z z coordinates of known points
+#' @param f values at known poins (length 8). Order: upper:bottom-left, bottom-right, top-left, top-right; bottom:bottom-left, bottom-right, top-left, top-right; using R's column-major ordering
+#' @param xout x coordinate of point to interpolate
+#' @param yout y coordinate of point to interpolate
+#' @param zout z coordinate of points to interpolate
+#'
+#' @return single trilinear interpolated value 
+#' @keywords internal
+#'
+rmfi_trilinear_intp <- function(x, y, z, f, xout, yout, zout) {
+  
+  x2 <- max(x)
+  x1 <- min(x)
+  y2 <- max(y)
+  y1 <- min(y)
+  z2 <- max(z)
+  z1 <- min(z)
+  
+  wx <- (xout - x1) / (x2 - x1)
+  wy <- (yout - y1) / (y2 - y1)
+  wz <- (zout - z1) / (z2 - z1)
+  
+  value <- (1-wx)*wy*(1-wz)*f[1] + wx*wy*(1-wz)*f[2] + (1-wx)*(1-wy)*(1-wz)*f[3] + wx*(1-wy)*(1-wz)*f[4] +
+    (1-wx)*wy*wz*f[5] + wx*wy*wz*f[6] + (1-wx)*(1-wy)*wz*f[7] + wx*(1-wy)*(1-wz)*f[8]
+  
+  return(c(value))
+}
+
 #' Create sequence of confining bed indicators
 #'
 #' @param dis \code{RMODFLOW} dis object
@@ -360,6 +420,15 @@ rmfi_create_bc_list <- function(arg, dis, varnames, aux = NULL) {
 #'
 rmfi_fortran_format <- function(format) {
   
+  # take only what is within first and last parentheses
+  if(grepl('\\(', format) && grepl('\\)', format)) {
+    splt <- strsplit(format, '')[[1]]
+    fp <- grep('\\(', splt)[1]
+    lp <- grep('\\)', splt)
+    lp <- lp[length(lp)]
+    format <- paste0(splt[fp:lp], collapse = '')
+  }
+  
   # remove outer parentheses
   format <- trimws(toupper(format))
   format <- gsub('^\\(|\\)$','',format)
@@ -448,11 +517,11 @@ rmfi_ifelse0 <- function(test, yes, no) {
 
 #' List supported MODFLOW packages
 #'
-#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc'}
+#' @param type character denoting type of packages to list; possible values are \code{'all' (default), 'basic', 'flow', 'boundary', 'solver', 'oc', 'sub', 'obs', 'swr', 'cfp', 'farm', 'cbc', 'output'}
 #'
 #' @return data.frame with ftype and rmf columns denoting the MODFLOW and \code{RMODFLOW} abbreviations for the requested packages
 #' @keywords internal
-#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data
+#' @details 'cbc' returns all packages which allow a i*cbc flag to be set which is a flag and unit number for writing cell-by-cell flow data. 'output' lists all supported output types.
 #' @note this function should be updated every time a new MODFLOW package is supported in \code{RMODFLOW}
 rmfi_list_packages <- function(type = 'all') {
   
@@ -495,9 +564,14 @@ rmfi_list_packages <- function(type = 'all') {
   # cbc (uzf and swi need to be set separately)
   cbc <- c('bcf', 'lpf', 'huf', 'upw', 'uzf', 'swi', 'fhb', 'rch', 'wel', 'drn', 'drt', 'ets', 'evt', 'ghb', 'lak', 'mnw1', 'mnw2', 'res', 'riv', 'sfr', 'str', 'ibs', 'sub', 'swt', 'swr', 'rip')
   
-  # subset
-  if(type != 'all') df <- subset(df, rmf %in% get(type))
-  
+  # output
+  if(type == 'output') {
+    df <- rmfd_supported_output
+  } else if(type != 'all') {
+    # subset type
+    df <- subset(df, rmf %in% get(type))
+  }
+
   return(df)
   
 }
@@ -710,8 +784,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
         header <- rmfi_parse_variables(remaining_lines[1], n = 3, format = 'fixed')
         locat <- as.numeric(header$variables[1])
         cnst <- as.numeric(header$variables[2])
-        if(cnst == 0) cnst <-  1.0
-        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:41], collapse = '')
+        fmtin <- paste0(strsplit(rmfi_remove_comments_end_of_line(toupper(remaining_lines[1])), '')[[1]][21:40], collapse = '')
         fmtin <- trimws(as.character(fmtin))
         
         # CONSTANT
@@ -719,11 +792,13 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           array[,,k] <- cnst
           nLines <- 1
         } else {
+          if(cnst == 0) cnst <-  1.0
           if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
           fname <- nam$fname[which(nam$nunit == locat)]
           direct <- attr(nam, 'dir')
           absfile <- file.path(direct, fname)
+          ext_file <- TRUE
           
           # ASCII
           if(locat > 0) {
@@ -731,8 +806,8 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
               lengths <- rmfi_fortran_format(fmtin)
               fortranfmt <-  TRUE
             }
-            if(locat == nam$nunit[which(basename(nam$fname) == basename(file))]) { # read from current file
-              
+            if(locat == nam$nunit[which(basename(nam$fname) == basename(file))] || normalizePath(absfile) == normalizePath(file)) { # read from current file
+              ext_file <- FALSE
               remaining_lines <- remaining_lines[-1] 
               if(fortranfmt) {
                 remaining_lines[1] <- paste(substring(remaining_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
@@ -798,11 +873,16 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
             
             close(con)
           }
-          if(is.null(attr(nam, as.character(locat)))) {
-            attr(nam, as.character(locat)) <- nLines
-          } else {
-            attr(nam, as.character(locat)) <- attr(nam, as.character(locat)) + nLines
+          
+          if(ext_file) {
+            if(is.null(attr(nam, as.character(locat)))) {
+              attr(nam, as.character(locat)) <- nLines
+            } else {
+              attr(nam, as.character(locat)) <- attr(nam, as.character(locat)) + nLines
+            }
+            nLines <- 1
           }
+
         }
         remaining_lines <- remaining_lines[-c(1:nLines)]
       }   
@@ -922,7 +1002,7 @@ rmfi_parse_array_parameters <- function(lines, dis, np, mlt = NULL, zon = NULL) 
           
           # zero or character entry terminates IZ
           iz_vector <- suppressWarnings(as.numeric(data_set_4b$variables[3:length(data_set_4b$variables)]))
-          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1], which(iz_vector == 0)[1], na.rm = TRUE)]
+          iz[[k]] <- iz_vector[1:min(length(iz_vector), which(is.na(iz_vector))[1] - 1, which(iz_vector == 0)[1], na.rm = TRUE)]
         }
         lines <- data_set_4b$remaining_lines
         rm(data_set_4b)
@@ -1000,20 +1080,20 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       if(naux > 0) {
         widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
-        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
         
         # handle AUX variables which may be free format
         df[[ncol(df)]] <- gsub(',', ' ', df[[ncol(df)]])
         cols2 <- do.call(readr::cols_only, as.list(rep('d', naux)))
-        lc <- as.data.frame(readr::read_table2(df[[ncol(df)]], col_names = FALSE, col_types = cols2))
+        lc <- as.data.frame(readr::read_table(I(df[[ncol(df)]]), col_names = FALSE, col_types = cols2))
         df <- cbind(df[-ncol(df)], lc)
         
       } else {
         widths <- readr::fwf_widths(c(rep(10, n)))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
-        df <- as.data.frame(readr::read_fwf(lines, widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
       }
@@ -1023,7 +1103,8 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
       # TODO unsuppress warnings;
       # reading in subset of columns without knowing all names not possible without warnings in readr
-      df <- as.data.frame(suppressWarnings(readr::read_table2(lines, col_names = FALSE, col_types = cols)))
+      # NOTE: this was for readr < 2.0.0; check again
+      df <- as.data.frame(suppressWarnings(readr::read_table(I(lines), col_names = FALSE, col_types = cols)))
     }
     return(df[1:nlst,])
   }
@@ -1470,7 +1551,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
     
     if(!is.null(dim(array)) && length(dim(array)) > 2) {
       for(i in 1:dim(array)[3]) {
-        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
+        cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=ifelse(i == 1, append, TRUE))
       }
     } else {
       cat(paste('EXTERNAL',nunit, cnstnt, ifelse(binary,"(binary)","(free)"), iprn, '\n', sep=' '), file=file, append=append)
@@ -1509,7 +1590,7 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
         cat(paste('CONSTANT ',cnstnt * c(array)[1], '\n', sep=''), file=file, append=append)
       } else {
         cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
-        cat(paste(paste(array, collapse=' '), '\n', sep=' '), file=file, append=append)     
+        cat(paste(paste(array, collapse=' '), '\n', sep=' '), file=file, append=TRUE)     
       }
     } else if(length(dim(array))==2) {
       if(prod(c(array)[1] == c(array))==1) {
@@ -1517,22 +1598,22 @@ rmfi_write_array <- function(array, file, cnstnt=1, iprn=-1, append=TRUE, extern
       } else {
         cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
         if(dim(array)[1] == 1) {
-          cat(paste0(paste(array, collapse=' '),'\n'), file=file, append=append)
+          cat(paste0(paste(array, collapse=' '),'\n'), file=file, append=TRUE)
         } else {
-          write.table(array, file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE) 
+          write.table(array, file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE) 
         }
       }
     } else {
       for(i in 1:dim(array)[3])
       {
         if(prod(c(array[,,i])[1] == c(array[,,i]))==1) {
-          cat(paste('CONSTANT ',cnstnt * c(array[,,i])[1], '\n', sep=''), file=file, append=append)
+          cat(paste('CONSTANT ',cnstnt * c(array[,,i])[1], '\n', sep=''), file=file, append=ifelse(i == 1, append, TRUE))
         } else {
-          cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=append)
+          cat(paste('INTERNAL ',cnstnt,' (free) ', iprn, '\n', sep=''), file=file, append=ifelse(i == 1, append, TRUE))
           if(dim(array)[1] == 1) {
-            cat(paste0(paste(array[,,i], collapse=' '),'\n'), file=file, append=append)
+            cat(paste0(paste(array[,,i], collapse=' '),'\n'), file=file, append=TRUE)
           } else {
-            write.table(array[,,i], file=file, append=append, sep=' ', col.names=FALSE, row.names=FALSE)       
+            write.table(array[,,i], file=file, append=TRUE, sep=' ', col.names=FALSE, row.names=FALSE)       
           }
         }
       }
@@ -1630,7 +1711,7 @@ rmfi_write_bc_list <- function(file, obj, dis, varnames, header, package, partyp
   rmfi_write_variables(ds2, ifelse(obj$option['noprint'], 'NOPRINT', ''), rmfi_ifelse0((!is.null(obj$aux)), paste('AUX', obj$aux), ''), file=file)
   
   # parameters
-  if(obj$np > 0){
+  if(obj$np > 0) {
     parm_names <- names(obj$parameter_values)
     tv_parm <- structure(rep(FALSE,obj$np), names = parm_names)
     
@@ -1734,31 +1815,40 @@ rmfi_write_list <- function(df, file, varnames, aux = NULL, format = 'free', app
   if(format == 'fixed') {
     fmt <- paste0(c(rep('%10i', 3), rep('%10g', n), rep('%10g', naux)), collapse = '')
     dff <- do.call('sprintf', c(df, fmt))
-    readr::write_lines(dff, path = file, append = append)
+    readr::write_lines(dff, file = file, append = append)
   } else {
-    readr::write_delim(df, path = file, delim = ' ', col_names = FALSE, append = append)
+    readr::write_delim(df, file = file, delim = ' ', col_names = FALSE, append = append)
   }
   
 }
 
-#' Write modflow variables
-#' Internal function used in the write_* functions for writing single line datasets
-#' @param format either \code{'fixed'} or \code{'free'}. Fixed format assumes 10 character spaces for each value
+#' Write MODFLOW variables
+#' Internal function used in the rmf_write_* functions for writing single line datasets
+#' @param format either \code{'fixed'} or \code{'free'}.  Fixed format assumes fixed width character spaces for each value as determined by the width argument
+#' @param width numeric vector with the character widths for each variable. If a single value, it is repeated.
 #' @param integer logical; should all values be converted to integers? MODFLOW does not allow for exponents in integer values
+#' @param iprn ignored
 #' @keywords internal
-rmfi_write_variables <- function(..., file, append=TRUE, format = 'free', integer = FALSE) {
+rmfi_write_variables <- function(..., file, append=TRUE, width = 10, format = 'free', integer = FALSE, iprn = -1) {
   arg <- list(...)
   arg <- arg[vapply(arg, function(i) all(nchar(i) > 0), TRUE)] # removes empty elements
   if(integer) arg <- lapply(arg, as.integer)
   
   # sets integers in proper format since Type is converted to double when vectorized
   if(format == 'free') {
-    arg <- lapply(arg, formatC)
+    if(integer) {
+      arg <- lapply(arg, formatC)
+    } else {
+      arg <- lapply(arg, as.character)
+    }
     arg <- unlist(arg)
     cat(paste0(paste(arg, sep = ' ', collapse = ' '), '\n'), file=file, append=append)
-  } else if(format == 'fixed') { # optional items are always free format so no need to adjust code for characters
-    arg <- lapply(arg, formatC, width = 10)
+  } else if(format == 'fixed') { 
+    arg <- unlist(lapply(arg, as.list), recursive = FALSE)
+    if(length(width) == 1) width <- rep(width, length(arg)) 
+    arg <- lapply(1:length(arg), function(i) rmfi_ifelse0(nchar(arg[[i]]) > width[i], formatC(arg[[i]], width = width[i]), paste0(paste0(rep(' ', width[i]-nchar(arg[[i]])), collapse = ''), as.character(arg[[i]]), collapse = '')))
+    arg <- lapply(1:length(arg), function(i) paste0(strsplit(arg[[i]], '')[[1]][1:width[i]], collapse = ''))
     arg <- unlist(arg)
-    cat(paste0(paste0(arg, collapse = ''), '\n'), file=file, append=append)
+    cat(paste0(paste0(arg, collapse=''), '\n'), file=file, append=append)
   }
 }

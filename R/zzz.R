@@ -1,7 +1,7 @@
 .onLoad <- function(libname, pkgname) {
   opts <- options()
   opts.RMODFLOW <- list(
-    RMODFLOW.path = paste0(system.file(package = "RMODFLOW"), "/code"),
+    RMODFLOW.path = file.path(system.file(package = "RMODFLOW"), "code"),
     RMODFLOW.ui = "verbose",
     RMODFLOW.theme = "RMODFLOW"
   )

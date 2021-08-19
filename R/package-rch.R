@@ -24,7 +24,7 @@ rmf_create_rch <- function(...,
   arg <- rmfi_create_bc_array(arg = list(...), dis = dis)
   
   # create rch object
-  obj <- arg[c("np", "mxl", "instances", "mxact", "itmp")]
+  obj <- arg[c("np", "instances")]
   obj$nrchop <- nrchop
   obj$irchcb <- irchcb
   obj$recharge <- arg$data

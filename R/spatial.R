@@ -1042,10 +1042,10 @@ rmf_set_prj.character <- function(file, dis, prj = rmf_get_prj(dis)) {
       comment_lines$comments <- comment_lines$comments[-c(st:end)]
     }
     v <- packageDescription("RMODFLOW")$Version
-    readr::write_lines(paste('# MODFLOW Discretization File created by RMODFLOW, version', v), path=file, append = FALSE)
-    readr::write_lines(paste0("#", comment_lines$comments), path = file, append = TRUE)
+    readr::write_lines(paste('# MODFLOW Discretization File created by RMODFLOW, version', v), file = file, append = FALSE)
+    readr::write_lines(paste0("#", comment_lines$comments), file = file, append = TRUE)
     rmfi_write_prj(dis, prj = prj, file = file)
-    readr::write_lines(comment_lines$remaining_lines, path = file, append = TRUE)
+    readr::write_lines(comment_lines$remaining_lines, file = file, append = TRUE)
   } else {
     warning('prj is NULL. No projection information is written.', call. = FALSE)
   }

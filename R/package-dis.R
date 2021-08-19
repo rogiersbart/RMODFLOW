@@ -51,7 +51,7 @@ rmf_create_dis <- function(nlay = 3,
     dis$lenuni <- lenuni
   
   # data set 2
-    dis$laycbd <- laycbd
+    dis$laycbd <- rmfi_ifelse0(length(laycbd) == 1, rep(laycbd, dis$nlay), laycbd)
     if(dis$laycbd[dis$nlay] != 0) {
       warning("Setting laycbd for the bottom layer to zero.", call. = FALSE)
       dis$laycbd[dis$nlay] <- 0

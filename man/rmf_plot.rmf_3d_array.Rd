@@ -25,10 +25,10 @@
   levels = NULL,
   gridlines = FALSE,
   add = FALSE,
-  crop = TRUE,
+  crop = FALSE,
   hed = NULL,
   l = NULL,
-  binwidth = pretty(diff(zlim)/20, 1)[1],
+  binwidth = max(pretty(diff(zlim)/20, 2)),
   label = TRUE,
   prj = rmf_get_prj(dis),
   crs = NULL,
@@ -65,7 +65,7 @@
 
 \item{gridlines}{logical; should grid lines be plotted? alternatively, provide colour of the grid lines.}
 
-\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to TRUE}
+\item{crop}{logical; should plot be cropped by dropping NA values (as set by mask); defaults to FALSE}
 
 \item{hed}{hed object for only plotting the saturated part of the grid; possibly subsetted with time step number; by default, last time step is used}
 
