@@ -118,7 +118,7 @@ rmf_as_tibble(...)
 
 \item{k}{optional layer number to subset}
 
-\item{l}{optional time step number to subet}
+\item{l}{optional time step number to subet. Set negative to subset the final time step.}
 
 \item{mask}{a 3d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active}
 
@@ -149,24 +149,24 @@ rmf_as_tibble(...)
 
 \code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
-If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 
 \code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
 x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
-If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 
 \code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
-x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 
 \code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
-x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 
 Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}.
 If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
 Providing \code{i or j} can be used for subsetting a cross-section through the array.
 
 \code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value,
-x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 
 Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}.
 If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
@@ -176,7 +176,7 @@ If \code{i, j and k} are provided, a \code{tibble} of a single cell time series 
 If \code{l} is not provided but \code{i, j or k} is, a \code{tibble} with a time series of the subsetted array according to \code{i, j or k} is returned.
 
 \code{rmf_as_tibble.rmf_list} returns a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
-x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
 }
 \description{

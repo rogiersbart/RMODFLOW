@@ -51,7 +51,7 @@ object of class lpf
 Convert a upw to a lpf object
 }
 \note{
-upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the omission of optional keywords. Layer wetting capabilities are also not supported by upw.
 }
 \seealso{
 \code{\link{rmf_create_lpf}}, \code{\link{rmf_convert_lpf_to_upw}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}

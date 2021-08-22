@@ -1033,7 +1033,7 @@ rmf_set_prj.character <- function(file, dis, prj = rmf_get_prj(dis)) {
   
   # TODO only write if prj is present: keep?
   if(!is.null(prj)) {
-    lines <- readr::read_lines(file)
+    lines <- readr::read_lines(file, lazy = FALSE)
     comment_lines <- rmfi_parse_comments(lines)
     st <- grep('Start RMODFLOW projection information', comment_lines$comments)
     if(length(st) > 0) {
@@ -1071,7 +1071,7 @@ rmf_set_prj.modflow <- function(modflow, prj) {
 }
 
 #'
-#' @return \code{rmf_transform_prj} returns an \code{RMODFLOW} prj object with transformed crs
+#' @return \code{rmf_transform_prj} returns the \code{RMODFLOW} object with a transformed crs in the \code{prj} object
 #' @details \code{rmf_transform_prj} transforms the origin coordinates to the new crs. If no \code{prj} was set, an error is raised.
 #' @export
 #' @rdname prj_auxiliary
@@ -1112,7 +1112,8 @@ rmf_transform_prj.dis <- function(dis, crs) {
   if(!rmf_has_prj(dis)) stop('dis object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(dis)
   prj <- rmf_transform_prj(prj, crs)
-  return(prj)
+  dis$prj <- prj
+  return(dis)
 }
 
 #' @export
@@ -1122,7 +1123,8 @@ rmf_transform_prj.modflow <- function(modflow, crs) {
   if(!rmf_has_prj(modflow)) stop('modflow object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(modflow)
   prj <- rmf_transform_prj(prj, crs)
-  return(prj)
+  modflow$dis$prj <- prj
+  return(modflow)
 }
 
 # For RMT3DMS objects
@@ -1181,7 +1183,8 @@ rmf_transform_prj.btn <- function(btn, crs) {
   if(!rmf_has_prj(btn)) stop('btn object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(btn)
   prj <- rmf_transform_prj(prj, crs)
-  return(prj)
+  btn$prj <- prj
+  return(btn)
 }
 
 #' @export
@@ -1190,7 +1193,8 @@ rmf_transform_prj.mt3dms <- function(mt3dms, crs) {
   if(!rmf_has_prj(mt3dms)) stop('mt3dms object has no prj object to transform', call. = FALSE)
   prj <- rmf_get_prj(mt3dms)
   prj <- rmf_transform_prj(prj, crs)
-  return(prj)
+  mt3dms$btn$prj <- prj
+  return(mt3dms)
 }
 
 #' Read RMODFLOW projection information from a USGS model reference file

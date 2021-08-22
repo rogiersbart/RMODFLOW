@@ -13,6 +13,7 @@ rmf_execute(...)
   code = "2005",
   evaluate = NULL,
   backup = FALSE,
+  preprocess = NULL,
   ui = NULL,
   convergence = "Normal termination",
   precision = "single"
@@ -42,6 +43,10 @@ PVAL file.}
 \item{backup}{Logical. Should a backup (with \code{.old} suffix) of the original
 PVAL file be created? Defaults to \code{FALSE}.}
 
+\item{preprocess}{Function to do preprocessing, which takes the model pval
+object as input, and returns another pval object. See details for how to
+use this. Defaults to NULL.}
+
 \item{ui}{If NULL (default), MODFLOW output is shown in the R console. If
 \code{"none"}, the output is suppressed.}
 
@@ -60,6 +65,22 @@ memory model).
 }
 \description{
 These functions execute MODFLOW models.
+}
+\details{
+The \code{preprocess} argument can be used for different purposes:
+\itemize{
+\item Implementing derived parameters: One can make some of the pval parameters
+depend on others. The \code{preprocess} function should in this case just
+modify the pval object, and return it. Note that this means that the values
+of derived parameters specified in \code{evaluate} might be changed in this
+case.
+\item Implementing any kind of parameter that is not directly supported by
+MODFLOW. This means the \code{preprocess} function should have some side
+effects, modifying some of the MODFLOW files. For this purpose, it is
+convenient to add extra parameters at the end of the pval file, while
+keeping the number of parameters (np) constant, and equal to the number
+of MODFLOW-supported parameters.
+}
 }
 \seealso{
 \code{\link[=rmf_install]{rmf_install()}} for external code installation,\cr

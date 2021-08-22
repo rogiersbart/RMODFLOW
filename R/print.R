@@ -1339,7 +1339,7 @@ print.upw <- function(upw, n = 5) {
                                         ifelse(upw$iupwcb > 0, paste('written to file number', upw$iupwcb), 
                                                '(only flow between constant-head cells) printed to the listing file')), '\n')
   cat('Dry cells are assigned a head value of', upw$hdry, '\n')
-  if(upw$ihdry > 0) cat('When heads are less than 1e-4 above the bottom of a cell, they will be set to', upw$hdry, '\n')
+  if(upw$iphdry > 0) cat('When heads are less than 1e-4 above the bottom of a cell, they will be set to', upw$hdry, '\n')
   cat('\n')
   
   # options

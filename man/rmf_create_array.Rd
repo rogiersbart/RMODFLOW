@@ -29,8 +29,47 @@ either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} objec
 Add rmf array class to object based on object dimensions
 }
 \details{
-subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}.
-When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
-Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
-\code{dimnames} are dropped.
+subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more dimensions). Atomic vectors are therefore never \code{rmf_arrays}.
+When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned unless \code{drop = TRUE}.
+Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}.
+}
+\examples{
+
+# 2D
+r <- rmf_create_array(1:100, dim = c(10, 10))
+r[,1]
+
+# returns rmf_2d_array
+r[,2:6]
+r[,1, drop = FALSE]
+
+# 3D
+r <- rmf_create_array(1:300, dim = c(10, 10, 3), kper = 1:2)
+r[,6,2] # 1D - vector 
+
+# returns 2D array
+r[,,1]
+r[,1,]
+
+# returns 3D array
+r[,,1, drop = FALSE]
+r[,,1:2]
+
+# 4D
+r <- rmf_create_array(1:600, dim = c(10, 10, 3, 2))
+
+# returns 4D
+r[,,1,] # l not specified
+r[,,,1, drop = FALSE]
+
+# returns 3D
+r[,,,1]
+
+# returns 2D
+r[,,1,1]
+
+# dimensions of length 1 are not automatically dropped
+r <- rmf_create_array(1:100, dim = c(1, 10, 3))
+r[,,1] # 1st dimension not dropped
+r[,,1, drop = TRUE] # 1st dimension dropped
 }

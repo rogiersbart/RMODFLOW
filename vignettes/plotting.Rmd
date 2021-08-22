@@ -255,7 +255,7 @@ If you wish to omit a certain package, specify the `omit` argument which takes a
 rmf_plot(m, k = 1, omit = 'CHD', gridlines = FALSE)
 ```
 
-Lastly, in some models, not all boundary conditions are present in all layers. For example, wells are often present in deeper layers. Instead of plotting all layers separately to view them, we can reproject all boundary condition cells to the current layer when the `k` index is given by setting `to_k = TRUE`. Note that the IBOUND is not reprojected.
+In some models, not all boundary conditions are present in all layers. For example, wells are often present in deeper layers. Instead of plotting all layers separately to view them, we can reproject all boundary condition cells to the current layer when the `k` index is given by setting `to_k = TRUE`. Note that the IBOUND is not reprojected.
 ```{r}
 m <- rmf_example_file("example-model.nam") %>%
   rmf_read(verbose = FALSE)
@@ -267,4 +267,18 @@ rmf_plot(m, k = 2)
 rmf_plot(m, k = 2, to_k = TRUE)
 ```
 
+# Underlying code
+When you call `rmf_plot` on a RMODFLOW object, it is converted to a `tibble` data frame and subsequently plotted using ggplot2. You can do this yourself for maximum flexibility:
+```{r}
+library(ggplot2)
+
+# rmf_plot(m$dis$top, dis = m$dis) is basically:
+
+rmf_as_tibble(m$dis$top, dis = m$dis) %>%
+  ggplot() +
+  geom_polygon(aes(x = x, y = y, group = id, fill = value)) +
+  coord_equal() +
+  scale_fill_gradientn(colours = rev(rainbow(7)))
+
+```
 

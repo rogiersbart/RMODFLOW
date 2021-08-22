@@ -157,7 +157,7 @@ rmf_as_tibble <- function(...) {
 #' @param i optional row number to subset
 #' @param j optional column number to subset
 #' @param k optional layer number to subset
-#' @param l optional time step number to subset
+#' @param l optional time step number to subset. Set negative to subset the final time step.
 #' @param mask optional 3D array with 0 or F indicating inactive cells; defaults to having all cells active
 #' @param ijk optional; a data.frame with i, j and k columns used to select the cells for \code{rmf_list} objects in \code{cbc}
 #' @param prj optional projection file object
@@ -248,13 +248,13 @@ rmf_as_tibble.cbc <- function(cbc,
 #' @param i optional row number to subset
 #' @param j optional column number to subset
 #' @param k optional layer number to subset
-#' @param l optional time step number to subset
+#' @param l optional time step number to subset. Set negative to subset the final time step.
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @return \code{rmf_as_tibble.ddn} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
-#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'  If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #'
 #' @export
 #' @rdname rmf_as_tibble
@@ -288,13 +288,13 @@ rmf_as_tibble.ddn <- function(ddn,
 #' @param i optional row number to subset
 #' @param j optional column number to subset
 #' @param k optional layer number to subset
-#' @param l optional time step number to subset
+#' @param l optional time step number to subset. Set negative to subset the final time step.
 #' @param as_points logical, should cell-centered nodal values be returned or 4 values per cell representing the corners. Defaults to FALSE. 
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @return \code{rmf_as_tibble.hed} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
 #' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. Possible additional columns might include \code{totim, pertim, kper & kstp}.
-#'  If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#'  If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #'
 #' @export
 #' @rdname rmf_as_tibble
@@ -333,7 +333,7 @@ rmf_as_tibble.hed <- function(hed,
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @return \code{rmf_as_tibble.rmf_2d_array} returns a \code{tibble} with columns \code{id, value, x, y} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value and
-#' x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' x & y coordinates. If \code{as_points = FALSE}, the coordinates represent the cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #'  
 #' @export
 #' @rdname rmf_as_tibble
@@ -414,7 +414,7 @@ rmf_as_tibble.rmf_2d_array <- function(array,
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'  
 #' @return \code{rmf_as_tibble.rmf_3d_array} returns a \code{tibble} with columns \code{id, value, x, y, z, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
-#' x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' x, y, z coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #'
 #' Providing either \code{i, j & k} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
 #' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
@@ -620,7 +620,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @param i optional row number to subset
 #' @param j optional column number to subset
 #' @param k optional layer number to subset
-#' @param l optional time step number to subet
+#' @param l optional time step number to subet. Set negative to subset the final time step.
 #' @param mask a 3d array with 0 or \code{FALSE} indicating inactive cells; defaults to having all cells active
 #' @param prj optional; a projection object
 #' @param crs optional; a crs object
@@ -630,7 +630,7 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @return \code{rmf_as_tibble.rmf_4d_array} \code{tibble} with columns \code{id, value, x, y, z, top, botm, time, nstp} representing the cell id's (either MODFLOW or R style; see the \code{id} argument), array value, 
-#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' x, y, z coordinates, cell top & bottom and MODFLOW time and time step. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #' 
 #' Providing either \code{i, j, k or l} can be used to subset the array. If none are supplied, no subsetting is performed and the entire array is converted to a \code{tibble}. 
 #' If \code{as_points = FALSE} and \code{i or j} are not provided , no \code{z} column is returned since in that case it is ambiguous what \code{z} should represent (cell center, top or bottom of the layer).
@@ -687,9 +687,10 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   } else {
     # full 3d array + time columns of subsetted time step
     if(!is.null(l)) {
-      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
-      tbl$time <- time[l]
-      tbl$nstp <- l
+      l_id <- ifelse(l < 0, dim(array)[4], l)
+      tbl <- rmf_as_tibble(rmf_create_array(array[,,,l_id]), i = i, j = j, k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = id)
+      tbl$time <- time[l_id]
+      tbl$nstp <- l_id
     } else if(!is.null(i) & !is.null(j) & !is.null(k)) { # single cell (time series)
       tbl <- rmf_as_tibble(array[,,,1], k = k, dis = dis, mask = mask, prj = prj, crs = crs, as_points = as_points, id = 'r')
       cell_id <- rmf_convert_ijk_to_id(i = i, j = j, k = k, dis = dis, type = 'r')
@@ -738,7 +739,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
 #' @param ... arguments passed to \code{\link{rmf_as_tibble.rmf_4d_array}} for \code{hed & ddn}. Otherwise ignored.
 #'
 #' @return \code{rmf_as_tibble.rmf_list} returns a \code{tibble} with the columns of \code{obj} except \code{i, j, k} and columns \code{id, x, y, top, botm} representing the cell id's (either MODFLOW or R style; see the \code{id} argument),
-#' x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the cell corners, otherwise the cell center.
+#' x, y coordinates and cell top & bottom. If \code{as_points = FALSE}, the coordinates represent the 2D cell corners (bottomleft, topleft, topright, bottomright on the XY plane), otherwise the cell center.
 #' Furthermore, if \code{as_points = TRUE}, an additional \code{z} column is added representing the cell centers z coordinates.
 #' 
 #' @export
@@ -1578,6 +1579,9 @@ rmf_convert_dis_to_saturated_dis <- function(dis,
 #'   k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
 #'   set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
 #'   
+#'   The coordinate system has its origin in the lower left corner in the top layer. Row indices (i) increase from front to back (with decreasing Y values), column indices (j) increase from left to right (with increasing X values),
+#'   layer indices (k) increase from top to bottom (with decreasing Z values).
+#'   
 #' @return data frame with real world x and y (and optionally z) coordinates
 #' @seealso \code{\link{rmf_convert_xyz_to_grid}}
 #' @export
@@ -2005,6 +2009,7 @@ rmf_convert_huf_to_mask <- function(huf, dis, bas = NULL) {
   mask[which(mask==0)] <- NA
   mask <- mask/mask
   mask[which(huf$thck==0)] <- NA
+  mask[is.na(mask)] <- 0
   return(mask)
 }
 
@@ -2118,7 +2123,7 @@ rmf_convert_ijk_to_id <- function(i,
 #' @param lpf \code{RMODFLOW} lpf object
 #' @param iphdry logical; indicating if head will be set to hdry when it's less than 1E-4 above the cell bottom; defaults to TRUE
 #' @return Object of class upw
-#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the omission of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @note upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
 #' @export
 #' @seealso \code{\link{rmf_create_upw}}, \code{\link{rmf_convert_upw_to_lpf}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
@@ -2161,7 +2166,7 @@ rmf_convert_lpf_to_upw <- function(lpf, iphdry = TRUE) {
 #' @param wetdry 3d array with a wetting threshold and flag indicating which neighboring cells can cause a cell to become wet; defaults to NULL. If not read for a specific layer, set all values in that layer to NA.
 #'
 #' @return object of class lpf
-#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+#' @note upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the omission of optional keywords. Layer wetting capabilities are also not supported by upw.
 #' @export
 #' @seealso \code{\link{rmf_create_lpf}}, \code{\link{rmf_convert_lpf_to_upw}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?lpf.htm}
 rmf_convert_upw_to_lpf <- function(upw, 
@@ -2217,10 +2222,14 @@ rmf_convert_upw_to_lpf <- function(upw,
 #' @param output character; containing 'xyz','ijk' and/or 'off' for the return of x, y, z, i, j, k, roff, coff and loff modflow coordinates
 #' @details
 #' If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
-#' If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
+#' If z is not provided, no third dimension coordinates are returned. 
 #' If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned. 
 #'
 #' If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
+#'
+#' The coordinate system has its origin in the lower left corner in the top layer. Row indices (i) increase from front to back (with decreasing Y values), column indices (j) increase from left to right (with increasing X values),
+#' layer indices (k) increase from top to bottom (with decreasing Z values).
+#' 
 #' @return data frame with modflow coordinates
 #' @seealso \code{\link{rmf_convert_grid_to_xyz}}
 #' @export
@@ -2351,12 +2360,50 @@ rmf_copy_to_wd <- function(filenames, ...) {
 #' @param kper integer vector specifying the stress periods in which the array is active. Used for defining boundary conditions. Defaults to \code{NULL}
 #' @param dimlabels character vector specifying the labels of the dimensions; defaults to \code{i, j, k, l} for the first, second, third and fourth dimension, respectively.
 #' @param ... 
-#' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more free dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
-#'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned.
-#'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}
-#'          \code{dimnames} are dropped. 
+#' @details subsetting a \code{rmf_array} will return a \code{rmf_array} as long as the object has a dim argument (i.e. has 2 or more dimensions). Atomic vectors are therefore never \code{rmf_arrays}. 
+#'          When \code{l} is not specified when subsetting a \code{rmf_4d_array}, a \code{rmf_4d_array} will always be returned unless \code{drop = TRUE}.
+#'          Furthermore, unlike subsetting \code{arrays}, dimensions with length 1 will not be dropped unless the \code{drop} argument is set to \code{TRUE}.
 #' @return either a \code{rmf_2d_array}, a \code{rmf_3d_array} or \code{rmf_4d_array} object
 #' @export
+#' @examples 
+#' 
+#' # 2D
+#' r <- rmf_create_array(1:100, dim = c(10, 10))
+#' r[,1]
+#' 
+#' # returns rmf_2d_array
+#' r[,2:6]
+#' r[,1, drop = FALSE]
+#' 
+#' # 3D
+#' r <- rmf_create_array(1:300, dim = c(10, 10, 3), kper = 1:2)
+#' r[,6,2] # 1D - vector 
+#' 
+#' # returns 2D array
+#' r[,,1]
+#' r[,1,]
+#' 
+#' # returns 3D array
+#' r[,,1, drop = FALSE]
+#' r[,,1:2]
+#' 
+#' # 4D
+#' r <- rmf_create_array(1:600, dim = c(10, 10, 3, 2))
+#' 
+#' # returns 4D
+#' r[,,1,] # l not specified
+#' r[,,,1, drop = FALSE]
+#' 
+#' # returns 3D
+#' r[,,,1]
+#' 
+#' # returns 2D
+#' r[,,1,1]
+#' 
+#' # dimensions of length 1 are not automatically dropped
+#' r <- rmf_create_array(1:100, dim = c(1, 10, 3))
+#' r[,,1] # 1st dimension not dropped
+#' r[,,1, drop = TRUE] # 1st dimension dropped
 
 rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dimlabels = attr(obj, 'dimlabels')) {
   attr(obj, 'dimnames') <- NULL
@@ -2387,32 +2434,39 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   if(missing(i) && missing(j) && missing(k) && missing(l)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1, missing(l) || length(l) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
+  drop_given <- 'drop' %in% names(list(...))
   
   obj <-  NextMethod(..., drop = drop)
   
   # l missing -> always 4d unless all other indices are given
-  if(!drop && sum(miss) > 1) {
+  if(!drop && sum(miss) > 1 && !drop_given) {
     if(!miss[4]) {
       dim(obj) <- dim(obj)[miss]
-    } 
-  } 
+      rst_lbl <- TRUE
+    } else {
+      rst_lbl <- FALSE
+    }
+  } else {
+    rst_lbl <- FALSE
+  }
   
   if (length(dim(obj)) == 2) {
     class(obj) <- replace(class(x), class(x) == 'rmf_4d_array', 'rmf_2d_array')
-  }
-  else if (length(dim(obj)) == 3) {
+    rst_lbl <- TRUE
+  } else if (length(dim(obj)) == 3) {
     class(obj) <- replace(class(x), class(x) == 'rmf_4d_array', 'rmf_3d_array')
-  } 
-  else if (length(dim(obj)) == 4) {
+    rst_lbl <- TRUE
+  } else if (length(dim(obj)) == 4) {
     class(obj) <- class(x)
   } else {
     class(obj) <- subset(class(x), class(x) != 'rmf_4d_array')
+    rst_lbl <- TRUE
   }
   attrs <- attributes(obj)
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
-  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
+  if(rst_lbl) attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[rmfi_ifelse0(miss[4], rmfi_ifelse0(!drop && sum(miss) > 1, rep(TRUE, 4), miss), miss)]
   if(!missing(l)) {
     if(!is.null(attr(obj,'kstp'))) attr(obj,'kstp') <- attr(obj,'kstp')[l]
     if(!is.null(attr(obj,'kper'))) attr(obj,'kper') <- attr(obj,'kper')[l]
@@ -2431,26 +2485,32 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   if(missing(i) && missing(j) && missing(k)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1, missing(k) || length(k) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
-  
+  drop_given <- 'drop' %in% names(list(...))
+
   obj <-  NextMethod(..., drop = drop)
-  
-  if(!drop && sum(miss) > 1) {
+
+  if(!drop && sum(miss) > 1 && !drop_given) {
     dim(obj) <- dim(obj)[miss]
-  } 
+    rst_lbl <- TRUE
+  } else {
+    rst_lbl <- FALSE
+  }
   
   if (length(dim(obj)) == 2) {
     class(obj) <- replace(class(x), class(x) == 'rmf_3d_array', 'rmf_2d_array')
-  }
-  else if (length(dim(obj)) == 3) {
+    rst_lbl <- TRUE
+  } else if (length(dim(obj)) == 3) {
     class(obj) <- class(x)
   } else {
     class(obj) <- subset(class(x), class(x) != 'rmf_3d_array')
+    rst_lbl <- TRUE
   }
+
   attrs <- attributes(obj)
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
-  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
+  if(rst_lbl) attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
   if(is.null(dim(obj))) attributes(obj) <- NULL
   
   return(obj)
@@ -2462,24 +2522,29 @@ rmf_create_array <- function(obj = NA, dim = NULL, kper = attr(obj, 'kper'), dim
   if(missing(i) && missing(j)) return(x)
   miss <- c(missing(i) || length(i) > 1, missing(j) || length(j) > 1)
   drop <- ifelse('drop' %in% names(list(...)), list(...)[['drop']], sum(miss) < 2)
+  drop_given <- 'drop' %in% names(list(...))
   
   obj <-  NextMethod(..., drop = drop)
-  
-  if(!drop && sum(miss) > 1) {
+
+  if(!drop && sum(miss) > 1 && !drop_given) {
     dim(obj) <- dim(obj)[miss]
-  } 
+    rst_lbl <- TRUE
+  } else {
+    rst_lbl <- FALSE
+  }
   
   if (length(dim(obj)) == 2) {
     class(obj) <- class(x)
   } else {
     class(obj) <- subset(class(x), class(x) != 'rmf_2d_array')
+    rst_lbl <- TRUE
   }
   
   attrs <- attributes(obj)
   id <- names(attributes(x))
   id <- id[!(id %in% c('dim', 'class'))]
   if(length(id) > 0) attributes(obj) <- append(attrs, attributes(x)[id])
-  attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
+  if(rst_lbl) attr(obj, 'dimlabels') <- attr(obj, 'dimlabels')[miss]
   if(is.null(dim(obj))) attributes(obj) <- NULL
   
   return(obj)

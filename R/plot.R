@@ -853,7 +853,8 @@ rmf_plot.hpr <- function(hpr,type='scatter',hobdry = -888, bins = NULL) {
 #' @param nlevels number of levels for the colour scale; defaults to 7
 #' @param levels labels that should be used on the factor legend; huf$hgunam is used by default
 #' @param type plot type: 'fill', 'factor' (default) or 'grid'
-#' @param gridlines logical; should grid lines be plotted? Alternatively, provide colour of the grid lines or set to 'huf' which plots the outline of the hgu's
+#' @param gridlines logical; should grid lines be plotted? Alternatively, provide colour of the grid lines or set to 'huf' which plots the outline of the hgu's. When hgu's are plotted, set to FALSE or 'huf'.
+#' @param crop logical; should plot be cropped by dropping NA values; defaults to FALSE
 #' @param ... parameters provided to plot.rmf_2d_array
 #' @return ggplot2 object or layer; if plot3D is TRUE, nothing is returned and the plot is made directly
 #' @method rmf_plot huf
@@ -871,6 +872,7 @@ rmf_plot.huf <- function(huf,
                          levels = setNames(huf$hgunam, 1:huf$nhuf),
                          type='factor',
                          gridlines = FALSE,
+                         crop = FALSE,
                          ...) {
   if(is.null(i) && is.null(j) && is.null(k) && is.null(hgu)) stop('Please provide i, j, k or hgu.', call. = FALSE)
   
@@ -890,7 +892,7 @@ rmf_plot.huf <- function(huf,
       }
     }
     mask <- rmfi_ifelse0(is.null(bas),huf_array*0+1,rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3,2,1))[,,k], bas$ibound[,,k]))
-    p <- rmf_plot(huf_array, dis = hufdis, mask=mask,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE,...)
+    p <- rmf_plot(huf_array, dis = hufdis, mask=mask,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE, crop = crop, ...)
     
   } else {
     huf_array <- rmf_create_array(rep(1:huf$nhuf,each=dis$nrow*dis$ncol),dim=c(dis$nrow,dis$ncol,huf$nhuf))
@@ -898,19 +900,19 @@ rmf_plot.huf <- function(huf,
       huf_array[which(huf_array != hgu)] <- NA
       hgu <- NULL
     }
-    p <- rmf_plot(huf_array, dis = hufdis, mask=mask, i=i,j=j,k=hgu,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE,...)
+    p <- rmf_plot(huf_array, dis = hufdis, mask=mask, i=i,j=j,k=hgu,colour_palette=colour_palette,nlevels=nlevels,type=type,levels=levels, gridlines = FALSE, crop = crop, ...)
     
   }
   
   if(gridlines != FALSE) {
     if(gridlines == 'huf') {
       if(!is.null(k)) {
-        return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',add=TRUE))
+        return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',add=TRUE, crop=crop))
       } else {
-        return(p + rmf_plot(huf_array, mask=mask, dis = hufdis, i=i,j=j,k=hgu,type='grid',add=TRUE))
+        return(p + rmf_plot(huf_array, mask=mask, dis = hufdis, i=i,j=j,k=hgu,type='grid',add=TRUE, crop=crop))
       }
     } else {
-      return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',gridlines = ifelse(is.character(gridlines), gridlines, 'black'),add=TRUE))
+      return(p + rmf_plot(dis$botm, dis = dis, i=i,j=j,k=k,bas=bas,type='grid',gridlines = ifelse(is.character(gridlines), gridlines, 'black'),add=TRUE, crop=crop))
     }
   } else {
     return(p)
@@ -991,10 +993,6 @@ rmf_plot.modflow <- function(modflow,
   colrs <- setNames(c('lightskyblue', 'grey50', NA, all_colrs[bc$rmf]), types)
   r <- rmf_create_array(1, dim = c(dis$nrow, dis$ncol, dis$nlay))
   
-  # ibound
-  r[which(bas$ibound < 0)] <- -1
-  r[which(bas$ibound == 0)] <- 0
-  
   pcks <- sort(names(modflow)[which(names(modflow) %in% bc$rmf)])
   
   if(length(pcks) > 0) {
@@ -1011,6 +1009,10 @@ rmf_plot.modflow <- function(modflow,
       }
     }
   }
+  
+  # ibound
+  r[which(bas$ibound < 0)] <- -1
+  r[which(bas$ibound == 0)] <- 0
   
   p <- rmf_plot(r, dis = dis, mask = r*0 + 1, i = i, j = j, k = k, type = 'factor', levels = types, gridlines = gridlines, prj = prj, crop = crop, ...)
   

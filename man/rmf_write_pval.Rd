@@ -4,17 +4,12 @@
 \alias{rmf_write_pval}
 \title{Write a MODFLOW parameter value file}
 \usage{
-rmf_write_pval(
-  pval,
-  file = {    
-    cat("Please select pval file to overwrite or provide new filename ...\\n")    
-    file.choose() }
-)
+rmf_write_pval(pval, path)
 }
 \arguments{
 \item{pval}{an \code{\link{RMODFLOW}} pval object}
 
-\item{file}{filename to write to; typically '*.pval'}
+\item{path}{Path to write the PVAL file. Typically with extension \code{.pval}.}
 }
 \value{
 \code{NULL}

@@ -65,7 +65,7 @@ rmf_installed_codes <- function() {
     rui::approve('Following codes have been installed in {.path {loc}}:')
     for(i in codes) rui::inform(i)
   }
-  return(invisible(codes))
+  return(invisible(setNames(codes, NULL)))
 }
 
 #' Install codes

@@ -4,15 +4,10 @@
 \alias{rmf_read_pval}
 \title{Read a MODFLOW parameter value file}
 \usage{
-rmf_read_pval(
-  file = {     cat("Please select pval file ...\\n")     file.choose() },
-  read_all = FALSE
-)
+rmf_read_pval(path)
 }
 \arguments{
-\item{file}{filename; typically '*.pval'}
-
-\item{read_all}{logical, indicating if \code{np} parameters should be read, or the full parameter table (only relevant if external codes use the pval file for storing additional parameters).}
+\item{path}{Path to the PVAL file. Typically with extension \code{.pval}.}
 }
 \value{
 object of class pval

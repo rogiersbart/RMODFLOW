@@ -18,7 +18,7 @@ Object of class upw
 Convert a lpf to a upw object
 }
 \note{
-upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the ommision of optional keywords. Layer wetting capabilities are also not supported by upw.
+upw input structure is nearly identical to lpf but calculations are done differently. Differences include the addition of the iphdry value and the omission of optional keywords. Layer wetting capabilities are also not supported by upw.
 
 upw must be used with the Newton solver. See also \code{\link{rmf_create_nwt}}.
 }

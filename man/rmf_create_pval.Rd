@@ -4,12 +4,19 @@
 \alias{rmf_create_pval}
 \title{Create an \code{RMODFLOW} pval object}
 \usage{
-rmf_create_pval(parnam, parval)
+rmf_create_pval(parnam, parval = NULL, np = NULL)
 }
 \arguments{
-\item{parnam}{character vector specifying the parameter names; defaults to NULL}
+\item{parnam}{character vector specifying the parameter names, in which case
+at least \code{parval} has to be provided as well, named numeric vector
+containing the parameter values, or data frame containing a \code{parnam} and
+\code{parval} column}
 
-\item{parval}{numeric vector specifying the parameter values; defaults to NULL+}
+\item{parval}{numeric vector specifying the parameter values; defaults to
+NULL, in which case values are extracted from \code{parnam}}
+
+\item{np}{number of MODFLOW-supported parameters; defaults to NULL, in which
+case the total number of parameters is determined from \code{parnam}}
 }
 \value{
 an \code{RMODFLOW} pval object
@@ -18,7 +25,11 @@ an \code{RMODFLOW} pval object
 \code{rmf_create_pval} creates an \code{RMODFLOW} pval object
 }
 \details{
-parnam & parval should be of the same length
+parnam & parval should be of the same length. Extra parameters that
+are not supported by MODFLOW can be introduced, but np should be adjusted
+accordingly (\emph{i.e.} not accounting for the extra parameters), and hence set
+explicitly. For details on working with these extra parameters, see the
+\code{preprocess} argument to \code{rmf_execute()}.
 }
 \seealso{
 \code{\link{rmf_read_pval}}, \code{\link{rmf_write_pval}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?parameter_value_file.htm}

@@ -17,6 +17,7 @@ rmf_optimize(
   restore = FALSE,
   visualize = interactive(),
   export = NULL,
+  continue = FALSE,
   iterate = 50,
   tolerate = 1e-04,
   ...
@@ -68,11 +69,14 @@ analysis? Defaults to \code{TRUE} in an interactive session; \code{FALSE} otherw
 \item{export}{Optional file path to export intermediate results to after each
 iteration.}
 
+\item{continue}{To continue from the last parameter set recorded in the
+export file, or not. Defaults to FALSE.}
+
 \item{iterate}{Integer. Maximum number of iterations.}
 
 \item{tolerate}{Double. Relative convergence tolerance.}
 
-\item{...}{Optional arguments passed to \code{\link[=optim]{optim()}}.}
+\item{...}{Optional arguments passed to \code{\link[=rmf_execute]{rmf_execute()}}.}
 }
 \value{
 Invisible list with \code{\link[=optim]{optim()}} results and the full parameter list.

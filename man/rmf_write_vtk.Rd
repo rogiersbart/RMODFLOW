@@ -108,6 +108,6 @@ dis <- rmf_set_prj(dis, NULL)
 
 rmf_write_vtk(dis$top, dis, file = file, as_points = TRUE)
 rmf_write_vtk(dis$top, dis, file = file, as_3d = TRUE)
-rmf_write_vtk(dis$top, dis, file = file, as_points = FALSE, n.vertex = TRUE)
+rmf_write_vtk(dis$top, dis, file = file, as_points = FALSE, vertices = TRUE)
 rmf_write_vtk(dis$botm, dis, file = file, ijk = TRUE)
 }

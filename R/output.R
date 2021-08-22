@@ -404,9 +404,10 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
   
   headers <- trimws(rmfd_state_headers)
   other_desc <- NULL
-
+  xsection <- FALSE
+  
   if(binary) { # Binary
-    
+    hed <- NULL
     real_number_bytes <- ifelse(precision == 'single', 4, 8)
     con <- file(file,open='rb')
     
@@ -550,7 +551,11 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       }
     })
     close(con)
-    return(hed)
+    if(is.null(hed)) {
+      stop('Error in reading binary head file.', call. = FALSE)
+    } else {
+      return(hed)
+    }
     
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
@@ -561,15 +566,15 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
     # variables <- rmfi_remove_empty_strings(strsplit(variables,' ')[[1]])
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
-    if(! desc %in% headers) {
-      if(variables[2] != dis$ncol) { # weak test to check if there's a label
-        stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
-      }
+    if(! desc %in% headers) { # weak test to check if there's a label
+      # if(variables[2] != dis$ncol) {
+      #   stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
+      # }
       label <- FALSE
       if(is.null(oc)) {
-        stop('No label line detected. Please specify an OC object.', call. = FALSE)
+        stop('No label line detected in ASCII head file. Please specify an OC object.', call. = FALSE)
       } else {
-        warning('Assuming file being read only contains head values.', call. = FALSE)
+        warning('No label line detected in ASCII head file. Assuming file only contains head values.', call. = FALSE)
       }
     }
     
@@ -660,8 +665,11 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
             ilay <- arrayInd(ind, dim(oc$save_head))[1]
             kstp <- oc$itsoc[arrayInd(ind, dim(oc$save_head))[2]]
             kper <- oc$iperoc[arrayInd(ind, dim(oc$save_head))[2]]
-            pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:(cumsum(dis$nstp)[kper]+kstp)])
-            totim <- sum(rmf_time_steps(dis=dis)$tsl[1:(cumsum(dis$nstp)[kper]+kstp)])
+            
+            tsl <- rmf_time_steps(dis = dis)$tsl
+            totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+            pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
+            
           } else {
             ind <- ifelse(first, 1, ifelse(ilay == dis$nlay, ind, ind + 1))
             read <- oc$save_head[ind]
@@ -673,8 +681,9 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
               }
               kstp <- oc$itsoc[ind]
               kper <- oc$iperoc[ind]
-              pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:(cumsum(dis$nstp)[kper]+kstp)])
-              totim <- sum(rmf_time_steps(dis=dis)$tsl[1:(cumsum(dis$nstp)[kper]+kstp)])
+              tsl <- rmf_time_steps(dis = dis)$tsl
+              totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+              pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
             }
           }
           
@@ -686,8 +695,9 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
           nstp <-  arrayInd(ind, dim(oc$hdsv))[2]
           kper <- findInterval(nstp, cumsum(dis$nstp), left.open = T) + 1
           kstp <- rmfi_ifelse0(kper == 1, nstp, nstp - cumsum(dis$nstp)[kper - 1])
-          pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:nstp])
-          totim <- sum(rmf_time_steps(dis=dis)$tsl[1:nstp])
+          tsl <- rmf_time_steps(dis = dis)$tsl
+          totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+          pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
         }
         
       }
@@ -721,21 +731,23 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
       hed.lines <- data_set$remaining_lines
       
       # skip non-head arrays
-      if(!is.null(huf) && huf$iohufheads > 0){
-        
-        if(any(grepl('HEAD IN HGU', hed.lines))) {
-          hed.lines <-  hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
-          dis$nlay <-  huf$nhuf
+      if(label) {
+        if(!is.null(huf) && huf$iohufheads > 0){
+          
+          if(any(grepl('HEAD IN HGU', hed.lines))) {
+            hed.lines <-  hed.lines[grep('HEAD IN HGU', hed.lines)[1]:length(hed.lines)]
+            dis$nlay <-  huf$nhuf
+          } else {
+            other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = FALSE)]
+            hed.lines <-  NULL
+          }
         } else {
-          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
-          hed.lines <-  NULL
-        }
-      } else {
-        if(any(grepl('HEAD', hed.lines))) {
-          hed.lines <-  hed.lines[grep('HEAD', hed.lines)[1]:length(hed.lines)]
-        } else {
-          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
-          hed.lines <-  NULL
+          if(any(grepl('HEAD', hed.lines))) {
+            hed.lines <-  hed.lines[grep('HEAD', hed.lines)[1]:length(hed.lines)]
+          } else {
+            other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = FALSE)]
+            hed.lines <-  NULL
+          }
         }
       }
       
@@ -811,9 +823,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
   
   headers <- rmfd_state_headers
   other_desc <- NULL
+  xsection <- FALSE
   
   if(binary) { # Binary
-    
+    hed <- NULL
     real_number_bytes <- ifelse(precision == 'single', 4, 8)
     con <- file(file,open='rb')
     
@@ -958,8 +971,12 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       }
     })
     close(con)
-    return(hed)
-    
+    if(is.null(hed)) {
+      stop('Error in reading binary drawdown file.', call. = FALSE)
+    } else {
+      return(hed)
+    }
+
   } else { # ASCII
     hed.lines <- readr::read_lines(file)
     label <- TRUE
@@ -969,15 +986,15 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
     variables <- trimws(substring(hed.lines[1], cumsum(header_fmt)[-length(header_fmt)] + 1, cumsum(header_fmt)[-1]))
     # variables <- rmfi_remove_empty_strings(strsplit(hed.lines[1],' ')[[1]])
     desc <- paste(variables[5:(length(variables)-4)], collapse=' ')
-    if(! desc %in% headers) {
-      if(variables[2] != dis$ncol) { # weak test to check if there's a label
-        stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
-      }
+    if(! desc %in% headers) { # weak test to check if there's a label
+      # if(variables[2] != dis$ncol) {
+      #   stop('Array description not recognized. Are you sure the file is not binary ?', call. = FALSE)
+      # }
       label <- FALSE
       if(is.null(oc)) {
-        stop('No label line detected. Please specify an OC object.', call. = FALSE)
+        stop('No label line detected in ASCII drawdown file. Please specify an OC object.', call. = FALSE)
       } else {
-        warning('Assuming file being read only contains head values.', call. = FALSE)
+        warning('No label line detected in ASCII drawdown file. Assuming file only contains drawdown values.', call. = FALSE)
       }
     }
     
@@ -1062,8 +1079,10 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
             ilay <- arrayInd(ind, dim(oc$save_drawdown))[1]
             kstp <- oc$itsoc[arrayInd(ind, dim(oc$save_drawdown))[2]]
             kper <- oc$iperoc[arrayInd(ind, dim(oc$save_drawdown))[2]]
-            pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:(cumsum(dis$nstp)[kper]+kstp)])
-            totim <- sum(rmf_time_steps(dis=dis)$tsl[1:(cumsum(dis$nstp)[kper]+kstp)])
+            
+            tsl <- rmf_time_steps(dis = dis)$tsl
+            totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+            pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
           } else {
             ind <- ifelse(first, 1, ifelse(ilay == dis$nlay, ind, ind + 1))
             read <- oc$save_drawdown[ind]
@@ -1075,8 +1094,9 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
               }
               kstp <- oc$itsoc[ind]
               kper <- oc$iperoc[ind]
-              pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:(cumsum(dis$nstp)[kper]+kstp)])
-              totim <- sum(rmf_time_steps(dis=dis)$tsl[1:(cumsum(dis$nstp)[kper]+kstp)])
+              tsl <- rmf_time_steps(dis = dis)$tsl
+              totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+              pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
             }
           }
           
@@ -1088,8 +1108,9 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
           nstp <-  arrayInd(ind, dim(oc$ddsv))[2]
           kper <- findInterval(nstp, cumsum(dis$nstp), left.open = T) + 1
           kstp <- rmfi_ifelse0(kper == 1, nstp, nstp - cumsum(dis$nstp)[kper - 1])
-          pertim <- sum(rmf_time_steps(dis=dis)$tsl[cumsum(dis$nstp)[kper - 1]:nstp])
-          totim <- sum(rmf_time_steps(dis=dis)$tsl[1:nstp])
+          tsl <- rmf_time_steps(dis = dis)$tsl
+          totim <- sum(tsl[1:ifelse(kper == 1, kstp, cumsum(dis$nstp)[kper-1] + kstp)])
+          pertim <- totim - ifelse(kper == 1, 0, sum(tsl[1:cumsum(dis$nstp)[kper-1]]))
         }
         
       }
@@ -1121,14 +1142,17 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
       hed.lines <- data_set$remaining_lines
       
       # skip non-drawdown arrays
-      if(any(grepl('DRAWDOWN', hed.lines))) {
-        hed.lines <-  hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
-      } else {
-        other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
-        hed.lines <-  NULL
+      if(label) {
+        if(any(grepl('DRAWDOWN', hed.lines))) {
+          hed.lines <-  hed.lines[grep('DRAWDOWN', hed.lines)[1]:length(hed.lines)]
+        } else {
+          other_desc <- headers[vapply(seq_along(headers), function(i) any(grepl(headers[i], hed.lines)), FUN.VALUE = F)]
+          hed.lines <-  NULL
+        }
       }
       
     }
+    
     if(!is.null(other_desc) && length(other_desc) != 0) {
       warning(paste('DRAWDOWN not found in file. Found ', length(other_desc), 'other descriptions:','\n',paste(other_desc, '\n'),'\n','Returning NULL'), call. = FALSE)
       return(NULL)

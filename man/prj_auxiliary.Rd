@@ -64,7 +64,7 @@ rmf_transform_prj(...)
 
 \code{rmf_set_prj} returns either a \code{RMODFLOW} dis or modflow object with the prj set or nothing when writing directly to a file.
 
-\code{rmf_transform_prj} returns an \code{RMODFLOW} prj object with transformed crs
+\code{rmf_transform_prj} returns the \code{RMODFLOW} object with a transformed crs in the \code{prj} object
 }
 \description{
 Functions to get, set, transform and check presence of prj objects

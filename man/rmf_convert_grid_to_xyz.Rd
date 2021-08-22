@@ -55,6 +55,9 @@ Optional roff, coff and loff values can be supplied along the i, j and k indices
 
 k indices should not represent Quasi-3D confining beds. If a real world coordinate should be obtained from a Quasi-3D confining bed,
 set the k index to the overlying model layer and supply a loff value (relative to the thickness of the overlying model layer)
+
+The coordinate system has its origin in the lower left corner in the top layer. Row indices (i) increase from front to back (with decreasing Y values), column indices (j) increase from left to right (with increasing X values),
+layer indices (k) increase from top to bottom (with decreasing Z values).
 }
 \seealso{
 \code{\link{rmf_convert_xyz_to_grid}}

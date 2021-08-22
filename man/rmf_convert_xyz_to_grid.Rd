@@ -34,10 +34,13 @@ Convert real world coordinates to modflow coordinates
 }
 \details{
 If prj is not provided, x, y and/or z input coordinates already represent modflow coordinates.
-If z is not provided, no third dimension coordinates are returned. For the x, y and z modflow coordinates, the origin is placed at the lower left corner of the grid.
+If z is not provided, no third dimension coordinates are returned.
 If the xyz coordinate falls on a boundary of two cells, the minimum ijk indices are returned.
 
 If the z coordinate falls within a Quasi-3D confining bed, the layer index of the overlying model layer is returned. The loff value then represents the fractional distance from the center of the overlying model layer.
+
+The coordinate system has its origin in the lower left corner in the top layer. Row indices (i) increase from front to back (with decreasing Y values), column indices (j) increase from left to right (with increasing X values),
+layer indices (k) increase from top to bottom (with decreasing Z values).
 }
 \seealso{
 \code{\link{rmf_convert_grid_to_xyz}}

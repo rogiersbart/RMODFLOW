@@ -18,6 +18,7 @@
   levels = setNames(huf$hgunam, 1:huf$nhuf),
   type = "factor",
   gridlines = FALSE,
+  crop = FALSE,
   ...
 )
 }
@@ -46,7 +47,9 @@
 
 \item{type}{plot type: 'fill', 'factor' (default) or 'grid'}
 
-\item{gridlines}{logical; should grid lines be plotted? Alternatively, provide colour of the grid lines or set to 'huf' which plots the outline of the hgu's}
+\item{gridlines}{logical; should grid lines be plotted? Alternatively, provide colour of the grid lines or set to 'huf' which plots the outline of the hgu's. When hgu's are plotted, set to FALSE or 'huf'.}
+
+\item{crop}{logical; should plot be cropped by dropping NA values; defaults to FALSE}
 
 \item{...}{parameters provided to plot.rmf_2d_array}
 }

@@ -173,7 +173,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
   upw$iupwcb <- as.numeric(data_set_1$variables[1])
   upw$hdry <- as.numeric(data_set_1$variables[2])
   upw$npupw <- as.numeric(data_set_1$variables[3])
-  upw$ihdry <- as.numeric(data_set_1$variables[4]) != 0
+  upw$iphdry <- as.numeric(data_set_1$variables[4]) != 0
   upw$noparcheck <- 'NOPARCHECK' %in% toupper(data_set_1$variables)
   upw_lines <- data_set_1$remaining_lines
   rm(data_set_1)
