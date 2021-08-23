@@ -202,7 +202,8 @@ rmf_as_tibble(m$drawdown, m$dis, k = 1)
 
 # hed
 rmf_as_tibble(m$head, m$dis, i = 2, as_points = TRUE)
-
+rmf_as_tibble(m$head, m$dis, l = 1)
+rmf_as_tibble(m$head, m$dis, l = 1, j = 5, mask = m$bas$ibound)
 # 2d array
 rmf_as_tibble(m$dis$top, m$dis, id = FALSE)
 
@@ -213,8 +214,8 @@ rmf_as_tibble(m$lpf$hk, m$dis, as_points = TRUE, i = 5)
 # 4d array
 r <- rmf_create_array(1:prod(dim(m$head)), dim = dim(m$head))
 rmf_as_tibble(r, m$dis)
-rmf_as_tibble(r, m$dis, time = 1)
-
+rmf_as_tibble(r, m$dis, l = 1)
+rmf_as_tibble(r, m$dis, j = 5)
 # rmf_list
 l <- m$chd$data
 rmf_as_tibble(l, m$dis)

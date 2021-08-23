@@ -512,6 +512,8 @@ rmf_as_sf.rmf_4d_array <- function(array, dis, mask = array(1, dim = dim(array)[
     f$id <- NULL
   }
   
+  # order based on time step
+  f <- f[order(f$nstp),]
   return(f)
 }
 

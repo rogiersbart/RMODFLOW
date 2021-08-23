@@ -274,11 +274,13 @@ rmf_as_tibble.ddn <- function(ddn,
   
   tbl <- rmf_as_tibble(rmf_create_array(ddn), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
   repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
-  if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[!is.na(attr(ddn, 'nstp'))], each = repeats)
-  if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[!is.na(attr(ddn, 'totim'))], each = repeats)
-  if(!is.null(attr(ddn, 'pertim'))) tbl$pertim <- rep(attr(ddn, 'pertim')[!is.na(attr(ddn, 'pertim'))], each = repeats)
-  if(!is.null(attr(ddn, 'kper'))) tbl$kper <- rep(attr(ddn, 'kper')[!is.na(attr(ddn, 'kper'))], each = repeats)
-  if(!is.null(attr(ddn, 'kstp'))) tbl$kstp <- rep(attr(ddn, 'kstp')[!is.na(attr(ddn, 'kstp'))], each = repeats)
+  
+  if(is.null(l)) l <- 1:dim(ddn)[4]
+  if(!is.null(attr(ddn, 'nstp'))) tbl$nstp <- rep(attr(ddn, 'nstp')[l], each = repeats)
+  if(!is.null(attr(ddn, 'totim'))) tbl$totim <- rep(attr(ddn, 'totim')[l], each = repeats)
+  if(!is.null(attr(ddn, 'pertim'))) tbl$pertim <- rep(attr(ddn, 'pertim')[l], each = repeats)
+  if(!is.null(attr(ddn, 'kper'))) tbl$kper <- rep(attr(ddn, 'kper')[l], each = repeats)
+  if(!is.null(attr(ddn, 'kstp'))) tbl$kstp <- rep(attr(ddn, 'kstp')[l], each = repeats)
   
   return(tbl)
 }
@@ -302,7 +304,8 @@ rmf_as_tibble.ddn <- function(ddn,
 #' @examples
 #' # hed
 #' rmf_as_tibble(m$head, m$dis, i = 2, as_points = TRUE)
-#' 
+#' rmf_as_tibble(m$head, m$dis, l = 1)
+#' rmf_as_tibble(m$head, m$dis, l = 1, j = 5, mask = m$bas$ibound)
 rmf_as_tibble.hed <- function(hed,
                               dis,
                               i = NULL,
@@ -314,11 +317,13 @@ rmf_as_tibble.hed <- function(hed,
   
   tbl <- rmf_as_tibble(rmf_create_array(hed), dis = dis, i = i, j = j, k = k, l = l, as_points = as_points, ...)
   repeats <- prod(ifelse(is.null(i), dis$nrow, length(i)), ifelse(is.null(j), dis$ncol, length(j)), ifelse(is.null(k), dis$nlay, length(k)), ifelse(as_points, 1, 4))
-  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[!is.na(attr(hed, 'nstp'))], each = repeats)
-  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[!is.na(attr(hed, 'totim'))], each = repeats)
-  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[!is.na(attr(hed, 'pertim'))], each = repeats)
-  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[!is.na(attr(hed, 'kper'))], each = repeats)
-  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[!is.na(attr(hed, 'kstp'))], each = repeats)
+  
+  if(is.null(l)) l <- 1:dim(hed)[4]
+  if(!is.null(attr(hed, 'nstp'))) tbl$nstp <- rep(attr(hed, 'nstp')[l], each = repeats)
+  if(!is.null(attr(hed, 'totim'))) tbl$totim <- rep(attr(hed, 'totim')[l], each = repeats)
+  if(!is.null(attr(hed, 'pertim'))) tbl$pertim <- rep(attr(hed, 'pertim')[l], each = repeats)
+  if(!is.null(attr(hed, 'kper'))) tbl$kper <- rep(attr(hed, 'kper')[l], each = repeats)
+  if(!is.null(attr(hed, 'kstp'))) tbl$kstp <- rep(attr(hed, 'kstp')[l], each = repeats)
   
   return(tbl)
 }
@@ -651,8 +656,8 @@ rmf_as_tibble.rmf_3d_array <- function(array,
 #' # 4d array
 #' r <- rmf_create_array(1:prod(dim(m$head)), dim = dim(m$head))
 #' rmf_as_tibble(r, m$dis)
-#' rmf_as_tibble(r, m$dis, time = 1)
-#' 
+#' rmf_as_tibble(r, m$dis, l = 1)
+#' rmf_as_tibble(r, m$dis, j = 5)
 rmf_as_tibble.rmf_4d_array <- function(array,
                                        dis,
                                        i = NULL,
@@ -670,7 +675,7 @@ rmf_as_tibble.rmf_4d_array <- function(array,
   if(any(length(i) > 1 || length(j) > 1 || length(k) > 1 || length(l) > 1)) stop('i, j, k or l should be of length 1', call. = FALSE)
   
   ts <- rmf_time_steps(dis, incl_ss = TRUE)
-  if(ts_time && length(ts$cumsum) != dim(array)[4]) warning('ts_time is TRUE but the array contains less time steps than specified by dis. Please consider setting ts_time = FALSE', call. = FALSE)
+  if(ts_time && (length(ts$cumsum) != dim(array)[4])) warning('ts_time is TRUE but the array contains less time steps than specified by dis. Please consider setting ts_time = FALSE', call. = FALSE)
   time <- rmfi_ifelse0(ts_time, ts$cumsum[seq_len(dim(array)[4])], seq_len(dim(array)[4]))
   
   # full 4d array
@@ -719,6 +724,13 @@ rmf_as_tibble.rmf_4d_array <- function(array,
         
         mask[which(mask == 0)] <- NA
         mask <- rmf_create_array(mask, dim = c(dim(mask), dim(array)[4]))
+        
+        if(is.null(i)) i <- 1:dis$nrow
+        if(is.null(j)) j <- 1:dis$ncol
+        if(is.null(k)) k <- 1:dis$nlay
+        
+        mask <- mask[i,j,k,]
+        array <- array[i,j,k,]
         tbl$value <- rep(c(array*mask^2), each = ifelse(as_points, 1, 4))
       }
     }
