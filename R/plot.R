@@ -1295,12 +1295,12 @@ rmf_plot.rmf_2d_array <- function(array,
       xyBackup <- xy
       xy <- na.omit(as.data.frame(xy))
       
-      # interpolate if grid is irregular for stat_contour
+      # interpolate if grid is irregular for stat_contour or if prj is present
       # skip interpolation if grid is regular
       cnst_delr <- isTRUE(do.call(all.equal, as.list(range(dis$delr) / mean(dis$delr))))
       cnst_delc <- isTRUE(do.call(all.equal, as.list(range(dis$delc) / mean(dis$delc))))
       
-      if(!(cnst_delr && cnst_delc)) {
+      if(!(cnst_delr && cnst_delc) || !is.null(prj)) {
         # TODO replace akima with interp (?)
         lx <- min(ceiling(sum(dis$delr)/min(dis$delr)), dis$ncol * 10)
         ly <- min(ceiling(sum(dis$delc)/min(dis$delc)), dis$nrow * 10)
