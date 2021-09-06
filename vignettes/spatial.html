@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Cas Neyens" />
+
+<meta name="date" content="2021-08-19" />
+
+<title>Spatial functions</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Spatial functions</h1>
+<h4 class="author">Cas Neyens</h4>
+<h4 class="date">2021-08-19</h4>
+
+
+
+<p>RMODFLOW has several functions to handle conversions from and to spatial objects. Spatial data in MODFLOW comes in two forms, discrete and continuous. This resembles the two major types of geographic data: vector and raster. RMODFLOW supports the conversion from and to <code>sf</code>, <code>stars</code> and <code>raster</code> objects. RMODFLOW uses a <code>prj</code> object to define the origin, rotation and coordinate reference system of the model and uses this object in spatial functions.</p>
+<div id="the-rmodflow-projection-object" class="section level1">
+<h1>The RMODFLOW projection object</h1>
+<p>If the MODFLOW model represents a real-world area, it can be georeferenced. This is done in RMODFLOW with the <code>prj</code> object. In essence, the <code>prj</code> object is a list with three components:</p>
+<ol style="list-style-type: decimal">
+<li>The origin: the real-world XY(Z) coordinates of the bottomleft corner of the model</li>
+<li>The rotation angle around this corner</li>
+<li>The coordinate reference system in which these coordinates are defined</li>
+</ol>
+<p>You can create a <code>prj</code> object from scratch using <code>rmf_create_prj()</code>. It needs three arguments: <code>origin</code> is a numeric vector with the X, Y and Z coordinates of the bottomleft corner. If no Z coordinate is supplied, it is set to zero. The default is <code>c(0, 0, 0)</code>. Note that these coordinates should be in length units defined in the <code>crs</code> argument. The second argument is <code>rotation</code>, specifying the rotation angle around the bottomleft corner in degrees counterclockwise. It defaults to 0. The third argument is <code>crs</code> which sets the coordinate reference system. It can take any value supported by <code>sf::st_crs</code>, e.g. EPSG codes, proj4string or WKT formats. If no crs is defined it should be set to <code>NA</code> (the default). In addition to those three arguments, <code>rmf_create_prj()</code> has a <code>ulcoordinate</code> argument which is a logical specifying that the supplied <code>origin</code> vector represents the topleft corner instead of the bottomleft (default is FALSE) and <code>nodecoordinate</code> which if set to TRUE specifies that the supplied <code>origin</code> vector represents the coordinates of the <em>nodal cell center</em> instead of the <em>cell corner</em> as it is by default. Note that if any of these two arguments are set to TRUE, a <code>dis</code> object needs to be supplied as well to convert <code>origin</code> to the bottomleft corner. The resulting <code>origin</code> values in the <code>prj</code> object always represent the bottomleft cell corner of the model.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(prj <span class="ot">&lt;-</span> <span class="fu">rmf_create_prj</span>(<span class="at">origin =</span> <span class="fu">c</span>(<span class="dv">152082</span>, <span class="fl">168000.2</span>), <span class="at">rotation =</span> <span class="sc">-</span><span class="dv">12</span>, <span class="at">crs =</span> <span class="dv">31370</span>))</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW Projection object: </span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Origin coordinates (x y z) of the lowerleft corner: </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   152082 168000.2 0 </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Grid rotation (degrees counterclockwise): </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   -12 </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coordinate Reference System: </span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   EPSG: 31370 </span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   proj4string: +proj=lcc +lat_0=90 +lon_0=4.36748666666667 +lat_1=51.1666672333333 +lat_2=49.8333339 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +units=m +no_defs</span></span></code></pre></div>
+<p>The <code>prj</code> object can be placed in an existing <code>dis</code> object using <code>rmf_set_prj</code> or by supplying <code>prj</code> to a <code>rmf_create_dis</code> call:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_create_dis</span>(<span class="at">prj =</span> prj)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_set_prj</span>(dis, prj)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Overwriting existing prj object in dis object</span></span></code></pre></div>
+<p>Whenever a <code>prj</code> argument is needed by a RMODFLOW function it is obtained from the <code>dis</code> object (if supplied) using <code>rmf_get_prj</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_plot</span>(dis<span class="sc">$</span>top, dis)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Alternatively, you can specify the <code>prj</code> argument directly in these functions:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_plot</span>(dis<span class="sc">$</span>top, dis, <span class="at">prj =</span> <span class="cn">NULL</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Using this approach, the <code>prj</code> object is part of the <code>dis</code> object and is by default directly obtained in function calls using <code>rmf_get_prj</code> although all those functions allow specifying <code>prj</code> directly as well.</p>
+<p>RMODFLOW projection information is written to the header comments of the DIS file when writing a <code>dis</code> object containing <code>prj</code> using <code>rmf_write_dis</code>. The structure of the RMODFLOW projection information is as follows:</p>
+<pre><code>#&gt; # Start RMODFLOW projection information
+#&gt; # Upper left corner: (152289.911690818, 168978.347600734)
+#&gt; # Lower left corner: (152082, 168000.2)
+#&gt; # Upper right corner: (153268.059291552, 168770.435909916)
+#&gt; # Lower right corner: (153060.147600734, 167792.288309182)
+#&gt; # Grid angle (in degrees counterclockwise): -12
+#&gt; # Z coordinate lower left corner: 0
+#&gt; # epsg: 31370
+#&gt; # End RMODFLOW projection information</code></pre>
+<p>If a crs is present, the EPSG, proj4string or WKT information is written (in that order of importance). If no crs is present a proj4string value of NA is written. Alternatively, you can ‘inject’ RMODFLOW style projection information into the header comments of an existing DIS file using <code>rmf_set_prj(file, dis, prj)</code> where <code>file</code> is the path to the DIS file.</p>
+<p>When reading in a DIS file, projection information is checked in multiple locations. Firstly, the header comments in the DIS file are checked for RMODFLOW style projection information. If not present, ModelMuse style projection is checked. If that’s also not available, MODFLOW-OWHM style projection information is checked in the first data set of the DIS object. If <code>rmf_read</code> is used to read in an entire model and a usgs.model.reference file is present in the same directory as the NAME file (as should be the case for usgs.reference.model files), the projection information is read from that file using <code>rmf_read_usgs_model_reference()</code> which takes precedence over the other formats.</p>
+<p>Most crs formats have length units defined. If they differ from the defined MODFLOW length units (<code>dis$lenuni</code>), RMODFLOW converts the latter on-the-fly whenever a <code>prj</code> is supplied with a crs element that has length units. This conversion is used in e.g. plotting or functions where coordinates are returned:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dis<span class="sc">$</span>lenuni <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># ft</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_plot</span>(dis<span class="sc">$</span>top, dis, <span class="at">prj =</span> prj) <span class="co"># crs in prj is defined in m</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="conversion-to-spatial-objects" class="section level1">
+<h1>Conversion to spatial objects</h1>
+<p>RMODFLOW provides several S3 functions to convert its base classes (<code>rmf_list</code> and <code>rmf_2d/3d/4d_array</code>) to spatial objects. Conversion can be to <code>sf</code>, <code>stars</code> or <code>raster</code> objects. The latter is only possible for non-rotated regular grids.</p>
+<p>Conversion to <code>sf</code> is done with <code>rmf_as_sf</code> which takes as input either an RMODFLOW array or list object, the dis argument and an optional prj object (by default taken from the dis argument). By default it returns polygon geometries representing the grid cells. If the <code>as_points</code> argument is set to <code>TRUE</code>, point geometries are returned representing the cell-centered nodes. In addition to the geometries and values, an <code>id</code> column is returned with either the <code>r</code> based or <code>modflow</code> based array index of the cell/node depending on the <code>id</code> argument (<code>r</code> by default):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_sf</span>(dis<span class="sc">$</span>top, dis)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 100 features and 2 fields</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Geometry type: POLYGON</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Dimension:     XY</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Bounding box:  xmin: 152082 ymin: 167936.8 xmax: 152443.5 ymax: 168298.3</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Projected CRS: Belge 1972 / Belgian Lambert 72</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; First 10 features:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    value  id                       geometry</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      0  10 POLYGON ((152082 168000.2, ...</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2      0  20 POLYGON ((152111.8 167993.9...</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3      0  30 POLYGON ((152141.6 167987.5...</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4      0  40 POLYGON ((152171.4 167981.2...</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5      0  50 POLYGON ((152201.3 167974.9...</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6      0  60 POLYGON ((152231.1 167968.5...</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7      0  70 POLYGON ((152260.9 167962.2...</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8      0  80 POLYGON ((152290.7 167955.8...</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9      0  90 POLYGON ((152320.5 167949.5...</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10     0 100 POLYGON ((152350.3 167943.2...</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>(sf <span class="ot">&lt;-</span> <span class="fu">rmf_as_sf</span>(dis<span class="sc">$</span>top, dis, <span class="at">as_points =</span> <span class="cn">TRUE</span>, <span class="at">id =</span> <span class="st">&#39;modflow&#39;</span>))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 100 features and 2 fields</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Geometry type: POINT</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Dimension:     XY</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Bounding box:  xmin: 152100.1 ymin: 167954.9 xmax: 152425.4 ymax: 168280.3</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Projected CRS: Belge 1972 / Belgian Lambert 72</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; First 10 features:</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    value  id                  geometry</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      0  91 POINT (152100.1 168011.9)</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2      0  92 POINT (152129.9 168005.6)</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3      0  93 POINT (152159.7 167999.3)</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4      0  94 POINT (152189.5 167992.9)</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5      0  95 POINT (152219.3 167986.6)</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6      0  96 POINT (152249.1 167980.3)</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7      0  97   POINT (152279 167973.9)</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8      0  98 POINT (152308.8 167967.6)</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9      0  99 POINT (152338.6 167961.2)</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10     0 100 POINT (152368.4 167954.9)</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sf)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>At its core, <code>rmf_as_sf</code> first converts to a <code>stars</code> object using <code>rmf_as_stars</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_stars</span>(dis<span class="sc">$</span>botm, dis)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; stars object with 3 dimensions and 2 attributes</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attribute(s):</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        Min. 1st Qu. Median  Mean 3rd Qu. Max.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; value   -30  -30.00  -20.0 -20.0  -10.00  -10</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; id        1   75.75  150.5 150.5  225.25  300</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; dimension(s):</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       from to offset   delta                       refsys point</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; x        1 10 152082 29.8139 Belge 1972 / Belgian Lamb... FALSE</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; y        1 10 168000 29.8139 Belge 1972 / Belgian Lamb... FALSE</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; layer    1  3     NA      NA                           NA    NA</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                          values x/y</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; x                          NULL [x]</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; y                          NULL [y]</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; layer layer_1, layer_2, layer_3    </span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sheared raster with parameters: 6.33714833612748 -6.33714833612748</span></span></code></pre></div>
+<p>To convert to <code>raster</code>, use <code>rmf_as_raster</code> which first calls <code>rmf_as_stars</code> and then converts to a <code>raster</code> object. Note that this only works for regular non-rotated rasters:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_raster</span>(dis<span class="sc">$</span>botm, dis)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error in asMethod(object): only regular rasters can be converted to Raster* objects</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_raster</span>(dis<span class="sc">$</span>top, dis, <span class="at">prj =</span> <span class="fu">rmf_create_prj</span>(<span class="at">origin =</span> <span class="fu">c</span>(<span class="dv">152082</span>, <span class="fl">168000.2</span>), <span class="at">crs =</span> <span class="dv">31370</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; class      : RasterBrick </span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; dimensions : 10, 10, 100, 2  (nrow, ncol, ncell, nlayers)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; resolution : 30.48, 30.48  (x, y)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; extent     : 152082, 152386.8, 168000.2, 168305  (xmin, xmax, ymin, ymax)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; crs        : +proj=lcc +lat_0=90 +lon_0=4.36748666666667 +lat_1=51.1666672333333 +lat_2=49.8333339 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +units=m +no_defs </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; source     : memory</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; names      : value,  id </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; min values :     0,   1 </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; max values :     0, 100</span></span></code></pre></div>
+</div>
+<div id="conversion-to-rmodflow-objects" class="section level1">
+<h1>Conversion to RMODFLOW objects</h1>
+<p>RMODFLOW can convert <code>sf</code>, <code>stars</code> and <code>raster</code> objects to <code>rmf_list</code> and <code>rmf_2d/3d/4d_array</code> objects using S3 functions <code>rmf_as_list</code> and <code>rmf_as_array</code>.</p>
+<p><code>rmf_as_list.sf</code> uses <code>sf::st_join</code> to find the MODFLOW grid indices corresponding to the <code>sf</code> object. By default, the geometrical operator is set to <code>sf::st_intersects</code> but this can be any kind described in <code>?sf::st_intersects</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_create_dis</span>()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># point</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sfc</span>(<span class="fu">list</span>(sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">150</span>, <span class="dv">312</span>)), sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">500</span>)), sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">850</span>, <span class="dv">566</span>))))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sf</span>(<span class="at">q =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">500</span>, <span class="sc">-</span><span class="dv">400</span>, <span class="sc">-</span><span class="dv">300</span>), <span class="at">geom =</span> pts)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># convert to rmf_list</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>(rlst <span class="ot">&lt;-</span> <span class="fu">rmf_as_list</span>(obj, dis))</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW list with 6 features and 1 variable </span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   i j k    q</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 7 2 1 -500</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 6 5 1 -400</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 6 6 1 -400</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 5 5 1 -400</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 5 6 1 -400</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 5 9 1 -300</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co"># polygon</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">120</span>, <span class="dv">120</span>), <span class="fu">c</span>(<span class="dv">120</span>, <span class="dv">760</span>), <span class="fu">c</span>(<span class="dv">800</span>, <span class="dv">800</span>), <span class="fu">c</span>(<span class="dv">120</span>, <span class="dv">120</span>))</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>pol1 <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_polygon</span>(<span class="fu">list</span>(p1))</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sf</span>(<span class="at">head =</span> <span class="dv">15</span>, <span class="at">geom =</span> sf<span class="sc">::</span><span class="fu">st_sfc</span>(pol1))</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co"># convert to rmf_list and plot</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="co"># op = sf::st_intersects</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_list</span>(obj, dis) <span class="sc">%&gt;%</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_plot</span>(dis, <span class="at">k =</span> <span class="dv">1</span>, <span class="at">grid =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(<span class="at">data =</span> obj, <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">fill =</span> <span class="st">&#39;yellow&#39;</span>)</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coordinate system already present. Adding new coordinate system, which will replace the existing one.</span></span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAAt1BMVEUAAAAAACsAAFUAK4AAVaoAv8QrACsrAFUrgNQzMzNNTU1NTWtNTYhNa6ZNiMRVAABVqv9ZWVlmZgBm2XZrTU1rTWtrTYhra4hra6ZrpuGAKwCAqoCA1P+ITU2ITWuITYiIa02Ia6aIxP+ma02ma2umiE2mxKam4eGm4f+qVQCq/6qq///EiE3E///UgCvU///hpmvh///r6+v4dm3/qlX/xIj/1ID/4ab//6r//8T//9T//+H///85A+XTAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAIUUlEQVR4nO2dC1fbRhSElYfbxJAS5dGGNCmJaVJocELauIag//+76sVusaTVjnZ19yXNnJwjznCx0MddWQw3UlFRRhWxv4HURUBABAREQEAEBERAQAQEREBABAREQEAEBERAQAQEREBAgwD99b/2PjQqnzoCAnUEBOoICNQREKgjIFBHQKCuF6D1z8uqun47f/K1uSEgpdX8cFndnC6qy58aGwJSujj4uOmg65Ol6qT6hoDultj61dfq+rez+mbzuccb3VUWY1GLAQS0enKLpL5pdVDxd1tZenIdREA7QP3OQUkd5BDPHtDN6fH27Wt/Q0B3gPpdByV1kEM8O0BIBERABNTwCAh4BAQ8AgIeAQGPgIBHQMAjIOAREPAICHgEBDwCAp43QGPRJDpo1pbW030tAREQAUGPgIBHQMAjIOAREPAICHgEBDwCAh4BAY+AgEdAwCMg4BEQ8AIDWr9Q08A5zQeFBaQmEi+ffAVz0hMGdDu2eZLVjGKUDsp0Trr8T32/oHX8+By0Peu4zEn3/UnKeWVTz7cqfS6xl2fV6nDpMiftHZCex7PnTZU+l9iuZ1zOQdKANDzaMDRe6fckve0glznpgYC61osRhsYru/YhA6hazecHZ07XQXaAII9e3dL2ys79CgEyaAggMw9HGBqv7P7BJAXIwEMOhsYrDZ2bAqAmD68wNF5pWtpJAAoIQ+OVMwIyeeWMgExeOSMgk1fOCMjklTMCMnnljIBMXjkjIJNXNmEQUM1r8iGgutfiQ0A1r80nAUBdmfCz8OqdP+s0gQ7qnz9Pc4lZ5M+TBGSTP08RkFX+PEFAdvnz9ABZ5s+TA2SbP08NkHX+PDFA9vnztAA55M+TAuSSP08JkFP+PCFAbvnzdAA55s+TAeSaP08FkHP+LATo5nTAfFAAQO75sxCgi4Uaw3OZkw4CaED+LANITSXuNg4zit4BDcmfZQCtX31QS8xxTtp3Jj0of9apdfwY0IuFouM4J+25g4blz1Id5Hw/ae+ABubPMoCu3w+Zk/YKaGj+LANIvYtt+sZxTtonoMH5sxCgzZWP4/8X8wtoeP4sBMigmIAE8udRA5LIn8cMSCR/HjEgmfx5vICE8ufRApLKn8cKSCx/Hikgufx5nIAE8+dRApLMn8cISDR/tgZ0dXTvTdqAZPNna0BVdV4UD76kC0g4f3YApLqoKB4lCkg6f3YCtEV0/5MtoACZtHj+rBME9LkoHm6WWr+FFrSD5PNn+w76/roonqoPvvVroZCAPOTP1oCujnourQiAfOTP1oCsFQ6Ql/x5RID85M/jAeQpfx4NIF/581gAecufRwLIX/48DkAe8+dRAPKZP48BkNf8eQSA/ObP+QPynD9nD8h3/pw7IO/5sxggNfsbfj7If/4sBuhyvqiCz0kHyJ+lAK1/ebcIPicdIn8WAnTz+x+ni9Bz0kHyZ51ah48BXR6rdRV2TjpM/izTQbcTrpoO8gkoUP4sA+hyrnQc8hwUKn+WAVRt3+YDzkkHy59FAYW7DgqXP4sB6pQPQAHz5ywBhcyfcwQUNH/OEFDY/Dk/QIHz5+wAhc6fcwMUPH/ODFD4/DkvQBHy56wAxcifcwIUJX/OCFCc/DkfQJHy52wAxcqfgwLqUJ9MOlr+rFOCHRQvfw7aQc6AIubPWQCKmT/nAChq/pwBoLj5c/qAIufPyQOKnT+nDih6/pw4oPj5c9qAEsifkwaUQv6cMqAk8ueEAaWRP6cLKJH8OVlAqeTPqQJKJn8WArR+MZ9Lzgelkz/LAFITieuXZ2Jz0gnlzzKAVgrHxUJqRjGl/FkG0K6LhOakk8qfdWode78ZxWOhOem08med59JB12+Pm7eVdgSUWP6s85zexRaVzD3tU8ufdZ49oC0fiTnp5PJnnWcPaDtpvxh+HZRe/qzz3N7FumQDKMH8WedFA5Ri/qzzYgFKMn/WeZEApZk/67w4gBLNn3VeFECp5s86LwagZPNnnRcBULr5s84LDyjh/FnnBQeUcv6s84IDasIgoL2d6WAQ0N7OCIiA+gMai4J2UI4eAQGPgIBHQMAjIOAREPAICHgEBDwCAh4BAY+AgEdAwCMg4BEQ8AgIeAQEvMGAbOaDcvSGArKak87RGwrIakYxR28oINs56ezUOmJLQF1z0nsfGpVP3eAOIiCtus5B8Q9Ius4RUNecdPwDkq5zBNR1HRT/gKTrXAHVlNIBSdcREKgjIFBHQKBOBNCdHuOSTOsICNQREKgjIFAnBGi8IiAgAgIiICACAhIDVPs1vyXDLWQa6nwUVaNqfnDWo26z38MlqrsNuOold5VSgOp/7mjKdAuZhjofyVnTxe1DBWGd2u8lqlsphvWSvUopQPWosfU9GG4hU1f3Izmbe6s6bgdRezWVEJ8sjXUXBx83Xr1kr1IKUD2s1kl3C5mWOh7J2d7bB7XEYN2ug0CdQlEv2auUAlT/c4dGnbeQqcnwSM59qftlbA4Cv972XALqFKB6yV5lqA7qvoVM41U6H8mp2Ruue3lWrQ6XKXSQ+RxkuoXMvkyP5Kzt7f3tAcC6XSeAunWIc1D9zx2tb8FwC5nWC3U8krOmi8W220DdroNAnUJRL9mrDHMdZLqFTEP9roM2n8HXN5V6C+9xvRTkOmi0IiAgAgIiICACAiIgIAICIiAgAgLKBNDne2+qq6NHEfacCaDq/KH6F0G5APrnh19//BRjx7kAqj4XT6PsNxtA50WUFZYNoG/3/zyK0kKZALra0Pl2P8ZJKBNA5w++VN9fx1hkmQCKJwICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgIAICIiAgAgIiICACAvoXm1fR6e6hNm8AAAAASUVORK5CYII=" /><!-- --></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># op = sf::st_covers</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_list</span>(obj, dis, <span class="at">op =</span> sf<span class="sc">::</span>st_covers) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_plot</span>(dis, <span class="at">k =</span> <span class="dv">1</span>, <span class="at">grid =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(<span class="at">data =</span> obj, <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">fill =</span> <span class="st">&#39;yellow&#39;</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coordinate system already present. Adding new coordinate system, which will replace the existing one.</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Note that when a point geometry is located on the edges of cells, depending on the used operator <code>op</code>, one or more cells might be returned. Although correct topological behaviour, this is not always desirable. E.g. if a well should be attributed to a single cell (unless the discharge is also recalculated):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4 cells selected for second point on cell edges</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sf</span>(<span class="at">q =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">500</span>, <span class="sc">-</span><span class="dv">400</span>, <span class="sc">-</span><span class="dv">300</span>), <span class="at">geom =</span> pts)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_list</span>(obj, dis) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_plot</span>( dis, <span class="at">k =</span> <span class="dv">1</span>, <span class="at">grid =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(<span class="at">data =</span> obj, <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coordinate system already present. Adding new coordinate system, which will replace the existing one.</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>The user should be aware of this and set <code>op</code> accordingly.</p>
+<p><code>rmf_as_array.sf</code> rasterizes a <code>sf</code> object to a <code>rmf_array</code> using <code>stars::st_rasterize</code> which in turn uses GDALRasterize.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>sfc <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sfc</span>(<span class="fu">list</span>(sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">100</span>,<span class="dv">200</span>)), sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">750</span>, <span class="dv">800</span>)), sf<span class="sc">::</span><span class="fu">st_point</span>(<span class="fu">c</span>(<span class="dv">700</span>, <span class="dv">850</span>))))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_sf</span>(<span class="at">q =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">500</span>, <span class="sc">-</span><span class="dv">400</span>, <span class="sc">-</span><span class="dv">300</span>), <span class="at">geom =</span> sfc)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_create_dis</span>()</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_array</span>(obj, <span class="at">dis =</span> dis, <span class="at">select =</span> <span class="st">&#39;q&#39;</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    0    0    0    0    0    0    0 -300    0     0</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    0 -500    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># add values at same location</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_array</span>(obj, <span class="at">dis =</span> dis, <span class="at">select =</span> <span class="st">&#39;q&#39;</span>, <span class="at">options =</span> <span class="fu">c</span>(<span class="st">&#39;MERGE_ALG=ADD&#39;</span>))</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    0    0    0    0    0    0    0 -700    0     0</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    0 -500    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    0    0    0    0    0    0    0    0    0     0</span></span></code></pre></div>
+<p>As an alternative, you can convert the <code>sf</code> object to a <code>rmf_list</code> and convert the resulting object using <code>rmf_as_array</code>. Results may differ:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># alternative</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_list</span>(obj, <span class="at">dis =</span> dis, <span class="at">select =</span> <span class="st">&#39;q&#39;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_as_array</span>(<span class="at">dis =</span> dis)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    0    0    0    0    0    0 -300 -700    0     0</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    0    0    0    0    0    0    0 -400    0     0</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    0    0    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] -500 -500    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] -500 -500    0    0    0    0    0    0    0     0</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    0    0    0    0    0    0    0    0    0     0</span></span></code></pre></div>
+<p>Converting a <code>stars</code> object to an array uses <code>stars::st_warp</code> if <code>resample = TRUE</code>. This should be used when the dimensions and resolution of the MODFLOW grid and the <code>stars</code> object do not match. The values will be resampled using the specified <code>method</code>. For possible methods, see <code>?stars::st_warp</code> (default is bilinear interpolation). If the dimensions and resolution do coincide, <code>resample</code> should be set to <code>FALSE</code> which simply sets the values in the <code>rmf_array</code> to those in the <code>stars</code> object. Conversion from <code>raster</code> objects uses the same functions but first converts <code>raster</code> to <code>stars</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">prod</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol), <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol))</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">rmf_as_stars</span>(r, <span class="at">dis =</span> dis)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_array</span>(s, <span class="at">dis =</span> dis, <span class="at">resample =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    1   11   21   31   41   51   61   71   81    91</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    2   12   22   32   42   52   62   72   82    92</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    3   13   23   33   43   53   63   73   83    93</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    4   14   24   34   44   54   64   74   84    94</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    5   15   25   35   45   55   65   75   85    95</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    6   16   26   36   46   56   66   76   86    96</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    7   17   27   37   47   57   67   77   87    97</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    8   18   28   38   48   58   68   78   88    98</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    9   19   29   39   49   59   69   79   89    99</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]   10   20   30   40   50   60   70   80   90   100</span></span></code></pre></div>
+<p>Conversion from <code>stars</code> to <code>rmf_list</code> is intended for <code>stars</code> objects with geometry dimensions (e.g.<code>sf</code> objects) and involves converting the <code>stars</code> object to <code>sf</code>.</p>
+<p>These spatial-to-RMODFLOW functions can for example be used in pipelines to create boundary condition packages. Ultimately, these might evolve to functions that are tailored for specific stress packages, e.g. a <code>rmf_build_wel</code> function that creates a <code>wel</code> object directly from a <code>sf</code> input object without the intermediate conversion to <code>rmf_list</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># linestring</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">150</span>,<span class="dv">312</span>), <span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">500</span>), <span class="fu">c</span>(<span class="dv">850</span>, <span class="dv">566</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>ls1 <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_linestring</span>(s1)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">100</span>,<span class="dv">100</span>), <span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">555</span>))</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>ls2 <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_linestring</span>(s2)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>sf<span class="sc">::</span><span class="fu">st_sf</span>(<span class="at">conductance =</span> <span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">1000</span>), <span class="at">stage =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">5</span>, <span class="sc">-</span><span class="dv">2</span>), <span class="at">rbot =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="sc">-</span><span class="dv">5</span>), <span class="at">geom =</span> sf<span class="sc">::</span><span class="fu">st_sfc</span>(ls1, ls2)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_as_list</span>(<span class="at">dis =</span> dis, <span class="at">kper =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_riv</span>(<span class="at">dis =</span> dis)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW River Package object with: </span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 23 non-parameter river cells </span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RIV fluxes are not saved to a cell-by-cell flow budget file </span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Summary of the first 15 defined river cells: </span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    k  i j stage conductance rbot parameter   name</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  1  7 2    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  1  7 3    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3  1  7 4    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  1  6 4    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  1  6 5    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  1  6 6    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7  1  5 5    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8  1  5 6    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9  1  5 7    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 1  5 8    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 1  5 9    -5         500   -6     FALSE list_1</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 1 10 1    -2        1000   -5     FALSE list_1</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13 1 10 2    -2        1000   -5     FALSE list_1</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14 1  9 1    -2        1000   -5     FALSE list_1</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 15 1  9 2    -2        1000   -5     FALSE list_1</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Summary of the stress-period information: </span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   kper list_1</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    1   TRUE</span></span></code></pre></div>
+</div>
+<div id="utility-functions" class="section level1">
+<h1>Utility functions</h1>
+<p>There are several S3 utility functions dealing with the <code>prj</code> object which work on <code>dis</code> and <code>modflow</code> objects. In addition to <code>rmf_get_prj</code> and <code>rmf_set_prj</code> (discussed above), <code>rmf_has_prj</code> returns a logical depending on the presence of a <code>prj</code> object in a <code>dis</code> or <code>modflow</code> object. <code>rmf_transform_prj</code> switches the crs of a <code>prj</code> object, transforms the origin coordinates and returns the supplied <code>prj</code>, <code>dis</code> or <code>modflow</code> argument with these modifications.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>prj <span class="ot">&lt;-</span> <span class="fu">rmf_create_prj</span>(<span class="at">origin =</span> <span class="fu">c</span>(<span class="dv">152082</span>, <span class="fl">168000.2</span>), <span class="at">rotation =</span> <span class="sc">-</span><span class="dv">12</span>, <span class="at">crs =</span> <span class="dv">31370</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_create_dis</span>(<span class="at">prj =</span> prj)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_has_prj</span>(dis)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_transform_prj</span>(prj, <span class="at">crs =</span> <span class="dv">3812</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW Projection object: </span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Origin coordinates (x y z) of the lowerleft corner: </span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   652081.9 668000.9 0 </span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Grid rotation (degrees counterclockwise): </span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   -12 </span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coordinate Reference System: </span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   EPSG: 3812 </span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   proj4string: +proj=lcc +lat_0=50.797815 +lon_0=4.35921583333333 +lat_1=49.8333333333333 +lat_2=51.1666666666667 +x_0=649328 +y_0=665262 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</span></span></code></pre></div>
+<p>Lastly, the <code>rmf_extent</code> function returns a list with (1) the coordinates of the grid corners as a <code>data.frame</code> and (2) the bounding box of the grid as a <code>sf bbox</code> object:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_extent</span>(dis)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $corners</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           x        y</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ll 152082.0 168000.2</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ul 152289.9 168978.3</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ur 153268.1 168770.4</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lr 153060.1 167792.3</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $bbox</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     xmin     ymin     xmax     ymax </span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 152082.0 167792.3 153268.1 168978.3</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

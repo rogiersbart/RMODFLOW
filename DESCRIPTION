@@ -3,7 +3,9 @@ Type: Package
 Title: Pre- and post-processing of MODFLOW files in R
 Version: 0.4.0.9000
 Date: 2016-06-27
-Authors@R: person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be")
+Authors@R: c(
+    person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be"),
+    person("Cas", "Neyens", role = "aut", email = "cas.neyens@vub.be"))
 Description: The RMODFLOW package provides a set of tools for groundwater flow
     modelling with MODFLOW.
 License: GPL (>= 2)
