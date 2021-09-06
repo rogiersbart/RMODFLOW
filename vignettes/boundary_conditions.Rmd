@@ -1,0 +1,123 @@
+---
+title: "Boundary conditions"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Boundary conditions}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+library(RMODFLOW)
+```
+
+Boundary conditions are a inherent part of partial differential equations. In terms of groundwater flow modelling, they typically represent features that add fluxes to the system or specify constant head values. These features may vary in space and time.
+MODFLOW is quite flexible in the way it lets users define boundary conditions. There are multiple ways to 'group' boundary conditions (e.g. Dirichlet, Neumann, Cauchy types). For the purpose of the RMODFLOW API however, all MODFLOW boundary conditions can be placed in one of two groups: 
+
+- Those representing discrete spatial features (e.g. rivers, wells, drains, ...)
+- Those representing continuous spatial features (e.g. recharge, evapotranspiration)
+
+This is similar to the way RMODFLOW handles input data (see also the [vignette in input data structures](input_data_structure.html)), i.e. `rmf_lists` and `rmf_arrays`. 
+
+Some of the basic boundary condition packages in MODFLOW-2005 are (for an extensive overview of RMODFLOW supported packages, check out https://github.com/rogiersbart/RMODFLOW/wiki/Overview-of-supported-MODFLOW-packages):
+
+- River package (RIV)
+- Recharge package (RCH)
+- Well package (WEL)
+- Drain package (DRN)
+- Evapotranspiration package (EVT)
+- General-head boundary package (GHB)
+- Time-variant specified-head package (CHD)
+
+The RCH & EVT packages represent spatially continuous data; the others discrete features. 
+
+## Discrete boundary conditions
+
+As with other packages, RMODFLOW can read in boundary condition packages with the appropriate `rmf_read_*` function:
+
+```{r}
+dis <- rmf_example_file('water-supply-problem.dis') %>%
+  rmf_read_dis()
+riv <- rmf_example_file('water-supply-problem.riv') %>%
+  rmf_read_riv(dis = dis)
+
+```
+
+The discrete boundary condition packages are lists with following elements: 
+
+- `dimensions` holding information on the amount of features & parameters
+-  cbc number to write cell-by-cell flow data to
+- `option` with possible options
+- `aux` with the names of possible AUX variables
+- `data` a `rmf_list` with the data of the boundary condition features
+- `kper` a `data.frame` with the stress-period information of the features
+
+```{r}
+str(riv)
+```
+
+Writing can be done with the appropriate `rmf_write_*` function:
+
+```{r, eval=FALSE}
+rmf_write_riv(riv, dis = dis, file = 'input.riv')
+```
+
+Creating discrete boundary condition objects can be done by supplying `rmf_list` objects with the appropriate variables and `kper` argument to the `rmf_create_*` function:
+```{r}
+riv_east <- data.frame(i = 1:dis$nrow, j = dis$ncol, k = 1, stage = 0, conductance = 0.02, rbot = -10) %>%
+  rmf_create_list(kper = 1)
+
+riv_west <- data.frame(i = 1:dis$nrow, j = 1, k = 1, stage = 0, conductance = 0.02, rbot = -10) %>%
+  rmf_create_list(kper = 1)
+
+riv_new <- rmf_create_riv(riv_east, riv_west, dis = dis)
+str(riv_new)
+```
+
+As input, the `rmf_create_*` functions can either take one or more `rmf_list` objects (possibly of class `rmf_parameter`) or a single list with one or more `rmf_list` objects (possibly of class `rmf_parameter`). If no `kper` argument is set on any of the objects, RMODFLOW will throw an error:
+```{r, error=TRUE, purl=FALSE}
+riv_east <- data.frame(i = 1:dis$nrow, j = dis$ncol, k = 1, stage = 0, conductance = 0.02, rbot = -10) %>%
+  rmf_create_list()
+
+riv_new <- rmf_create_riv(riv_east, dis = dis)
+
+```
+
+
+## Continuous boundary conditions
+Similar to their discrete kin, continuous boundary condition packages can be read in through the appropriate `rmf_read_*` function and written with their `rmf_write_*` function. When reading a continuous boundary condition package that has been defined using MODFLOW parameters (see also [the vignette on RMODFLOW parameters](parameters.html)), a `mlt` and `zon` argument should often be specified.
+
+```{r}
+# Currently, no example models with RCH or EVT packages
+```
+
+Creating continuous boundary condition packages can be done by supplying `rmf_2d_array` objects (possibly of class `rmf_parameter`) or a single list with `rmf_2d_array` objects  (possibly of class `rmf_parameter`) to the `rmf_create_*` function. Similar to the discrete boundary conditions, a `kper` argument must be set on all objects:
+```{r}
+dis <- rmf_create_dis(nper = 2)
+
+rch_summer <- rmf_create_array(0.0002, dim = c(dis$nrow, dis$ncol), kper = 1)
+rch_winter <- rmf_create_array(0.0003, dim = c(dis$nrow, dis$ncol), kper = 2)
+
+rch <- rmf_create_rch(list(rch_summer, rch_winter), dis = dis)
+
+```
+
+The continuous boundary condition packages are lists with following elements: 
+
+- `dimensions` holding information on the amount of features & parameters
+-  the n*opt variable (e.g. nrchop) 
+-  cbc number to write cell-by-cell flow data to
+-  name of the variable, e.g. `recharge` which is a list with `rmf_2d_arrays` holding the recharge values
+-  optional variables such as `irch` which are also lists with `rmf_2d_arrays` holding those values
+- `kper` a `data.frame` with the stress-period information of the features
+
+```{r}
+str(rch)
+```
+
+Notice that for different stress-periods, the variables (e.g. recharge) are defined as separate `rmf_2d_arrays` with `kper` attributes rather than a single 3D array where the 3th dimension represents stress-periods.
+
+

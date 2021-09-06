@@ -4,10 +4,6 @@
 \name{reexports}
 \alias{reexports}
 \alias{\%>\%}
-\alias{reexports}
-\alias{read_rds}
-\alias{reexports}
-\alias{write_rds}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -15,8 +11,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
-
-  \item{readr}{\code{\link[readr]{read_rds}}, \code{\link[readr]{write_rds}}}
+  \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
 }}
 

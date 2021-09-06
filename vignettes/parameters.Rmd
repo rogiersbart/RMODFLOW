@@ -1,0 +1,184 @@
+---
+title: "MODFLOW parameters"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MODFLOW parameters}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+library(RMODFLOW)
+```
+
+Since MODFLOW-2000, you can specify so called parameters in the MODFLOW input files of flow and boundary condition packages. A parameter multiplies all the variable values of the defined cells with the parameter value. For example in the river package, the only allowed parameter type is RIV, which represents the riverbed hydraulic conductivity. All the riverbed hydraulic conductivities in the cells defined under the parameter will therefore be multiplied with the parameter value. You can specify parameters for the horizontal hydraulic conductivity in layers, for the recharge values, the riverbed conductance etc. MODFLOW parameters differ between discrete boundary conditions and continuous data for boundary conditions and flow packages. These parameters all have the following:
+
+- A parameter name
+- A predefined parameter type specific to the package (e.g. HK, VK, RCH, ...)
+- A parameter value
+- A number specifying the amount of clusters/cells defined by the parameter
+
+Additionally, a parameter can be time-varying. This means that there can be multiple "instances" of a single parameter. Each instance defines a different set of clusters/cells for the parameter. The name, type and value remain the same.
+
+The idea behind MODFLOW parameters is that they are easier to handle during calibration and sensitivity analysis. Instead of changing all individual values of each cell, you just change the parameter value. This is made even easier by the PVAL file, which lists all the parameters active in the current simulation with their names and values. This file can be used by external optimization softwares such as UCODE.
+
+If you do not use a scripting language to prepare or optimize your MODFLOW model, parameters can be very useful. But if you use a scripting language you could just as easily define a parameter inside your script and use those in your scripted optimization.
+
+**I strongly advise against using MODFLOW parameters in your models, unless you really need to. You can script them yourself and keep your input files self-contained.**
+
+MODFLOW parameters are difficult to handle because sometimes, the input specifying a single parameter is spread around multiple files. With a single function, it is difficult to read in or access a single MODFLOW parameter. Your new best friend RMODFLOW is equipped to deal with this however. 
+
+The RMODFLOW parameter API aims at : 
+
+1. Creating objects of class `rmf_parameter` that are self-contained, i.e. all the data required by the parameter is contained in a single R object. This is done by setting attributes on the object such as `parnam`, `parval`, `mlt` etc.  This way, if a user wants to access a MODFLOW parameter, they don't have to combine or calculate from different objects. 
+2. Creating these `rmf_parameter` objects with RMODFLOW using S3 *functions* which should be relatively straightforward (or maybe not, as we'll see below).
+
+## Reading
+Reading of MODFLOW parameters is done automatically by the RMODFLOW `rmf_read_*` of those packages that may contain parameters.
+
+For discrete boundary conditions, there is no problem. A parameter is defined with data much like it is without a parameter. The `data` object also contains a logical `parameter` column indicating if the cell is part of a parameter. A new `parameter_values` element is also added.
+```{r}
+dis <- rmf_example_file("example-model.dis") %>%
+  rmf_read_dis()
+
+# chd <- rmf_example_file("example-model.chd") %>%
+#   rmf_read_chd(dis = dis) # FIX failing for me at the moment
+# str(chd)
+```
+
+The problem arises when reading/writing continuous data defined by parameters, i.e. flow package data and continuous boundary condition data. Parameters of this kind are defined for clusters, not cells. There can be multiple clusters per parameter. The information for a cluster is different for flow packages and continuous boundary conditions.
+
+For flow packages, a parameter cluster contains:
+
+- Integers specifying the layer(s) to which the parameter applies
+- Name of multiplier array ("NONE" if no multiplier array is active)
+- Name of zone array ("ALL" if no zone array is active)
+- IZ values which are the integer indices of the zone array, if present, for which the parameter applies
+
+For a continuous boundary condition, a parameter cluster contains:
+
+- Name of multiplier array ("NONE" if no multiplier array is active)
+- Name of zone array ("ALL" if no zone array is active)
+- IZ values which are the integer indices of the zone array, if present, for which the parameter applies
+- Additionally, this type of parameter can be time-varying.s **Note: time-varying parameters are implemented but have not been tested.**
+
+The problem here is that if we want to read in a package defined by such parameters, we need to supply a `mlt` and/or `zon` object to the read function (unless mltarr = "NONE" and zonarr = "ALL"). The idea is that the read-in object contains ALL the information used by MODFLOW. So not only the multiplier/zone array names, but also their values. That way, the user can access the parameter directly and in its entirety without having to calculate it from different arrays.
+```{r}
+mlt <- rmf_example_file("example-model.mlt") %>%
+  rmf_read_mlt(dis = dis)
+
+zon <- rmf_example_file("example-model.zon") %>%
+  rmf_read_zon(dis = dis)
+
+lpf <- rmf_example_file("example-model.lpf") %>%
+  rmf_read_lpf(dis = dis, mlt = mlt, zon = zon)
+str(lpf)
+```
+
+If a `mlt` or `zon` object is needed but not supplied, the `rmf_read_*` function will throw an error.
+
+The returned flow package object will have a `parameter` element which contains the flow parameters and a `parameter_values` argument containing the corresponding values. Additionally, the variable (let's call them variables here; there actually *hydraulic parameters* since they remain constant during the simulation) arrays such as HK have been recalculated taking the defined parameters into account. Thus, in the example above, where parameters were defined for HK, the `lpf$hk` array contains the values used by MODFLOW. You don't have to calculate those yourself. 
+
+For continuous boundary condition packages such as recharge, the returned object also contains a `parameter_values` element but the parameter arrays are listed under the corresponding variable, e.g. `rch$recharge`. When plotting, the S3 method automatically calculates and plots all the active arrays for the specified stress-period.
+```{r}
+# No example with continuous boundary package defined by parameters
+```
+
+If you do not want to deal with the reading of additional input arguments, just use the top-level `rmf_read()` function as discussed in [the vignette on top-level functions](top_level.html).
+
+You can calculate a resulting `rmf_array` from specified multiplier & zone arrays, parameter values and or layers indices using `rmf_calculate_array()`:
+```{r}
+rmf_calculate_array(dis = dis, 
+                    layer = 1:2,
+                    mltarr = mlt$rmlt[c(1, 9)],
+                    zonarr = NULL,
+                    parval = 1.5)
+```
+
+
+As stated above, a PVAL file contains all the active MODFLOW parameters. This can be read using the `rmf_read_pval()` function:
+```{r}
+pvl <- rmf_example_file("example-model.pval") %>%
+  rmf_read_pval()
+str(pvl)
+```
+
+
+## Writing
+Once the object is read in or created, writing is no problem. Just use the appropriate `rmf_write_*` function and this will handle everything. No need to supply additional function arguments besides the `dis` object and the filepath.
+
+## Creating
+RMODFLOW provides S3 methods for creating MODFLOW parameters through the `rmf_create_parameter()` functions.
+
+Creating a parameter for a discrete boundary condition package is easy: just call `rmf_create_parameter.rmf_list()` on a `rmf_list` object:
+```{r}
+lst <- data.frame(i = 1,
+                  j = 1:dis$ncol,
+                  k = 1,
+                  q = 500) %>%
+  rmf_create_list(kper = 1)
+
+lst_p <- rmf_create_parameter(lst, parnam = "WELLS", parval = 1.5)
+str(lst_p)
+
+```
+
+Creating a parameter for continuous boundary conditions is a little trickier. There are two ways of doing this. First, you can call `rmf_create_parameter.rmf_2d_array` on a `rmf_2d_array` and specify the `kper` argument which by default looks at the `kper` argument of the array. This is intended to be used on arrays that contain the same values. If values differ in an array however, the mltnam attribute is named (which can be set with the `mltnam` argument). As a user, you should then supply this array to a MLT object.
+```{r}
+ar <- rmf_create_array(12e-1, dim = c(dis$nrow, dis$ncol)) %>%
+  rmf_create_parameter(parnam = "RCH_1", parval = 1.5, kper = 1) 
+ar
+
+ar2 <- rnorm(dis$nrow*dis$ncol, mean = 12e-1, sd = 0.5) %>%
+  rmf_create_array(dim = c(dis$nrow, dis$ncol)) %>%
+  rmf_create_parameter(parnam = "RCH_2", parval = 1.5, kper = 1) 
+ar2
+```
+
+Secondly, you can use `rmf_create_parameter.default()` and supply the multiplier and/or zone arrays directly to create an array from:
+```{r}
+mlt <- rmf_create_mlt(mltnam = "RCH", rmlt = rmf_create_array(0.0002, dim = c(dis$nrow, dis$ncol)))
+zon <- rmf_create_zon(zonnam = "RCH", izon = rmf_create_array(1:4, dim = c(dis$nrow, dis$ncol)))
+p <- rmf_create_parameter(dis = dis, kper = 1, parnam = "RCH_1", parval = 1.5,
+                          mltnam = "RCH", zonnam = "RCH", iz = list(c(1,2)),
+                          mlt = mlt, zon = zon)
+p
+```
+
+For flow package data, it works similar. In addition to the above functions, you also have `rmf_create_parameter.rmf_3d_array()`. Also, for flow package data, you should not supply `kper` but rather a `layer` argument (defaults to all layers in the array) as well as a `partyp` argument. Just like `rmf_create_parameter.rmf_2d_array`, this is intended to be used on arrays the contain the same values so that Mltarr = "NONE" and Zonarr = "ALL". If different values are present, you should remember to add the array to the `mlt` object.
+```{r}
+hk <- rmf_create_array(10, dim = c(dis$nrow, dis$ncol, dis$nlay)) %>%
+  rmf_create_parameter(parnam = "HK_1", parval = 0.5, layer = 1:dis$nlay,
+                       partyp = "HK")
+str(hk)
+```
+
+It is therefore often safer to use the `rmf_create_parameter.default()` function:
+```{r}
+mlt <- rmf_create_mlt(mltnam = "HK", rmlt = rmf_create_array(rnorm(dis$nrow*dis$ncol, 8, 8), dim = c(dis$nrow, dis$ncol)))
+zon <- rmf_create_zon(zonnam = "HK", izon = rmf_create_array(1, dim = c(dis$nrow, dis$ncol)))
+p <- rmf_create_parameter(dis = dis, layer = 1:dis$nlay, parnam = "HK_1", parval = 1.5,
+                          mltnam = "HK", zonnam = "HK", iz = list(1),
+                          partyp = "HK", mlt = mlt, zon = zon)
+str(p)
+```
+
+
+To create a `pvl` object, simply supply vectors with the names and parameter values:
+```{r}
+rmf_create_pval(parnam = c("HK_1", "HK_2"),
+               parval = c(12, 0.01))
+```
+
+Of course, all of this can be avoided by not using MODFLOW parameters and just script your own:
+```{r}
+hk_fact <- 1.5
+hk <- rmf_create_array(10, dim = c(dis$nrow, dis$ncol, dis$nlay)) * hk_fact
+lpf <- rmf_create_lpf(dis = dis, hk = hk)
+
+```
+
+

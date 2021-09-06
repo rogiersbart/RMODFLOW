@@ -1,10 +1,10 @@
 ---
-title: "A brief overview"
+title: "Introduction to RMODFLOW"
 author: "Bart Rogiers"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A brief overview}
+  %\VignetteIndexEntry{Introduction to RMODFLOW}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -85,13 +85,58 @@ Many ways of visualizing 2D, 3D and 4D arrays are available. Check out the help 
 rmf_plot(dis$top, dis = dis)
 ```
 
+```{r}
+df <- rmf_as_tibble(dis$top, dis = dis)
+library(ggplot2)
+ggplot(df, aes(x, y, fill = value, group = id)) +
+  geom_polygon() +
+  scale_fill_gradientn(colours = rev(rainbow(7))) +
+  coord_equal()
+```
+
+3D array:
+
+```{r}
+rmf_plot(dis$botm, dis = dis, k = 1)
+rmf_plot(dis$botm, dis = dis, i = 5)
+rmf_plot(dis$botm, dis = dis, j = 5)
+```
+
+```{r}
+df <- dis$botm %>%
+  rmf_as_tibble(dis = dis, k = 1)
+ggplot(df, aes(x, y, fill = value, group = id)) +
+  geom_polygon() +
+  scale_fill_gradientn(colours = rev(rainbow(7))) +
+  coord_equal()
+```
+
+
+
 And here you have a basic map view and two vertical cross-sections for a 4D array:
 
 ```{r}
-rmf_plot(hed, dis = dis, k = 1)
-rmf_plot(hed, dis = dis, i = 5)
+rmf_plot(hed, dis = dis, k = 1, l = 1)
+rmf_plot(hed, dis = dis, i = 5, l = 1)
 rmf_plot(hed, dis = dis, j = 5)
 ```
+
+```{r}
+df <- rmf_as_tibble(hed, dis = dis, k = 1, l = 1)
+ggplot(df, aes(x, y, fill = value, group = id)) +
+  geom_polygon() +
+  scale_fill_gradientn(colours = rev(rainbow(7))) +
+  coord_equal()
+```
+
+Test sf
+
+```{r, eval = FALSE}
+df <- rmf_as_sf(dis$top, dis = dis, prj = list(projection = "+init=epsg:31370", origin = c(0,0,0), rotation = 0))
+library(mapview)
+mapview(df)
+```
+
 
 # The pipe operator
 

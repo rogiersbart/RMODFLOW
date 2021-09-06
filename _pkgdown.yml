@@ -5,6 +5,7 @@ authors:
 template:
   params:
     bootswatch: united
+    ganalytics: UA-32706734-4
 
 reference:
   - title: "Read MODFLOW files"

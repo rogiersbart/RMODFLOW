@@ -3,9 +3,9 @@ Type: Package
 Title: Pre- and post-processing of MODFLOW files in R
 Version: 0.4.0.9000
 Date: 2016-06-27
-Authors@R: person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be")
-Author: Bart Rogiers <brogiers@sckcen.be>
-Maintainer: Bart Rogiers <brogiers@sckcen.be>
+Authors@R: c(
+    person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be"),
+    person("Cas", "Neyens", role = "aut", email = "cas.neyens@vub.be"))
 Description: The RMODFLOW package provides a set of tools for groundwater flow
     modelling with MODFLOW.
 License: GPL (>= 2)
@@ -13,24 +13,43 @@ Imports:
     ggplot2,
     akima,
     rgl,
-    readr,
-    hydroPSO,
+    readr (>= 2.0.0),
     hydroGOF,
-    DEoptim,
     directlabels,
-    grid,
-    quadprog,
+    fs,
     sp,
     rgdal,
     animation,
     tools,
-    lubridate,
     xml2,
-    rvest
+    rvest,
+    sf,
+    tibble,
+    dplyr,
+    stringr,
+    purrr,
+    abind,
+    ggquiver,
+    magrittr,
+    stars,
+    processx,
+    tidyr,
+    spectralscale,
+    rui,
+    lubridate
+Remotes:
+    rogiersbart/spectralscale,
+    rogiersbart/rui
 URL: https://github.com/rogiersbart/RMODFLOW
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
-RoxygenNote: 6.0.1
-Suggests: knitr,
-    rmarkdown
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    mapview
 VignetteBuilder: knitr
 ByteCompile: true
+Depends: 
+    R (>= 2.10)

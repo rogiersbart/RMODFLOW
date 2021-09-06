@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Cas Neyens" />
+
+<meta name="date" content="2021-08-19" />
+
+<title>MODFLOW parameters</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">MODFLOW parameters</h1>
+<h4 class="author">Cas Neyens</h4>
+<h4 class="date">2021-08-19</h4>
+
+
+
+<p>Since MODFLOW-2000, you can specify so called parameters in the MODFLOW input files of flow and boundary condition packages. A parameter multiplies all the variable values of the defined cells with the parameter value. For example in the river package, the only allowed parameter type is RIV, which represents the riverbed hydraulic conductivity. All the riverbed hydraulic conductivities in the cells defined under the parameter will therefore be multiplied with the parameter value. You can specify parameters for the horizontal hydraulic conductivity in layers, for the recharge values, the riverbed conductance etc. MODFLOW parameters differ between discrete boundary conditions and continuous data for boundary conditions and flow packages. These parameters all have the following:</p>
+<ul>
+<li>A parameter name</li>
+<li>A predefined parameter type specific to the package (e.g. HK, VK, RCH, …)</li>
+<li>A parameter value</li>
+<li>A number specifying the amount of clusters/cells defined by the parameter</li>
+</ul>
+<p>Additionally, a parameter can be time-varying. This means that there can be multiple “instances” of a single parameter. Each instance defines a different set of clusters/cells for the parameter. The name, type and value remain the same.</p>
+<p>The idea behind MODFLOW parameters is that they are easier to handle during calibration and sensitivity analysis. Instead of changing all individual values of each cell, you just change the parameter value. This is made even easier by the PVAL file, which lists all the parameters active in the current simulation with their names and values. This file can be used by external optimization softwares such as UCODE.</p>
+<p>If you do not use a scripting language to prepare or optimize your MODFLOW model, parameters can be very useful. But if you use a scripting language you could just as easily define a parameter inside your script and use those in your scripted optimization.</p>
+<p><strong>I strongly advise against using MODFLOW parameters in your models, unless you really need to. You can script them yourself and keep your input files self-contained.</strong></p>
+<p>MODFLOW parameters are difficult to handle because sometimes, the input specifying a single parameter is spread around multiple files. With a single function, it is difficult to read in or access a single MODFLOW parameter. Your new best friend RMODFLOW is equipped to deal with this however.</p>
+<p>The RMODFLOW parameter API aims at :</p>
+<ol style="list-style-type: decimal">
+<li>Creating objects of class <code>rmf_parameter</code> that are self-contained, i.e. all the data required by the parameter is contained in a single R object. This is done by setting attributes on the object such as <code>parnam</code>, <code>parval</code>, <code>mlt</code> etc. This way, if a user wants to access a MODFLOW parameter, they don’t have to combine or calculate from different objects.</li>
+<li>Creating these <code>rmf_parameter</code> objects with RMODFLOW using S3 <em>functions</em> which should be relatively straightforward (or maybe not, as we’ll see below).</li>
+</ol>
+<div id="reading" class="section level2">
+<h2>Reading</h2>
+<p>Reading of MODFLOW parameters is done automatically by the RMODFLOW <code>rmf_read_*</code> of those packages that may contain parameters.</p>
+<p>For discrete boundary conditions, there is no problem. A parameter is defined with data much like it is without a parameter. The <code>data</code> object also contains a logical <code>parameter</code> column indicating if the cell is part of a parameter. A new <code>parameter_values</code> element is also added.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.dis&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_dis</span>()</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># chd &lt;- rmf_example_file(&quot;example-model.chd&quot;) %&gt;%</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   rmf_read_chd(dis = dis) # FIX failing for me at the moment</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># str(chd)</span></span></code></pre></div>
+<p>The problem arises when reading/writing continuous data defined by parameters, i.e. flow package data and continuous boundary condition data. Parameters of this kind are defined for clusters, not cells. There can be multiple clusters per parameter. The information for a cluster is different for flow packages and continuous boundary conditions.</p>
+<p>For flow packages, a parameter cluster contains:</p>
+<ul>
+<li>Integers specifying the layer(s) to which the parameter applies</li>
+<li>Name of multiplier array (“NONE” if no multiplier array is active)</li>
+<li>Name of zone array (“ALL” if no zone array is active)</li>
+<li>IZ values which are the integer indices of the zone array, if present, for which the parameter applies</li>
+</ul>
+<p>For a continuous boundary condition, a parameter cluster contains:</p>
+<ul>
+<li>Name of multiplier array (“NONE” if no multiplier array is active)</li>
+<li>Name of zone array (“ALL” if no zone array is active)</li>
+<li>IZ values which are the integer indices of the zone array, if present, for which the parameter applies</li>
+<li>Additionally, this type of parameter can be time-varying.s <strong>Note: time-varying parameters are implemented but have not been tested.</strong></li>
+</ul>
+<p>The problem here is that if we want to read in a package defined by such parameters, we need to supply a <code>mlt</code> and/or <code>zon</code> object to the read function (unless mltarr = “NONE” and zonarr = “ALL”). The idea is that the read-in object contains ALL the information used by MODFLOW. So not only the multiplier/zone array names, but also their values. That way, the user can access the parameter directly and in its entirety without having to calculate it from different arrays.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mlt <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.mlt&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_mlt</span>(<span class="at">dis =</span> dis)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>zon <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.zon&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_zon</span>(<span class="at">dis =</span> dis)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>lpf <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.lpf&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_lpf</span>(<span class="at">dis =</span> dis, <span class="at">mlt =</span> mlt, <span class="at">zon =</span> zon)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(lpf)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 19</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ ilpfcb            : num 9</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ hdry              : num -2e+20</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ nplpf             : num 2</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ storagecoefficient: logi FALSE</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ constantcv        : logi FALSE</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ thickstrt         : logi FALSE</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ nocvcorrection    : logi FALSE</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ novfc             : logi FALSE</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ noparcheck        : logi FALSE</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ laytyp            : num [1:9] 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ layavg            : num [1:9] 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ chani             : num [1:9] -1 -1 -1 -1 -1 -1 -1 -1 -1</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ layvka            : num [1:9] 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ laywet            : num [1:9] 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ parameters        :List of 2</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ HK_Par1: &#39;rmf_parameter&#39; num [1:10, 1:10, 1:6] 0 0 0 0 0 0 0 0 0 0 ...</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;parnam&quot;)= chr &quot;HK_Par1&quot;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;parval&quot;)= num 150</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;layer&quot;)= num [1:6] 1 2 3 4 5 6</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;partyp&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;mlt&quot;)= chr [1:6] &quot;NONE&quot; &quot;NONE&quot; &quot;NONE&quot; &quot;NONE&quot; ...</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;zon&quot;)= chr [1:6] &quot;HK_Par1_Z1&quot; &quot;HK_Par1_Z2&quot; &quot;HK_Par1_Z3&quot; &quot;HK_Par1_Z4&quot; ...</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;iz&quot;)=List of 6</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ HK_Par2: &#39;rmf_parameter&#39; num [1:10, 1:10, 1:9] 100 100 100 100 90 ...</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;parnam&quot;)= chr &quot;HK_Par2&quot;</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;parval&quot;)= num 200</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;layer&quot;)= num [1:9] 1 2 3 4 5 6 7 8 9</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;partyp&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;mlt&quot;)= chr [1:9] &quot;HK_Par2_M1&quot; &quot;HK_Par2_M2&quot; &quot;HK_Par2_M3&quot; &quot;HK_Par2_M4&quot; ...</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;zon&quot;)= chr [1:9] &quot;HK_Par2_Z1&quot; &quot;HK_Par2_Z2&quot; &quot;HK_Par2_Z3&quot; &quot;HK_Par2_Z4&quot; ...</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..- attr(*, &quot;iz&quot;)=List of 6</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : num 1</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ parameter_values  : Named num [1:2] 150 200</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;HK_Par1&quot; &quot;HK_Par2&quot;</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ hk                : &#39;rmf_3d_array&#39; num [1:10, 1:10, 1:9] 100 100 100 100 90 ...</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ hani              : &#39;rmf_3d_array&#39; num [1:10, 1:10, 1:9] 1 1 1 1 1.11 ...</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ vka               : &#39;rmf_3d_array&#39; num [1:10, 1:10, 1:9] 1 1 1 1 1 1 1 1 1 1 ...</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;comment&quot;)= chr &quot; LPF: Layer Property Flow package file created on 2017-05-30 by ModelMuse version 3.9.0.0.&quot;</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr [1:2] &quot;lpf&quot; &quot;rmf_package&quot;</span></span></code></pre></div>
+<p>If a <code>mlt</code> or <code>zon</code> object is needed but not supplied, the <code>rmf_read_*</code> function will throw an error.</p>
+<p>The returned flow package object will have a <code>parameter</code> element which contains the flow parameters and a <code>parameter_values</code> argument containing the corresponding values. Additionally, the variable (let’s call them variables here; there actually <em>hydraulic parameters</em> since they remain constant during the simulation) arrays such as HK have been recalculated taking the defined parameters into account. Thus, in the example above, where parameters were defined for HK, the <code>lpf$hk</code> array contains the values used by MODFLOW. You don’t have to calculate those yourself.</p>
+<p>For continuous boundary condition packages such as recharge, the returned object also contains a <code>parameter_values</code> element but the parameter arrays are listed under the corresponding variable, e.g. <code>rch$recharge</code>. When plotting, the S3 method automatically calculates and plots all the active arrays for the specified stress-period.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># No example with continuous boundary package defined by parameters</span></span></code></pre></div>
+<p>If you do not want to deal with the reading of additional input arguments, just use the top-level <code>rmf_read()</code> function as discussed in <a href="top_level.html">the vignette on top-level functions</a>.</p>
+<p>You can calculate a resulting <code>rmf_array</code> from specified multiplier &amp; zone arrays, parameter values and or layers indices using <code>rmf_calculate_array()</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_calculate_array</span>(<span class="at">dis =</span> dis, </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">layer =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">mltarr =</span> mlt<span class="sc">$</span>rmlt[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">9</span>)],</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">zonarr =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">parval =</span> <span class="fl">1.5</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 3d array with 10 rows, 10 columns and 2 layers, representing the i, j &amp; k dimensions. </span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.7500000 0.7500000 0.7500000 0.7500000 0.7686140 0.8474689 0.9263238</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.7500000 0.7500000 0.7500000 0.7500000 0.7893653 0.8682202 0.9470751</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.7500000 0.7500000 0.7500000 0.7500000 0.8101166 0.8889715 0.9678264</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.7500000 0.7432230 0.7222131 0.7012033 0.7815875 0.8979043 0.9885777</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.6749410 0.6539311 0.6329213 0.6119115 0.6599835 0.7763003 0.8942276</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.5856492 0.5646393 0.5436295 0.5226197 0.5383795 0.6597886 0.7900325</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.4963574 0.4753475 0.4543377 0.4500000 0.4500000 0.5555935 0.6858374</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4513984 0.5816423</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4774472</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,8]      [,9]     [,10]</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 1.0051788 1.0500000 1.0500000</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 1.0259301 1.0500000 1.0500000</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 1.0466813 1.0500000 1.0500000</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 1.0500000 1.0500000 1.0500000</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 1.0244715 1.0500000 1.0500000</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.9202764 1.0500000 1.0500000</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.8160813 0.9463252 1.0500000</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.7118862 0.8421301 0.9723740</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.6076911 0.7379350 0.8681789</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.5034959 0.6337398 0.7639837</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 2</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.7500000 0.7500000 0.7500000 0.7500000 0.7686140 0.8474689 0.9263238</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.7500000 0.7500000 0.7500000 0.7500000 0.7893653 0.8682202 0.9470751</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.7500000 0.7500000 0.7500000 0.7500000 0.8101166 0.8889715 0.9678264</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.7500000 0.7432230 0.7222131 0.7012033 0.7815875 0.8979043 0.9885777</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.6749410 0.6539311 0.6329213 0.6119115 0.6599835 0.7763003 0.8942276</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.5856492 0.5646393 0.5436295 0.5226197 0.5383795 0.6597886 0.7900325</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.4963574 0.4753475 0.4543377 0.4500000 0.4500000 0.5555935 0.6858374</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4513984 0.5816423</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4774472</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000 0.4500000</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,8]      [,9]     [,10]</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 1.0051788 1.0500000 1.0500000</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 1.0259301 1.0500000 1.0500000</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 1.0466813 1.0500000 1.0500000</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 1.0500000 1.0500000 1.0500000</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 1.0244715 1.0500000 1.0500000</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.9202764 1.0500000 1.0500000</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.8160813 0.9463252 1.0500000</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.7118862 0.8421301 0.9723740</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.6076911 0.7379350 0.8681789</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.5034959 0.6337398 0.7639837</span></span></code></pre></div>
+<p>As stated above, a PVAL file contains all the active MODFLOW parameters. This can be read using the <code>rmf_read_pval()</code> function:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pvl <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.pval&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_pval</span>()</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(pvl)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 2</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ np  : num 4</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data: tibble [4 x 2] (S3: tbl_df/tbl/data.frame)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ parnam: chr [1:4] &quot;HK_Par1&quot; &quot;HK_Par2&quot; &quot;CHD_Par1&quot; &quot;CHD_Par2&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ parval: num [1:4] 150 200 30 30</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;comment&quot;)= chr &quot; PVAL file created on 2017-05-30 by ModelMuse version 3.9.0.0.&quot;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr [1:2] &quot;pval&quot; &quot;rmf_package&quot;</span></span></code></pre></div>
+</div>
+<div id="writing" class="section level2">
+<h2>Writing</h2>
+<p>Once the object is read in or created, writing is no problem. Just use the appropriate <code>rmf_write_*</code> function and this will handle everything. No need to supply additional function arguments besides the <code>dis</code> object and the filepath.</p>
+</div>
+<div id="creating" class="section level2">
+<h2>Creating</h2>
+<p>RMODFLOW provides S3 methods for creating MODFLOW parameters through the <code>rmf_create_parameter()</code> functions.</p>
+<p>Creating a parameter for a discrete boundary condition package is easy: just call <code>rmf_create_parameter.rmf_list()</code> on a <code>rmf_list</code> object:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>lst <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">i =</span> <span class="dv">1</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">j =</span> <span class="dv">1</span><span class="sc">:</span>dis<span class="sc">$</span>ncol,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">k =</span> <span class="dv">1</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">q =</span> <span class="dv">500</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_list</span>(<span class="at">kper =</span> <span class="dv">1</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>lst_p <span class="ot">&lt;-</span> <span class="fu">rmf_create_parameter</span>(lst, <span class="at">parnam =</span> <span class="st">&quot;WELLS&quot;</span>, <span class="at">parval =</span> <span class="fl">1.5</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(lst_p)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Classes &#39;rmf_parameter&#39;, &#39;rmf_list&#39; and &#39;data.frame&#39;:    10 obs. of  4 variables:</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ i: num  1 1 1 1 1 1 1 1 1 1</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ j: int  1 2 3 4 5 6 7 8 9 10</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ k: num  1 1 1 1 1 1 1 1 1 1</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ q: num  500 500 500 500 500 500 500 500 500 500</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;kper&quot;)= num 1</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parnam&quot;)= chr &quot;WELLS&quot;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parval&quot;)= num 1.5</span></span></code></pre></div>
+<p>Creating a parameter for continuous boundary conditions is a little trickier. There are two ways of doing this. First, you can call <code>rmf_create_parameter.rmf_2d_array</code> on a <code>rmf_2d_array</code> and specify the <code>kper</code> argument which by default looks at the <code>kper</code> argument of the array. This is intended to be used on arrays that contain the same values. If values differ in an array however, the mltnam attribute is named (which can be set with the <code>mltnam</code> argument). As a user, you should then supply this array to a MLT object.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ar <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(<span class="fl">12e-1</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_parameter</span>(<span class="at">parnam =</span> <span class="st">&quot;RCH_1&quot;</span>, <span class="at">parval =</span> <span class="fl">1.5</span>, <span class="at">kper =</span> <span class="dv">1</span>) </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ar</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Active during stress period: 1 </span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2  1.2   1.2</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parnam&quot;)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH_1&quot;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parval&quot;)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.5</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;mlt&quot;)</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;NONE&quot;</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;zon&quot;)</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;ALL&quot;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>ar2 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(dis<span class="sc">$</span>nrow<span class="sc">*</span>dis<span class="sc">$</span>ncol, <span class="at">mean =</span> <span class="fl">12e-1</span>, <span class="at">sd =</span> <span class="fl">0.5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_array</span>(<span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_parameter</span>(<span class="at">parnam =</span> <span class="st">&quot;RCH_2&quot;</span>, <span class="at">parval =</span> <span class="fl">1.5</span>, <span class="at">kper =</span> <span class="dv">1</span>) </span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>ar2</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Active during stress period: 1 </span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.8622544 1.7177458 0.7071614 1.1059387 0.2039422 1.3893549 1.3033530</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.5321135 0.4182131 1.4771901 1.2320352 1.3195507 1.0910106 0.7158136</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.2114483 2.0823891 1.2941426 1.4681752 1.8610797 0.9895661 0.7373341</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 1.5102661 1.5870899 0.9137615 0.9721996 1.0625720 0.9549752 2.0313197</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.7023085 2.2883747 1.5806117 0.5925514 1.3776705 1.1781776 1.2265713</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 1.4586874 0.7089096 1.7554675 1.7160923 0.9507596 1.4491953 1.4450042</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.7070739 0.7317844 1.4788095 1.6615930 1.4511923 0.4493761 1.0825667</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 1.0173869 1.5436023 0.5211000 0.8782099 0.4719098 1.3609972 1.2031789</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.7751420 1.2432469 1.0667987 0.7372677 1.9396328 1.0190410 0.7767562</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 1.2802870 1.5849111 1.4635497 1.2234469 1.1009021 1.1744023 1.2353149</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             [,8]        [,9]     [,10]</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 1.72532262  2.23913155 0.6664853</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.67155062  0.88264444 0.8948220</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 1.37025566  1.14456889 1.4715876</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.73216042  1.20819935 1.6217587</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 1.93666075  1.26141678 0.8894753</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 1.13040087 -0.03144597 1.1466509</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.84535039  1.97848690 0.6658991</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.01808446  0.34141707 0.9908544</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.58361623  0.53394435 1.5311249</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 1.34054596  1.36264617 0.7302635</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parnam&quot;)</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH_2&quot;</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parval&quot;)</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.5</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;mlt&quot;)</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH_2&quot;</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;zon&quot;)</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;ALL&quot;</span></span></code></pre></div>
+<p>Secondly, you can use <code>rmf_create_parameter.default()</code> and supply the multiplier and/or zone arrays directly to create an array from:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mlt <span class="ot">&lt;-</span> <span class="fu">rmf_create_mlt</span>(<span class="at">mltnam =</span> <span class="st">&quot;RCH&quot;</span>, <span class="at">rmlt =</span> <span class="fu">rmf_create_array</span>(<span class="fl">0.0002</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>zon <span class="ot">&lt;-</span> <span class="fu">rmf_create_zon</span>(<span class="at">zonnam =</span> <span class="st">&quot;RCH&quot;</span>, <span class="at">izon =</span> <span class="fu">rmf_create_array</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">rmf_create_parameter</span>(<span class="at">dis =</span> dis, <span class="at">kper =</span> <span class="dv">1</span>, <span class="at">parnam =</span> <span class="st">&quot;RCH_1&quot;</span>, <span class="at">parval =</span> <span class="fl">1.5</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">mltnam =</span> <span class="st">&quot;RCH&quot;</span>, <span class="at">zonnam =</span> <span class="st">&quot;RCH&quot;</span>, <span class="at">iz =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">mlt =</span> mlt, <span class="at">zon =</span> zon)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>p</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Active during stress period: 1 </span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]  [,8]  [,9] [,10]</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00 3e-04 0e+00</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parnam&quot;)</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH_1&quot;</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;parval&quot;)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.5</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;mlt&quot;)</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH&quot;</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;zon&quot;)</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RCH&quot;</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;iz&quot;)</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;iz&quot;)[[1]]</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 2</span></span></code></pre></div>
+<p>For flow package data, it works similar. In addition to the above functions, you also have <code>rmf_create_parameter.rmf_3d_array()</code>. Also, for flow package data, you should not supply <code>kper</code> but rather a <code>layer</code> argument (defaults to all layers in the array) as well as a <code>partyp</code> argument. Just like <code>rmf_create_parameter.rmf_2d_array</code>, this is intended to be used on arrays the contain the same values so that Mltarr = “NONE” and Zonarr = “ALL”. If different values are present, you should remember to add the array to the <code>mlt</code> object.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>hk <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(<span class="dv">10</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol, dis<span class="sc">$</span>nlay)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_create_parameter</span>(<span class="at">parnam =</span> <span class="st">&quot;HK_1&quot;</span>, <span class="at">parval =</span> <span class="fl">0.5</span>, <span class="at">layer =</span> <span class="dv">1</span><span class="sc">:</span>dis<span class="sc">$</span>nlay,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">partyp =</span> <span class="st">&quot;HK&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(hk)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  &#39;rmf_parameter&#39; num [1:10, 1:10, 1:9] 10 10 10 10 10 10 10 10 10 10 ...</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parnam&quot;)= chr &quot;HK_1&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parval&quot;)= num 0.5</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;layer&quot;)= int [1:9] 1 2 3 4 5 6 7 8 9</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;partyp&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;mlt&quot;)= chr [1:9] &quot;NONE&quot; &quot;NONE&quot; &quot;NONE&quot; &quot;NONE&quot; ...</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;zon&quot;)= chr [1:9] &quot;ALL&quot; &quot;ALL&quot; &quot;ALL&quot; &quot;ALL&quot; ...</span></span></code></pre></div>
+<p>It is therefore often safer to use the <code>rmf_create_parameter.default()</code> function:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mlt <span class="ot">&lt;-</span> <span class="fu">rmf_create_mlt</span>(<span class="at">mltnam =</span> <span class="st">&quot;HK&quot;</span>, <span class="at">rmlt =</span> <span class="fu">rmf_create_array</span>(<span class="fu">rnorm</span>(dis<span class="sc">$</span>nrow<span class="sc">*</span>dis<span class="sc">$</span>ncol, <span class="dv">8</span>, <span class="dv">8</span>), <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>zon <span class="ot">&lt;-</span> <span class="fu">rmf_create_zon</span>(<span class="at">zonnam =</span> <span class="st">&quot;HK&quot;</span>, <span class="at">izon =</span> <span class="fu">rmf_create_array</span>(<span class="dv">1</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol)))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">rmf_create_parameter</span>(<span class="at">dis =</span> dis, <span class="at">layer =</span> <span class="dv">1</span><span class="sc">:</span>dis<span class="sc">$</span>nlay, <span class="at">parnam =</span> <span class="st">&quot;HK_1&quot;</span>, <span class="at">parval =</span> <span class="fl">1.5</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">mltnam =</span> <span class="st">&quot;HK&quot;</span>, <span class="at">zonnam =</span> <span class="st">&quot;HK&quot;</span>, <span class="at">iz =</span> <span class="fu">list</span>(<span class="dv">1</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">partyp =</span> <span class="st">&quot;HK&quot;</span>, <span class="at">mlt =</span> mlt, <span class="at">zon =</span> zon)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(p)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  &#39;rmf_parameter&#39; num [1:10, 1:10, 1] 16.1 3.4 19.6 9.9 7.5 ...</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;dimlabels&quot;)= chr [1:3] &quot;i&quot; &quot;j&quot; &quot;k&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parnam&quot;)= chr &quot;HK_1&quot;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;parval&quot;)= num 1.5</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;layer&quot;)= int [1:9] 1 2 3 4 5 6 7 8 9</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;partyp&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;mlt&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;zon&quot;)= chr &quot;HK&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;iz&quot;)=List of 1</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ : num 1</span></span></code></pre></div>
+<p>To create a <code>pvl</code> object, simply supply vectors with the names and parameter values:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_pval</span>(<span class="at">parnam =</span> <span class="fu">c</span>(<span class="st">&quot;HK_1&quot;</span>, <span class="st">&quot;HK_2&quot;</span>),</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">parval =</span> <span class="fu">c</span>(<span class="dv">12</span>, <span class="fl">0.01</span>))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW Parameter Value File object with: </span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 parameter values: </span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   parnam parval</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   HK_1  12.00</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2   HK_2   0.01</span></span></code></pre></div>
+<p>Of course, all of this can be avoided by not using MODFLOW parameters and just script your own:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>hk_fact <span class="ot">&lt;-</span> <span class="fl">1.5</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>hk <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(<span class="dv">10</span>, <span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol, dis<span class="sc">$</span>nlay)) <span class="sc">*</span> hk_fact</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>lpf <span class="ot">&lt;-</span> <span class="fu">rmf_create_lpf</span>(<span class="at">dis =</span> dis, <span class="at">hk =</span> hk)</span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

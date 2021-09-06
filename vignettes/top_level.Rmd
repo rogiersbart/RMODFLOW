@@ -1,0 +1,53 @@
+---
+title: "Top-level functions"
+author: "Cas Neyens"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{top_level}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+library(RMODFLOW)
+```
+
+RMODFLOW provides `rmf_create_*`, `rmf_read_*` and `rmf_write_*` functions for individual MODFLOW packages. In most cases however, it is useful to read, write and create entire MODFLOW models. For this, RMODFLOW provides the top-level `rmf_create`, `rmf_read` and `rmf_write` functions. The main advantage of using these top-level functions, besides the obvious less verbose code, is that all options are set correctly: free/fixed formats, binary, additional arguments etc. are all set correctly by these functions. 
+
+## Read
+To read in an entire model, use `rmf_read()` on the MODFLOW name file. This will read in all the input packages active during the simulation. The only additional argument that has to be specified by the user is the `precision` of binary files ("single" by default).
+```{r}
+rma <- rmf_example_file("rocky-mountain-arsenal.nam") %>%
+  rmf_read()
+```
+
+To also include output files, set `output = TRUE` but be warned: this might become slow if output files are large.
+To suppress the writing of information to the console, set `verbose = FALSE`.
+
+`rmf_read` returns a list of class `modflow` which holds all the packages. It can be useful to "unpack" this list with `list2env(model, .Globalenv)`.
+
+## Create
+To create a RMODFLOW `modflow` object, use `rmf_create()`. This function takes as input RMODFLOW objects of class `rmf_package` or a single list with `rmf_package` objects. If a `nam` object is not provided, it is created (silently). To overwrite the cell-by-cell flow package number of all objects that have a this number, specify a `cbc` value.
+```{r}
+modflow <- rmf_create(rma$dis, rma$bas, rma$lpf, rma$oc, rma$pcg, rma$wel, rma$chd, cbc = 88)
+str(modflow)
+```
+
+All MODFLOW simulations must have at least a DIS, BAS, solver and flow package. If any of those are missing or duplicated, `rmf_create` will throw an error.
+```{r, error=T, purl=FALSE}
+modflow <- rmf_create(rma$dis, rma$bas, rma$lpf, rma$oc)
+```
+
+## Write
+To write a model, use `rmf_write()` and pass a `modflow` object and the path to a MODFLOW name file. 
+```{r, eval = FALSE}
+rmf_write(modflow, file = "input.nam", verbose = FALSE)
+```
+
+You can exclude certain packages from writing by supplying an `exclude` argument with their RMODFLOW abbreviations. This can be useful if you e.g. want try out excluding a package from the simulation without recreating the entire `modflow` object. Because this bypasses the creation of the `modflow` object, you can exclude required packages such as the solver or the DIS file without RMODFLOW erroring out, so be careful.
+```{r, eval = FALSE}
+rmf_write(modflow, file = "input.nam", verbose = FALSE, exclude = c("wel", "chd"))
+```
+

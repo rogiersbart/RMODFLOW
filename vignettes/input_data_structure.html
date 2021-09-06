@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Cas Neyens" />
+
+<meta name="date" content="2021-08-19" />
+
+<title>Structure of input data</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Structure of input data</h1>
+<h4 class="author">Cas Neyens</h4>
+<h4 class="date">2021-08-19</h4>
+
+
+
+<p>Input for MODFLOW models is read from user/GUI-generated files. Typically, every package has a separate file and these are accessed and read on a line-by-line basis. The type, number and order of variables being read are strictly predefined for every file and are documented in the MODFLOW user-manual and <a href="https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm">online help</a>. The MODFLOW source code is almost entirely written in FORTRAN and has evolved over more than three decades. As such, the capabilities of reading input have evolved as well, maintaining backward compatibility. Initially, only fixed-format input could be read, where every value has a predefined amount of characters. In later versions, the less strict free-format could be used. Because of these rigid rules, writing MODFLOW input files by hand can be a cumbersome task. This is one of the reasons to use a GUI or script-based library such as RMODFLOW.</p>
+<p>Input for MODFLOW packages can generally be thought of in three forms:</p>
+<ol style="list-style-type: decimal">
+<li>Scalar values</li>
+<li>Array-directed input</li>
+<li>List-directed input</li>
+</ol>
+<div id="scalar-values" class="section level2">
+<h2>1. Scalar values</h2>
+<p>The first type consists of one or more values on a single line that are read by MODFLOW. These are mostly integers or doubles. For example, the <code>dis</code> file contains the number of rows, columns, layers and stress periods, all as integers. RMODFLOW treats these type of values as scalars. It uses the internal functions <code>rmfi_parse_variables</code> and <code>rmfi_write_variables</code> to read and write these values, respectively. By default, the free-format is used (<code>format = &#39;free&#39;</code> argument) which simply reads every value on the line. If <code>format = &#39;fixed&#39;</code>, 10-character fields are read for <code>n</code> values. Missing values are assigned zero. When writing or creating, it is advised to consistently use the free-format (default). If you are having trouble reading in a file and don’t know if free-format is being used, try passing the <code>format = &#39;fixed&#39;</code> argument to the call of the read function. There are no explicit <code>create</code> functions for scalars; they are simply assigned through arguments in the function calls to the <code>rmf_create_*</code> functions, e.g. <code>rmf_create_dis(nrow = 42, ncol = 42, nlay = 3)</code>.</p>
+</div>
+<div id="array-directed-input" class="section level2">
+<h2>2. Array-directed input</h2>
+<p>Array-directed input represents continuous variables over the MODFLOW grid such as the model elevation (<code>dis$top</code>) or hydraulic conductivity (e.g. <code>lpf$hk</code>). MODFLOW output often comes in the form of arrays as well, e.g. simulated heads or drawdowns. In RMODFLOW, MODFLOW arrays are handled by the <code>rmf_array</code> classes and corresponding S3 methods. There are three <code>rmf_array</code> classes: <code>rmf_2d_array</code>, <code>rmf_3d_array</code> and <code>rmf_4d_array</code>. Arrays that are returned from <code>rmf_read_*</code> functions are always of one of these classes. Arrays passed to <code>rmf_write_*</code> functions are also of these classes.</p>
+<div id="creating" class="section level3">
+<h3>Creating</h3>
+<p>To create a <code>rmf_array</code>, use the <code>rmf_create_array()</code> function. When this function is called on an existing matrix or array, it simply sets the class depending on the dim argument (2D, 3D or 4D). Alternatively, you can supply a dim argument yourself:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ar <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">42</span>, <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">ncol =</span> <span class="dv">5</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(ar)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 4 rows and 5 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]   42   42   42   42   42</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]   42   42   42   42   42</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]   42   42   42   42   42</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]   42   42   42   42   42</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(<span class="dv">42</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 4 rows and 5 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]   42   42   42   42   42</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]   42   42   42   42   42</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]   42   42   42   42   42</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]   42   42   42   42   42</span></span></code></pre></div>
+<p>Besides setting the class, <code>rmf_create_array</code> also adds a <code>dimlabel</code> attribute which holds the names of MODFLOW dimensions the array represents. By default, these are <code>i, j, k &amp; l</code> -representing rows, columns, layers and time steps, respectively- for a 4D array, <code>i, j &amp; k</code> for a 3D array and <code>i &amp; j</code> for a 2D array. These can also be set by supplying a dimlabel argument:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(<span class="dv">10</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">5</span>), <span class="at">dimlabels =</span> <span class="fu">c</span>(<span class="st">&#39;rows&#39;</span>, <span class="st">&#39;columns&#39;</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 2 rows and 5 columns, representing the rows &amp; columns dimensions. </span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]   10   10   10   10   10</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]   10   10   10   10   10</span></span></code></pre></div>
+<p>A <code>rmf_array</code> is <em>at least 2D</em>, possibly 3D or 4D. When creating, it is implicitely assumed that the first dimension of the <code>rmf_array</code> represents rows, the second dimension columns, the optional third dimension layers and the optional fourth dimension time-steps. So if you have a one-layered model, a <code>rmf_4d_array</code> would have a third dimension of length one:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(<span class="st">&quot;my_value&quot;</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 4d array with 2 rows, 2 columns, 1 layer and 3 timesteps, representing the i, j, k &amp; l dimensions. </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1, 1</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1]       [,2]      </span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] &quot;my_value&quot; &quot;my_value&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] &quot;my_value&quot; &quot;my_value&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1, 2</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1]       [,2]      </span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] &quot;my_value&quot; &quot;my_value&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] &quot;my_value&quot; &quot;my_value&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1, 3</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1]       [,2]      </span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] &quot;my_value&quot; &quot;my_value&quot;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] &quot;my_value&quot; &quot;my_value&quot;</span></span></code></pre></div>
+<p>A 1D <code>rmf_array</code> does therefore not exist; it is simply an atomic vector. Calling <code>rmf_create_array</code> on an atomic vector returns an error:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(<span class="fu">rep</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: Please provide 2d matrix, or 2d, 3d or 4d array.</span></span></code></pre></div>
+<p>In base MODFLOW-2005, 1D arrays are only used to assign the DELR and DELC variables (representing widths along rows and columns). It makes little sense to do this in R with verbose calls such as <code>matrix(100, nrow = 42, ncol = 1)</code> or <code>array(100, dim = c(42, 1))</code> instead of a simple <code>rep(100, 42)</code>.</p>
+</div>
+<div id="subsetting" class="section level3">
+<h3>Subsetting</h3>
+<p>A <code>rmf_array</code> behaves like a common array in R with two exceptions related to subsetting.</p>
+<ol style="list-style-type: decimal">
+<li>Unlike R arrays, <code>drop = FALSE</code> by default for <code>rmf_arrays</code>. Subsetting a <code>rmf_array</code> will therefore not drop dimensions with length 1 or collapse into the lowest possible dimension unless the result is 1D. This behaviour can be overwritten by setting <code>drop = TRUE</code>.</li>
+<li>Unlike R arrays, subsetting a <code>rmf_array</code> will not drop the class. As such, subsetting a <code>rmf_array</code> will always return a <code>rmf_array</code> as long as it has a <code>dim</code> argument, i.e. the subsetted result is 2D, 3D or 4D.</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R array drops dims of length 1</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ar <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="dv">1</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ar[,,,<span class="dv">2</span>])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 2</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># rmf_array keeps dims of length 1</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>rmf_ar <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(ar)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(rmf_ar[,,,<span class="dv">2</span>])</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 2 1</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># collapses into atomic vector</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(ar[<span class="dv">1</span>,<span class="dv">1</span>,,])</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;numeric&quot;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># remains 4D array since 4th dimension is not subsetted</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[<span class="dv">1</span>,<span class="dv">1</span>,,])</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;rmf_4d_array&quot;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co"># collapses</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[<span class="dv">1</span>,<span class="dv">1</span>,,, <span class="at">drop =</span> <span class="cn">TRUE</span>])</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;numeric&quot;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co"># drops class</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>ar <span class="ot">&lt;-</span> <span class="fu">structure</span>(<span class="fu">array</span>(<span class="dv">12</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">2</span>)), <span class="at">class =</span> <span class="st">&#39;not_rmf&#39;</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(ar[,,<span class="dv">1</span>])</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;matrix&quot; &quot;array&quot;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co"># subsetting a rmf_array always returns a rmf_array...</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar)</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;rmf_4d_array&quot;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[,,<span class="dv">1</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;rmf_4d_array&quot;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[,,,<span class="dv">1</span>])</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;rmf_3d_array&quot;</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[,,<span class="dv">1</span>,<span class="dv">1</span>])</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;rmf_2d_array&quot;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co"># ... unless return is 1D</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(rmf_ar[,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>])</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;numeric&quot;</span></span></code></pre></div>
+<p>This creates a consistency when using <code>rmf_arrays</code>. In the example with a one-layered model, classic R arrays would drop the unused 3th dimension. This would result in a 3D array where the third dimension suddenly represents time-steps instead of layers. Furthermore, as long as a subsetted <code>rmf_array</code> remains in fact an array (has a dim argument), it should still be one of the <code>rmf_array</code> classes. For example, extracting a layer from a <code>rmf_3d_array</code> should return a <code>rmf_2d_array</code> instead of becoming a matrix:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting a single layer returns a rmf_array</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.dis&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmf_read_dis</span>()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dis<span class="sc">$</span>botm[,,<span class="dv">5</span>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] -14.50490 -14.83648 -14.92529 -14.85315 -14.88318 -15.22660 -15.60427</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] -14.81713 -14.90889 -14.83753 -14.99092 -15.69238 -16.18429 -16.32294</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] -14.96890 -14.85298 -15.06713 -15.79833 -16.28175 -16.32756 -16.73219</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] -14.99913 -14.83854 -15.57881 -16.28461 -16.33874 -17.08000 -17.76279</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] -14.95689 -15.00021 -16.16134 -16.32473 -17.10558 -17.77778 -16.96283</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] -14.84188 -15.63926 -16.31119 -17.02771 -17.78451 -17.00444 -16.31083</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] -14.89941 -16.07933 -16.50189 -17.78640 -17.02192 -16.31098 -15.87303</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] -14.86487 -15.41835 -16.31006 -16.37534 -16.31068 -15.96870 -14.89909</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] -14.90482 -14.86794 -14.92409 -15.38964 -15.45983 -14.93413 -14.91179</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] -14.61301 -15.13022 -15.15843 -14.96830 -14.88495 -14.88413 -14.86478</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,8]      [,9]     [,10]</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] -15.74037 -15.36730 -14.83495</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] -16.31697 -16.19521 -14.95860</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] -17.61780 -16.32182 -14.97984</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] -16.82500 -16.19919 -14.84082</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] -16.31050 -15.32750 -14.89233</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] -15.77645 -14.83797 -14.88540</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] -14.87565 -14.90725 -14.53460</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] -14.92088 -14.75577 -14.16998</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] -14.89658 -14.34830 -14.10139</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] -14.41982 -14.11653 -14.18420</span></span></code></pre></div>
+</div>
+<div id="time" class="section level3">
+<h3>Time</h3>
+<p>Time in MODFLOW is represented in two ways: through time-steps and stress periods. Time-steps are inherit to the finite-difference equations used by MODFLOW whereas stress periods are used as a convenience for the user. A stress period encompases one or more time-steps during which all temporal input remains constant. Arrays for input files such as recharge arrays can therefore vary per stress period. Output arrays such as simulated heads however, vary on a time-step basis. This creates a design choice for the <code>rmf_array</code>: does the 4th dimension represent time-steps or stress-periods? As stated above, the 4th dimension for a <code>rmf_array</code> represent time-steps since the other dimensions (rows, columns and layers) are also inherited from the finite-difference approximation. If you want a <code>rmf_array</code> to represent constant input over one or more stress periods, you can supply a <code>kper</code> argument to <code>rmf_create_array</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_array</span>(<span class="fl">1.5</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>), <span class="at">kper =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 2 rows and 2 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Active during stress periods: 1 4 </span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  1.5  1.5</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]  1.5  1.5</span></span></code></pre></div>
+<p>This sets the <code>kper</code> attribute which is used by the create functions for boundary-conditions to know during which stress-periods this array should be active.</p>
+</div>
+<div id="reading-writing-rmf_arrays" class="section level3">
+<h3>Reading &amp; writing rmf_arrays</h3>
+<p>In a MODFLOW input file, an array is preceded by a single-line, the array-control record. This line contains information on the type and format of values in the following array and where to read them. There are two types of array-control records:</p>
+<ol style="list-style-type: decimal">
+<li>Fixed-format</li>
+</ol>
+<blockquote>
+<p>LOCAT CNSTNT FMTIN IPRN</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>Free-format. This type can take one of four possible forms:</li>
+</ol>
+<blockquote>
+<p><strong>CONSTANT</strong> CNSTNT<br />
+<strong>INTERNAL</strong> CNSTNT FMTIN IPRN<br />
+<strong>EXTERNAL</strong> Nunit CNSTNT FMTIN IPRN<br />
+<strong>OPEN/CLOSE</strong> FNAME CNSTNT FMTIN IPRN</p>
+</blockquote>
+<p>To add to the complexity, fixed-format and free-format <strong>EXTERNAL</strong> and <strong>OPEN/CLOSE</strong> headers can point to binary files which contain the array. After the array-control records, the array is being read. Each control-record is explained in the manual and <a href="https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?.htm">online help</a>. RMODFLOW can read fixed-format and all 4 types of free-format array-headers. There is no support for writing fixed-format arrays.</p>
+<p>To read MODFLOW arrays, RMODFLOW uses the internal <code>rmfi_parse_array</code> function which is called in all <code>rmf_read_*</code> functions that need to read in arrays. If the array-control record is fixed-format, a <code>nam</code> object (as returned from <code>rmf_read_nam</code>) needs to be supplied in the call to the <code>rmf_read_*</code> function (unless LOCAT = 0). This is because the LOCAT variable represent a FORTRAN unit number which points to the file containing the array. Without the corresponding NAME file, it is impossible to know which file this unit number represents. The same is true when reading <strong>EXTERNAL</strong> files. If the array is binary, the user must know if the array is single or double precision. By default, the <code>precision</code> argument is set to <code>&#39;single&#39;</code>.</p>
+<p>Writing arrays to input files is handled by the internal <code>rmfi_write_array</code> function. By default, arrays are written in free-format using either the <strong>CONSTANT</strong> or <strong>INTERNAL</strong> array-control header, depending on whether or not there is more than one unique value in the supplied array. There is support for writing <strong>EXTERNAL</strong> and <strong>OPEN/CLOSE</strong> arrays to external files, but this is discouraged. Keeping all data in a single file creates a more clear and cohesive structure. To write <strong>EXTERNAL</strong> arrays, you will need to supply the <code>external</code> argument to the <code>rmf_write_*</code> call which is a character vector with the names of the data sets to write. It will also need a <code>nam</code> object to check for a unique unit number (Nunit). You will have to add this unit number manually to a NAM file yourself. This is because the <code>rmfi_write_array</code> function is not intended to alter existing RMODFLOW objects; only to write arrays. To write an <strong>OPEN/CLOSE</strong> file, a <code>fname</code> argument needs to be given which is a character vector with the names of the data sets to write. Each OPEN/CLOSE file can contain only one 2D array. Both <strong>EXTERNAL</strong> and <strong>OPEN/CLOSE</strong> files can be written as binary by supplying a <code>binary</code> argument which is a character vector with the names of the data sets to write as binary.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.dis&quot;</span>) <span class="sc">%&gt;%</span> <span class="fu">rmf_read_dis</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>nam <span class="ot">&lt;-</span> <span class="fu">rmf_example_file</span>(<span class="st">&quot;example-model.nam&quot;</span>) <span class="sc">%&gt;%</span> <span class="fu">rmf_read_nam</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># this will create separate files for the 3D botm array and for the 2D top array using the EXTERNAL header</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># it will also generate a warning as a reminder to add Nunit to the NAME file </span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_write_dis</span>(<span class="at">dis =</span> dis, <span class="at">file =</span> <span class="st">&quot;input.dis&quot;</span>, <span class="at">external =</span> <span class="fu">c</span>(<span class="st">&quot;botm&quot;</span>, <span class="st">&quot;top&quot;</span>), <span class="at">nam =</span> nam)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># this will create separate binary files for each layer in botm using the OPEN/CLOSE header</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_write_dis</span>(<span class="at">dis =</span> dis, <span class="at">file =</span> <span class="st">&quot;input.dis&quot;</span>, <span class="at">fname =</span> <span class="fu">c</span>(<span class="st">&quot;botm&quot;</span>), <span class="at">binary =</span> <span class="fu">c</span>(<span class="st">&quot;botm&quot;</span>))</span></code></pre></div>
+<p>Lastly, the <code>rmf_read_array()</code> and <code>rmf_write_array()</code> functions can be used to read/write an <code>rmf_array</code> from/to separate files. These functions are not called when reading MODFLOW packages, but rather serve as utility functions when a user needs to read/write an array from/to MODFLOW supported files instead of writing an entire MODFLOW package. Because they are intended to be used outside the context of packages, they do not recognize array-control records. They can however read/write a MODFLOW output header such as:</p>
+<blockquote>
+<p>KSTP KPER PERTIM TOTIM DESC NCOL NROW ILAY</p>
+</blockquote>
+</div>
+</div>
+<div id="list-directed-input" class="section level2">
+<h2>3. List-directed input</h2>
+<p>Where array-directed input represents continuous data over the MODFLOW grid, list-directed input can be thought of as discrete (spatial) features. Examples include wells, rivers, drains etc. Some output comes in list-directed form as well, most notably certain cell-by-cell fluxes from discrete boundary conditions. List-directed input basically looks like a R data.frame, containing rows and columns. Each row represent a discrete feature, the columns contain the variables. A MODFLOW list always contains the following columns: <code>i</code>, <code>j</code>, <code>k</code> representing the row, column and layer indices of the feature, respectively. Additional columns contain the variables, e.g. the well package has the <code>q</code> variable representing the volumetric flux of the well.</p>
+<p>In RMODFLOW, MODFLOW lists are handled by the <code>rmf_list</code> class and corresponding S3 methods. A <code>rmf_list</code> is basically a data.frame. This might be confusing, since a list is a different class in R. We’ve chosen to follow the naming conventions in MODFLOW however.</p>
+<div id="creating-1" class="section level3">
+<h3>Creating</h3>
+<p>To create a <code>rmf_list</code>, use the <code>rmf_create_list()</code> function on a data.frame-like object which contains at least i, j and k columns. The passed object will be coerced to a data.frame.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wells <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(<span class="sc">~</span>i, <span class="sc">~</span>j, <span class="sc">~</span>k, <span class="sc">~</span>q,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                <span class="dv">1</span>,   <span class="dv">1</span>,  <span class="dv">1</span>, <span class="sc">-</span><span class="dv">25</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                <span class="dv">2</span>,   <span class="dv">1</span>,  <span class="dv">1</span>, <span class="sc">-</span><span class="dv">50</span>) <span class="sc">%&gt;%</span> <span class="fu">rmf_create_list</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(wells)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Classes &#39;rmf_list&#39; and &#39;data.frame&#39;: 2 obs. of  4 variables:</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ i: num  1 2</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ j: num  1 1</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ k: num  1 1</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ q: num  -25 -50</span></span></code></pre></div>
+<p>A <code>rmf_list</code> is mostly used when handling boundary condition packages. Because their input may vary per stress period, a <code>kper</code> attribute can be set on <code>rmf_list</code> as well:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>wel <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="sc">-</span><span class="dv">25</span>), <span class="at">ncol =</span> <span class="dv">4</span>) </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(wel) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;i&quot;</span>, <span class="st">&quot;j&quot;</span>, <span class="st">&quot;k&quot;</span>, <span class="st">&quot;q&quot;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_create_list</span>(wel, <span class="at">kper =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)) <span class="sc">%&gt;%</span> <span class="fu">str</span>()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Classes &#39;rmf_list&#39; and &#39;data.frame&#39;: 1 obs. of  4 variables:</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ i: num 1</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ j: num 1</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ k: num 2</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ q: num -25</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;kper&quot;)= num [1:2] 1 4</span></span></code></pre></div>
+<p>Time-steps are not readily handled by a <code>rmf_list</code> at the moment.</p>
+</div>
+<div id="reading-writing-rmf_lists" class="section level3">
+<h3>Reading &amp; writing rmf_lists</h3>
+<p>The internal function <code>rmfi_parse_list</code> is used by <code>rmf_read_*</code> functions that need to read MODFLOW lists. RMODFLOW can handle reading external and open/close lists as well. There is also support for reading the rarely used SFAC value. Additionally, binary lists can also be read. There is no mention of binary lists in the MODFLOW-2005 manual, but the source code does contain functions for handling these types of lists.</p>
+<p>There is no separate <code>rmfi_write_list</code> function. Writing a list consist of sequentially calling <code>rmfi_write_variables</code> on each row. There is currently no support for writing external or open/close lists. Writing of the SFAC value and of binary lists is also not available. Because of the limited use of these capabilities, these functionalities might not be added at all in RMODFLOW.</p>
+</div>
+</div>
+<div id="conversion" class="section level2">
+<h2>Conversion</h2>
+<p>RMODFLOW can convert between a <code>rmf_list</code> and a <code>rmf_array</code> with the <code>rmf_as_list()</code> and <code>rmf_as_array()</code> functions.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dis <span class="ot">&lt;-</span> <span class="fu">rmf_create_dis</span>(<span class="at">nrow =</span> <span class="dv">3</span>, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nlay =</span> <span class="dv">1</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ar <span class="ot">&lt;-</span> <span class="fu">rmf_create_array</span>(<span class="at">dim =</span> <span class="fu">c</span>(dis<span class="sc">$</span>nrow, dis<span class="sc">$</span>ncol, dis<span class="sc">$</span>nlay, <span class="dv">2</span>))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>ar[] <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">prod</span>(<span class="fu">dim</span>(ar))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>ar</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 4d array with 3 rows, 2 columns, 1 layer and 2 timesteps, representing the i, j, k &amp; l dimensions. </span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1, 1</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    1    4</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    2    5</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    3    6</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; , , 1, 2</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    7   10</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    8   11</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    9   12</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_list</span>(ar[,,,<span class="dv">1</span>])</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW list with 6 features and 1 variable </span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   i j k value</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 1 1     1</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 1 1     2</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 3 1 1     3</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 1 2 1     4</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2 2 1     5</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 3 2 1     6</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a><span class="co"># a rmf_as_list.rmf_4d_array needs a l index for the 4th dimension</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>lst <span class="ot">&lt;-</span> <span class="fu">rmf_as_list</span>(ar, <span class="at">l =</span> <span class="dv">2</span>)</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>lst </span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW list with 6 features and 1 variable </span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   i j k value</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 1 1     7</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 1 1     8</span></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 3 1 1     9</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 1 2 1    10</span></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2 2 1    11</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 3 2 1    12</span></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a><span class="co"># rmf_as_array needs a dis object to guess the dimensions of the array</span></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a><span class="fu">rmf_as_array</span>(lst, <span class="at">dis =</span> dis)</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RMODFLOW 2d array with 3 rows and 2 columns, representing the i &amp; j dimensions. </span></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not representing stress period data </span></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    7   10</span></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    8   11</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    9   12</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
