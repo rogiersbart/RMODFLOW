@@ -171,7 +171,7 @@ rmf_create_oc <- function(dis,
 #' @seealso \code{\link{rmf_write_oc}}, \code{\link{rmf_create_oc}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?oc.htm}
 rmf_read_oc <- function(file = {cat('Please select oc file ...\n'); file.choose()}, dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}, ...) {
   
-  oc_lines <- readr::read_lines(file)
+  oc_lines <- readr::read_lines(file, lazy = FALSE)
   oc <- list()
   
   # data set 0

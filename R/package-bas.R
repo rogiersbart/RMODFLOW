@@ -73,7 +73,7 @@ rmf_read_bas <- function(file = {cat('Please select bas file ...\n'); file.choos
                          ...) {
   
   bas <- list()
-  bas_lines <- readr::read_lines(file)
+  bas_lines <- readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(bas_lines)

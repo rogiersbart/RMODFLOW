@@ -62,7 +62,7 @@ rmf_create_pval = function(parnam,
 #' @seealso \code{\link{rmf_create_pval}}, \code{\link{rmf_write_pval}}, \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?pval.htm}
 rmf_read_pval <- function(path) {
   
-  pval_lines <- readr::read_lines(path)
+  pval_lines <- readr::read_lines(path, lazy = FALSE)
   pval <- list()
   
   # data set 0

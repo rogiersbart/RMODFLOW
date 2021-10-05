@@ -287,7 +287,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
     stop('Code not up to date', call. = FALSE)
     #     # update this to match the above structure!
     #     cbc <- list()
-    #     cbc.lines <- readr::read_lines(file)
+    #     cbc.lines <- readr::read_lines(file, lazy = FALSE)
     #     while(length(cbc.lines)!=0) {
     #       name <- substr(cbc.lines[1],25,40)
     #       cat('Processing',name,'...\n')    
@@ -558,7 +558,7 @@ rmf_read_hed <- function(file = {cat('Please select head file ...\n'); file.choo
     }
     
   } else { # ASCII
-    hed.lines <- readr::read_lines(file)
+    hed.lines <- readr::read_lines(file, lazy = FALSE)
     label <- TRUE
     header_fmt <- '(1X,2I5,2E15.6,A17,3I6,A17)'
     header_fmt <- rmfi_fortran_format(header_fmt)
@@ -978,7 +978,7 @@ rmf_read_ddn <- function(file = {cat('Please select ddn file ...\n'); file.choos
     }
 
   } else { # ASCII
-    hed.lines <- readr::read_lines(file)
+    hed.lines <- readr::read_lines(file, lazy = FALSE)
     label <- TRUE
     header_fmt <- '(1X,2I5,2E15.6,A17,3I6,A17)'
     header_fmt <- rmfi_fortran_format(header_fmt)
@@ -1187,7 +1187,7 @@ rmf_read_drawdown <- function(...) {
 
 rmf_read_bud <-  function(file = {cat('Please select listing file ...\n'); file.choose()}){
   
-  lst.lines <- readr::read_lines(file)
+  lst.lines <- readr::read_lines(file, lazy = FALSE)
   headers <- grep("VOLUMETRIC BUDGET FOR ENTIRE MODEL", lst.lines)
   enders <- grep("TIME SUMMARY AT END OF TIME STEP", lst.lines)
   

@@ -64,7 +64,7 @@ rmf_create_de4 <- function(itmx = 100,
 rmf_read_de4 <- function(file = {cat('Please select direct solver file ...\n'); file.choose()}, ...){
   
   de4 <- list()
-  de4_lines <- readr::read_lines(file)
+  de4_lines <- readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(de4_lines)

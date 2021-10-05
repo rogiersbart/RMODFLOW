@@ -393,7 +393,7 @@ rmf_optimize <- function(
                  "not provided an export file path.")
       rui::error("Issue with optimization.")
     }
-    start <- readr::read_tsv(export) %>%
+    start <- readr::read_tsv(export, lazy = FALSE) %>%
       dplyr::select(-1, -2) %>%
       dplyr::slice(nrow(.)) %>%
       unlist()

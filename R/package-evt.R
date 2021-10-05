@@ -106,7 +106,7 @@ rmf_read_evt <-  function(file = {cat('Please select evt file ...\n'); file.choo
                           zon = NULL,
                           ... ){
   
-  lines <- readr::read_lines(file)
+  lines <- readr::read_lines(file, lazy = FALSE)
   rmf_arrays <- list()
   
   # data set 0

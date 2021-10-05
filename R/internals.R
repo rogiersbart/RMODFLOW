@@ -672,7 +672,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           }
           
           # if external file holds multiple arrays, remove the corresponding lines
-          external_lines <-  readr::read_lines(absfile)
+          external_lines <-  readr::read_lines(absfile, lazy = FALSE)
           if(!is.null(attr(nam, as.character(nunit)))) external_lines <- external_lines[-c(1:attr(nam, as.character(nunit)))]
           
           if(fortranfmt) {
@@ -745,7 +745,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
             lengths <- rmfi_fortran_format(fmtin)
             fortranfmt <-  TRUE
           }
-          external_lines <-  readr::read_lines(absfile)
+          external_lines <-  readr::read_lines(absfile, lazy = FALSE)
           
           if(fortranfmt) {
             external_lines[1] <- paste(substring(external_lines[1], first = cumsum(lengths) - lengths + 1, last = cumsum(lengths)), collapse = ' ')
@@ -823,7 +823,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
               }
 
             } else { # read from external file
-              external_lines <-  readr::read_lines(absfile)
+              external_lines <-  readr::read_lines(absfile, lazy = FALSE)
               # remove lines of previous arrays
               if(!is.null(attr(nam, as.character(locat)))) external_lines <- external_lines[-c(1:attr(nam, as.character(locat)))]
               
@@ -1080,7 +1080,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       if(naux > 0) {
         widths <- readr::fwf_widths(c(rep(10, n - naux), NA))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - naux - 3), 'c')))
-        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols, lazy = FALSE))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
         
@@ -1093,7 +1093,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       } else {
         widths <- readr::fwf_widths(c(rep(10, n)))
         cols <- do.call(readr::cols_only, as.list(c(rep('i', 3), rep('d', n - 3))))
-        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols))
+        df <- as.data.frame(readr::read_fwf(I(lines), widths, col_types = cols, lazy = FALSE))
         
         df <- replace(df, which(is.na(df), arr.ind = TRUE), 0)
       }
@@ -1121,7 +1121,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       close(con)
       df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
-      ext_lines <- readr::read_lines(extfile)
+      ext_lines <- readr::read_lines(extfile, lazy = FALSE)
       header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(ext_lines[1]),' |\t')[[1]])
       if(toupper(header[1]) == 'SFAC') {
         scale <- as.numeric(header[2])
@@ -1144,7 +1144,7 @@ rmfi_parse_list <-  function(remaining_lines, nlst, l = NULL, varnames, scalevar
       df <-  matrix(aa, nrow=nlst, ncol=3+length(varnames), byrow = TRUE)
     } else {
       
-      ext_lines <- readr::read_lines(extfile)
+      ext_lines <- readr::read_lines(extfile, lazy = FALSE)
       
       header <- rmfi_remove_empty_strings(strsplit(rmfi_remove_comments_end_of_line(ext_lines[1]),' |\t')[[1]])
       if(toupper(header[1]) == 'SFAC') {

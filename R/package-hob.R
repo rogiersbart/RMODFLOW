@@ -188,7 +188,7 @@ rmf_create_hob <- function(locations,
 #' @seealso \code{\link{rmf_create_hob}}, \code{\link{rmf_write_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 rmf_read_hob <- function(file = {cat('Please select hob file ...\n'); file.choose()}, ...) {
   
-  hob_lines <- readr::read_lines(file)
+  hob_lines <- readr::read_lines(file, lazy = FALSE)
   hob <- list()
   
   # data set 0

@@ -142,7 +142,7 @@ rmf_create_nwt <- function(headtol = 0.001,
 #' @seealso \code{\link{rmf_write_nwt}}, \code{\link{rmf_create_nwt}} and \url{https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/}
 rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choose()}, ...) {
   
-  nwt_lines <- readr::read_lines(file)
+  nwt_lines <- readr::read_lines(file, lazy = FALSE)
   nwt <- list()
   
   # data set 0

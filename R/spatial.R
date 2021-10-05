@@ -1209,7 +1209,7 @@ rmf_transform_prj.mt3dms <- function(mt3dms, crs) {
 rmf_read_usgs_model_reference <- function(file = {cat('Please select usgs.model.reference file ...\n'); file.choose()},
                                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())}) {
   
-  lines <- readr::read_lines(file)
+  lines <- readr::read_lines(file, lazy = FALSE)
   
   # remove commented lines
   comments <- which(substr(lines, 1, 1) == "#")

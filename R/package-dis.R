@@ -94,7 +94,7 @@ rmf_create_dis <- function(nlay = 3,
 #' @seealso \code{\link{rmf_write_dis}}, \code{\link{rmf_create_dis}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm}
 rmf_read_dis <- function(file = {cat('Please select dis file ...\n'); file.choose()}, ...) {
   
-  dis_lines <- readr::read_lines(file)
+  dis_lines <- readr::read_lines(file, lazy = FALSE)
   dis <- list()
   prj <- NULL
   

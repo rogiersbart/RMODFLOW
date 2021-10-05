@@ -57,7 +57,7 @@ rmf_create_sip <- function(mxiter = 50,
 rmf_read_sip <- function(file = {cat('Please select strongly implicit procedure file ...\n'); file.choose()}, ...){
   
   sip <- list()
-  sip_lines <- readr::read_lines(file)
+  sip_lines <- readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(sip_lines)
