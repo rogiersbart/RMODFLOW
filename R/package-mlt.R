@@ -67,7 +67,7 @@ rmf_read_mlt <- function(file = {cat('Please select mlt file ...\n'); file.choos
                          dis = {cat('Please select dis file ...\n'); rmf_read_dis(file.choose())},
                          ...) {
   mlt <- list()
-  mlt_lines <- readr::read_lines(file)
+  mlt_lines <- readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(mlt_lines)

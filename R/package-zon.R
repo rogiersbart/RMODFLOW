@@ -53,7 +53,7 @@ rmf_read_zon <-  function(file = {cat('Please select zon file ...\n'); file.choo
                           ...){
   
   zon <-  list()
-  zon_lines <-  readr::read_lines(file)
+  zon_lines <-  readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <-  rmfi_parse_comments(zon_lines)

@@ -150,7 +150,7 @@ rmf_read_hfb <-  function(file = {cat('Please select horizontal flow barrier fil
   
   vars <- c('irow2', 'icol2', 'hydchr')
   option <- c('NOPRINT' = FALSE)
-  lines <-  readr::read_lines(file)
+  lines <-  readr::read_lines(file, lazy = FALSE)
   scalevar <- 6
   
   arg <- list(...)

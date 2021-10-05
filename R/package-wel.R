@@ -53,7 +53,7 @@ rmf_read_wel <-  function(file = {cat('Please select well file ...\n'); file.cho
   
   vars <- c('q')
   option <- c('NOPRINT' = FALSE)
-  lines <-  readr::read_lines(file)
+  lines <-  readr::read_lines(file, lazy = FALSE)
   
   input <- rmfi_parse_bc_list(lines = lines, dis = dis, varnames = vars, option = option, scalevar = 4, ...)
   

@@ -187,7 +187,7 @@ rmf_read_lpf <- function(file = {cat('Please select lpf file ...\n'); file.choos
                          zon = NULL,
                          ...) {
   
-  lpf_lines <- readr::read_lines(file)
+  lpf_lines <- readr::read_lines(file, lazy = FALSE)
   lpf <- list()
   
   # data set 0

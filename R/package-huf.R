@@ -202,7 +202,7 @@ rmf_read_huf <- function(file = {cat('Please select huf file ...\n'); file.choos
                          zon = NULL,
                          ...) {
   
-  huf_lines <- readr::read_lines(file)
+  huf_lines <- readr::read_lines(file, lazy = FALSE)
   huf <- list()
 
   # data set 0
@@ -486,7 +486,7 @@ rmf_read_kdep <- function(file = {cat('Please select kdep file ...\n'); file.cho
                           dis = {cat('Please select corresponding dis file ...\n'); rmf_read_dis(file.choose())},
                           ...) {
   
-  kdep_lines <- readr::read_lines(file)
+  kdep_lines <- readr::read_lines(file, lazy = FALSE)
   kdep <- list()
   
   # data set 0
@@ -662,7 +662,7 @@ rmf_read_lvda <- function(file,
                           ...) {
   
   
-  lvda_lines <- readr::read_lines(file)
+  lvda_lines <- readr::read_lines(file, lazy = FALSE)
   lvda <- list()
   
   # data set 0
