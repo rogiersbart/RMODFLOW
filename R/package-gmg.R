@@ -77,7 +77,7 @@ rmf_create_gmg <- function(rclose = 0.001,
 #' @seealso \code{\link{rmf_write_gmg}}, \code{\link{rmf_create_gmg}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?gmg.htm}
 rmf_read_gmg <- function(file = {cat('Please select gmg file ...\n'); file.choose()}, ...) {
   
-  gmg_lines <- readr::read_lines(file)
+  gmg_lines <- readr::read_lines(file, lazy = FALSE)
   gmg <- list()
   
   # data set 0

@@ -122,7 +122,7 @@ rmf_create_nam <- function(..., basename = NULL) {
 rmf_read_nam <- function(file = {cat('Please select nam file ...\n'); file.choose()}) {
   
   nam <- list()
-  lines <- readr::read_lines(file)
+  lines <- readr::read_lines(file, lazy = FALSE)
   
   # top comments
   data_set_0 <- rmfi_parse_comments(lines)

@@ -159,7 +159,7 @@ rmf_read_upw <- function(file = {cat('Please select upw file ...\n'); file.choos
                          zon = NULL,
                          ...) {
   
-  upw_lines <- readr::read_lines(file)
+  upw_lines <- readr::read_lines(file, lazy = FALSE)
   upw <- list()
   
   # data set 0

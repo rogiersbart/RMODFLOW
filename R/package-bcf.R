@@ -99,7 +99,7 @@ rmf_read_bcf <- function(file = {cat('Please select bcf file ...\n'); file.choos
                         ...){
   
   bcf <-  list()
-  bcf_lines <-  readr::read_lines(file)
+  bcf_lines <-  readr::read_lines(file, lazy = FALSE)
   
   # data set 0
   data_set_0 <- rmfi_parse_comments(bcf_lines)

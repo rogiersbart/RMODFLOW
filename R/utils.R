@@ -3745,7 +3745,7 @@ rmf_read_array <- function(file, nrow = NULL, ncol = NULL, nlay=1, nstp=1, binar
     close(con)
     
   } else { # ASCII
-    lines <- readr::read_lines(file)
+    lines <- readr::read_lines(file, lazy = FALSE)
     
     if(header) {
       

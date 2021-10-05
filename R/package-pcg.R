@@ -64,7 +64,7 @@ rmf_create_pcg <- function(mxiter = 20,
 #' @seealso \code{\link{rmf_write_pcg}}, \code{\link{rmf_create_pcg}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?pcg.htm}
 rmf_read_pcg <- function(file = {cat('Please select pcg file ...\n'); file.choose()}, ...) {
   
-  pcg_lines <- readr::read_lines(file)
+  pcg_lines <- readr::read_lines(file, lazy = FALSE)
   pcg <- list()
   
   # data set 0

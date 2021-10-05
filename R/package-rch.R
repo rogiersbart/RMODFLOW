@@ -73,7 +73,7 @@ rmf_read_rch <-  function(file = {cat('Please select rch file ...\n'); file.choo
                           zon = NULL,
                           ... ){
   
-  lines <- readr::read_lines(file)
+  lines <- readr::read_lines(file, lazy = FALSE)
   rmf_arrays <- list()
   
   # data set 0

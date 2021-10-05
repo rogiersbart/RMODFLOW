@@ -47,7 +47,7 @@ rmf_create_lmt <- function(fname = 'output.ftl',
 #' 
 rmf_read_lmt <- function(file={cat('Please select lmt file ...\n'); file.choose()}, ...) {
   
-  lmt_lines <- readr::read_lines(file)
+  lmt_lines <- readr::read_lines(file, lazy = FALSE)
   lmt <- list()
   
   # data set 0
