@@ -5,3 +5,4 @@
 ^NEWS\.md$
 ^inst/code/
 ^data-raw$
+^README\.Rmd$

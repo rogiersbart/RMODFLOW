@@ -394,7 +394,8 @@ rmf_optimize <- function(
       rui::error("Issue with optimization.")
     }
     start <- readr::read_tsv(export, lazy = FALSE) %>%
-      dplyr::select(-1, -2) %>%
+      dplyr::filter(is.finite(cost)) %>% 
+      dplyr::select(-cost, -converged) %>%
       dplyr::slice(nrow(.)) %>%
       unlist()
   }

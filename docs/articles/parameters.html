@@ -6,23 +6,18 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MODFLOW parameters • RMODFLOW</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/united/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="MODFLOW parameters">
+<script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="MODFLOW parameters">
 <meta property="og:description" content="RMODFLOW">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]--><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-32706734-4"></script><script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-32706734-4');
-</script>
+<![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
@@ -37,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">RMODFLOW</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
       </span>
     </div>
 
@@ -112,7 +107,7 @@
       <h1 data-toc-skip>MODFLOW parameters</h1>
                         <h4 class="author">Cas Neyens</h4>
             
-            <h4 class="date">2021-09-06</h4>
+            <h4 class="date">2021-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rogiersbart/RMODFLOW/blob/master/vignettes/parameters.Rmd"><code>vignettes/parameters.Rmd</code></a></small>
       <div class="hidden name"><code>parameters.Rmd</code></div>
@@ -376,28 +371,28 @@
 <span class="va">ar2</span>
 <span class="co">#&gt; RMODFLOW 2d array with 10 rows and 10 columns, representing the i &amp; j dimensions. </span>
 <span class="co">#&gt; Active during stress period: 1 </span>
-<span class="co">#&gt;            [,1]      [,2]     [,3]       [,4]      [,5]      [,6]      [,7]</span>
-<span class="co">#&gt;  [1,] 1.3085086 0.4614816 1.086500 0.97956549 1.5064366 0.5681369 1.8005999</span>
-<span class="co">#&gt;  [2,] 1.1030245 2.0580097 1.072726 0.09066484 1.0590334 1.3735253 1.3545042</span>
-<span class="co">#&gt;  [3,] 1.2285086 0.6563492 2.279540 1.34255690 0.8107590 0.5716219 0.8928630</span>
-<span class="co">#&gt;  [4,] 0.7328647 1.0576020 1.178001 1.44121015 1.7811450 0.9660546 0.3951984</span>
-<span class="co">#&gt;  [5,] 1.1482050 0.4235096 1.445277 1.24646139 1.4371341 1.1582732 1.3505758</span>
-<span class="co">#&gt;  [6,] 1.4082081 1.4496880 1.282635 1.01622223 1.6176927 1.6609367 1.2263785</span>
-<span class="co">#&gt;  [7,] 0.4590660 1.3976044 2.344551 1.35708702 0.8836153 0.7601923 0.9648195</span>
-<span class="co">#&gt;  [8,] 1.6208404 2.3815984 1.365891 1.26742388 0.9756333 1.8426625 0.5500428</span>
-<span class="co">#&gt;  [9,] 0.7449510 0.8912614 1.108991 1.59009299 1.0606756 1.4508127 1.3217983</span>
-<span class="co">#&gt; [10,] 1.2602675 0.6046778 1.654202 1.62083764 0.9237180 1.5997339 0.7261530</span>
-<span class="co">#&gt;            [,8]      [,9]    [,10]</span>
-<span class="co">#&gt;  [1,] 1.5417337 0.9439784 1.638000</span>
-<span class="co">#&gt;  [2,] 1.6797772 1.6838702 1.218556</span>
-<span class="co">#&gt;  [3,] 1.0607371 1.5576230 1.348528</span>
-<span class="co">#&gt;  [4,] 1.7243852 1.7575133 1.695584</span>
-<span class="co">#&gt;  [5,] 1.7744612 1.0552646 1.142876</span>
-<span class="co">#&gt;  [6,] 0.1917988 1.1278206 1.387054</span>
-<span class="co">#&gt;  [7,] 1.8447112 0.6372425 1.036398</span>
-<span class="co">#&gt;  [8,] 1.2459046 2.0290415 1.595479</span>
-<span class="co">#&gt;  [9,] 1.5982800 0.4963004 1.131930</span>
-<span class="co">#&gt; [10,] 1.1542623 1.1212171 2.298955</span>
+<span class="co">#&gt;            [,1]       [,2]      [,3]      [,4]      [,5]      [,6]      [,7]</span>
+<span class="co">#&gt;  [1,] 1.3987215  1.4007822 0.9481330 1.1861319 0.5285347 1.0197793 1.3316558</span>
+<span class="co">#&gt;  [2,] 1.1014303  0.3172325 1.2282764 0.7300679 1.6681879 1.1518832 0.7751159</span>
+<span class="co">#&gt;  [3,] 1.6531710  0.3876060 1.2060965 1.0574406 1.2965436 0.9930334 1.4943110</span>
+<span class="co">#&gt;  [4,] 0.7814193  1.5404219 1.8328985 0.9367031 0.8126319 0.9844248 1.4360198</span>
+<span class="co">#&gt;  [5,] 1.2394528  1.6142921 1.5891760 1.3831091 2.2647125 1.3270520 0.7856721</span>
+<span class="co">#&gt;  [6,] 1.7520531  1.0204952 1.2735220 1.6790536 0.5510337 1.6078179 1.4659023</span>
+<span class="co">#&gt;  [7,] 1.3560670  0.7346869 1.0309370 1.4310345 1.3094746 2.0020454 0.6993674</span>
+<span class="co">#&gt;  [8,] 1.3241762  0.7967068 1.2289476 1.2881479 1.5803410 1.1627943 1.6313164</span>
+<span class="co">#&gt;  [9,] 1.0465408  0.6020116 0.8228026 1.0803232 1.1579018 0.5282616 1.0703940</span>
+<span class="co">#&gt; [10,] 0.9539094 -0.1537345 1.0997940 0.9129385 0.6730613 1.5048293 1.9936104</span>
+<span class="co">#&gt;            [,8]     [,9]     [,10]</span>
+<span class="co">#&gt;  [1,] 1.2530623 1.352850 1.3610880</span>
+<span class="co">#&gt;  [2,] 0.8609448 1.228679 1.7992211</span>
+<span class="co">#&gt;  [3,] 2.0252072 1.277916 1.6909336</span>
+<span class="co">#&gt;  [4,] 0.2547936 0.665999 0.3178983</span>
+<span class="co">#&gt;  [5,] 1.1027948 0.809356 1.7271896</span>
+<span class="co">#&gt;  [6,] 1.2095580 1.347287 1.1084517</span>
+<span class="co">#&gt;  [7,] 0.5601449 1.371613 0.9257086</span>
+<span class="co">#&gt;  [8,] 1.6866873 1.454696 0.1696303</span>
+<span class="co">#&gt;  [9,] 0.5172566 1.669242 0.3597518</span>
+<span class="co">#&gt; [10,] 1.5336927 1.123371 0.9521509</span>
 <span class="co">#&gt; attr(,"parnam")</span>
 <span class="co">#&gt; [1] "RCH_2"</span>
 <span class="co">#&gt; attr(,"parval")</span>
@@ -460,7 +455,7 @@
                           mltnam <span class="op">=</span> <span class="st">"HK"</span>, zonnam <span class="op">=</span> <span class="st">"HK"</span>, iz <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>,
                           partyp <span class="op">=</span> <span class="st">"HK"</span>, mlt <span class="op">=</span> <span class="va">mlt</span>, zon <span class="op">=</span> <span class="va">zon</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>
-<span class="co">#&gt;  'rmf_parameter' num [1:10, 1:10, 1] 9.57 12.08 19.16 12.64 5.02 ...</span>
+<span class="co">#&gt;  'rmf_parameter' num [1:10, 1:10, 1] -2.73 9.35 7.91 6.68 12.53 ...</span>
 <span class="co">#&gt;  - attr(*, "dimlabels")= chr [1:3] "i" "j" "k"</span>
 <span class="co">#&gt;  - attr(*, "parnam")= chr "HK_1"</span>
 <span class="co">#&gt;  - attr(*, "parval")= num 1.5</span>
@@ -499,7 +494,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by <a href="https://rogiersbart.github.io/">Bart Rogiers</a>.</p>
+  <p>Developed by <a href="https://rogiersbart.github.io/">Bart Rogiers</a>, Cas Neyens.</p>
 </div>
 
 <div class="pkgdown">

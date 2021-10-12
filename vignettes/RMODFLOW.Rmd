@@ -28,13 +28,13 @@ rmf_example_files()
 
 The corresponding full file paths can be accessed through `rmf_example_file()` as follows:
 
-```{r}
+```{r eval = FALSE}
 rmf_example_file("example-model.dis")
 ```
 
 For all files from a single model, use:
 
-```{r}
+```{r eval = FALSE}
 rmf_example_model("example-model")
 ```
 

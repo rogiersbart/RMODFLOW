@@ -6,23 +6,18 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Introduction to RMODFLOW • RMODFLOW</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/united/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to RMODFLOW">
+<script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Introduction to RMODFLOW">
 <meta property="og:description" content="RMODFLOW">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]--><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-32706734-4"></script><script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-32706734-4');
-</script>
+<![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
@@ -37,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">RMODFLOW</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
       </span>
     </div>
 
@@ -112,7 +107,7 @@
       <h1 data-toc-skip>Introduction to RMODFLOW</h1>
                         <h4 class="author">Bart Rogiers</h4>
             
-            <h4 class="date">2021-09-06</h4>
+            <h4 class="date">2021-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rogiersbart/RMODFLOW/blob/master/vignettes/RMODFLOW.Rmd"><code>vignettes/RMODFLOW.Rmd</code></a></small>
       <div class="hidden name"><code>RMODFLOW.Rmd</code></div>
@@ -126,7 +121,7 @@
 <a href="#example-files" class="anchor"></a>Example files</h1>
 <p>RMODFLOW currently comes with several example MODFLOW models. The models can be listed with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rogiersbart/RMODFLOW">RMODFLOW</a></span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://rogiersbart.github.io/RMODFLOW/">RMODFLOW</a></span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ! {RMODFLOW} is still in its experimental lifecycle stage.
 ## 
@@ -170,50 +165,30 @@
 <p>The corresponding full file paths can be accessed through <code><a href="../reference/rmf_example_file.html">rmf_example_file()</a></code> as follows:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_example_file.html">rmf_example_file</a></span><span class="op">(</span><span class="st">"example-model.dis"</span><span class="op">)</span></code></pre></div>
-<pre><code>## [1] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.dis"</code></pre>
 <p>For all files from a single model, use:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_example_model.html">rmf_example_model</a></span><span class="op">(</span><span class="st">"example-model"</span><span class="op">)</span></code></pre></div>
-<pre><code>##  [1] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.bas" 
-##  [2] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.cbc" 
-##  [3] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.chd" 
-##  [4] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.dis" 
-##  [5] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.fdn" 
-##  [6] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.fhd" 
-##  [7] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.gpt" 
-##  [8] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.gsf" 
-##  [9] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.lpf" 
-## [10] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.lst" 
-## [11] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.md"  
-## [12] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.mlt" 
-## [13] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.nam" 
-## [14] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.oc"  
-## [15] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.pcg" 
-## [16] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.pval"
-## [17] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.Rmd" 
-## [18] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.wel" 
-## [19] "C:/Users/brogiers/Documents/R/win-library/4.1/RMODFLOW/extdata/example-model.zon"</code></pre>
 </div>
 <div id="io" class="section level1">
 <h1 class="hasAnchor">
 <a href="#io" class="anchor"></a>I/O</h1>
 <p>All functions for reading MODFLOW files into R have a prefix <code>rmf_read_</code>, after which in most cases the most common file extension follows. You can for instance read in the discretization file <code>example-model.dis</code> using:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">dis</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_read_dis.html">rmf_read_dis</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmf_example_file.html">rmf_example_file</a></span><span class="op">(</span><span class="st">"example-model.dis"</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">dis</span><span class="op">)</span></code></pre></div>
 <pre><code>## [1] "dis"         "rmf_package"</code></pre>
 <p>For several MODFLOW file types, the functions need more than just the filename to be able to process the file. For reading in the basic package file, you for instance have to specify a dis object as an additional argument:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">bas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_read_bas.html">rmf_read_bas</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmf_example_file.html">rmf_example_file</a></span><span class="op">(</span><span class="st">"example-model.bas"</span><span class="op">)</span>, dis <span class="op">=</span> <span class="va">dis</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">bas</span><span class="op">)</span></code></pre></div>
 <pre><code>## [1] "bas"         "rmf_package"</code></pre>
 <p>For the heads outputted by the model, you also need to specify a bas object:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">hed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_read_hed.html">rmf_read_fhd</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmf_example_file.html">rmf_example_file</a></span><span class="op">(</span><span class="st">"example-model.fhd"</span><span class="op">)</span>, dis <span class="op">=</span> <span class="va">dis</span>, bas <span class="op">=</span> <span class="va">bas</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">hed</span><span class="op">)</span></code></pre></div>
 <pre><code>## [1] "hed"          "rmf_4d_array"</code></pre>
 <p>To inspect the contents of these objects, which are often just lists, using <code><a href="https://rdrr.io/r/utils/str.html">str()</a></code> is often useful:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">dis</span><span class="op">)</span></code></pre></div>
 <pre><code>## List of 16
 ##  $ nlay  : num 9
@@ -244,7 +219,7 @@
 ##   ..- attr(*, "class")= chr "prj"
 ##  - attr(*, "comment")= chr [1:6] " Discretization File created on 2017-05-30 by ModelMuse version 3.9.0.0." " Upper left corner: (0, 0)" " Lower left corner: (0, -1000)" " Upper right corner: (1000, 0)" ...
 ##  - attr(*, "class")= chr [1:2] "dis" "rmf_package"</code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">bas</span><span class="op">)</span></code></pre></div>
 <pre><code>## List of 10
 ##  $ xsection    : logi FALSE
@@ -261,7 +236,7 @@
 ##   ..- attr(*, "dimlabels")= chr [1:3] "i" "j" "k"
 ##  - attr(*, "comment")= chr " Basic Package file created on 2017-05-30 by ModelMuse version 3.9.0.0."
 ##  - attr(*, "class")= chr [1:2] "bas" "rmf_package"</code></pre>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">hed</span><span class="op">)</span></code></pre></div>
 <pre><code>##  'hed' num [1:10, 1:10, 1:9, 1] 30 29.9 29.9 29.9 29.9 ...
 ##  - attr(*, "nstp")= num 1
@@ -272,17 +247,17 @@
 ##  - attr(*, "dimlabels")= chr [1:4] "i" "j" "k" "l"</code></pre>
 <p>All the elements in these lists are named following the MODFLOW variable names, as described in the <a href="https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/">online guide to MODFLOW</a>, but we use lowercase throughout the package (except for the package title).</p>
 <p>Similar to the reading functions, all writing functions start with a prefix <code>rmf_write_</code>, so you can try these as well. At this point, it might be useful to copy some of the example files to your working directory, and play around with them. You can use the following approach to do so:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_copy_to_wd.html">rmf_copy_to_wd</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmf_example_model.html">rmf_example_model</a></span><span class="op">(</span><span class="st">"example-model"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="visualization" class="section level1">
 <h1 class="hasAnchor">
 <a href="#visualization" class="anchor"></a>Visualization</h1>
 <p>Many ways of visualizing 2D, 3D and 4D arrays are available. Check out the help pages <code><a href="../reference/rmf_plot.rmf_2d_array.html">?rmf_plot.rmf_2d_array</a></code>, <code><a href="../reference/rmf_plot.rmf_3d_array.html">?rmf_plot.rmf_3d_array</a></code> and <code><a href="../reference/rmf_plot.rmf_4d_array.html">?rmf_plot.rmf_4d_array</a></code> to find out more. Here’s a basic visualization of a 2D array:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">top</span>, dis <span class="op">=</span> <span class="va">dis</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_as_tibble.html">rmf_as_tibble</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">top</span>, dis <span class="op">=</span> <span class="va">dis</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">id</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
@@ -291,16 +266,16 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_equal</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
 <p>3D array:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">botm</span>, dis <span class="op">=</span> <span class="va">dis</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">botm</span>, dis <span class="op">=</span> <span class="va">dis</span>, i <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-12-2.png" width="700"></p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">botm</span>, dis <span class="op">=</span> <span class="va">dis</span>, j <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-12-3.png" width="700"></p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">dis</span><span class="op">$</span><span class="va">botm</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="../reference/rmf_as_tibble.html">rmf_as_tibble</a></span><span class="op">(</span>dis <span class="op">=</span> <span class="va">dis</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">id</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
@@ -309,16 +284,16 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_equal</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 <p>And here you have a basic map view and two vertical cross-sections for a 4D array:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">hed</span>, dis <span class="op">=</span> <span class="va">dis</span>, k <span class="op">=</span> <span class="fl">1</span>, l <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">hed</span>, dis <span class="op">=</span> <span class="va">dis</span>, i <span class="op">=</span> <span class="fl">5</span>, l <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-14-2.png" width="700"></p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">hed</span>, dis <span class="op">=</span> <span class="va">dis</span>, j <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-14-3.png" width="700"></p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_as_tibble.html">rmf_as_tibble</a></span><span class="op">(</span><span class="va">hed</span>, dis <span class="op">=</span> <span class="va">dis</span>, k <span class="op">=</span> <span class="fl">1</span>, l <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">id</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_polygon.html">geom_polygon</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
@@ -326,7 +301,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_equal</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="RMODFLOW_files/figure-html/unnamed-chunk-15-1.png" width="700"></p>
 <p>Test sf</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmf_as_sf.html">rmf_as_sf</a></span><span class="op">(</span><span class="va">dis</span><span class="op">$</span><span class="va">top</span>, dis <span class="op">=</span> <span class="va">dis</span>, prj <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>projection <span class="op">=</span> <span class="st">"+init=epsg:31370"</span>, origin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, rotation <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/r-spatial/mapview">mapview</a></span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/pkg/mapview/man/mapView.html">mapview</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></code></pre></div>
@@ -335,7 +310,7 @@
 <h1 class="hasAnchor">
 <a href="#the-pipe-operator" class="anchor"></a>The pipe operator</h1>
 <p>The <a href="https://cran.r-project.org/web/packages/magrittr/index.html">magrittr</a> pipe is also imported in the package, so at the moment you can do things like:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/rmf_example_file.html">rmf_example_file</a></span><span class="op">(</span><span class="st">"example-model.dis"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu"><a href="../reference/rmf_read_dis.html">rmf_read_dis</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu"><a href="../reference/rmf_plot.html">rmf_plot</a></span><span class="op">(</span><span class="va">.</span><span class="op">$</span><span class="va">top</span>, dis <span class="op">=</span> <span class="va">.</span><span class="op">)</span></code></pre></div>
@@ -355,7 +330,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by <a href="https://rogiersbart.github.io/">Bart Rogiers</a>.</p>
+  <p>Developed by <a href="https://rogiersbart.github.io/">Bart Rogiers</a>, Cas Neyens.</p>
 </div>
 
 <div class="pkgdown">
