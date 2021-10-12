@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/united/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -38,6 +38,8 @@
 
 
 
+  <link href="../extra.css" rel="stylesheet">
+  
 
 <meta property="og:title" content="Function reference" />
 
@@ -53,16 +55,6 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 
-
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-32706734-4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-32706734-4');
-</script>
 
 
   </head>
@@ -81,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">RMODFLOW</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
       </span>
     </div>
 
@@ -165,6 +157,167 @@
     </colgroup>
 
     <tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-model-level-functionality" class="hasAnchor"><a href="#section-model-level-functionality" class="anchor"></a>Model-level functionality</h2>
+          <p class="section-desc"><p>Work with complete models</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="rmf_read.html">rmf_read</a></code> </p>
+        </td>
+        <td><p>Read a MODFLOW model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_write.html">rmf_write()</a></code> </p>
+        </td>
+        <td><p>Write a MODFLOW model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_create.html">rmf_create()</a></code> </p>
+        </td>
+        <td><p>Create an <code>RMODFLOW</code> modflow object</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-execute-analyze-and-optimize-models" class="hasAnchor"><a href="#section-execute-analyze-and-optimize-models" class="anchor"></a>Execute, analyze and optimize models</h2>
+          <p class="section-desc"><p>Run MODFLOW, perform sensitivity analysis and local optimization</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="rmf_execute.html">rmf_execute()</a></code> </p>
+        </td>
+        <td><p>Execute a MODFLOW model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_analyze.html">rmf_analyze()</a></code> </p>
+        </td>
+        <td><p>Analyze a MODFLOW model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_optimize.html">rmf_optimize()</a></code> </p>
+        </td>
+        <td><p>Optimize a MODFLOW model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_performance.html">rmf_performance()</a></code> </p>
+        </td>
+        <td><p>Generic function to get model performance measures</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-install-the-modflow-family-of-codes" class="hasAnchor"><a href="#section-install-the-modflow-family-of-codes" class="anchor"></a>Install the MODFLOW-2005 family of codes</h2>
+          <p class="section-desc"><p>Download the MODFLOW codes and put them in a known location</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="rmf_install.html">rmf_install()</a></code> <code><a href="rmf_install.html">rmf_installed_codes()</a></code> </p>
+        </td>
+        <td><p>Install external codes</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-work-with-a-coordinate-reference-system" class="hasAnchor"><a href="#section-work-with-a-coordinate-reference-system" class="anchor"></a>Work with a coordinate reference system</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="prj_auxiliary.html">rmf_get_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_has_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_set_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_transform_prj()</a></code> </p>
+        </td>
+        <td><p>Functions to get, set, transform and check presence of prj objects</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_create_prj.html">rmf_create_prj()</a></code> </p>
+        </td>
+        <td><p>Create a RMODFLOW projection object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_read_usgs_model_reference.html">rmf_read_usgs_model_reference</a></code> </p>
+        </td>
+        <td><p>Read RMODFLOW projection information from a USGS model reference file</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-work-with-example-models" class="hasAnchor"><a href="#section-work-with-example-models" class="anchor"></a>Work with example models</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="rmf_example.html">rmf_example()</a></code> </p>
+        </td>
+        <td><p>Access example MODFLOW files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_example_file.html">rmf_example_file()</a></code> </p>
+        </td>
+        <td><p>Path to example file</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_example_files.html">rmf_example_files()</a></code> </p>
+        </td>
+        <td><p>Path to example files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_example_model.html">rmf_example_model()</a></code> </p>
+        </td>
+        <td><p>List example model files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rmf_example_models.html">rmf_example_models()</a></code> </p>
+        </td>
+        <td><p>List example models</p></td>
+      </tr>
+    </tbody><tbody>
       <tr>
         <th colspan="2">
           <h2 id="section-read-modflow-files" class="hasAnchor"><a href="#section-read-modflow-files" class="anchor"></a>Read MODFLOW files</h2>
@@ -812,8 +965,8 @@
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-convert" class="hasAnchor"><a href="#section-convert" class="anchor"></a>Convert</h2>
-          <p class="section-desc"><p>Convert</p></p>
+          <h2 id="section-convert-rmodflow-objects" class="hasAnchor"><a href="#section-convert-rmodflow-objects" class="anchor"></a>Convert RMODFLOW objects</h2>
+          <p class="section-desc"><p>Convert between object types, coordinates, …</p></p>
         </th>
       </tr>
       
@@ -929,104 +1082,6 @@
           <p><code><a href="rmf_convert_xyz_to_grid.html">rmf_convert_xyz_to_grid()</a></code> </p>
         </td>
         <td><p>Convert real world coordinates to modflow coordinates</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-other" class="hasAnchor"><a href="#section-other" class="anchor"></a>Other</h2>
-          <p class="section-desc"><p>Other</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="plot3d.mf2darray.html">plot3d(<i>&lt;mf2darray&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Plot a MODFLOW 2D array</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="plot3d.mf3darray.html">plot3d(<i>&lt;mf3darray&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Plot a MODFLOW 2D array</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="prj_auxiliary.html">rmf_get_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_has_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_set_prj()</a></code> <code><a href="prj_auxiliary.html">rmf_transform_prj()</a></code> </p>
-        </td>
-        <td><p>Functions to get, set, transform and check presence of prj objects</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="read.array.html">read.array()</a></code> </p>
-        </td>
-        <td><p>Read an array specified by a free-format control record</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_backup_pval.html">rmfi_backup_pval()</a></code> </p>
-        </td>
-        <td><p>Backup a PVAL file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_download_code.html">rmfi_download_code()</a></code> </p>
-        </td>
-        <td><p>Download a code</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_find.html">rmfi_find()</a></code> </p>
-        </td>
-        <td><p>Find paths to executables</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_guide_url.html">rmfi_guide_url()</a></code> </p>
-        </td>
-        <td><p>Complete guide url from page name or shortcut</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_install_code.html">rmfi_install_code()</a></code> </p>
-        </td>
-        <td><p>Install codes</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_look_for_path.html">rmfi_look_for_path()</a></code> </p>
-        </td>
-        <td><p>Look for a file path in a NAM file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_replace_in_vector.html">rmfi_replace_in_vector()</a></code> </p>
-        </td>
-        <td><p>Replace values in a vector with corresponding parameter names</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmfi_write_array.html">rmfi_write_array()</a></code> </p>
-        </td>
-        <td><p>Write modflow array
-Internal function used in the write_* functions for writing array datasets</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_analyze.html">rmf_analyze()</a></code> </p>
-        </td>
-        <td><p>Analyze a MODFLOW model</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_animate.html">rmf_animate()</a></code> </p>
-        </td>
-        <td><p>Generic function to make animations from RMODFLOW arrays</p></td>
       </tr><tr>
         
         <td>
@@ -1093,420 +1148,25 @@ Internal function used in the write_* functions for writing array datasets</p></
           <p><code><a href="rmf_as_tibble.html">rmf_as_tibble()</a></code> </p>
         </td>
         <td><p>Generic function to convert RMODFLOW objects to tibbles</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_browse.html">rmf_browse()</a></code> </p>
-        </td>
-        <td><p>Browse the RMODFLOW pkgdown website</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_calculate_array.html">rmf_calculate_array()</a></code> </p>
-        </td>
-        <td><p>Calculate a <code>rmf_2d_array</code> or <code>rmf_3d_array</code> from multiplier arrays, zone arrays and/or parameter values</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_calculate_thickness.html">rmf_calculate_thickness()</a></code> </p>
-        </td>
-        <td><p>Calculate layer thicknesses</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_cell_coordinates.html">rmf_cell_coordinates()</a></code> <code><a href="rmf_cell_coordinates.html">rmf_get_cell_coordinates()</a></code> </p>
-        </td>
-        <td><p>Generic functions to get cell coordinates</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_cell_dimensions.html">rmf_cell_dimensions()</a></code> </p>
-        </td>
-        <td><p>Generic function to get cell dimensions</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_cell_info.html">rmf_cell_info()</a></code> </p>
-        </td>
-        <td><p>Generic function to print information at a certain grid cell</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_bcf_to_lpf.html">rmf_convert_bcf_to_lpf()</a></code> </p>
-        </td>
-        <td><p>Convert a bcf to a lpf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_cbc_to_darcy.html">rmf_convert_cbc_to_darcy()</a></code> </p>
-        </td>
-        <td><p>Convert cbc object fluxes to darcy velocities</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_dis_to_saturated_dis.html">rmf_convert_dis_to_saturated_dis()</a></code> </p>
-        </td>
-        <td><p>Convert a dis object to correspond to the saturated volume</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_grid_to_xyz.html">rmf_convert_grid_to_xyz()</a></code> </p>
-        </td>
-        <td><p>Convert modflow coordinates to real world coordinates</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_hed_to_water_table.html">rmf_convert_hed_to_water_table()</a></code> </p>
-        </td>
-        <td><p>Obtain the water table elevation from a hydraulic head array</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_hob_to_locations.html">rmf_convert_hob_to_locations()</a></code> </p>
-        </td>
-        <td><p>Convert a hob object to a locations data frame</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_hob_to_time_series.html">rmf_convert_hob_to_time_series()</a></code> </p>
-        </td>
-        <td><p>Convert a hob object to a time series data frame</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_huf_to_dis.html">rmf_convert_huf_to_dis()</a></code> </p>
-        </td>
-        <td><p>Convert a huf to a dis object (for plotting)</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_huf_to_grid.html">rmf_convert_huf_to_grid()</a></code> </p>
-        </td>
-        <td><p>Convert a parameter defined on the HUF grid to the numerical grid</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_huf_to_lpf.html">rmf_convert_huf_to_lpf()</a></code> </p>
-        </td>
-        <td><p>Convert a huf to a lpf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_huf_to_mask.html">rmf_convert_huf_to_mask()</a></code> </p>
-        </td>
-        <td><p>Convert a huf to a mask object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_ibound_to_neighbours.html">rmf_convert_ibound_to_neighbours()</a></code> </p>
-        </td>
-        <td><p>Convert an <code>ibound</code> array to lower, upper, left, right, front and back logical arrays indicating presence of a neighbouring active cell</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_id_to_id.html">rmf_convert_id_to_id()</a></code> </p>
-        </td>
-        <td><p>Convert id to id</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_id_to_ijk.html">rmf_convert_id_to_ijk()</a></code> </p>
-        </td>
-        <td><p>Convert id to ijk</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_ijk_to_id.html">rmf_convert_ijk_to_id()</a></code> </p>
-        </td>
-        <td><p>Convert ijk to id</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_lpf_to_upw.html">rmf_convert_lpf_to_upw()</a></code> </p>
-        </td>
-        <td><p>Convert a lpf to a upw object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_upw_to_lpf.html">rmf_convert_upw_to_lpf()</a></code> </p>
-        </td>
-        <td><p>Convert a upw to a lpf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_convert_xyz_to_grid.html">rmf_convert_xyz_to_grid()</a></code> </p>
-        </td>
-        <td><p>Convert real world coordinates to modflow coordinates</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_copy_to_wd.html">rmf_copy_to_wd()</a></code> </p>
-        </td>
-        <td><p>Copy files from specified paths to current working directory</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create.html">rmf_create()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> modflow object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_array.html">rmf_create_array()</a></code> </p>
-        </td>
-        <td><p>Add rmf array class to object based on object dimensions</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_bas.html">rmf_create_bas()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> bas object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_bcf.html">rmf_create_bcf()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> bcf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_chd.html">rmf_create_chd()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> chd object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_de4.html">rmf_create_de4()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> de4 object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_dis.html">rmf_create_dis()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> dis object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_drn.html">rmf_create_drn()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> drn object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_evt.html">rmf_create_evt()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> evt object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_ghb.html">rmf_create_ghb()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> ghb object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_gmg.html">rmf_create_gmg()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> gmg object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_hfb.html">rmf_create_hfb()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> hfb object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_hob.html">rmf_create_hob()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> hob object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_huf.html">rmf_create_huf()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> huf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_kdep.html">rmf_create_kdep()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> kdep object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_list.html">rmf_create_list()</a></code> </p>
-        </td>
-        <td><p>Add rmf list class to data.frame and check if k, i and j columns are present</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_lmt.html">rmf_create_lmt()</a></code> </p>
-        </td>
-        <td><p>Create a <code>RMODFLOW</code> lmt object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_lpf.html">rmf_create_lpf()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> lpf object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_lvda.html">rmf_create_lvda()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> lvda object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_mlt.html">rmf_create_mlt()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> mlt object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_nam.html">rmf_create_nam()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> nam object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_nwt.html">rmf_create_nwt()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> nwt object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_oc.html">rmf_create_oc()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> oc object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_parameter.default.html">rmf_create_parameter(<i>&lt;default&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Create an array parameter</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_parameter.html">rmf_create_parameter()</a></code> </p>
-        </td>
-        <td><p>Create a MODFLOW parameter</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_parameter.rmf_2d_array.html">rmf_create_parameter(<i>&lt;rmf_2d_array&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Concise function for creating a 2D-array parameter.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_parameter.rmf_3d_array.html">rmf_create_parameter(<i>&lt;rmf_3d_array&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Concise function for creating a 3D-array parameter.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_parameter.rmf_list.html">rmf_create_parameter(<i>&lt;rmf_list&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Create a List Data input parameter</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_pcg.html">rmf_create_pcg()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> pcg object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_prj.html">rmf_create_prj()</a></code> </p>
-        </td>
-        <td><p>Create a RMODFLOW projection object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_pval.html">rmf_create_pval()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> pval object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_rch.html">rmf_create_rch()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> rch object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_riv.html">rmf_create_riv()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> riv object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_sip.html">rmf_create_sip()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> sip object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_upw.html">rmf_create_upw()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> upw object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_wel.html">rmf_create_wel()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> wel object.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_create_zon.html">rmf_create_zon()</a></code> </p>
-        </td>
-        <td><p>Create an <code>RMODFLOW</code> zon object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_example.html">rmf_example()</a></code> </p>
-        </td>
-        <td><p>Access example MODFLOW files</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_example_file.html">rmf_example_file()</a></code> </p>
-        </td>
-        <td><p>Path to example file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_example_files.html">rmf_example_files()</a></code> </p>
-        </td>
-        <td><p>Path to example files</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_example_model.html">rmf_example_model()</a></code> </p>
-        </td>
-        <td><p>List example model files</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_example_models.html">rmf_example_models()</a></code> </p>
-        </td>
-        <td><p>List example models</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_execute.html">rmf_execute()</a></code> </p>
-        </td>
-        <td><p>Execute a MODFLOW model</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_extent.html">rmf_extent()</a></code> </p>
-        </td>
-        <td><p>Obtain the corners and bounding box of the MODFLOW grid</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-other" class="hasAnchor"><a href="#section-other" class="anchor"></a>Other</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="rmf_guide.html">rmf_guide()</a></code> </p>
+        </td>
+        <td><p>Launch the online guide pages</p></td>
       </tr><tr>
         
         <td>
@@ -1516,33 +1176,9 @@ Internal function used in the write_* functions for writing array datasets</p></
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_guide.html">rmf_guide()</a></code> </p>
-        </td>
-        <td><p>Launch the online guide pages</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_install.html">rmf_install()</a></code> <code><a href="rmf_install.html">rmf_installed_codes()</a></code> </p>
-        </td>
-        <td><p>Install external codes</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="rmf_interpolate.html">rmf_interpolate()</a></code> </p>
         </td>
         <td><p>Interpolation of points on a rmf_2d/3d/4d_array</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_optimize.html">rmf_optimize()</a></code> </p>
-        </td>
-        <td><p>Optimize a MODFLOW model</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_performance.html">rmf_performance()</a></code> </p>
-        </td>
-        <td><p>Generic function to get model performance measures</p></td>
       </tr><tr>
         
         <td>
@@ -1678,222 +1314,6 @@ Internal function used in the write_* functions for writing array datasets</p></
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_read.html">rmf_read</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW model</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_array.html">rmf_read_array()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW array from a separate file.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_bas.html">rmf_read_bas</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW basic file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_bcf.html">rmf_read_bcf</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW bcf file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_bud.html">rmf_read_bud</a></code> </p>
-        </td>
-        <td><p>Reads the volumetric budget from a MODFLOW listing file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_cbc.html">rmf_read_cbc</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW cell-by-cell budget file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_chd.html">rmf_read_chd()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW time-variant specified-head file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_ddn.html">rmf_read_ddn</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW drawdown file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_de4.html">rmf_read_de4</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW direct solver file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_dis.html">rmf_read_dis</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW discretization file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_drn.html">rmf_read_drn</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW drain file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_evt.html">rmf_read_evt</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW evapotranspiration file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_ghb.html">rmf_read_ghb</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW general-head boundary file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_gmg.html">rmf_read_gmg</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW Geometric Multigrid Solver file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_hed.html">rmf_read_hed</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW head file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_hfb.html">rmf_read_hfb()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW horizontal flow barrier file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_hob.html">rmf_read_hob</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW head observations file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_hpr.html">rmf_read_hpr</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW head predictions file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_huf.html">rmf_read_huf</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW hydrogeologic unit flow file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_kdep.html">rmf_read_kdep</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW hydraulic conductivity depth-dependence capability file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_lmt.html">rmf_read_lmt</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW Link-MT3DMS Package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_lpf.html">rmf_read_lpf</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW layer-property flow file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_lvda.html">rmf_read_lvda()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW model-layer variable-direction horizontal anisotropy capability file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_mlt.html">rmf_read_mlt</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW multiplier file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_nam.html">rmf_read_nam</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW name file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_nwt.html">rmf_read_nwt</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW Newton solver package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_oc.html">rmf_read_oc</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW output control option file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_pcg.html">rmf_read_pcg</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW preconditioned conjugate-gradient package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_pval.html">rmf_read_pval()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW parameter value file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_rch.html">rmf_read_rch</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW recharge file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_riv.html">rmf_read_riv</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW river file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_sip.html">rmf_read_sip()</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW strongly implicit procedure file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_upw.html">rmf_read_upw</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW-NWT Upstream Weighting file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_usgs_model_reference.html">rmf_read_usgs_model_reference</a></code> </p>
-        </td>
-        <td><p>Read RMODFLOW projection information from a USGS model reference file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_wel.html">rmf_read_wel</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW well file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_read_zon.html">rmf_read_zon</a></code> </p>
-        </td>
-        <td><p>Read a MODFLOW zone file</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="rmf_saturated_thickness.html">rmf_saturated_thickness()</a></code> </p>
         </td>
         <td><p>Calculate saturated thicknesses</p></td>
@@ -1906,189 +1326,51 @@ Internal function used in the write_* functions for writing array datasets</p></
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write.html">rmf_write()</a></code> </p>
+          <p><code><a href="rmf_copy_to_wd.html">rmf_copy_to_wd()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW model</p></td>
+        <td><p>Copy files from specified paths to current working directory</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_array.html">rmf_write_array()</a></code> </p>
+          <p><code><a href="rmf_browse.html">rmf_browse()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW array to a separate file.</p></td>
+        <td><p>Browse the RMODFLOW pkgdown website</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_bas.html">rmf_write_bas()</a></code> </p>
+          <p><code><a href="rmf_cell_coordinates.html">rmf_cell_coordinates()</a></code> <code><a href="rmf_cell_coordinates.html">rmf_get_cell_coordinates()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW basic file</p></td>
+        <td><p>Generic functions to get cell coordinates</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_bcf.html">rmf_write_bcf()</a></code> </p>
+          <p><code><a href="rmf_cell_dimensions.html">rmf_cell_dimensions()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW block-centered flow file</p></td>
+        <td><p>Generic function to get cell dimensions</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_chd.html">rmf_write_chd()</a></code> </p>
+          <p><code><a href="rmf_cell_info.html">rmf_cell_info()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW time-variant specified-head file</p></td>
+        <td><p>Generic function to print information at a certain grid cell</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_de4.html">rmf_write_de4()</a></code> </p>
+          <p><code><a href="rmf_calculate_array.html">rmf_calculate_array()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW direct solver package</p></td>
+        <td><p>Calculate a <code>rmf_2d_array</code> or <code>rmf_3d_array</code> from multiplier arrays, zone arrays and/or parameter values</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_dis.html">rmf_write_dis()</a></code> </p>
+          <p><code><a href="rmf_calculate_thickness.html">rmf_calculate_thickness()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW discretization file</p></td>
+        <td><p>Calculate layer thicknesses</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="rmf_write_drn.html">rmf_write_drn()</a></code> </p>
+          <p><code><a href="rmf_animate.html">rmf_animate()</a></code> </p>
         </td>
-        <td><p>Write a MODFLOW drain file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_evt.html">rmf_write_evt()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW evapotranspiration file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_ghb.html">rmf_write_ghb()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW general-head boundary file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_gmg.html">rmf_write_gmg()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW Geometric Multigrid Solver file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_hfb.html">rmf_write_hfb()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW horizontal flow barrier file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_hob.html">rmf_write_hob()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW head observations file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_huf.html">rmf_write_huf()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW hydrogeologic unit flow file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_kdep.html">rmf_write_kdep()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW hydraulic conductivity depth-dependence capability file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_lmt.html">rmf_write_lmt()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW Link-MT3DMS Package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_lpf.html">rmf_write_lpf()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW layer-property flow file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_lvda.html">rmf_write_lvda()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW model-layer variable-direction horizontal anisotropy capability file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_mlt.html">rmf_write_mlt()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW multiplier file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_nam.html">rmf_write_nam()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW name file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_nwt.html">rmf_write_nwt()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW Newton solver package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_oc.html">rmf_write_oc()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW output control option file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_pcg.html">rmf_write_pcg()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW preconditioned conjugate-gradient package file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_pval.html">rmf_write_pval()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW parameter value file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_rch.html">rmf_write_rch()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW recharge file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_riv.html">rmf_write_riv()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW river file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_sip.html">rmf_write_sip()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW strongly implicit procedure package</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_upw.html">rmf_write_upw()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW-NWT upstream weighting file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_vtk.html">rmf_write_vtk()</a></code> </p>
-        </td>
-        <td><p>Write RMODFLOW objects to VTK files</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_wel.html">rmf_write_wel()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW well file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="rmf_write_zon.html">rmf_write_zon()</a></code> </p>
-        </td>
-        <td><p>Write a MODFLOW zone file</p></td>
+        <td><p>Generic function to make animations from RMODFLOW arrays</p></td>
       </tr>
     </tbody>
     </table>
@@ -2104,7 +1386,7 @@ Internal function used in the write_* functions for writing array datasets</p></
 
       <footer>
       <div class="copyright">
-  <p>Developed by <a href='https://rogiersbart.github.io/'>Bart Rogiers</a>.</p>
+  <p>Developed by <a href='https://rogiersbart.github.io/'>Bart Rogiers</a>, Cas Neyens.</p>
 </div>
 
 <div class="pkgdown">
