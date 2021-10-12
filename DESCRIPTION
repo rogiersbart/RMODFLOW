@@ -1,13 +1,18 @@
 Package: RMODFLOW
 Type: Package
-Title: Pre- and post-processing of MODFLOW files in R
-Version: 0.4.1
-Date: 2016-06-27
+Title: Pre- and post-processing of MODFLOW files
+Version: 0.5.0
+Date: 2021-10-12
 Authors@R: c(
-    person("Bart", "Rogiers", role = c("aut", "cre"), email = "brogiers@sckcen.be"),
+    person(
+    given = "Bart",
+    family = "Rogiers",
+    email = "bart.rogiers@sckcen.be",
+    role = c("cre", "aut"),
+    comment = c(ORCID = "0000-0002-8836-0988")),
     person("Cas", "Neyens", role = "aut", email = "cas.neyens@vub.be"))
 Description: The RMODFLOW package provides a set of tools for groundwater flow
-    modelling with MODFLOW.
+    modelling with the MODFLOW-2005 family of codes.
 License: GPL (>= 2)
 Imports: 
     ggplot2,
@@ -40,7 +45,7 @@ Imports:
 Remotes:
     rogiersbart/spectralscale,
     rogiersbart/rui
-URL: https://github.com/rogiersbart/RMODFLOW
+URL: https://rogiersbart.github.io/RMODFLOW/
 BugReports: https://github.com/rogiersbart/RMODFLOW/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

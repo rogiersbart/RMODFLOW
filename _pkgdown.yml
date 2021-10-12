@@ -1,13 +1,37 @@
+home:
+  title: The {RMODFLOW} R package
+  description: Pre- and post-processing of MODFLOW files
+url: https://rogiersbart.github.io/RMODFLOW/
 authors:
   Bart Rogiers:
     href: https://rogiersbart.github.io/
-
-template:
-  params:
-    bootswatch: united
-    ganalytics: UA-32706734-4
-
 reference:
+  - title: "Model-level functionality"
+    desc: "Work with complete models"
+    contents:
+      - rmf_read
+      - rmf_write
+      - rmf_create
+  - title: "Execute, analyze and optimize models"
+    desc: "Run MODFLOW, perform sensitivity analysis and local optimization"
+    contents:
+      - rmf_execute
+      - rmf_analyze
+      - rmf_optimize
+      - rmf_performance
+  - title: "Install the MODFLOW-2005 family of codes"
+    desc: "Download the MODFLOW codes and put them in a known location"
+    contents:
+      - starts_with("rmf_install")
+  - title: "Work with a coordinate reference system"
+    desc: ""
+    contents:
+      - matches("prj")
+      - ends_with("reference")
+  - title: "Work with example models"
+    desc: ""
+    contents:
+      - starts_with("rmf_example")
   - title: "Read MODFLOW files"
     desc: "Functions to read MODFLOW files and return RMODFLOW objects"
     contents: 
@@ -20,17 +44,22 @@ reference:
     desc: "Functions to create RMODFLOW objects"
     contents: 
       - starts_with("rmf_create_")
-  - title: "Convert"
-    desc: "Convert"
+  - title: "Convert RMODFLOW objects"
+    desc: "Convert between object types, coordinates, ..."
     contents:
       - starts_with("rmf_convert_")
+      - starts_with("rmf_as_")
   - title: "Other"
-    desc: "Other"
+    desc: ""
     contents:
-      - starts_with("rmf_animate_")
-      - starts_with("rmf_cell")
-      - rmf_example_file
-      - starts_with("rmf_export")
-      - starts_with("rmf_performance")
+      - rmf_guide
+      - rmf_gradient
+      - rmf_interpolate
       - starts_with("rmf_plot")
-      - starts_with("rmf_run")
+      - rmf_saturated_thickness
+      - rmf_time_steps
+      - rmf_copy_to_wd
+      - rmf_browse
+      - matches("cell")
+      - starts_with("rmf_calculate")
+      - rmf_animate

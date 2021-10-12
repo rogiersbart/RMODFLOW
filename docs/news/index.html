@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/united/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -38,6 +38,8 @@
 
 
 
+  <link href="../extra.css" rel="stylesheet">
+  
 
 <meta property="og:title" content="Changelog" />
 
@@ -53,16 +55,6 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 
-
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-32706734-4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-32706734-4');
-</script>
 
 
   </head>
@@ -81,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">RMODFLOW</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
       </span>
     </div>
 
@@ -157,36 +149,43 @@
       <small>Source: <a href='https://github.com/rogiersbart/RMODFLOW/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="rmodflow-050-wip" class="section level1">
+    <div id="rmodflow-050" class="section level1">
 <h1 class="page-header" data-toc-text="0.5.0">
-<a href="#rmodflow-050-wip" class="anchor"></a>RMODFLOW 0.5.0 [WIP]</h1>
+<a href="#rmodflow-050" class="anchor"></a>RMODFLOW 0.5.0</h1>
 <ul>
+<li>Version presented by <a href="https://drive.google.com/file/d/1KC1geIZ4PoauFP00fkcxtEqD3jxAfP4L/">Neyens and Rogiers (2021)</a>.</li>
+<li>New functionality for converting between {<a href="https://rogiersbart.github.io/RMODFLOW/">RMODFLOW</a>} and {<a href="https://rspatial.github.io/sf/">sf</a>}, {<a href="https://rspatial.github.io/stars/">stars</a>} and {<a href="https://rspatial.github.io/raster/">raster</a>} objects (<a href="https://github.com/rogiersbart/RMODFLOW/pull/20"><a href='https://github.com/rogiersbart/RMODFLOW/issues/20'>#20</a></a>).</li>
+<li>New model-level functionality with <code><a href="../reference/rmf_read.html">rmf_read()</a></code>, <code><a href="../reference/rmf_write.html">rmf_write()</a></code>, <code><a href="../reference/rmf_create.html">rmf_create()</a></code> (<a href="https://github.com/rogiersbart/RMODFLOW/pull/8"><a href='https://github.com/rogiersbart/RMODFLOW/issues/8'>#8</a></a>).</li>
+<li>Reworked model execution UI, resulting in the new <code><a href="../reference/rmf_execute.html">rmf_execute()</a></code>, <code><a href="../reference/rmf_analyze.html">rmf_analyze()</a></code> and <code><a href="../reference/rmf_optimize.html">rmf_optimize()</a></code> (<a href="https://github.com/rogiersbart/RMODFLOW/issues/7"><a href='https://github.com/rogiersbart/RMODFLOW/issues/7'>#7</a></a>).</li>
+<li>Updated input data processing and representation (<a href="https://github.com/rogiersbart/RMODFLOW/pull/8"><a href='https://github.com/rogiersbart/RMODFLOW/issues/8'>#8</a></a>).</li>
+<li>Extended MODFLOW package support for the <code>rmf_read_*()</code>, <code>rmf_write_*()</code> and <code>rmf_create_*()</code> families of functions (<a href="https://github.com/rogiersbart/RMODFLOW/pull/3"><a href='https://github.com/rogiersbart/RMODFLOW/issues/3'>#3</a></a>).</li>
 <li>Added automatic installation of MODFLOW variants (<a href="https://github.com/rogiersbart/RMODFLOW/issues/2"><a href='https://github.com/rogiersbart/RMODFLOW/issues/2'>#2</a></a>).</li>
 <li>Added automatic finding of paths to MODFLOW executables.</li>
 <li>Added function prefixes <code>rmf_</code>, and <code>rmfi_</code> for internal functions.</li>
 <li>Added a <a href="https://rogiersbart.github.io/RMODFLOW/">pkgdown site</a>.</li>
 <li>Added example models for function documentation examples and vignettes.</li>
+<li>First developments presented by <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mZVJHSGhYek52bm8/">Rogiers (2017)</a>.</li>
 </ul>
 </div>
     <div id="rmodflow-040" class="section level1">
 <h1 class="page-header" data-toc-text="0.4.0">
 <a href="#rmodflow-040" class="anchor"></a>RMODFLOW 0.4.0</h1>
 <ul>
-<li>Version used by <a href="https://rogiersbart.github.io/science-output.html<a href='https://github.com/rogiersbart/RMODFLOW/issues/13416953'>#13416953</a>">Neyens (2016)</a>.</li>
+<li>Version used by <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mY2lzLU1xbDBWeHc/">Neyens (2016)</a>.</li>
 </ul>
 </div>
     <div id="rmodflow-030" class="section level1">
 <h1 class="page-header" data-toc-text="0.3.0">
 <a href="#rmodflow-030" class="anchor"></a>RMODFLOW 0.3.0</h1>
 <ul>
-<li>Version presented by <a href="https://rogiersbart.github.io/science-output.html<a href='https://github.com/rogiersbart/RMODFLOW/issues/26516586'>#26516586</a>">Rogiers (2015)</a>.</li>
+<li>Version presented by <a href="https://drive.google.com/file/d/0B4xr2UZeAf_mUEJuRUhCM3JtQlE/">Rogiers (2015)</a>.</li>
 </ul>
 </div>
     <div id="rmodflow-020" class="section level1">
 <h1 class="page-header" data-toc-text="0.2.0">
 <a href="#rmodflow-020" class="anchor"></a>RMODFLOW 0.2.0</h1>
 <ul>
-<li>Version presented by <a href="https://rogiersbart.github.io/science-output.html<a href='https://github.com/rogiersbart/RMODFLOW/issues/25516537'>#25516537</a>">Rogiers (2015)</a>.</li>
+<li>Version presented by <a href="https://drive.google.com/file/d/1-UlcwQzaSI-VIrp7A5KpYjM9WLOmuMZT/">Rogiers (2015)</a>.</li>
 </ul>
 </div>
     <div id="rmodflow-010" class="section level1">
@@ -209,7 +208,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by <a href='https://rogiersbart.github.io/'>Bart Rogiers</a>.</p>
+  <p>Developed by <a href='https://rogiersbart.github.io/'>Bart Rogiers</a>, Cas Neyens.</p>
 </div>
 
 <div class="pkgdown">
