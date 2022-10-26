@@ -365,8 +365,8 @@ rmf_as_tibble.rmf_2d_array <- function(array,
     positions <- data.frame(id = ids, x = xy$x, y = xy$y)
     values <- data.frame(id = ids, value = c(array*mask^2))
   } else {
-    xWidth <- rep(dis$delr, dis$nrow)
-    yWidth <- rep(dis$delc, each = dis$ncol)
+    xWidth <- rep(dis$delr, each = dis$nrow)
+    yWidth <- rep(dis$delc, dis$ncol)
     positions <- data.frame(id = rep(ids, each=4), x = rep(xy$x, each = 4), y = rep(xy$y, each = 4))
     positions$x[(seq(1, nrow(positions), 4))] <- positions$x[(seq(1, nrow(positions), 4))] - xWidth/2
     positions$x[(seq(2, nrow(positions), 4))] <- positions$x[(seq(2, nrow(positions), 4))] - xWidth/2
