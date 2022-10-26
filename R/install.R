@@ -105,11 +105,12 @@ rmfi_download_code <- function(code, dir, os, overwrite) {
     folder <- gsub('\\.zip', '', basename(x))
   } else if(code == 'MODFLOW-NWT') {
     if(os == 'Windows') {
-      x <- "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip"
+      x <- "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.3.0.zip"
     } else {
       rui::error("{code} is not available for your operating system.")
     }
-    folder <- gsub('\\.zip', '', basename(x))
+    # folder <- gsub('\\.zip', '', basename(x))
+    folder <- "MODFLOW-NWT" # for version 1.3.0
   } else if(code == 'MODFLOW-OWHM') {
     if(os == 'Windows') {
       x <- "https://ca.water.usgs.gov/modeling-software/one-water-hydrologic-model/MF_OWHM_v1_0_win.zip"
