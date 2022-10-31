@@ -761,7 +761,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           }
           
         } else {
-          con <- file(asbfile,open='rb')
+          con <- file(absfile,open='rb')
           real_number_bytes <- ifelse(precision == 'single', 4, 8)
           type <- ifelse(integer, 'integer', 'numeric')
           size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
@@ -842,7 +842,7 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
             }
             
           } else if(locat < 0) { # read binary from external file
-            con <- file(asbfile,open='rb')
+            con <- file(absfile,open='rb')
             real_number_bytes <- ifelse(precision == 'single', 4, 8)
             type <- ifelse(integer, 'integer', 'numeric')
             size <- ifelse(type == 'integer', NA_integer_, real_number_bytes)
