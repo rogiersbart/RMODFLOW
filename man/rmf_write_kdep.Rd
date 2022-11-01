@@ -6,9 +6,12 @@
 \usage{
 rmf_write_kdep(
   kdep,
-  file = {    
-    cat("Please select kdep file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select kdep file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

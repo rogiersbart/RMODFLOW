@@ -5,9 +5,15 @@
 \title{Read a MODFLOW output control option file}
 \usage{
 rmf_read_oc(
-  file = {     cat("Please select oc file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select oc file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

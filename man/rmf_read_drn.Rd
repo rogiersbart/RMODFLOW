@@ -5,9 +5,15 @@
 \title{Read a MODFLOW drain file}
 \usage{
 rmf_read_drn(
-  file = {     cat("Please select drain file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select drain file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

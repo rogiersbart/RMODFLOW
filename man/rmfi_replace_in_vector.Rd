@@ -15,9 +15,6 @@ character for \emph{e.g.} the transformation.}
 \item{new}{Named numeric vector, or named list of functions and/or numeric
 values.}
 }
-\value{
-
-}
 \description{
 This function is a helper for processing the arguments of \code{\link[=rmf_execute]{rmf_execute()}},
 \code{\link[=rmf_analyze]{rmf_analyze()}} and \code{\link[=rmf_optimize]{rmf_optimize()}} that can be named vectors, a named

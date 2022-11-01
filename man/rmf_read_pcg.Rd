@@ -5,7 +5,10 @@
 \title{Read a MODFLOW preconditioned conjugate-gradient package file}
 \usage{
 rmf_read_pcg(
-  file = {     cat("Please select pcg file ...\\n")     file.choose() },
+  file = {
+     cat("Please select pcg file ...\\n")
+     file.choose()
+ },
   ...
 )
 }

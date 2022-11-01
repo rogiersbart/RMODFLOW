@@ -7,9 +7,12 @@
 rmf_write_wel(
   wel,
   dis = rmf_read_dis(),
-  file = {    
-    cat("Please choose wel file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose wel file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

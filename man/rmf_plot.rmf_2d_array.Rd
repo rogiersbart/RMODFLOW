@@ -8,12 +8,15 @@
   array,
   dis,
   bas = NULL,
-  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {     if (dis$nlay > 1)         
-    warning("Using first ibound layer as mask.", call. = FALSE)    
+  mask = rmfi_ifelse0(is.null(bas), array * 0 + 1, {
+     if (dis$nlay > 1) 
+        
+    warning("Using first ibound layer as mask.", call. = FALSE)
+    
     rmfi_ifelse0(bas$xsection, aperm(bas$ibound, c(3, 2, 1))[, , 1], bas$ibound[, , 1])
+
     }),
-  colour_palette = ifelse(type \%in\% c("contour", "vector"), "black",
-    rmfi_rev_rainbow),
+  colour_palette = ifelse(type \%in\% c("contour", "vector"), "black", rmfi_rev_rainbow),
   zlim = range(array[as.logical(mask)], finite = TRUE),
   nlevels = 7,
   type = "fill",

@@ -6,9 +6,12 @@
 \usage{
 rmf_write_de4(
   de4,
-  file = {    
-    cat("Please choose de4 file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose de4 file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

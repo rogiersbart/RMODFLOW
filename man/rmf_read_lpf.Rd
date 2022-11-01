@@ -5,9 +5,15 @@
 \title{Read a MODFLOW layer-property flow file}
 \usage{
 rmf_read_lpf(
-  file = {     cat("Please select lpf file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select lpf file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   mlt = NULL,
   zon = NULL,
   ...

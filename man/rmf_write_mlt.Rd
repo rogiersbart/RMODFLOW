@@ -6,9 +6,12 @@
 \usage{
 rmf_write_mlt(
   mlt,
-  file = {    
-    cat("Please choose mlt file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose mlt file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

@@ -5,7 +5,10 @@
 \title{Read a MODFLOW name file}
 \usage{
 rmf_read_nam(
-  file = {     cat("Please select nam file ...\\n")     file.choose() }
+  file = {
+     cat("Please select nam file ...\\n")
+     file.choose()
+ }
 )
 }
 \arguments{

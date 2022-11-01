@@ -6,11 +6,17 @@
 \usage{
 rmf_write_lpf(
   lpf,
-  file = {    
-    cat("Please select lpf file to overwrite or provide new filename ...\\n")    
-    file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+    
+    cat("Please select lpf file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   iprn = -1,
   ...
 )

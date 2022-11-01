@@ -6,8 +6,11 @@
 \usage{
 rmf_write_oc(
   oc,
-  file = {     cat("Please select oc file to overwrite or provide new filename ...\\n")
-        file.choose() },
+  file = {
+     cat("Please select oc file to overwrite or provide new filename ...\\n")
+
+        file.choose()
+ },
   ...
 )
 }

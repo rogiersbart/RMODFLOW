@@ -6,9 +6,12 @@
 \usage{
 rmf_write(
   modflow,
-  file = {    
-    cat("Please select nam file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select nam file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   exclude = NULL,
   suppress = FALSE,
   verbose = TRUE,

@@ -5,7 +5,10 @@
 \title{Read a MODFLOW Newton solver package file}
 \usage{
 rmf_read_nwt(
-  file = {     cat("Please select nwt file ...\\n")     file.choose() },
+  file = {
+     cat("Please select nwt file ...\\n")
+     file.choose()
+ },
   ...
 )
 }

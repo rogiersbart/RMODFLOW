@@ -6,9 +6,12 @@
 \usage{
 rmf_write_lvda(
   lvda,
-  file = {    
-    cat("Please select lvda file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select lvda file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

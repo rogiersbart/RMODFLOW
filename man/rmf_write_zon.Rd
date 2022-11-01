@@ -6,9 +6,12 @@
 \usage{
 rmf_write_zon(
   zon,
-  file = {    
-    cat("Please choose zon file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose zon file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

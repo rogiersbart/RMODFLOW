@@ -5,10 +5,16 @@
 \title{Read a MODFLOW general-head boundary file}
 \usage{
 rmf_read_ghb(
-  file = {     cat("Please select general-head boundary file ...\\n")     file.choose()
-    },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select general-head boundary file ...\\n")
+    
+    file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

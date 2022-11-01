@@ -15,9 +15,6 @@ rmfi_look_for_path(dir, nam, type = NULL, unit = NULL)
 
 \item{unit}{Integer. Unit number of the entry to look for.}
 }
-\value{
-
-}
 \description{
 Look for a file path in a NAM file
 }

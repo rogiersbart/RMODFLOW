@@ -5,9 +5,15 @@
 \title{Read a MODFLOW basic file}
 \usage{
 rmf_read_bas(
-  file = {     cat("Please select bas file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select bas file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

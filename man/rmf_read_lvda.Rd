@@ -6,8 +6,11 @@
 \usage{
 rmf_read_lvda(
   file,
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

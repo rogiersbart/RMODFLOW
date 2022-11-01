@@ -5,9 +5,15 @@
 \title{Read a MODFLOW river file}
 \usage{
 rmf_read_riv(
-  file = {     cat("Please select river file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select river file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

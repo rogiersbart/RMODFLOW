@@ -6,9 +6,12 @@
 \usage{
 rmf_write_dis(
   dis,
-  file = {    
-    cat("Please select dis file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select dis file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

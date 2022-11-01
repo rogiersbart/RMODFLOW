@@ -6,7 +6,10 @@
 \title{Read a MODFLOW head predictions file}
 \usage{
 rmf_read_hpr(
-  file = {     cat("Please select hpr file ...\\n")     file.choose() }
+  file = {
+     cat("Please select hpr file ...\\n")
+     file.choose()
+ }
 )
 
 rmf_read_hob_out(...)
@@ -22,6 +25,6 @@ object of class hpr
 }
 \section{Functions}{
 \itemize{
-\item \code{rmf_read_hob_out}: Compatible with default ModelMuse file extension
-}}
+\item \code{rmf_read_hob_out()}: Compatible with default ModelMuse file extension
 
+}}

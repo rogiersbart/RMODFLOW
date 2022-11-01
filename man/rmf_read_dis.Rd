@@ -5,7 +5,10 @@
 \title{Read a MODFLOW discretization file}
 \usage{
 rmf_read_dis(
-  file = {     cat("Please select dis file ...\\n")     file.choose() },
+  file = {
+     cat("Please select dis file ...\\n")
+     file.choose()
+ },
   ...
 )
 }

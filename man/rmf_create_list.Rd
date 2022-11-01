@@ -18,9 +18,9 @@ an object of class \code{rmf_list} and \code{data.frame}
 Add rmf list class to data.frame and check if k, i and j columns are present
 }
 \details{
-\preformatted{ rmf_lists represent List Data input (and output) as used by MODFLOW. rmf_lists are used to define stress period input for boundary condition packages; 
+\if{html}{\out{<div class="sourceCode">}}\preformatted{ rmf_lists represent List Data input (and output) as used by MODFLOW. rmf_lists are used to define stress period input for boundary condition packages; 
  to define parameters and to read certain types of output in the the cell-by-cell budget file. A MODFLOW List Data can be viewed as discrete spatial features in contrast to the MODFLOW array data type which represents continuous data.
  
  A rmf_list is a dataframe with at least 3 integer columns k, i and j, that may contain repeated values.
-}
+}\if{html}{\out{</div>}}
 }

@@ -6,9 +6,12 @@
 \usage{
 rmf_write_huf(
   huf,
-  file = {    
-    cat("Please select huf file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select huf file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

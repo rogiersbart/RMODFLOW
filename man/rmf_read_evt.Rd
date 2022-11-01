@@ -5,9 +5,15 @@
 \title{Read a MODFLOW evapotranspiration file}
 \usage{
 rmf_read_evt(
-  file = {     cat("Please select evt file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select evt file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   mlt = NULL,
   zon = NULL,
   ...

@@ -5,7 +5,10 @@
 \title{Read a MODFLOW model}
 \usage{
 rmf_read(
-  file = {     cat("Please select nam file ...\\n")     file.choose() },
+  file = {
+     cat("Please select nam file ...\\n")
+     file.choose()
+ },
   output = FALSE,
   precision = "single",
   verbose = TRUE
