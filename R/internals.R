@@ -663,7 +663,9 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
         if(is.null(nam)) stop('Please supply a nam object when reading EXTERNAL arrays', call. = FALSE)
         fname <-  nam$fname[which(nam$nunit == nunit)]
         direct <-  attr(nam, 'dir')
-        absfile <- file.path(direct, fname)
+        absfile <- file.path(fname)
+        if(!file.exists(absfile)) absfile <- file.path(direct, fname) # try full name
+        if(!file.exists(absfile)) stop('Could not determine path to EXTERNAL file on unit number ', nunit, call. = FALSE)
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
@@ -738,7 +740,9 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
         binary <- ifelse(toupper(fmtin) == "(BINARY)", TRUE, FALSE)
         
         direct <-  dirname(file)
-        absfile <- file.path(direct, fname)
+        absfile <- file.path(fname)
+        if(!file.exists(absfile)) absfile <- file.path(direct, fname) # try full name
+        if(!file.exists(absfile)) stop('Could not determine path to OPEN/CLOSE file with FNAME ', fname, call. = FALSE)
         
         if(!binary) {
           if(!(toupper(fmtin) %in% c('(FREE)', 'FREE', '(BINARY)','BINARY'))) {
@@ -795,9 +799,12 @@ rmfi_parse_array <- function(remaining_lines,nrow,ncol,nlay, ndim, fmt = NULL,
           if(cnst == 0) cnst <-  1.0
           if(is.null(nam)) stop('Please supply a nam object when reading FIXED-FORMAT arrays', call. = FALSE)
           
-          fname <- nam$fname[which(nam$nunit == locat)]
+          fname <- nam$fname[which(nam$nunit == abs(locat))]
           direct <- attr(nam, 'dir')
-          absfile <- file.path(direct, fname)
+          
+          absfile <- file.path(fname)
+          if(!file.exists(absfile)) absfile <- file.path(direct, fname) # try full name
+          if(!file.exists(absfile)) stop('Could not determine path to EXTERNAL file on unit number ', locat, call. = FALSE)
           ext_file <- TRUE
           
           # ASCII
