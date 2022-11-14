@@ -80,6 +80,7 @@ Functions to convert rmf_array and rmf_list objects to simple features
 \details{
 The returned z coordinate when \code{as_points = TRUE} reflects the cell node.
 The crs is taken from the \code{prj} argument.
+Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
 }
 \examples{
 dis <- rmf_create_dis()
@@ -101,5 +102,11 @@ rmf_as_sf(r, dis = dis, id = FALSE)
 # rmf_list
 l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(3, 2), q = c(-500, -400)))
 rmf_as_sf(l, dis = dis)
+
+# 2d array with varying cellsize
+dis$delr <- c(seq(50, 10, length.out = 7), seq(10, 50, length.out = 3))
+dis$delc <- c(seq(100, 20, length.out = 7), seq(30, 100, length.out = 3)) # increasing i with decreasing Y
+r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+rmf_as_sf(r, dis = dis)
 
 }

@@ -401,7 +401,8 @@ rmf_as_array.Raster <- function(obj,
 #' 
 #' @details The returned z coordinate when \code{as_points = TRUE} reflects the cell node.
 #' The crs is taken from the \code{prj} argument.
-#'  
+#' Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
+#'
 #' @return A \code{sf} object with point geometries representing the cell-centered nodes when \code{as_points = TRUE}. When \code{as_points = FALSE},
 #' the geometries are polygons representing the entire cell. 
 #' When converting a \code{rmf_array}, the \code{sf} object has following variables: one with the array values per cell/node, 
@@ -433,6 +434,12 @@ rmf_as_array.Raster <- function(obj,
 #' # rmf_list
 #' l <- rmf_create_list(data.frame(i = 1, j = 1:2, k = c(3, 2), q = c(-500, -400)))
 #' rmf_as_sf(l, dis = dis)
+#' 
+#' # 2d array with varying cellsize
+#' dis$delr <- c(seq(50, 10, length.out = 7), seq(10, 50, length.out = 3))
+#' dis$delc <- c(seq(100, 20, length.out = 7), seq(30, 100, length.out = 3)) # increasing i with decreasing Y
+#' r <- rmf_create_array(1:prod(dis$nrow, dis$ncol), dim = c(dis$nrow, dis$ncol))
+#' rmf_as_sf(r, dis = dis)
 #' 
 rmf_as_sf <- function(...) {
   UseMethod('rmf_as_sf')
@@ -572,7 +579,8 @@ rmf_as_sf.rmf_list <- function(obj, dis, prj = rmf_get_prj(dis), as_points = FAL
 #' @param select integer or character specifying which column of the \code{rmf_list} object to convert to \code{stars} variable.
 #' @param ... additional arguments passed to \code{rmf_as_array} when converting a \code{rmf_list} object. Otherwise, ignored.
 #'
-#' @details The crs is taken from the \code{prj} argument.
+#' @details The crs is taken from the \code{prj} argument. 
+#' Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
 #'
 #' @return a \code{stars} object with x and y dimensions when \code{array} is 2d, x, y and layer (integer representing MODFLOW layer; similar to bands) when \code{array} is 3d,
 #' x, y, layer and time dimensions when \code{array} is 4d. When converting a \code{rmf_list} object, it is first converted to a \code{rmf_array} using \code{rmf_as_array}.
@@ -625,7 +633,8 @@ rmf_as_stars.rmf_2d_array <- function(array, dis, mask = array*0 + 1, prj = rmf_
   # TODO use negative deltay: more consistent with how most raster data is read from file. Problem is that origin is then upper left and problems are created with rotations
   # d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = rev(org[2] + (c(0, cumsum(dis$delc)) * length_mlt)))
   
-  d <-  stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = org[2] + (c(0, cumsum(dis$delc)) * length_mlt))
+  # MODFLOW origin = prj origin = lowerleft corner, but MODFLOW has increasing row indices with decreasing Y coordinate
+  d <- stars::st_dimensions(x = org[1] + (c(0, cumsum(dis$delr)) * length_mlt), y = org[2] + (c(0, cumsum(rev(dis$delc))) * length_mlt))
   s <- stars::st_as_stars(m, dimensions = d)
   names(s) <- name
   
@@ -843,7 +852,8 @@ rmf_as_raster.rmf_list <- function(obj, dis, select, prj = rmf_get_prj(dis), ...
 #' \code{crs} is set by a call to \code{sf::st_crs}.
 #' Rotation is around the lowerleft corner of the model.
 #' \code{RMODFLOW} does not work optimally for geographic coordinate systems. 
-#'
+#' Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
+#' 
 #' @return an object of class \code{prj} which is a list with the (1) origin vector containing x, y and z coordinates of the lowerleft corner,
 #'  (2) the rotation angle in degrees counterclockwise and (3) the coordinate reference system as an \code{sf crs} object
 #' @export
