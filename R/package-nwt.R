@@ -10,7 +10,7 @@
 #' @param iprnwt flag indicating if information about solver convergence is printed to the listing file
 #' @param ibotav logical; indicating whether corrections are made to groundwater head relative to the cell-bottom altitude if the cell is surrounded by dewatered cells.
 #' @param options character vector; possible values include \code{"SPECIFIED"}, \code{"SIMPLE"}, \code{"MODERATE"} and \code{"COMPLEX"}. See details for more information.
-#' @param continue logical; should the model solve a subsequent time step after it fails to converge ? Defaults to TRUE.
+#' @param continue logical; should the model solve a subsequent time step after it fails to converge ? Defaults to FALSE.
 #' @param dbdtheta coefficient used to reduce the weight applied to the head change between nonlinear iterations
 #' @param dbdkappa coefficient used to increase the weight applied to the ead change between nonlinear iteraions
 #' @param dbdgamma factor used to weight the head change gor iterations \code{n-1} and \code{n}
@@ -35,12 +35,12 @@
 #' @param hclosexmd read if \code{LINMETHD = 2} & \code{options = "SPECIFIED"}; head closure criteria for inner (linear) iteraions
 #' @param mxiterxmd read if \code{LINMETHD = 2} & \code{options = "SPECIFIED"}; maximum number of iteraions for the linear solution
 #' @return Object of class nwt
-#' @details the option keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If option = "SPECIFIED", the user specifies the values.
-#'   If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
-#'   If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
-#'   Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
+#' @details the options keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If options = "SPECIFIED", the user specifies the values.
+#'   If options = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If options =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
+#'   If options = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
+#'   Default values for \code{dbdtheta - mxiterxmd} are set to those used when options = "MODERATE".
 #'   
-#'   If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
+#'   If \code{ILUMETHODE = 1}, ILU with drop tolerance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
 #'   
 #' @note nwt must be used with the Upstream Weighting flow package. See also \code{\link{rmf_create_upw}}.
 #' @references Kipp, K.L., Jr., Hsieh, P.A. & Charlton, S.R. 2008, Guide to the revised groundwater flow and heat transport simulator; HYDROTERM - Version 3: U.S. Geological Survey Techniques and Methods 6-A25, 160 p.
@@ -54,7 +54,7 @@ rmf_create_nwt <- function(headtol = 0.001,
                            iprnwt = 0,
                            ibotav = 0,
                            options = 'MODERATE',
-                           continue = TRUE,
+                           continue = FALSE,
                            dbdtheta = 0.7,
                            dbdkappa = 0.001,
                            dbdgamma = 0.0,
@@ -92,9 +92,9 @@ rmf_create_nwt <- function(headtol = 0.001,
   nwt$iprnwt <- iprnwt
   nwt$ibotav <- ibotav
   nwt$options <- toupper(options)
+  nwt$continue <- continue
   
   if(nwt$options == "SPECIFIED") {
-    nwt$continue <- continue
     nwt$dbdtheta <- dbdtheta
     nwt$dbdkappa <- dbdkappa
     nwt$dbdgamma <- dbdgamma
@@ -162,13 +162,14 @@ rmf_read_nwt <- function(file = {cat('Please select nwt file ...\n'); file.choos
   nwt$ibotav <- rmfi_ifelse0(is.na(data_set_1$variables[7]), 0, as.numeric(data_set_1$variables[7]))
   nwt$options <- toupper(as.character(data_set_1$variables[8]))
   
+  if((length(data_set_1$variables) > 8) && (toupper(as.character(data_set_1$variables[9])) == 'CONTINUE')) {
+    nwt$continue <- TRUE
+    data_set_1$variables <- data_set_1$variables[-9]
+  } else {
+    nwt$continue <- FALSE
+  }
+  
   if(nwt$options == "SPECIFIED") {
-    if(toupper(as.character(data_set_1$variables[9])) == 'CONTINUE') {
-      nwt$continue <- TRUE
-      data_set_1$variables <- data_set_1$variables[-9]
-    } else {
-      nwt$continue <- FALSE
-    }
     nwt$dbdtheta <- rmfi_ifelse0(is.na(data_set_1$variables[9]), 0, as.numeric(data_set_1$variables[9]))
     nwt$dbdkappa <- rmfi_ifelse0(is.na(data_set_1$variables[10]), 0, as.numeric(data_set_1$variables[10]))
     nwt$dbdgamma <- rmfi_ifelse0(is.na(data_set_1$variables[11]), 0, as.numeric(data_set_1$variables[11]))
@@ -232,10 +233,14 @@ rmf_write_nwt <- function(nwt,
   cat(paste('#', comment(nwt)), sep='\n', file=file, append=TRUE)
   
   # data set 1
-  rmfi_write_variables(nwt$headtol, nwt$fluxtol, as.integer(nwt$maxiterout), nwt$thickfact, as.integer(nwt$linmeth), as.integer(nwt$iprnwt), as.integer(nwt$ibotav), toupper(nwt$options), 
-                       rmfi_ifelse0(toupper(nwt$options) == "SPECIFIED", paste(ifelse(nwt$continue, 'CONTINUE', ''), nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, as.integer(nwt$backflag), 
-                                                                               as.integer(nwt$maxbackiter), nwt$backtol, nwt$backreduce), '') , file=file, ...)
-  
+  if(nwt$options != 'SPECIFIED') {
+    rmfi_write_variables(nwt$headtol, nwt$fluxtol, as.integer(nwt$maxiterout), nwt$thickfact, as.integer(nwt$linmeth), as.integer(nwt$iprnwt), as.integer(nwt$ibotav), toupper(nwt$options), ifelse(nwt$continue, 'CONTINUE', ''), 
+                         file=file, ...)
+  } else {
+    rmfi_write_variables(nwt$headtol, nwt$fluxtol, as.integer(nwt$maxiterout), nwt$thickfact, as.integer(nwt$linmeth), as.integer(nwt$iprnwt), as.integer(nwt$ibotav), toupper(nwt$options), ifelse(nwt$continue, 'CONTINUE', ''), 
+                         nwt$dbdtheta, nwt$dbdkappa, nwt$dbdgamma, nwt$momfact, as.integer(nwt$backflag), as.integer(nwt$maxbackiter), nwt$backtol, nwt$backreduce, file=file, ...)
+  }
+
   # data set 2
   if(toupper(nwt$options) == "SPECIFIED") {
     
