@@ -37,7 +37,7 @@ rmf_create_rch <- function(...,
     if(!inherits(irch, 'list')) irch <- list(irch)
     irch <- lapply(irch, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
     obj$irch <- irch
-    names(obj$irch) <- paste('irch', length(irch), sep = '_')
+    names(obj$irch) <- paste('irch', 1:length(irch), sep = '_')
     obj$kper$irch <- NA_character_
     for(i in 1:length(irch)) {
       obj$kper$irch[c(1:dis$nper) %in% attr(irch[[i]],'kper')] <- names(obj$irch)[i]
@@ -255,15 +255,17 @@ rmf_write_rch <-  function(rch,
   for (i in 1:dis$nper){
     
     check_prev <- function(kper, i) {
-      df <- kper[c(i-1,i), -1, drop = FALSE]
+      drop_names <- which(names(kper) %in% c('kper', 'irch'))
+      df <- kper[c(i-1,i), -drop_names, drop = FALSE]
       identical(c(df[2,]), c(df[1,]))
     }
     
     # data set 5
     # inrech
-    drop_id <- which(colnames(rch$kper) %in% c('kper', 'irch'))
-    names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-drop_id]]
-    
+    # drop_id <- which(colnames(rch$kper) %in% c('kper', 'irch'))
+    # names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)[-drop_id]]
+    names_act <- colnames(rch$kper)[which(rch$kper[i,which(!is.na(rch$kper[i,]))] != FALSE)]
+    names_act <- names_act[which(!(names_act %in% c('kper', 'irch')))]
     if(i > 1 && check_prev(rch$kper, i)) {
       inrech <- -1
     } else {

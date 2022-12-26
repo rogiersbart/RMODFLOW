@@ -38,7 +38,7 @@ rmf_create_evt <- function(...,
   # surf
   if(!inherits(surf, 'list')) surf <- list(surf)
   obj$surf <- surf
-  names(obj$surf) <- paste('surf', length(surf), sep = '_')
+  names(obj$surf) <- paste('surf', 1:length(surf), sep = '_')
   obj$kper$surf <- NA_character_
   for(i in 1:length(surf)) {
     obj$kper$surf[c(1:dis$nper) %in% attr(surf[[i]],'kper')] <- names(obj$surf)[i]
@@ -52,7 +52,7 @@ rmf_create_evt <- function(...,
   # exdp
   if(!inherits(exdp, 'list')) exdp <- list(exdp)
   obj$exdp <- exdp
-  names(obj$exdp) <- paste('exdp', length(exdp), sep = '_')
+  names(obj$exdp) <- paste('exdp', 1:length(exdp), sep = '_')
   obj$kper$exdp <- NA_character_
   for(i in 1:length(exdp)) {
     obj$kper$exdp[c(1:dis$nper) %in% attr(exdp[[i]],'kper')] <- names(obj$exdp)[i]
@@ -69,7 +69,7 @@ rmf_create_evt <- function(...,
     if(!inherits(ievt, 'list')) ievt <- list(ievt)
     ievt <- lapply(ievt, function(i) {r <- apply(i, MARGIN = 1:length(dim(i)), function(x) as.integer(x)); attributes(r) <- attributes(i); r})
     obj$ievt <- ievt
-    names(obj$ievt) <- paste('ievt', length(ievt), sep = '_')
+    names(obj$ievt) <- paste('ievt', 1:length(ievt), sep = '_')
     obj$kper$ievt <- NA_character_
     for(i in 1:length(ievt)) {
       obj$kper$ievt[c(1:dis$nper) %in% attr(ievt[[i]],'kper')] <- names(obj$ievt)[i]
@@ -323,7 +323,8 @@ rmf_write_evt <-  function(evt,
   for (i in 1:dis$nper){
     
     check_prev <- function(kper, i) {
-      df <- kper[c(i-1,i), -1, drop = FALSE]
+      drop_names <- which(names(kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
+      df <- kper[c(i-1,i), -drop_names, drop = FALSE]
       identical(c(df[2,]), c(df[1,]))
     }
     
@@ -339,8 +340,10 @@ rmf_write_evt <-  function(evt,
     } 
     
     # inevtr
-    drop_id <- which(colnames(evt$kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
-    names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-drop_id]]
+    # drop_id <- which(colnames(evt$kper) %in% c('kper', 'surf', 'exdp', 'ievt'))
+    # names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)[-drop_id]]
+    names_act <- colnames(evt$kper)[which(evt$kper[i,which(!is.na(evt$kper[i,]))] != FALSE)]
+    names_act <- names_act[which(!(names_act %in% c('kper', 'surf', 'exdp', 'ievt')))]
     if(i > 1 && check_prev(evt$kper, i)) {
       inevtr <- -1
     } else {
