@@ -5,9 +5,15 @@
 \title{Read a MODFLOW hydraulic conductivity depth-dependence capability file}
 \usage{
 rmf_read_kdep(
-  file = {     cat("Please select kdep file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select kdep file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

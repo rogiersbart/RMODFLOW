@@ -13,7 +13,7 @@ rmf_create_nwt(
   iprnwt = 0,
   ibotav = 0,
   options = "MODERATE",
-  continue = TRUE,
+  continue = FALSE,
   dbdtheta = 0.7,
   dbdkappa = 0.001,
   dbdgamma = 0,
@@ -56,7 +56,7 @@ rmf_create_nwt(
 
 \item{options}{character vector; possible values include \code{"SPECIFIED"}, \code{"SIMPLE"}, \code{"MODERATE"} and \code{"COMPLEX"}. See details for more information.}
 
-\item{continue}{logical; should the model solve a subsequent time step after it fails to converge ? Defaults to TRUE.}
+\item{continue}{logical; should the model solve a subsequent time step after it fails to converge ? Defaults to FALSE.}
 
 \item{dbdtheta}{coefficient used to reduce the weight applied to the head change between nonlinear iterations}
 
@@ -111,12 +111,12 @@ Object of class nwt
 \code{rmf_create_nwt} creates an \code{RMODFLOW} nwt object.
 }
 \details{
-the option keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If option = "SPECIFIED", the user specifies the values.
-If option = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If option =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
-If option = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
-Default values for \code{dbdtheta - mxiterxmd} are set to those used when option = "MODERATE".
+the options keyword controls the default values for input arguments \code{dbdtheta - mxiterxmd}. If options = "SPECIFIED", the user specifies the values.
+If options = "SIMPLE", default values will be defined by NWT that work well for nearly linear models. If options =" MODERATE", default input values will be defined by NWT that work well for moderately nonlinear models.
+If options = "COMPLEX", default values will be defined by NWT that work well for highly nonlinear models. See the MODFLOW-NWT manual for details on these values.
+Default values for \code{dbdtheta - mxiterxmd} are set to those used when options = "MODERATE".
 
-If \code{ILUMETHODE = 1}, ILU with drop toleance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
+If \code{ILUMETHODE = 1}, ILU with drop tolerance and fill limit is used. If \code{ILUMETHOD = 2}, ILU(k), Order k incomplete LU factorization is used. See the MODFLOW-NWT and Kipp et al. (2008) for details.
 }
 \note{
 nwt must be used with the Upstream Weighting flow package. See also \code{\link{rmf_create_upw}}.

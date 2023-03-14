@@ -6,9 +6,12 @@
 \usage{
 rmf_write_lmt(
   lmt,
-  file = {    
-    cat("Please choose lmt file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose lmt file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

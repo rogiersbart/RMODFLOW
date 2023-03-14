@@ -6,9 +6,12 @@
 \usage{
 rmf_write_pcg(
   pcg,
-  file = {    
-    cat("Please select pcg file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select pcg file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

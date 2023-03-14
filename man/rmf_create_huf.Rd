@@ -91,8 +91,10 @@ If iohufheads (iohufflows) > 0, heads (cell-by-cell flows)  will be interpolated
 Flow variables are any of \code{HK, HANI, VK, VANI, SS, SY and SYTP}. Variables can be specified either through the use of parameters or direct vector input through hk, hani, vk, ss, sy and sytp arguments.
 Specifying directly with parameters is useful if the parametrization is complex. If only a single value per hgu per partyp is needed, the direct vector input can be used.
 If any parameters are specified, all flow variables have to be specified by parameters. If hk, hani, vk, ss, sy or sytp are not named, the hgu number will be added as a suffix to the type (e.g. 'HK_1').
-Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI can not be specified, only VK. VANI can be set through hguvani.\preformatted{     \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
-}
+Flow variable SYTP can not be specified per hgu, only for all hgu's. Using direct vector input, VANI can not be specified, only VK. VANI can be set through hguvani.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     \code{\link{rmf_convert_huf_to_grid}} can be used to convert parameters defined on the HUF grid to the numerical grid
+}\if{html}{\out{</div>}}
 }
 \seealso{
 \code{\link{rmf_create_parameter}}, \code{\link{rmf_convert_huf_to_grid}}, \code{\link{rmf_read_huf}}, \code{\link{rmf_write_huf}} and \url{http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?huf.htm}

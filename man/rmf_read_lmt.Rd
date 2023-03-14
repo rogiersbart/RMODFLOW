@@ -5,7 +5,10 @@
 \title{Read a MODFLOW Link-MT3DMS Package file}
 \usage{
 rmf_read_lmt(
-  file = {     cat("Please select lmt file ...\\n")     file.choose() },
+  file = {
+     cat("Please select lmt file ...\\n")
+     file.choose()
+ },
   ...
 )
 }

@@ -5,10 +5,16 @@
 \title{Read RMODFLOW projection information from a USGS model reference file}
 \usage{
 rmf_read_usgs_model_reference(
-  file = {     cat("Please select usgs.model.reference file ...\\n")     file.choose()
+  file = {
+     cat("Please select usgs.model.reference file ...\\n")
+     file.choose()
+
     },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) }
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ }
 )
 }
 \arguments{

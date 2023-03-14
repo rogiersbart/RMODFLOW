@@ -6,9 +6,15 @@
 \title{Read a MODFLOW drawdown file}
 \usage{
 rmf_read_ddn(
-  file = {     cat("Please select ddn file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select ddn file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   oc = NULL,
   bas = NULL,
   hdry = NULL,

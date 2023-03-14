@@ -6,9 +6,12 @@
 \usage{
 rmf_write_nwt(
   nwt,
-  file = {    
-    cat("Please select nwt file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select nwt file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

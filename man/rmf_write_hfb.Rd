@@ -7,9 +7,12 @@
 rmf_write_hfb(
   hfb,
   dis = rmf_read_dis(),
-  file = {    
-    cat("Please choose hfb file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose hfb file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

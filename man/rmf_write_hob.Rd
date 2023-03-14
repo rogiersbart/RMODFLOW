@@ -6,9 +6,12 @@
 \usage{
 rmf_write_hob(
   hob,
-  file = {    
-    cat("Please select hob file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please select hob file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

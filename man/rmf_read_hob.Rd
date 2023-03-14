@@ -6,7 +6,10 @@
 \title{Read a MODFLOW head observations file}
 \usage{
 rmf_read_hob(
-  file = {     cat("Please select hob file ...\\n")     file.choose() },
+  file = {
+     cat("Please select hob file ...\\n")
+     file.choose()
+ },
   ...
 )
 
@@ -25,9 +28,9 @@ object of class hob
 }
 \section{Functions}{
 \itemize{
-\item \code{rmf_read_ob_hob}: Compatible with default ModelMuse file extensions
-}}
+\item \code{rmf_read_ob_hob()}: Compatible with default ModelMuse file extensions
 
+}}
 \seealso{
 \code{\link{rmf_create_hob}}, \code{\link{rmf_write_hob}} and \url{https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hob.htm}
 }

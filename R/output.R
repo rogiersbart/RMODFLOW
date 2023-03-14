@@ -107,7 +107,7 @@ rmf_read_cbc <- function(file = {cat('Please select cell-by-cell budget file ...
           stop(paste('Header descriptions do not match. Are you sure the file is', precision,'precision?'), call. = FALSE)
         }
         
-        read <- ifelse((fluxes != 'all' && !(name %in% fluxes)), FALSE, TRUE) 
+        read <- ifelse((fluxes[1] != 'all' && !(name %in% fluxes)), FALSE, TRUE) 
         ncol <- readBin(con,what='integer',n=1)
         nrow <- readBin(con,what='integer',n=1)
         nlay <- readBin(con,what='integer',n=1)

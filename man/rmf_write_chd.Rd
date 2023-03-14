@@ -7,9 +7,12 @@
 rmf_write_chd(
   chd,
   dis = rmf_read_dis(),
-  file = {    
-    cat("Please choose chd file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose chd file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

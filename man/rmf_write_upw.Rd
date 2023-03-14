@@ -6,11 +6,17 @@
 \usage{
 rmf_write_upw(
   upw,
-  file = {    
-    cat("Please select upw file to overwrite or provide new filename ...\\n")    
-    file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+    
+    cat("Please select upw file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   iprn = -1,
   ...
 )

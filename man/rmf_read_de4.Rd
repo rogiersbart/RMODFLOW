@@ -5,7 +5,10 @@
 \title{Read a MODFLOW direct solver file}
 \usage{
 rmf_read_de4(
-  file = {     cat("Please select direct solver file ...\\n")     file.choose() },
+  file = {
+     cat("Please select direct solver file ...\\n")
+     file.choose()
+ },
   ...
 )
 }

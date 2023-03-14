@@ -6,7 +6,10 @@
 \title{Reads the volumetric budget from a MODFLOW listing file}
 \usage{
 rmf_read_bud(
-  file = {     cat("Please select listing file ...\\n")     file.choose() }
+  file = {
+     cat("Please select listing file ...\\n")
+     file.choose()
+ }
 )
 
 rmf_read_budget(...)

@@ -5,9 +5,15 @@
 \title{Read a MODFLOW recharge file}
 \usage{
 rmf_read_rch(
-  file = {     cat("Please select rch file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select rch file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   mlt = NULL,
   zon = NULL,
   ...

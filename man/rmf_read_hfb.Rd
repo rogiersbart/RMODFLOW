@@ -5,10 +5,16 @@
 \title{Read a MODFLOW horizontal flow barrier file}
 \usage{
 rmf_read_hfb(
-  file = {     cat("Please select horizontal flow barrier file ...\\n")    
-    file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select horizontal flow barrier file ...\\n")
+    
+    file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   ...
 )
 }

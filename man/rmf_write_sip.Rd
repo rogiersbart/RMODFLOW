@@ -6,9 +6,12 @@
 \usage{
 rmf_write_sip(
   sip,
-  file = {    
-    cat("Please choose sip file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  file = {
+    
+    cat("Please choose sip file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   ...
 )
 }

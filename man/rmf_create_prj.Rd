@@ -39,6 +39,7 @@ If no z coordinate is specified in \code{origin}, it is set to zero.
 \code{crs} is set by a call to \code{sf::st_crs}.
 Rotation is around the lowerleft corner of the model.
 \code{RMODFLOW} does not work optimally for geographic coordinate systems.
+Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
 }
 \examples{
 rmf_create_prj(origin = c(152082, 168000.2), rotation = -12, crs = 31370)

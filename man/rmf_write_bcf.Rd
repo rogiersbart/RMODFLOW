@@ -6,11 +6,17 @@
 \usage{
 rmf_write_bcf(
   bcf,
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
-  file = {    
-    cat("Please select bcf file to overwrite or provide new filename ...\\n")    
-    file.choose() },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
+  file = {
+    
+    cat("Please select bcf file to overwrite or provide new filename ...\\n")
+    
+    file.choose()
+ },
   iprn = -1,
   ...
 )

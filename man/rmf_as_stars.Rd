@@ -79,6 +79,7 @@ Functions to convert rmf_array and rmf_list objects to stars objects
 }
 \details{
 The crs is taken from the \code{prj} argument.
+Note that in MODFLOW, row indices (i) increase with decreasing Y coordinates, i.e. row 1 - column 1 corresponds to the upperleft cell.
 }
 \examples{
 dis <- rmf_create_dis()

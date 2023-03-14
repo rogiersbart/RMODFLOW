@@ -365,8 +365,8 @@ rmf_as_tibble.rmf_2d_array <- function(array,
     positions <- data.frame(id = ids, x = xy$x, y = xy$y)
     values <- data.frame(id = ids, value = c(array*mask^2))
   } else {
-    xWidth <- rep(dis$delr, dis$nrow)
-    yWidth <- rep(dis$delc, each = dis$ncol)
+    xWidth <- rep(dis$delr, each = dis$nrow)
+    yWidth <- rep(dis$delc, dis$ncol)
     positions <- data.frame(id = rep(ids, each=4), x = rep(xy$x, each = 4), y = rep(xy$y, each = 4))
     positions$x[(seq(1, nrow(positions), 4))] <- positions$x[(seq(1, nrow(positions), 4))] - xWidth/2
     positions$x[(seq(2, nrow(positions), 4))] <- positions$x[(seq(2, nrow(positions), 4))] - xWidth/2
@@ -1021,13 +1021,13 @@ rmf_cell_coordinates.dis <- function(dis,
     cell_coordinates$z[] <- coord_prj$z
     
     if(include_faces) {
-      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
-      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
-      cell_coordinates$front[] <- faces_prj_1$x
-      cell_coordinates$right[] <- faces_prj_1$y
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$right[,,1]), y = c(cell_coordinates$front[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$left[,,1]), y = c(cell_coordinates$back[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
+      cell_coordinates$front[] <- faces_prj_1$y
+      cell_coordinates$right[] <- faces_prj_1$x
       cell_coordinates$upper[] <- faces_prj_1$z
-      cell_coordinates$back[] <- faces_prj_2$x
-      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$back[] <- faces_prj_2$y
+      cell_coordinates$left[] <- faces_prj_2$x
       cell_coordinates$lower[] <- faces_prj_2$z
     }
   }
@@ -1073,13 +1073,13 @@ rmf_cell_coordinates.huf <- function(huf,
     cell_coordinates$z[] <- coord_prj$z
     
     if(include_faces) {
-      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$front[,,1]), y = c(cell_coordinates$right[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
-      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$back[,,1]), y = c(cell_coordinates$left[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
-      cell_coordinates$front[] <- faces_prj_1$x
-      cell_coordinates$right[] <- faces_prj_1$y
+      faces_prj_1 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$right[,,1]), y = c(cell_coordinates$front[,,1]), z = c(cell_coordinates$upper), prj = prj, dis=dis)
+      faces_prj_2 <- rmf_convert_grid_to_xyz(x = c(cell_coordinates$left[,,1]), y = c(cell_coordinates$back[,,1]), z = c(cell_coordinates$lower), prj = prj, dis=dis)
+      cell_coordinates$front[] <- faces_prj_1$y
+      cell_coordinates$right[] <- faces_prj_1$x
       cell_coordinates$upper[] <- faces_prj_1$z
-      cell_coordinates$back[] <- faces_prj_2$x
-      cell_coordinates$left[] <- faces_prj_2$y
+      cell_coordinates$back[] <- faces_prj_2$y
+      cell_coordinates$left[] <- faces_prj_2$x
       cell_coordinates$lower[] <- faces_prj_2$z
     }
   }
@@ -1703,7 +1703,7 @@ rmf_convert_hed_to_water_table <- function(hed, l = NULL, na_values = NULL) {
     if(!is.null(l)) {
       hed <- hed[,,,l]
     } else {
-      warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
+      if(dim(hed)[4] > 1) warning('Using final time step heads to determine saturated part of grid.', call. = FALSE)
       hed <- hed[,,,dim(hed)[4]]
     }
   }

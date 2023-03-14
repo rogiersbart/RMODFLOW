@@ -5,8 +5,14 @@
 \title{Read a MODFLOW zone file}
 \usage{
 rmf_read_zon(
-  file = {     cat("Please select zon file ...\\n")     file.choose() },
-  dis = {     cat("Please select dis file ...\\n")     rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select zon file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select dis file ...\\n")
+     rmf_read_dis(file.choose())
+ },
   ...
 )
 }

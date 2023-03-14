@@ -5,9 +5,16 @@
 \title{Read a MODFLOW cell-by-cell budget file}
 \usage{
 rmf_read_cbc(
-  file = {     cat("Please select cell-by-cell budget file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select cell-by-cell budget file ...\\n")
+     file.choose()
+
+    },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   huf = NULL,
   oc = NULL,
   precision = "single",

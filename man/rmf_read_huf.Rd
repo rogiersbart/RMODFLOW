@@ -5,9 +5,15 @@
 \title{Read a MODFLOW hydrogeologic unit flow file}
 \usage{
 rmf_read_huf(
-  file = {     cat("Please select huf file ...\\n")     file.choose() },
-  dis = {     cat("Please select corresponding dis file ...\\n")    
-    rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select huf file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select corresponding dis file ...\\n")
+    
+    rmf_read_dis(file.choose())
+ },
   mlt = NULL,
   zon = NULL,
   ...

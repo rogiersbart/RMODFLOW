@@ -1283,12 +1283,12 @@ print.nwt <- function(nwt) {
   cat(ifelse(nwt$linmeth == 1, 'The GMRES', 'The xMD'), 'matrix solver will be used', '\n')
   cat('Information about solver convergence will', ifelse(nwt$iprnwt == 0, 'not be printed', 'be printed'), 'to the listing file', '\n')
   cat('Corrections to heads in cells surrounded by dewatered cells will', ifelse(nwt$ibotav == 0, 'not be made', 'be made'), '\n')
+  if(nwt$continue) cat('If the model fails to converge during a time step, it will continue to solve the next time step', '\n')
   cat('\n')
   
   if(toupper(nwt$options) == 'SPECIFIED') {
     cat('The following solver options are user-specified:', '\n')
     cat('\n')
-    cat('If the model fails to converge during a time step,', ifelse(nwt$continue, 'it will continue to solve the next time step', 'model execution will stop'), '\n')
     cat('DBDTHETA:', nwt$dbdtheta, '\n')
     cat('DBDKAPPA:', nwt$dbdkappa, '\n')
     cat('DBDGAMMA:', nwt$dbdgamma, '\n')

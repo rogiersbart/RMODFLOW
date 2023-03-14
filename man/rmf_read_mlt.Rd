@@ -5,8 +5,14 @@
 \title{Read a MODFLOW multiplier file}
 \usage{
 rmf_read_mlt(
-  file = {     cat("Please select mlt file ...\\n")     file.choose() },
-  dis = {     cat("Please select dis file ...\\n")     rmf_read_dis(file.choose()) },
+  file = {
+     cat("Please select mlt file ...\\n")
+     file.choose()
+ },
+  dis = {
+     cat("Please select dis file ...\\n")
+     rmf_read_dis(file.choose())
+ },
   ...
 )
 }
