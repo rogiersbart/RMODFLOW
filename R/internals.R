@@ -1222,14 +1222,14 @@ rmfi_parse_variables <- function(remaining_lines, n, nlay = NULL, character = FA
 #' @param ... arguments passes to \code{\link{hydroGOF::gof}}
 #' @keywords internal
 rmfi_performance_measures <- function(observations, predictions,print=FALSE,measures = c('ssq', 'mse', 'mae', 'me', 'r2', 'nse', 'rmse', 'pbias', 'kge'), ...) {
-  gof <- hydroGOF::gof(predictions, observations, ...)
+  gof <- hydroGOF::gof(predictions, observations, ..., digits = Inf)
   name <- c('Mean error', 'Mean absolute error', 'Mean squared error', 'Root mean squared error', 'Normalized root mean squared error',
             'Percent bias', 'Ratio of rmse to standard deviation of observations', 'Ratio of standard deviations', 'Nash-Sutcliffe efficiency', 
             'Modified Nash-Sutcliffe efficiency', 'Relative Nash-Sutcliffe efficiency','Index of agreement', 'Modified index of agreement', 
             'Relative index of agreement', 'Coefficient of persistance', 'Pearson product-moment correlation coefficient', 'Coefficient of determination',
             'R2 multiplied with slope of linear regression between sim and obs', 'Kling-Gupta efficiency', 'Volumetric efficiency')
   gof <- data.frame(measure = rownames(gof), value = c(gof), name = name)
-  gof <- rbind(gof, data.frame(measure = 'SSQ', value = round(sum((predictions - observations)^2), digits = 2), name ='Sum of squared errors'))
+  gof <- rbind(gof, data.frame(measure = 'SSQ', value = sum((predictions - observations)^2), name ='Sum of squared errors'))
   measures <- tolower(measures)
   if("pbias" %in% measures) measures <- replace(measures, which(measures == 'pbias'), 'pbias %')
   if("nrmse" %in% measures) measures <- replace(measures, which(measures == 'nmrse'), 'nrmse %')
